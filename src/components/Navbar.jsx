@@ -9,7 +9,7 @@ export default function Navbar() {
     <div className="h-[90px] flex justify-between items-center px-40">
       <Image src={img} width={110} />
 
-      <div className="flex gap-10 items-center">
+      <div className="hidden lg:flex gap-10 items-center">
         <Link href="/features" className="text-lg font-semibold text-gray-500">
           Features
         </Link>
