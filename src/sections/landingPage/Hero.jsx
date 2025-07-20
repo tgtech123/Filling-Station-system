@@ -1,5 +1,6 @@
 import Image from "next/image";
 import bgImg from "../../assets/fuel-bg.svg";
+import test from "../../assets/test.svg"
 import liveDb from "../../assets/LiveDashboard.png";
 import { ArrowRight, BriefcaseBusiness } from "lucide-react";
 import { Button } from "@/components/ui/button";
