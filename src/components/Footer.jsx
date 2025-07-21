@@ -1,5 +1,5 @@
 import Image from "next/image";
-import logo from "../assets/logoWhite.png"
+import logo from "../assets/station-logo.png"
 export default function Footer() {
     return (
         <div className="bg-[#132958] py-10 px-6 lg:px-40">
