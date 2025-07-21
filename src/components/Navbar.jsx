@@ -18,7 +18,7 @@ export default function Navbar() {
         </Link>
 
         <Button className="bg-[#0080FF]" size="lg">
-          Get Started Now
+          <Link href="/login">Get Started Now</Link>
           <span>
             <ArrowRight />
           </span>
