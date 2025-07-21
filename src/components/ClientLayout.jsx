@@ -1,19 +1,44 @@
+// "use client";
+// import { usePathname } from "next/navigation";
+// import Navbar from "./Navbar";
+// import Footer from "./Footer";
+
+// export default function ClientLayout({children}) {
+//   const pathname = usePathname();
+
+//   const hideOnRoutes = "/login" || pathname.startsWith("/dashboard");
+
+//   const hideNavAndFooter = hideOnRoutes.includes(pathname);
+//   return (
+//     <>
+//         {!hideNavAndFooter && <Navbar />}
+//         {children}
+//         {!hideNavAndFooter && <Footer />}
+//     </>
+//   );
+// }
+
+
 "use client";
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 
-export default function ClientLayout({children}) {
+export default function ClientLayout({ children }) {
   const pathname = usePathname();
 
-  const hideOnRoutes = "/login" || pathname.startsWith("/dashboard");
+  const hideOnExactRoutes = ["/login"];
+  const hideOnPrefixRoutes = ["/dashboard"];
 
-  const hideNavAndFooter = hideOnRoutes.includes(pathname);
+  const hideNavAndFooter =
+    hideOnExactRoutes.includes(pathname) ||
+    hideOnPrefixRoutes.some((route) => pathname.startsWith(route));
+
   return (
     <>
-        {!hideNavAndFooter && <Navbar />}
-        {children}
-        {!hideNavAndFooter && <Footer />}
+      {!hideNavAndFooter && <Navbar />}
+      {children}
+      {!hideNavAndFooter && <Footer />}
     </>
   );
 }
