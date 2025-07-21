@@ -4,7 +4,6 @@ import { GoChevronDown } from "react-icons/go";
 import { GoChevronUp } from "react-icons/go";
 import { FiEyeOff } from "react-icons/fi";
 import { FiEye } from "react-icons/fi";
-import LoginTwo from '../LoginTwo';
 
 
 
