@@ -5,7 +5,10 @@ import Footer from "./Footer";
 
 export default function ClientLayout({children}) {
   const pathname = usePathname();
-  const hideNavAndFooter = pathname.includes("login");
+
+  const hideOnRoutes = "/login" || pathname.startsWith("/dashboard");
+
+  const hideNavAndFooter = hideOnRoutes.includes(pathname);
   return (
     <>
         {!hideNavAndFooter && <Navbar />}
