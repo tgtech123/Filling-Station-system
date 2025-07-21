@@ -4,6 +4,7 @@ import test from "../../assets/test.svg"
 import liveDb from "../../assets/LiveDashboard.png";
 import { ArrowRight, BriefcaseBusiness } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Hero() {
   return (
@@ -32,7 +33,7 @@ export default function Hero() {
             size="lg"
             className="bg-gradient-to-r from-[#0080ff] via-[#0c3865] font-semibold mt-8 to-[#0c3865] py-6"
             >
-            Get started now <ArrowRight />
+            <Link href="/login">Get started now <ArrowRight /></Link>
           </Button>
               </div>
 
