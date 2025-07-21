@@ -1,3 +1,5 @@
+"use client";
+
 import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -18,15 +20,18 @@ export const metadata = {
   description: "Filling Station Management System",
 };
 
+const pathname = usePathname();
+const hideNavAndFooter = pathname.includes('login');
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
         className={`${plusJakartaSans.variable} ${manrope.variable} antialiased`}
       >
-        <Navbar />
-        {children}
-        <Footer />
+        {!hideNavAndFooter && <Navbar />}
+          {children}
+        {!hideNavAndFooter && <Footer />}
       </body>
     </html>
   );
