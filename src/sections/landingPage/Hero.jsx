@@ -33,7 +33,7 @@ export default function Hero() {
             size="lg"
             className="bg-gradient-to-r from-[#0080ff] via-[#0c3865] font-semibold mt-8 to-[#0c3865] py-6"
             >
-            <Link href="/login">Get started now <ArrowRight /></Link>
+            <Link href="/login" className="flex items-center">Get started now <ArrowRight /></Link>
           </Button>
               </div>
 

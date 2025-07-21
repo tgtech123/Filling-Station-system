@@ -1,5 +1,5 @@
 import Image from "next/image";
-import img from "../assets/Logo.png";
+import img from "../assets/station-logo.png";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
@@ -17,7 +17,7 @@ export default function Navbar() {
           Contact
         </Link>
 
-        <Button className="bg-[#0080FF]" size="lg">
+        <Button className="bg-[#0080FF] flex" size="lg">
           <Link href="/login">Get Started Now</Link>
           <span>
             <ArrowRight />
