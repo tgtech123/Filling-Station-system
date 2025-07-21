@@ -7,7 +7,7 @@ import { ArrowRight } from "lucide-react";
 export default function Navbar() {
   return (
     <div className="h-[90px] flex justify-between items-center px-40">
-      <Image src={img} width={110} alt="logo image" />
+      <Image src={img} width={130} alt="logo image" />
 
       <div className="hidden lg:flex gap-10 items-center">
         <Link href="/features" className="text-lg font-semibold text-gray-500">
