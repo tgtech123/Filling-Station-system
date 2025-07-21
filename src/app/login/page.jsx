@@ -1,7 +1,9 @@
-export default function Login() {
+import Login from "@/sections/login/Login"
+
+export default function LoginPage() {
     return (
-        <div>
-            Login Page
+        <div className="">
+            <Login/>
         </div>
     )
 }
