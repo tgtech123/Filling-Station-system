@@ -1,6 +1,5 @@
 'use client'
 import React, { useState } from 'react'
-import { GoChevronDown, GoChevronUp } from "react-icons/go";
 import { FiEyeOff, FiEye } from "react-icons/fi";
 import LoginTwo from '../LoginTwo';
 
@@ -11,7 +10,7 @@ const Login = () => {
   const handleShowPassword = () => setShowPassword(!showPassword);
 
   return (
-    <div className='flex flex-col md:flex-row gap-8 justify-center items-center px-4 py-12 md:py-28 min-h-screen w-full'>
+    <div className='flex gap-8 justify-center items-center  '>
       {/* Left - Form Section */}
       <div className='w-full md:w-[450px]'>
         <div className='leading-7'>
@@ -83,7 +82,7 @@ const Login = () => {
       </div>
 
       {/* Right Section - Optional */}
-      <div className='hidden md:block'>
+      <div className=''>
         <LoginTwo />
       </div>
     </div>
