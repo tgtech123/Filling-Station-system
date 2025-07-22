@@ -1,11 +1,11 @@
 import Image from "next/image";
-import logo from "../assets/logoWhite.png"
+import logo from "../assets/station-logo.png"
 export default function Footer() {
     return (
         <div className="bg-[#132958] py-10 px-6 lg:px-40">
             <div className="grid grid-cols-1 justify-items-center lg:justify-items-start lg:grid-cols-3 gap-10">
                 <div className="flex flex-col items-center lg:items-start">
-                    <Image src={logo} alt="logo image" />
+                    <Image src={logo} alt="logo image" width={100} />
                     <p className="text-white text-center lg:text-left mt-4">
                         Streamline operations. boost efficiency
                         and maximize profits.

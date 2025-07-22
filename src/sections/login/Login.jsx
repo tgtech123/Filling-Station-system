@@ -1,7 +1,11 @@
 'use client'
 import React, { useState } from 'react'
-import { FiEyeOff, FiEye } from "react-icons/fi";
-import LoginTwo from '../LoginTwo';
+import { GoChevronDown } from "react-icons/go";
+import { GoChevronUp } from "react-icons/go";
+import { FiEyeOff } from "react-icons/fi";
+import { FiEye } from "react-icons/fi";
+
+
 
 const Login = () => {
   const [password, setPassword] = useState("");
