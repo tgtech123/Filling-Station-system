@@ -1,9 +1,10 @@
-import Login from "@/sections/login/Login"
+import { LogIn } from "lucide-react";
+
 
 export default function LoginPage() {
     return (
-        <div className="">
-            <Login/>
+        <div className="flex">
+            <LogIn/>
         </div>
     )
 }
