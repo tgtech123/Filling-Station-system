@@ -6,7 +6,7 @@ import userAvatarImg from "../../assets/userAvatar.png"
 
 export default function Sidebar() {
   return (
-    <div className="fixed w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md flex mt-6 flex-col items-center">
+    <div className="fixed w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md flex flex-col items-center">
       <div>
         <Image src={logo} width={130} alt="logo image" />
       </div>
@@ -51,7 +51,7 @@ export default function Sidebar() {
 
         </div>
 
-        <div className="absolute bottom-20 p-2 rounded-[12px] border-2 border-gray-300 flex gap-6 items-center">
+        <div className="absolute bottom-10 p-2 rounded-[12px] border-2 border-gray-300 flex gap-6 items-center">
         {/* User Avatar  */}
         <div className="flex gap-2">
             <Image src={userAvatarImg} alt="user avatar" />
