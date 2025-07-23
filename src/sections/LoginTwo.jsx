@@ -4,21 +4,21 @@ import TextSlider from './login/TextSlider'
 
 const LoginTwo = () => {
   return (
-    <div className=''>
-        <div className=' relative'>
+    <div className='h-screen relative w-full'>
+        <div className=' h-full w-full relative'>
 
             <Image className=''
               src='/Onboarding.png'
               height={1024}
-              width={720}
+              width={760}
               alt='dashboard-image'
             />
 
-            <div className='absolute bottom-[-45px]'>
-              <TextSlider/>
-            </div>
 
         </div>
+            <div className='absolute top-[500px] w-full px-4'>
+              <TextSlider/>
+            </div>
     </div>
   )
 }

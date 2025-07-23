@@ -79,7 +79,7 @@ const TextSlider = () => {
         </div>
 
         {/* Slide Indicators */}
-        <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6 justify-center px-4">
+        <div className="flex flex-wrap gap-2 sm:gap-3 mb-1 sm:mb-6 justify-center px-4">
           {slides.map((_, index) => (
             <button
               key={index}
