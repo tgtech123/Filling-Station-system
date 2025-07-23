@@ -15,7 +15,7 @@ export default function Sidebar() {
         {/* General */}
         <p className="mb-4">GENERAL</p>
 
-        <div className="links">
+        <div className="links text-sm">
           <div className="flex items-center gap-2 bg-[#ff9d29] rounded-[12px] text-white px-6 py-3">
             <House />
             Dashboard
@@ -34,7 +34,7 @@ export default function Sidebar() {
         <div>
           <p className="mb-4">TOOLS</p>
 
-          <div className="links">
+          <div className="links text-sm">
             <div className="flex items-center gap-2 rounded-[12px] px-6 py-3">
               <CircleQuestionMark />
               Help
@@ -56,7 +56,7 @@ export default function Sidebar() {
         <div className="flex gap-2">
             <Image src={userAvatarImg} alt="user avatar" />
             <div>
-                <h4 className="text-black text-lg font-semibold">Oboh ThankGod</h4>
+                <h4 className="text-black text-md font-semibold">Oboh ThankGod</h4>
                 <p className="text-sm">Attendant</p>
             </div>
         </div>
