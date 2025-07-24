@@ -1,4 +1,4 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 
 export default function FlashCard({name, icon, period, variable, trend}) {
     return (

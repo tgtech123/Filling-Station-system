@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import logo from "../../assets/station-logo.png";
-import { CircleFadingArrowUp, CircleQuestionMark, House, LogOut, Moon, TrendingUp } from "lucide-react";
+import { CircleFadingArrowUp, CircleQuestionMark, House, Moon, TrendingUp } from "lucide-react";
 import { PiToggleLeftFill } from "react-icons/pi";
 import userAvatarImg from "../../assets/userAvatar.png"
 import UserAvatar from "./UserAvatar";
