@@ -1,4 +1,12 @@
+"use client"
+
 import DisplayCard from "./DisplayCard";
+import dynamic from 'next/dynamic';
+
+const SalesChart = dynamic(() => import("../Dashboard/SalesOverviewChart"), {
+  ssr: false,
+  loading: () => <p>Loading chart...</p>
+});
 
 export default function MainContainer() {
     return (
@@ -8,6 +16,7 @@ export default function MainContainer() {
                 <DisplayCard span={2} height={400} />
                 <DisplayCard />
                 <DisplayCard />
+                <SalesChart />
             </div>
         </div>
     )

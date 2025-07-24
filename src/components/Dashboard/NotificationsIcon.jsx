@@ -1,5 +1,4 @@
 
-
 export default function NotificationsIcon({iconName, messageCount}) {
     return (
         <div className="bg-[#f6f6f6] relative w-fit cursor-pointer px-4 py-5 rounded-[9px] flex items-center justify-center">
