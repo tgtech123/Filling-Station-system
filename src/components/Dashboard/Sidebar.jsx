@@ -1,12 +1,26 @@
+"use client"
+
 import Image from "next/image";
 import logo from "../../assets/station-logo.png";
 import { CircleFadingArrowUp, CircleQuestionMark, House, LogOut, Moon, TrendingUp } from "lucide-react";
 import { PiToggleLeftFill } from "react-icons/pi";
 import userAvatarImg from "../../assets/userAvatar.png"
+import UserAvatar from "./UserAvatar";
+import { useState } from "react";
+import LogoutButton from "./LogoutButton";
 
 export default function Sidebar() {
+  const [isActive, setIsActive] = useState("dashboard")
+  const username = "Oboh ThankGod";
+  const userRole = "Attendant";
+
+  const links = [
+    {id: "dashboard", name: "Dashboard", icon: <House />},
+    {id: "shift", name: "Shift", icon: <CircleFadingArrowUp />},
+    {id: "sales", name: "Sales Report", icon: <TrendingUp />}
+  ] 
   return (
-    <div className="fixed w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md flex flex-col items-center">
+    <div className="fixed z-30 w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md hidden lg:flex flex-col items-center">
       <div>
         <Image src={logo} width={130} alt="logo image" />
       </div>
@@ -16,18 +30,12 @@ export default function Sidebar() {
         <p className="mb-4">GENERAL</p>
 
         <div className="links text-sm">
-          <div className="flex items-center gap-2 bg-[#ff9d29] rounded-[12px] text-white px-6 py-3">
-            <House />
-            Dashboard
-          </div>
-          <div className="mt-4 flex items-center gap-2 rounded-[12px] px-6 py-3">
-            <CircleFadingArrowUp />
-            Shifts
-          </div>
-          <div className="flex items-center gap-2 rounded-[12px] px-6 py-3">
-            <TrendingUp />
-            Sales Report
-          </div>
+          {links.map((link) => (
+            <div onClick={() => setIsActive(link.id)} className={`flex cursor-pointer items-center gap-2 ${isActive === link.id ? "bg-[#ff9d29] text-white" : "bg-transparent text-[#888]"} rounded-[12px] py-3 px-6`}>
+              {link.icon}
+              {link.name}
+            </div>
+          ))}
         </div>
 
         {/* Tools */}
@@ -35,13 +43,13 @@ export default function Sidebar() {
           <p className="mb-4">TOOLS</p>
 
           <div className="links text-sm">
-            <div className="flex items-center gap-2 rounded-[12px] px-6 py-3">
+            <div className="flex items-center cursor-pointer gap-2 rounded-[12px] px-6 py-3">
               <CircleQuestionMark />
               Help
             </div>
 
             <div className="flex items-center justify-between gap-2 rounded-[12px] px-6 py-3">
-                <div className="flex gap-2 items-center">    
+                <div className="flex gap-2 items-center cursor-pointer">    
                     <Moon />
                     DarkMode
                 </div>
@@ -53,17 +61,12 @@ export default function Sidebar() {
 
         <div className="absolute bottom-10 p-2 rounded-[12px] border-2 border-gray-300 flex gap-6 items-center">
         {/* User Avatar  */}
-        <div className="flex gap-2">
-            <Image src={userAvatarImg} alt="user avatar" />
-            <div>
-                <h4 className="text-black text-md font-semibold">Oboh ThankGod</h4>
-                <p className="text-sm">Attendant</p>
-            </div>
-        </div>
-        <div>
-            <LogOut  className="text-[#ff1f1f] font-semibold"/>
-        </div>
-
+        <UserAvatar 
+          userAvatarImg={userAvatarImg}
+          username={username}
+          userRole={userRole}
+        />
+        <LogoutButton />
         </div>
       </aside>
     </div>
