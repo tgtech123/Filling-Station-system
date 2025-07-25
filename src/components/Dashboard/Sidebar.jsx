@@ -30,8 +30,8 @@ export default function Sidebar() {
         <p className="mb-4">GENERAL</p>
 
         <div className="links text-sm">
-          {links.map((link) => (
-            <div onClick={() => setIsActive(link.id)} className={`flex cursor-pointer items-center gap-2 ${isActive === link.id ? "bg-[#ff9d29] text-white" : "bg-transparent text-[#888]"} rounded-[12px] py-3 px-6`}>
+          {links.map((link, linkIxdex) => (
+            <div key={linkIxdex} onClick={() => setIsActive(link.id)} className={`flex cursor-pointer items-center gap-2 ${isActive === link.id ? "bg-[#ff9d29] text-white" : "bg-transparent text-[#888]"} rounded-[12px] py-3 px-6`}>
               {link.icon}
               {link.name}
             </div>
