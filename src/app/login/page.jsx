@@ -3,7 +3,7 @@ import Login from "@/sections/login/Login";
 
 export default function LoginPage() {
     return (
-        <div className="flex ">
+        <div className="">
            <Login/>
         </div>
     )
