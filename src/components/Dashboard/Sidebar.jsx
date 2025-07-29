@@ -8,6 +8,7 @@ import userAvatarImg from "../../assets/userAvatar.png"
 import UserAvatar from "./UserAvatar";
 import { useState } from "react";
 import LogoutButton from "./LogoutButton";
+import Link from "next/link";
 
 export default function Sidebar() {
   const [isActive, setIsActive] = useState("dashboard")
@@ -15,9 +16,9 @@ export default function Sidebar() {
   const userRole = "Attendant";
 
   const links = [
-    {id: "dashboard", name: "Dashboard", icon: <House />},
-    {id: "shift", name: "Shift", icon: <CircleFadingArrowUp />},
-    {id: "sales", name: "Sales Report", icon: <TrendingUp />}
+    {id: "dashboard", name: "Dashboard", icon: <House />, link: "/dashboard"},
+    {id: "shift", name: "Shift", icon: <CircleFadingArrowUp />, link: "/dashboard/shifts"},
+    {id: "sales", name: "Sales Report", icon: <TrendingUp />, link: "/dashboard/sales"}
   ] 
   return (
     <div className="fixed z-30 w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md hidden lg:flex flex-col items-center">
@@ -31,10 +32,10 @@ export default function Sidebar() {
 
         <div className="links text-sm">
           {links.map((link, linkIxdex) => (
-            <div key={linkIxdex} onClick={() => setIsActive(link.id)} className={`flex cursor-pointer items-center gap-2 ${isActive === link.id ? "bg-[#ff9d29] text-white" : "bg-transparent text-[#888]"} rounded-[12px] py-3 px-6`}>
+            <Link href={link.link} key={linkIxdex} onClick={() => setIsActive(link.id)} className={`flex cursor-pointer items-center gap-2 ${isActive === link.id ? "bg-[#ff9d29] text-white" : "bg-transparent text-[#888]"} rounded-[12px] py-3 px-6`}>
               {link.icon}
               {link.name}
-            </div>
+            </Link>
           ))}
         </div>
 
