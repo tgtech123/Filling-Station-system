@@ -6,12 +6,12 @@ import { CircleFadingArrowUp, CircleQuestionMark, House, Moon, TrendingUp } from
 import { PiToggleLeftFill } from "react-icons/pi";
 import userAvatarImg from "../../assets/userAvatar.png"
 import UserAvatar from "./UserAvatar";
-import { useState } from "react";
 import LogoutButton from "./LogoutButton";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Sidebar() {
-  const [isActive, setIsActive] = useState("dashboard")
+  const pathname = usePathname()
   const username = "Oboh ThankGod";
   const userRole = "Attendant";
 
@@ -31,8 +31,8 @@ export default function Sidebar() {
         <p className="mb-4">GENERAL</p>
 
         <div className="links text-sm">
-          {links.map((link, linkIxdex) => (
-            <Link href={link.link} key={linkIxdex} onClick={() => setIsActive(link.id)} className={`flex cursor-pointer items-center gap-2 ${isActive === link.id ? "bg-[#ff9d29] text-white" : "bg-transparent text-[#888]"} rounded-[12px] py-3 px-6`}>
+          {links.map((link) => (
+            <Link href={link.link} key={link.id} className={`flex cursor-pointer items-center gap-2 ${pathname === link.link ? "bg-[#ff9d29] text-white" : "bg-transparent text-[#888]"} rounded-[12px] py-3 px-6`}>
               {link.icon}
               {link.name}
             </Link>
