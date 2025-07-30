@@ -8,6 +8,7 @@ import {
   House,
   Moon,
   TrendingUp,
+  X,
 } from "lucide-react";
 import { PiToggleLeftFill } from "react-icons/pi";
 import userAvatarImg from "../../assets/userAvatar.png";
@@ -37,28 +38,20 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     },
   ];
   return (
-    // <div
-    //   className={`fixed z-30 w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md transform transition-transform duration-300 ease-in-out ${
-    //     isVisible ? "translate-x-0" : "hidden -translate-x-full"
-    //   }  lg:translate-x-0 lg:transition-none lg:flex flex-col items-center`}
-    // >
     <div
-  className={`
-    fixed z-30 w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md
-    transform transition-transform duration-300 ease-in-out
-    translate-x-0 flex flex-col items-center
-    ${isVisible ? "translate-x-0" : "-translate-x-full"}
-    lg:translate-x-0 lg:transition-none lg:flex
-  `}
->
-      <div className="flex justify-between items-center">
+      className={`fixed z-30 w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md transform transition-transform duration-300 ease-in-out ${
+        isVisible ? "translate-x-0" : "-translate-x-full"
+      }  lg:translate-x-0 lg:transition-none lg:flex flex-col items-center`}
+    >
+
+      <div className="flex justify-between items-start pt-2 px-2">
         <Image src={logo} width={130} alt="logo image" />
         <div className="w-full flex justify-end px-4 pt-4 lg:hidden">
           <button
             onClick={toggleSidebar}
-            className="text-[#ff1f1f] font-semibold text-sm border border-[#ff1f1f] px-3 py-1 rounded-md"
+            className="cursor-pointer text-white font-semibold text-md border bg-[#1a71f6] p-2 rounded-md"
           >
-            Cancel
+            <X size={26} />
           </button>
         </div>
       </div>
