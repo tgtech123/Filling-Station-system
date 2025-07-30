@@ -5,7 +5,7 @@ import { FiSearch, FiDownload } from 'react-icons/fi';
 const SearchBar = ({ searchTerm, onSearch }) => {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-2">
-      <div className="relative w-full sm:max-w-sm">
+      <div className="relative ml-2 w-full sm:max-w-sm">
         <input
           type="text"
           placeholder="Search product"
