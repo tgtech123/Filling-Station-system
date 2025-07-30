@@ -1,14 +1,14 @@
-import Header from "@/components/Dashboard/Header";
-import Sidebar from "@/components/Dashboard/Sidebar";
+import DashboardLayout from "@/components/Dashboard/DashboardLayout";
+import SalesReport from "./SalesReport";
 
 export default function Sales() {
     return (
-        <div>
-            <Sidebar />
-            <Header />
-            <main className="pl-[280px] pt-[90px]">
-                Sales Report Page
-            </main>
-        </div>
+        <DashboardLayout>
+           <h2 className="text-2xl font-semibold mb-2">Sales Report Page</h2>
+           <p className="mb-2 font-medium">Preview and export your sales report</p>
+
+            <SalesReport />
+        </DashboardLayout>
+     
     )
 }

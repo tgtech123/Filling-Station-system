@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import { FiEyeOff } from "react-icons/fi";
 import { FiEye } from "react-icons/fi";
 import LoginTwo from '../LoginTwo';
+import Link from 'next/link';
 
 const Login = () => {
   const [password, setPassword] = useState("");
@@ -64,7 +65,7 @@ const Login = () => {
 
             {/* Sign In Button */}
             <button className="bg-blue-600 rounded-md font-semibold text-white h-[45px] hover:bg-blue-500 transition">
-              Sign In
+              <Link href="/dashboard">Sign In</Link>
             </button>
 
             {/* Forgot Password */}

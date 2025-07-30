@@ -1,21 +1,12 @@
-"use client"
-
-
-import Sidebar from "@/components/Dashboard/Sidebar";
-import Header from "@/components/Dashboard/Header";
+import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import MainContainer from "@/components/Dashboard/MainContainer";
-import { useState } from "react";
-export default function Dashboard() {
-    const [showSidebar, setShowSidebar] = useState(false);
 
-    function toggleSidebar() {
-        setShowSidebar(!showSidebar)
-    }
+export default function Dashboard() {
+   
     return (
-        <div className="bg-gray-100 min-h-[100vh] h-auto">
-            <Sidebar isVisible={showSidebar} toggleSidebar={toggleSidebar} />
-            <Header toggleSidebar={toggleSidebar} />
+        <DashboardLayout>
             <MainContainer />
-        </div>
+        </DashboardLayout>
+
     )
 }

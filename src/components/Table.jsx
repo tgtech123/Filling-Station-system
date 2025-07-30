@@ -5,7 +5,7 @@ const Table = ({ columns, data }) => {
   return (
     <div className="overflow-x-auto w-full mt-4 rounded-lg border border-gray-200">
       <table className="min-w-full text-sm text-left text-gray-700">
-        <thead className="bg-gray-100 text-xs font-semibold text-gray-600 uppercase">
+        <thead className="bg-gray-100 text-md font-semibold text-gray-600">
           <tr>
             {columns.map((col, index) => (
               <th key={index} className="px-4 py-3 whitespace-nowrap">
