@@ -3,6 +3,7 @@ import React from "react";
 import Link from "next/link";
 import FormField from "./FormField";
 import { FiPhone } from "react-icons/fi";
+import { X } from "lucide-react";
 
 const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
   const sectionStyle = "grid grid-cols-1 sm:grid-cols-2 gap-4";
@@ -20,7 +21,7 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
 
         <Link href="/dashboard">
           <button className="bg-blue-600 text-white px-4 py-2 text-sm sm:text-xs md:text-sm lg:text-base rounded-md hover:bg-blue-500 whitespace-nowrap">
-            X
+            <X />
           </button>
         </Link>
       </div>
