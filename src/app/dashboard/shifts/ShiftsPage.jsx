@@ -32,7 +32,7 @@ export default function ShiftsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F6F6] px-4 py-6 sm:px-6 lg:px-12">
+    <div className="min-h-screen bg-[#F6F6F6] py-6 sm:px-6 lg:px-12">
       <div className="max-w-full bg-white p-4 rounded-[24px] overflow-x-auto">
         <TableHeader />
         <SearchBar
