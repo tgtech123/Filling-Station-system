@@ -16,12 +16,12 @@ const EndShiftCard = ({ onClose, onEnd }) => {
   }, [openingReading, closingReading]);
 
   return (
-    <div className="fixed top-20 right-4 w-[90vw] sm:w-[24rem] bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+    <div className="fixed top-28 right-4 w-[90vw] sm:w-[24rem] bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800">End Shift</h2>
-          <p className="text-xs sm:text-sm text-gray-500">Provide details to end your shift</p>
+          <p className="text-xs sm:text-sm text-gray-500">Submit meter reading to end shift</p>
         </div>
         <button
           onClick={onClose}
@@ -95,7 +95,7 @@ const EndShiftCard = ({ onClose, onEnd }) => {
         {/* End Shift Button */}
         <button
           type="button"
-          className="w-full bg-[#0080FF] hover:bg-blue-500 transition-all duration-200 text-white text-sm py-2 rounded-lg font-medium"
+          className="w-full bg-[#0080FF] hover:bg-blue-200 font-semibold transition-all duration-200 text-white text-sm py-2 rounded-lg "
           onClick={onEnd}
         >
           End Shift
