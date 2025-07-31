@@ -5,6 +5,7 @@ import { columns, data as fullData } from "./salesData";
 import { paginate } from "./utils/paginate";
 import { useState, useMemo } from "react";
 import Pagination from "@/components/Pagination";
+import CustomSearchBar from "@/components/Dashboard/CustomSearchBar";
 
 const ITEMS_PER_PAGE = 9;
 
@@ -19,24 +20,31 @@ export default function SalesReport() {
     );
   }, [searchTerm]);
 
-   const handlePageChange = (newPage) => {
+  const handlePageChange = (newPage) => {
     setPage(newPage);
   };
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
   const paginatedData = paginate(filteredData, page, ITEMS_PER_PAGE);
 
-  const handleNext = () => setPage((prev) => Math.min(prev + 1, totalPages));
-  const handlePrev = () => setPage((prev) => Math.max(prev - 1, 1));
+  // const handleNext = () => setPage((prev) => Math.min(prev + 1, totalPages));
+  // const handlePrev = () => setPage((prev) => Math.max(prev - 1, 1));
 
   return (
     <div className="bg-white p-4 rounded-[24px]">
       <div>
-        <SearchBar
+        {/* <SearchBar
           searchTerm={searchTerm}
           onSearch={(val) => {
             setSearchTerm(val);
             setPage(1); 
+          }}
+        /> */}
+        <CustomSearchBar
+          searchTerm={searchTerm}
+          onSearch={(val) => {
+            setSearchTerm(val);
+            setPage(1);
           }}
         />
       </div>
@@ -44,13 +52,13 @@ export default function SalesReport() {
         <Table columns={columns} data={paginatedData} />
       </div>
 
-         <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={filteredData.length}
-                onPageChange={handlePageChange}
-                itemsPerPage={ITEMS_PER_PAGE}
-              />
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        totalItems={filteredData.length}
+        onPageChange={handlePageChange}
+        itemsPerPage={ITEMS_PER_PAGE}
+      />
     </div>
   );
 }
