@@ -321,7 +321,7 @@ export default function CustomFilter({ handleClose }) {
   };
 
   return (
-    <div className="absolute top-[250px] right-10 h-[350px] w-[300px] lg:w-[400px] flex items-center justify-center p-2">
+    <div className="absolute top-[250px] right-10 h-[350px] w-[350px] lg:w-[400px] flex items-center justify-center p-2">
       <div className="bg-white rounded-xl p-4 w-full max-w-[600px] shadow-xl">
         {/* Header */}
         <div className="flex justify-between items-center mb-5">
