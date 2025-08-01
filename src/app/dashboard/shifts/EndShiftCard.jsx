@@ -61,6 +61,7 @@ const EndShiftCard = ({ onClose, onEnd }) => {
           <label className="block text-sm font-medium text-gray-700 mb-1">Opening meter reading</label>
           <input
             type="number"
+            inputMode="numeric"
             value={openingReading}
             onChange={(e) => setOpeningReading(e.target.value)}
             placeholder="Enter opening meter reading"
@@ -73,6 +74,7 @@ const EndShiftCard = ({ onClose, onEnd }) => {
           <label className="block text-sm font-medium text-gray-700 mb-1">Litres sold</label>
           <input
             type="number"
+            inputMode="numeric"
             value={litresSold}
             readOnly
             placeholder="Auto-calculated"
@@ -85,6 +87,7 @@ const EndShiftCard = ({ onClose, onEnd }) => {
           <label className="block text-sm font-medium text-gray-700 mb-1">Closing meter reading</label>
           <input
             type="number"
+            inputMode="numeric"
             value={closingReading}
             onChange={(e) => setClosingReading(e.target.value)}
             placeholder="Enter closing meter reading"

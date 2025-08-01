@@ -8,7 +8,10 @@ export default function FlashCard({name, icon, period, variable, trend}) {
                 <div></div>
                 <div className="flex flex-col items-center">
                     <h4 className="font-semibold">{name}</h4>
-                    <div className="text-sm text-[#737373]">{period}</div>
+                    <div className="text-sm text-[#737373]">
+                    {typeof period === "string" ? <p>{period}</p> : period}
+                    </div>
+
                 </div>
                 <span className="text-xl">{icon}</span>
             </div>

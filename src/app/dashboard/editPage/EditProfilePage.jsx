@@ -5,6 +5,7 @@ import { FiPhone } from 'react-icons/fi';
 import EditFormField from './EditFormField';
 import ProfileImageUpload from './ProfileImageUpload ';
 import { Save } from 'lucide-react'
+import { X } from 'lucide-react';
 
 
 const EditProfilePage = ({ profileData }) => {
@@ -39,7 +40,7 @@ const EditProfilePage = ({ profileData }) => {
             <button
             className="bg-blue-600 text-white px-4 py-2 text-sm sm:text-xs md:text-sm lg:text-base rounded-md hover:bg-blue-500 whitespace-nowrap"
             >
-            X
+            <X size={20} /> 
             </button>
         </Link>
       

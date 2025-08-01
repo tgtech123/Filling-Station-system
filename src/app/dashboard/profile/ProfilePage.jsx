@@ -21,7 +21,7 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
 
         <Link href="/dashboard">
           <button className="bg-blue-600 text-white px-4 py-2 text-sm sm:text-xs md:text-sm lg:text-base rounded-md hover:bg-blue-500 whitespace-nowrap">
-            <X />
+            <X size={22} />
           </button>
         </Link>
       </div>
