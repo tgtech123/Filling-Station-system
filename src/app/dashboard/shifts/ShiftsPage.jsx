@@ -8,7 +8,7 @@ import { columns, data as fullData } from './shiftData';
 import { paginate } from './utils/paginate';
 import exportToExcel from '@/components/Hooks/ExportToExcel';
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 6;
 
 export default function ShiftsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,8 +33,8 @@ export default function ShiftsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F6F6] px-4 py-6 sm:px-6 lg:px-12">
-      <div className="max-w-full overflow-x-auto">
+    <div className="min-h-screen bg-[#F6F6F6] py-6 sm:px-6 lg:px-12">
+      <div className="max-w-full bg-white p-4 rounded-[24px] overflow-x-auto">
         <TableHeader />
 
         <SearchBar

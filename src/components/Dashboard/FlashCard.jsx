@@ -2,7 +2,7 @@ import { TrendingUp } from "lucide-react";
 
 export default function FlashCard({name, icon, period, variable, trend}) {
     return (
-        <div className={`min-h-[150px] flex flex-col justify-between h-auto p-4 border-2 rounded-[20px] border-[#e7e7e7]`}>
+        <div className={`min-h-[150px] flex flex-col justify-between h-auto p-4 border-2 rounded-[20px] hover:bg-[#1a71f6] cursor-pointer hover:text-white border-[#e7e7e7]`}>
 
             <div className="flex  justify-between">
                 <div></div>
