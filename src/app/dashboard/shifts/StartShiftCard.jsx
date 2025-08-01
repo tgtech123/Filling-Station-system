@@ -33,12 +33,13 @@ const StartShiftCard = ({ onClose, onStart }) => {
 
         {/* Pump Number */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Pump no</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Pump No</label>
           <select className="w-full border rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring focus:ring-blue-200">
             <option value="">Select pump</option>
             <option value="1">Pump 1</option>
             <option value="2">Pump 2</option>
             <option value="3">Pump 3</option>
+            <option value="3">Pump 4</option>
           </select>
         </div>
 
@@ -47,6 +48,7 @@ const StartShiftCard = ({ onClose, onStart }) => {
           <label className="block text-sm font-medium text-gray-700 mb-1">Opening meter reading</label>
           <input
             type="number"
+            inputMode="numeric"
             placeholder="Input meter reading"
             className="w-full border rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring focus:ring-blue-200"
           />
