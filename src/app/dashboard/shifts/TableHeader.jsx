@@ -28,7 +28,7 @@ const TableHeader = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 lg:gap-0 justify-between bg-white py-6 px-4 rounded-lg relative">
+    <div className="flex flex-col mb-3 lg:flex-row items-start lg:items-center gap-3 lg:gap-0 justify-between bg-white py-6 px-4 rounded-xl relative">
       <div>
         <h1 className="text-2xl font-semibold text-gray-800">Shifts</h1>
         <p className="text-gray-500 text-sm">Enter meter reading to start your shift</p>

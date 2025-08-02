@@ -7,6 +7,8 @@ import Table from '@/components/Table';
 import { columns, data as fullData } from './shiftData'; 
 import { paginate } from './utils/paginate';
 import exportToExcel from '@/components/Hooks/ExportToExcel';
+import { GoChevronRight, GoChevronLeft  } from "react-icons/go";
+
 
 const ITEMS_PER_PAGE = 6;
 
@@ -33,9 +35,9 @@ export default function ShiftsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F6F6] py-6 sm:px-6 lg:px-12">
-      <div className="max-w-full bg-white p-4 rounded-[24px] overflow-x-auto">
+    <div className="min-h-screen bg-[#F6F6F6] sm:px-6 lg:px-1">
         <TableHeader />
+      <div className="max-w-full bg-white p-4 rounded-xl overflow-x-auto">
 
         <SearchBar
           searchTerm={searchTerm}
@@ -59,17 +61,18 @@ export default function ShiftsPage() {
           <div className="flex gap-2">
             <button
               onClick={handlePrev}
-              className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 text-xs sm:text-sm"
+              className="px-2 py-1 border-[1.5px] border-neutral-400 rounded-md hover:bg-gray-100 disabled:opacity-50 text-xs sm:text-sm"
               disabled={page === 1}
             >
-              &lt;
+              <GoChevronLeft size={20} />
+
             </button>
             <button
               onClick={handleNext}
-              className="px-3 py-1 border rounded hover:bg-gray-100 disabled:opacity-50 text-xs sm:text-sm"
+              className="px-2 py-1 border-[1.5px] border-neutral-400 rounded-md hover:bg-gray-100 disabled:opacity-50 text-xs sm:text-sm"
               disabled={page === totalPages}
             >
-              &gt;
+              <GoChevronRight size={20} />
             </button>
           </div>
         </div>
