@@ -6,7 +6,7 @@ import SearchBar from '@/components/SearchBar';
 import Table from '@/components/Table';
 import { columns, data as fullData } from './shiftData'; 
 import { paginate } from './utils/paginate';
-import exportToExcel from '@/components/Hooks/ExportToExcel';
+import exportToExcel from '@/hooks/ExportToExcel';
 import { GoChevronRight, GoChevronLeft  } from "react-icons/go";
 
 

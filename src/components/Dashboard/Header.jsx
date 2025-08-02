@@ -9,7 +9,7 @@ import LogoutButton from "./LogoutButton";
 export default function Header({toggleSidebar, showSidebar}) {
     return (
         <div className="px-4 z-10 pl-0 lg:pl-[280px] fixed shadow-md h-[90px] w-full bg-white flex items-center justify-end gap-4">
-            <div className="hidden lg:flex">
+            <div className="hidden lg:flex gap-2">
             <NotificationsIcon iconName={<Mail />} messageCount={2} />
             <NotificationsIcon iconName={<Bell />} messageCount={8} />
             </div>

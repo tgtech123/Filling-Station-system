@@ -1,6 +1,6 @@
 import React from 'react';
 import { FiSearch, FiDownload } from 'react-icons/fi';
-import  exportToExcel  from '@/components/Hooks/ExportToExcel'; 
+import  exportToExcel  from '@/hooks/ExportToExcel'; 
 
 const SearchBar = ({ searchTerm, onSearch, exportData, exportColumns }) => {
   const handleExport = () => {

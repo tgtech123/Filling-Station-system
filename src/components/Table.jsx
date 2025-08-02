@@ -1,4 +1,3 @@
-// components/Table.js
 import React from 'react';
 
 const Table = ({ columns, data }) => {
@@ -15,7 +14,7 @@ const Table = ({ columns, data }) => {
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-100">
-          {data.map((row, rowIndex) => (
+          {/* {data.map((row, rowIndex) => (
             <tr key={rowIndex} className="hover:bg-gray-50">
               {row.map((cell, cellIndex) => (
                 <td key={cellIndex} className="px-4 py-3 whitespace-nowrap">
@@ -23,7 +22,25 @@ const Table = ({ columns, data }) => {
                 </td>
               ))}
             </tr>
-          ))}
+          ))} */}
+
+          {data.length === 0 ? (
+  <tr>
+    <td colSpan={columns.length} className="text-center py-4 text-gray-400">
+      No matching records found.
+    </td>
+  </tr>
+) : (
+  data.map((row, rowIndex) => (
+    <tr key={rowIndex} className="hover:bg-gray-50">
+      {row.map((cell, cellIndex) => (
+        <td key={cellIndex} className="px-4 py-3 whitespace-nowrap">
+          {cell}
+        </td>
+      ))}
+    </tr>
+  ))
+)}
         </tbody>
       </table>
     </div>
