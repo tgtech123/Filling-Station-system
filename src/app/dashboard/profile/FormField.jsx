@@ -1,27 +1,28 @@
 // components/FormField.jsx
 import React from 'react';
 
-const FormField = ({ label, value, icon, type = 'text', disabled = true, name, onChange }) => {
+const FormField = ({ label, value, onChange, icon, type = "text", error, disabled }) => {
   return (
-    <div className="flex flex-col gap-1 w-full">
-      {label && <label className="text-sm font-semibold text-gray-700">{label}</label>}
+
+    <div className="space-y-1">
+      <label className="text-sm font-medium text-gray-700">{label}</label>
       <div className="relative">
-        {icon && <span className="absolute left-3 top-2.5 text-gray-500">{icon}</span>}
+        {icon && <div className="absolute inset-y-0 left-3 flex items-center text-gray-400">{icon}</div>}
         <input
           type={type}
-          name={name}
           value={value}
-          onChange={onChange}
+          onChange={(e) => onChange?.(e.target.value)}
+          className={`w-full px-3 py-2 border rounded-md text-sm ${
+            icon ? "pl-10" : ""
+          } ${error ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring ${disabled ? "bg-neutral-200 text-neutral-500" : ""}`}
           disabled={disabled}
-          className={`w-full h-[42px] rounded-md border px-4 ${
-            icon ? 'pl-10' : ''
-          } border-gray-300 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            disabled ? 'bg-gray-100 cursor-not-allowed' : ''
-          }`}
         />
       </div>
+      {error && <p className="text-red-500 text-xs">{error}</p>}
     </div>
   );
-};
+}
+
+
 
 export default FormField;

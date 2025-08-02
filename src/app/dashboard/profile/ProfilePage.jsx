@@ -3,6 +3,7 @@ import React from "react";
 import Link from "next/link";
 import FormField from "./FormField";
 import { FiPhone } from "react-icons/fi";
+import { HiOutlineMail } from "react-icons/hi";
 import { X } from "lucide-react";
 
 const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
@@ -27,7 +28,7 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
       </div>
 
       {/* Top Summary */}
-        <div className="bg-gray-50 p-4 rounded-md space-y-4">
+        <div className=" p-4 rounded-md space-y-4">
       {/* Top Section */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             {/* Profile Info */}
@@ -55,7 +56,7 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
           </div>
 
       {/* Sales Target Section */}
-          <div className="mt-4 border rounded-3xl p-5 space-y-3">
+          <div className="mt-4 w-[670px] border rounded-3xl px-2 py-2 space-y-5">
             <label className="text-sm font-semibold text-gray-600 block">
               Sales Target
             </label>
@@ -85,7 +86,9 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
           </div>
         </div>
 
-
+        <div className='bg-neutral-100 rounded py-2 pl-3 text-neutral-800 font-semibold'>
+           STAFF DETAILS
+        </div>
       {/* Personal Info */}
       <section>
         <h4 className="text-sm font-semibold text-gray-700 mb-2">
@@ -105,6 +108,7 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
           <FormField
             label="Email address"
             value={profileData?.email}
+            icon={<HiOutlineMail className=' mt-0.5' size={20}/>}
             disabled={!isEditable}
           />
           <FormField
@@ -187,7 +191,7 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
             label="Confirm new password"
             type="password"
             value={"***************"}
-            disabled={false}
+            disabled={true}
           />
         </div>
       </section>

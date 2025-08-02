@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Table = ({ columns, data }) => {
+const Table = ({ columns, data, renderActions  }) => {
   return (
     <div className="overflow-x-auto w-full mt-4 rounded-lg border border-gray-200">
       <table className="min-w-full text-sm text-left text-gray-700">
@@ -9,7 +9,12 @@ const Table = ({ columns, data }) => {
             {columns.map((col, index) => (
               <th key={index} className="px-4 py-3 whitespace-nowrap">
                 {col}
+
+                {renderActions && (
+            <th className="text-left py-2 px-4 border-b">Action</th>
+          )}
               </th>
+
             ))}
           </tr>
         </thead>
@@ -38,6 +43,11 @@ const Table = ({ columns, data }) => {
           {cell}
         </td>
       ))}
+      {renderActions && (
+                <td className="px-4 py-3 whitespace-nowrap">
+                  {renderActions(row)}
+                </td>
+              )}
     </tr>
   ))
 )}

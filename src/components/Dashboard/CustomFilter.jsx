@@ -4,15 +4,7 @@ import { X } from 'lucide-react';
 export default function CustomFilter({ handleClose, onApplyFilter, currentFilters = {} }) {
   console.log('CustomFilter rendered with props:', { handleClose, onApplyFilter, currentFilters });
   
-  // const [shiftType, setShiftType] = useState(currentFilters.shiftType || {
-  //   all: true,
-  //   oneDay: false,
-  //   morning: false,
-  //   evening: false,
-  //   dayOff: false
-  // });
-
-  const defaultShiftType = {
+    const defaultShiftType = {
   all: true,
   oneDay: false,
   morning: false,
@@ -40,18 +32,7 @@ const [pumpNo, setPumpNo] = useState({
   ...currentFilters.pumpNo
 });
 
-  
-  // const [pumpNo, setPumpNo] = useState(currentFilters.pumpNo || {
-  //   all: true,
-  //   pump1: false,
-  //   pump2: false,
-  //   pump3: false,
-  //   pump4: false,
-  //   pump5: false,
-  //   pump6: false
-  // });
-
-  useEffect(() => {
+   useEffect(() => {
     console.log('Current shiftType state:', shiftType);
     console.log('Current pumpNo state:', pumpNo);
   }, [shiftType, pumpNo]);
