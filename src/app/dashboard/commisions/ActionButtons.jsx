@@ -6,17 +6,17 @@ const ActionButtons = () => (
   <div className="flex gap-2">
     <button
     //   onClick={onView}
-      className="text-gray-600 hover:text-blue-500"
+      className="text-gray-600 border-[1.5px] cursor-pointer py-1.5 px-2 rounded-xl"
       title="View"
     >
-      <Eye size={18} />
+      <Eye size={22} />
     </button>
     <button
     //   onClick={onPrint}
-      className="text-gray-600 hover:text-blue-500"
+      className=" border-[1.5px] cursor-pointer py-1.5 px-2 rounded-xl text-blue-600"
       title="Print"
     >
-      <Printer size={18} />
+      <Printer size={22} />
     </button>
   </div>
 );
