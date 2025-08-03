@@ -10,9 +10,9 @@ const Table = ({ columns, data, renderActions  }) => {
               <th key={index} className="px-4 py-3 whitespace-nowrap">
                 {col}
 
-                {renderActions && (
+                {/* {renderActions && (
             <th className="text-left py-2 px-4 border-b">Action</th>
-          )}
+                )} */}
               </th>
 
             ))}
