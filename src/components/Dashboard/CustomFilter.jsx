@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 export default function CustomFilter({ handleClose, onApplyFilter, currentFilters = {} }) {
   console.log('CustomFilter rendered with props:', { handleClose, onApplyFilter, currentFilters });
@@ -199,7 +200,7 @@ const [pumpNo, setPumpNo] = useState({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-[500px] shadow-xl">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -225,8 +226,9 @@ const [pumpNo, setPumpNo] = useState({
                     console.log('Clicking shift type: all');
                     handleShiftTypeChange('all');
                   }}
-                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  className="w-4 h-4 text-blue-600 border-[8px] bg-gray-100 border-gray-400 rounded focus:ring-blue-500 focus:ring-2"
                 />
+                
                 <span className="ml-3 text-sm text-gray-700">All</span>
               </label>
               

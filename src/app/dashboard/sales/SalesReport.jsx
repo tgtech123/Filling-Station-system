@@ -115,7 +115,7 @@ export default function SalesReport() {
         />
       </div>
       {console.log("Filtered data length:", filteredData.length)}
-      <div className="w-full overflow-x-auto">
+      <div className="mt-4 w-full overflow-x-auto">
         <Table columns={columns} data={paginatedData} />
       </div>
 

@@ -24,7 +24,7 @@ export default function Pagination({
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
-  if (totalPages <= 1) return null; // Don't show pagination if only one page
+  if (totalPages <= 1) return null; 
 
   return (
     <div className={`flex flex-col sm:flex-row items-center justify-between mt-4 text-sm text-gray-600 gap-3 ${className}`}>
@@ -43,10 +43,6 @@ export default function Pagination({
         >
           &lt;
         </button>
-        
-        <span className="px-3 py-1 text-xs sm:text-sm font-medium">
-          Page {currentPage} of {totalPages}
-        </span>
         
         <button
           onClick={handleNext}
