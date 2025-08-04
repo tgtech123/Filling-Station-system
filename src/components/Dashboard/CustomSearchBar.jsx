@@ -47,9 +47,9 @@ export default function CustomSearchBar({
           placeholder="Search product"
           value={searchTerm ?? ''}
           onChange={(e) => onSearch(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-gray-300 rounded-lg py-2 pl-4 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <FiSearch className="absolute left-3 top-2.5 text-gray-400" />
+        <FiSearch className="absolute right-3 top-2.5 text-gray-400" />
       </div>
 
       <div className="flex items-center gap-4">
