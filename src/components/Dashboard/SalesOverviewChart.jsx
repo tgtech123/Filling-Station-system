@@ -94,7 +94,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 export default function SalesOverviewChart() {
   return (
     <DisplayCard>
-      <div className="w-full h-[460px] lg:h-[445px] p-4">
+      <div className="w-full h-[460px] lg:h-[445px] p-0">
         <div className="mb-4">
           <h2 className="text-xl font-bold text-gray-800">Sales Overview</h2>
           <p className="text-gray-600">This month</p>
