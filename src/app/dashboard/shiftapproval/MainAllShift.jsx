@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import ShiftApprovalHeader from "./ShiftApprovalHeader";
 import ShiftCard from "./ShiftCard";
+import ApprovedShiftsPage from "./ApprovedShiftsPage";
 
 const allShifts = [
   {
@@ -65,7 +66,9 @@ export default function ShiftApprovalPage() {
         <ShiftApprovalHeader activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="mx-auto p-4 bg-white rounded-xl">
         {shiftsToDisplay.length === 0 ? (
-          <p className="text-gray-500">No shifts to display.</p>
+          <div className="text-gray-500">
+            <ApprovedShiftsPage/>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {shiftsToDisplay.map((shift) => (

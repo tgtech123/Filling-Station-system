@@ -8,7 +8,7 @@ export default function ShiftApprovalHeader({ activeTab, onTabChange }) {
         <h1 className="text-2xl font-bold text-neutral-800 ">Shift Approval</h1>
         <p className="text-neutral-800 text-xl">Approve submitted shifts and export report</p>
 
-        <div className="border p-2 flex gap-2 rounded-xl">
+        <div className="border w-fit p-2 flex gap-2 rounded-xl">
           <button
             onClick={() => onTabChange("pending")}
             className={`px-4 py-2 rounded flex gap-2 ${

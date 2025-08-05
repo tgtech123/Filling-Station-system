@@ -1,8 +1,8 @@
-import DashboardLayout from '@/components/Dashboard/DashboardLayout'
 import React from 'react'
+import DashboardLayout from '@/components/Dashboard/DashboardLayout'
 import MainAllShift from './MainAllShift'
 
-const page = () => {
+export default function page() {
   return (
     <DashboardLayout>
         <MainAllShift/>
@@ -11,4 +11,3 @@ const page = () => {
   )
 }
 
-export default page
