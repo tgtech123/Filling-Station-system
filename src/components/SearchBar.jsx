@@ -12,8 +12,8 @@ const SearchBar = ({ searchTerm, onSearch, exportData, exportColumns }) => {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between mt-6 gap-2">
-      <div className="relative ml-2 w-full sm:max-w-sm">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div className="relative w-full sm:max-w-sm">
         <input
           type="text"
           placeholder="Search product"
