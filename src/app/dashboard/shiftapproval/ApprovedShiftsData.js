@@ -25,8 +25,36 @@ export const tableRows = [
     "123,000,000",
     "123,000,000",
     "-N3,000",
-    "John Dave",
-    React.createElement(BsEye, { className: "h-6 w-6"})
+    "Esor Gladys",
+    React.createElement(BsEye, { className: "h-5 w-5 cursor-pointer"})
+
+  ],
+  [
+    "12/12/2025",
+    "Egbanabor Oboh",
+    "One-Day/ Morning",
+    "1",
+    "125 Ltrs",
+    "1345",
+    "123,000,000",
+    "123,000,000",
+    "-N3,000",
+    "Esor Gladys",
+    React.createElement(BsEye, { className: "h-5 w-5"})
+
+  ],
+  [
+    "12/12/2025",
+    "Nnamdi Uzo",
+    "One-Day/ Morning",
+    "1",
+    "125 Ltrs",
+    "1345",
+    "123,000,000",
+    "123,000,000",
+    "-N3,000",
+    "Ewokor Patience",
+    React.createElement(BsEye, { className: "h-6 w-6 cursor-pointer"})
 
   ],
   [
@@ -39,9 +67,21 @@ export const tableRows = [
     "123,000,000",
     "123,000,000",
     "-N3,000",
-    "John Dave",
-    React.createElement(BsEye, { className: "h-6 w-6"})
-
+    "John Dumelo",
+    React.createElement(BsEye, { className: "h-6 w-6 cursor-pointer"})
+  ],
+  [
+    "12/12/2025",
+    "Benji Ogbeche",
+    "One-Day/ Morning",
+    "1",
+    "125 Ltrs",
+    "1345",
+    "123,000,000",
+    "123,000,000",
+    "-N3,000",
+    "Benjamin Odaji",
+    React.createElement(BsEye, { className: "h-6 w-6 cursor-pointer"})
   ],
   [
     "12/12/2025",
@@ -55,7 +95,6 @@ export const tableRows = [
     "-N3,000",
     "John Dave",
     React.createElement(BsEye, { className: "h-6 w-6"})
-
   ],
   [
     "12/12/2025",
@@ -68,7 +107,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -81,7 +120,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -94,7 +133,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -107,7 +146,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -120,7 +159,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -133,7 +172,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -146,7 +185,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -159,7 +198,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -172,7 +211,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -185,7 +224,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -198,7 +237,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -211,46 +250,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
-  ],
-  [
-    "12/12/2025",
-    "John Melo",
-    "One-Day/ Morning",
-    "1",
-    "125 Ltrs",
-    "1345",
-    "123,000,000",
-    "123,000,000",
-    "-N3,000",
-    "John Dave",
-    "View"
-  ],
-  [
-    "12/12/2025",
-    "John Melo",
-    "One-Day/ Morning",
-    "1",
-    "125 Ltrs",
-    "1345",
-    "123,000,000",
-    "123,000,000",
-    "-N3,000",
-    "John Dave",
-    "btn"
-  ],
-  [
-    "12/12/2025",
-    "John Melo",
-    "One-Day/ Morning",
-    "1",
-    "125 Ltrs",
-    "1345",
-    "123,000,000",
-    "123,000,000",
-    "-N3,000",
-    "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -263,7 +263,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -276,7 +276,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6"})
   ],
   [
     "12/12/2025",
@@ -289,7 +289,7 @@ export const tableRows = [
     "123,000,000",
     "-N3,000",
     "John Dave",
-    "View"
+    React.createElement(BsEye, { className: "h-6 w-6 cursor-pointer"})
   ],
   [
     "12/12/2025",

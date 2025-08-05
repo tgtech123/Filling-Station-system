@@ -1,5 +1,6 @@
 import React from "react";
-import { AlarmClock, CheckCheck } from 'lucide-react'
+import { AlarmClock } from 'lucide-react'
+import { IoCheckmarkDoneOutline } from "react-icons/io5";
 
 export default function ShiftApprovalHeader({ activeTab, onTabChange }) {
   return (
@@ -28,7 +29,7 @@ export default function ShiftApprovalHeader({ activeTab, onTabChange }) {
                 : "text-neutral-200"
             }`} 
 
-          > <CheckCheck />
+          > <IoCheckmarkDoneOutline size={24} />
             Approved
           </button>
         </div>
