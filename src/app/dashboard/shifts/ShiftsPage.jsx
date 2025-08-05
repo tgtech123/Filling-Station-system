@@ -47,6 +47,7 @@ export default function ShiftsPage() {
           }}
           exportData={filteredData} // pass the full filtered data
           exportColumns={columns}
+          exportVariant='compact'
         />
 
         <div className="w-full overflow-x-auto mt-4">
