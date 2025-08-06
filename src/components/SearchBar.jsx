@@ -41,7 +41,7 @@ const SearchBar = ({
         return (
           <button
             onClick={handleExport}
-            className="mt-2 sm:mt-0 flex bg-blue-500 text-white items-center cursor-pointer gap-2 border border-gray-300 text-md font-semibold px-4 py-2 rounded-lg hover:bg-blue-300"
+            className="mt-2 sm:mt-0 flex bg-neutral-50 text-neutral-500 items-center cursor-pointer gap-2 border border-gray-300 text-md font-semibold px-4 py-2 rounded-lg hover:bg-neutral-100"
           >
             Export <FiDownload size={20} />
           </button>
