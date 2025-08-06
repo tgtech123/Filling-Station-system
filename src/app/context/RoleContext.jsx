@@ -14,20 +14,19 @@ export const RoleProvider = ({ children }) => {
     
     try {
       const storedRole = localStorage.getItem("userRole");
-      console.log("🔍 RoleContext: Stored role:", storedRole);
+      
       
       if (storedRole && storedRole !== 'null' && storedRole !== 'undefined') {
         setUserRole(storedRole);
-        console.log("✅ RoleContext: Role set to:", storedRole);
+        
       } else {
-        console.log("❌ RoleContext: No valid role found");
+        console.log("RoleContext: No valid role found");
       }
     } catch (error) {
-      console.error("❌ RoleContext: Error reading localStorage:", error);
+      console.error("RoleContext: Error reading localStorage:", error);
     }
     
     setIsLoading(false);
-    console.log("🔍 RoleContext: Initialization complete");
   }, []);
 
   // Debug role changes

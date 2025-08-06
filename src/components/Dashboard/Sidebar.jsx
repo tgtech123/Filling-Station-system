@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import logo from "../../assets/station-logo.png";
+
 import {
   CircleFadingArrowUp,
   CircleQuestionMark,
@@ -9,22 +10,25 @@ import {
   Moon,
   TrendingUp,
   X,
-  Users,
-  Settings,
-  FileText,
-  DollarSign,
-  BarChart3,
-  UserCheck,
-  Shield,
-  Database,
+  Cpu,
+  Wrench,
 } from "lucide-react";
+import { RiOilLine } from "react-icons/ri"
 import { PiToggleLeftFill } from "react-icons/pi";
+import { HiOutlineChartBar } from "react-icons/hi";
+import { FaFire, FaHandHoldingUsd } from "react-icons/fa";
+import { BsFillFuelPumpFill } from "react-icons/bs";
+import { MdOutlinePeopleAlt } from "react-icons/md";
+import { IoCheckmarkDone, IoDocumentText } from "react-icons/io5";
+import { TfiBoltAlt } from "react-icons/tfi";
+import { BiSolidTachometer } from "react-icons/bi";
 import userAvatarImg from "../../assets/userAvatar.png";
 import UserAvatar from "./UserAvatar";
 import LogoutButton from "./LogoutButton";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRole } from "@/app/context/RoleContext";
+import { TbCurrencyNaira, TbTargetArrow } from "react-icons/tb";
 
 export default function Sidebar({ isVisible, toggleSidebar }) {
   const pathname = usePathname();
@@ -40,105 +44,168 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       roles: ["cashier", "attendant", "accountant", "supervisor", "manager"],
     },
     {
-      id: "payments",
-      name: "Payment Processing",
-      icon: <DollarSign />,
-      link: "/dashboard/payments",
-      roles: ["cashier", "supervisor", "manager"],
+      id: "attendant-report",
+      name: "Attendant Report",
+      icon: <CircleFadingArrowUp />,
+      link: "/dashboard/attendant-report",
+      roles: ["cashier"],
     },
     {
-      id: "transactions",
-      name: "Transaction History",
-      icon: <FileText />,
-      link: "/dashboard/transactions",
-      roles: ["cashier", "supervisor", "manager"],
+      id: "lubricants",
+      name: "Lubricant Sales",
+      icon: <RiOilLine size={24} />,
+      link: "/dashboard/lubricants",
+      roles: ["cashier"],
     },
     {
       id: "shift",
       name: "Shifts",
       icon: <CircleFadingArrowUp />,
       link: "/dashboard/shifts",
-      roles: ["attendant", "supervisor", "manager"],
+      roles: ["attendant"],
     },
     {
-      id: "sales-entry",
-      name: "Sales Entry",
-      icon: <DollarSign />,
-      link: "/dashboard/sales-entry",
-      roles: ["supervisor", "manager"],
+      id: "fuel-management",
+      name: "Fuel Management",
+      icon: <FaFire size={24} />,
+      link: "/dashboard/fuel-management",
+      roles: ["manager"],
     },
     {
-      id: "financial-reports",
-      name: "Financial Reports",
-      icon: <FileText />,
-      link: "/dashboard/financial-reports",
-      roles: ["accountant", "supervisor", "manager"],
+      id: "shift-approval",
+      name: "Shift Approval",
+      icon: <IoCheckmarkDone size={24} />,
+      link: "/dashboard/shiftApproval",
+      roles: ["supervisor"]
     },
     {
-      id: "accounting",
-      name: "Accounting",
-      icon: <Database />,
-      link: "/dashboard/accounting",
-      roles: ["accountant", "supervisor", "manager"],
+      id: "reports",
+      name: "Reports",
+      icon: <HiOutlineChartBar size={24} />,
+      link: "/dashboard/reports",
+      roles: ["accountant"],
+    },
+    {
+      id: "sales-and-cash-report",
+      name: "Sales & Cash Report",
+      icon: <TbCurrencyNaira size={24} />,
+      link: "/dashboard/sales-and-currency-report",
+      roles: ["manager"],
     },
     {
       id: "sales-reports",
       name: "Sales Reports",
       icon: <TrendingUp />,
       link: "/dashboard/sales",
-      roles: ["attendant", "supervisor", "manager"],
+      roles: ["attendant"],
     },
     {
       id: "staff-management",
       name: "Staff Management",
-      icon: <Users />,
-      link: "/dashboard/staff",
-      roles: ["supervisor", "manager"],
+      icon: <MdOutlinePeopleAlt />
     },
     {
-      id: "inventory",
-      name: "Inventory",
-      icon: <BarChart3 />,
-      link: "/dashboard/inventory",
-      roles: ["supervisor", "manager"],
+      id: "schedule-shift",
+      name: "Schedule Shift",
+      icon: <CircleFadingArrowUp />,
+      link: "/dashboard/schedule-shift",
+      roles: ["supervisor"],
     },
     {
-      id: "analytics",
-      name: "Analytics",
-      icon: <BarChart3 />,
-      link: "/dashboard/analytics",
+      id: "dip-reading",
+      name: "Dip Reading",
+      icon: <BiSolidTachometer size={24} />,
+      link: "/dashboard/dip-reading",
+      roles: ["supervisor"],
+    },
+    {
+      id: "commissions",
+      name: "Commissions",
+      icon: <FaHandHoldingUsd size={24}/>,
+      link: "/dashboard/commisions",
+      roles: ["accountant"]
+    },
+    {
+      id: "pump-performance",
+      name: "Pump Performance",
+      icon: <BsFillFuelPumpFill size={24} />,
+      link: "/dashboard/pumpPerformance",
+      roles: ["supervisor"],
+    },
+    {
+      id: "staff-performance",
+      name: "Staff Performance",
+      icon: <TbTargetArrow size={24} />,
+      link: "/dashboard/staff-performance",
+      roles: ["supervisor"],
+    },
+    {
+      id: "trends",
+      name: "Trends",
+      icon: <TfiBoltAlt size={24} />,
+      link: "/dashboard/trends",
+      roles: ["accountant"],
+    },
+    {
+      id: "pump-control",
+      name: "Pump Control",
+      icon: <BsFillFuelPumpFill size={24} />,
+      link: "/dashboard/pump-control",
       roles: ["manager"],
     },
     {
-      id: "user-management",
-      name: "User Management",
-      icon: <UserCheck />,
-      link: "/dashboard/users",
+      id: "lubricant-management",
+      name: "Lubricant Management",
+      icon: <RiOilLine size={24} />,
+      link: "/dashboard/lubricant-management",
       roles: ["manager"],
     },
     {
-      id: "settings",
+      id: "financial-overview",
+      name: "Financial Overview",
+      icon: <TrendingUp />,
+      link: "/dashboard/financial-overview",
+      roles: ["manager"],
+    },
+    {
+      id: "activity-logs",
+      name: "Activity Logs",
+      icon: <Cpu />,
+      link: "/dashboard/activity-logs",
+      roles: ["manager"],
+    },
+    {
+      id: "export-reports",
+      name: "Export Reports",
+      icon: <IoDocumentText size={24} />,
+      link: "/dashboard/export-reports",
+      roles: ["manager"]
+    },
+    {
+      id: "system-settings",
       name: "System Settings",
-      icon: <Settings />,
-      link: "/dashboard/settings",
-      roles: ["manager"],
-    },
-    {
-      id: "audit",
-      name: "Audit Logs",
-      icon: <Shield />,
-      link: "/dashboard/audit",
-      roles: ["manager"],
-    },
+      icon: <Wrench />,
+      link: "/dashboard/system-settings",
+      roles: ["manager"]
+    }
   ];
 
   // Filter links based on user role
+  // const getVisibleLinks = (userRole) => {
+  //   if (!userRole) return [];
+  //   return allLinks.filter((link) =>
+  //     link.roles.includes(userRole.toLowerCase())
+  //   );
+  // };
+
   const getVisibleLinks = (userRole) => {
-    if (!userRole) return [];
-    return allLinks.filter((link) =>
+  if (!userRole || typeof userRole !== 'string') return [];
+  return allLinks.filter(
+    (link) =>
+      Array.isArray(link.roles) &&
       link.roles.includes(userRole.toLowerCase())
-    );
-  };
+  );
+};
 
   const visibleLinks = getVisibleLinks(userRole);
   const roleInfo = getRoleInfo();
