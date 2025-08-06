@@ -1,6 +1,3 @@
-
-
-
 "use client";
 
 import React, { useState } from "react";
@@ -147,7 +144,6 @@ export default function RoleSelectionPage() {
                     <CheckCircle className="w-8 h-8 text-blue-500 bg-white rounded-full shadow-lg" />
                   </div>
                 )}
-
                 {/* Role Icon */}
                 <div
                   className={`w-16 h-16 bg-gradient-to-r ${role.color} rounded-xl flex items-center justify-center text-white mb-4 shadow-lg`}
@@ -238,10 +234,7 @@ export default function RoleSelectionPage() {
 };
 
 // export default RoleSelectionPage;
-
-
 // "use client";
-
 // import React, { useState } from "react";
 // import {
 //   Users,
