@@ -1,5 +1,7 @@
 import React from "react";
 import { IoIosSearch } from "react-icons/io";
+import { BsPrinter } from "react-icons/bs";
+
 
 const SalesHeader = () => {
   return (
@@ -28,8 +30,9 @@ const SalesHeader = () => {
         </form>
 
         {/* Reprint Button */}
-        <button className="bg-[#0080FF] w-full md:w-auto px-7 py-2 text-white font-semibold hover:bg-blue-700 rounded-lg">
+        <button className="bg-[#0080FF]  flex  gap-2 w-full md:w-auto px-4 py-2 text-white font-semibold hover:bg-blue-700 rounded-lg">
           Reprint
+          <BsPrinter size={24} />
         </button>
       </div>
     </div>
