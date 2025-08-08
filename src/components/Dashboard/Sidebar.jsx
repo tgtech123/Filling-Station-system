@@ -54,7 +54,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "lubricants",
       name: "Lubricant Sales",
       icon: <RiOilLine size={24} />,
-      link: "/dashboard/lubricants",
+      link: "/dashboard/lubricantSales",
       roles: ["cashier"],
     },
     {
@@ -75,7 +75,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "shift-approval",
       name: "Shift Approval",
       icon: <IoCheckmarkDone size={24} />,
-      link: "/dashboard/shiftApproval",
+      link: "/dashboard/shiftapproval",
       roles: ["supervisor"]
     },
     {
@@ -115,7 +115,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "dip-reading",
       name: "Dip Reading",
       icon: <BiSolidTachometer size={24} />,
-      link: "/dashboard/dip-reading",
+      link: "/dashboard/dipReading",
       roles: ["supervisor"],
     },
     {
