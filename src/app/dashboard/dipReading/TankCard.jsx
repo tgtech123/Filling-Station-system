@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check, Clock } from "lucide-react";
+import { ArrowRightLeft, Check, Clock } from "lucide-react";
 import { useState } from "react";
 import { IoWarning } from "react-icons/io5";
 
@@ -8,26 +8,53 @@ export default function TankCard({
   tankName,
   productType,
   lastUpdated,
-  status,
   systemReading,
 }) {
   const [manualReading, setManualReading] = useState("");
   const [message, setMessage] = useState("");
-  const [error, setError] = useState(true);
+  const [error, setError] = useState(false);
+  const [status, setStatus] = useState("Pending");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  
+  const handleUpdate = () => {
+    const systemVal = parseFloat(systemReading);
+    const manualVal = parseFloat(manualReading);
+
+    if (isNaN(manualVal)) {
+      setMessage("Please enter a valid manual reading.");
+      setError(true);
+      setStatus("Deviation");
+      return;
+    }
+
+    const diff = Math.abs(systemVal - manualVal);
+
+    if (diff !== 0) {
+      setMessage(`${diff} Ltrs Deviation`);
+      setErrorMessage(
+        `Manual Reading differs from system reading by ${diff} Litres. Please verify the reading and investigate if necessary.`
+      );
+      setError(true);
+      setStatus("Deviation");
+    } else {
+      setMessage("Reading Matched");
+      setError(false);
+      setStatus("Matched");
+    }
+  };
 
   return (
-    <div className="border-2  p-3 rounded-[20px] border-[#e7e7e7]">
-      {/* First */}
-      <div className="flex justify-between">
+    <div className="border-2 my-3 p-3 rounded-[20px] border-[#e7e7e7]">
+      <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
         <div>
-          <h4 className="text-2xl mb-2 font-medium">Tank {tankName}</h4>
+          <h4 className="text-xl sm:text-2xl mb-2 font-medium">
+            Tank {tankName}
+          </h4>
           <p className="font-medium">{productType}</p>
         </div>
-        <div className="flex flex-col items-end">
+        <div className="flex flex-col items-start sm:items-end">
           <button
-            className={`mb-4 flex w-fit items-center text-[12px] font-semibold gap-1 p-2 rounded-lg ${
+            className={`mb-2 flex w-fit items-center text-[12px] font-semibold gap-1 p-2 rounded-lg ${
               status === "Pending"
                 ? "bg-[#fec6aa] text-[#eb2b0b]"
                 : status === "Deviation"
@@ -44,62 +71,64 @@ export default function TankCard({
               <Check size={18} />
             )}
           </button>
-          <p className="text-[#888888] font-medium">
+          <p className="text-[#888888] font-medium text-sm">
             Last Updated - {lastUpdated}
           </p>
         </div>
       </div>
 
-      {/* Second */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <div className="col-span-3 relative w-full lg:w-fit flex flex-col lg:flex-row items-start lg:items-end gap-6 border-2 px-[16px] py-[8px] rounded-[12px] border-[#e7e7e7]">
+      <div className="flex flex-col lg:flex-row gap-4 mt-4">
+        <div className="col-span-3 flex w-full lg:w-3/6 flex-col lg:flex-row items-stretch lg:items-end gap-4 border-2 px-4 py-3 rounded-[12px] border-[#e7e7e7] relative">
           {/* System Reading */}
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-semibold mb-2">System Reading</p>
             <input
               type="text"
               disabled
-              value={systemReading}
-              className="bg-[#e7e7e7] p-4 rounded-[12px] text-sm border-2 border-[#d5d3d3]"
+              value={`${systemReading} Litres`}
+              className="bg-[#e7e7e7] w-full p-3 rounded-[12px] text-sm border-2 border-[#d5d3d3]"
             />
           </div>
           {/* Manual Reading */}
-          <div>
+          <div className="flex-1">
             <p className="text-sm font-semibold mb-2">Manual Reading</p>
             <input
               type="text"
               value={manualReading}
               onChange={(e) => setManualReading(e.target.value)}
-              className="bg-white p-4 rounded-[12px] text-sm border-2 border-[#d5d3d3] placeholder:text-[#e7e7e7]"
+              className="bg-white w-full p-3 rounded-[12px] text-sm border-2 border-[#d5d3d3] placeholder:text-[#e7e7e7]"
               placeholder="Enter Reading"
             />
           </div>
-          {/* Update */}
-          <button className="cursor-pointer hover:bg-[#004cff] py-4 px-6 text-white text-sm font-semibold w-fit rounded-[12px] bg-[#0080ff]">
+          {/* Update Button */}
+          <button
+            onClick={handleUpdate}
+            className="self-center w-full lg:w-fit lg:self-end cursor-pointer hover:bg-[#004cff] py-3 px-5 text-white text-sm font-semibold rounded-[12px] bg-[#0080ff] transition-colors"
+          >
             Update
           </button>
-          {/* Arrow */}
-          <div className="mx-4 absolute right-[-100px] hidden lg:flex items-end">
-            <span>
-              <ArrowRight />
-            </span>
-          </div>
         </div>
-        <div className="col-span-2 border-2 px-[16px] py-[8px] rounded-[12px] border-[#e7e7e7]">
+        {/* Arrow (only visible on large screens) */}
+        <div className="w-full lg:w-1/6 flex justify-center items-center">
+          <ArrowRightLeft />
+        </div>
+        {/* Comparison */}
+        <div className="col-span-2 w-full lg:w-2/6 border-2 px-4 py-3 rounded-[12px] border-[#e7e7e7]">
           <p className="text-sm font-semibold mb-2">Comparison</p>
           <input
             type="text"
             value={message}
-            className="bg-white p-4 w-full rounded-[12px] text-sm border-2 border-[#d5d3d3] placeholder:text-[#e7e7e7]"
+            readOnly
+            className="bg-white w-full p-3 rounded-[12px] text-sm border-2 border-[#d5d3d3] placeholder:text-[#e7e7e7]"
             placeholder="Awaiting Manual Reading"
           />
         </div>
       </div>
-
-      {error && (
-        <div className="mt-3 bg-[#ffdcdc] text-[#ff0000] w-fit p-2 flex gap-2 items-center">
-            <IoWarning />
-            <p className="text-[15px]">Manual Reading differs from system reading by 100 Litres. Please verify the reading and investigate if necessary.</p>
+      {/* Error Message */}
+      {error && message && (
+        <div className="mt-3 bg-[#ffdcdc] text-[#ff0000] w-full sm:w-fit p-2 flex gap-2 items-center rounded">
+          <IoWarning />
+          <p className="text-[15px]">{errorMessage}</p>
         </div>
       )}
     </div>
