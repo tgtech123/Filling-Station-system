@@ -1,5 +1,6 @@
 import React from 'react'
 import { LuPlus } from "react-icons/lu";
+import Link from 'next/link';
 
 const DynamicSalesTable = () => {
   return (
@@ -34,9 +35,11 @@ const DynamicSalesTable = () => {
 
         {/* Record Button */}
         <div className="mt-2 md:mt-0">
-          <button className="bg-[#0080FF] hover:bg-blue-700 text-white flex items-center gap-2 px-5 py-2 rounded-lg font-semibold w-full md:w-auto justify-center">
-            Record <LuPlus size={20} />
-          </button>
+          
+            <button className="bg-[#0080FF] hover:bg-blue-700 text-white flex items-center gap-2 px-5 py-2 rounded-lg font-semibold w-full md:w-auto justify-center">
+              Record <LuPlus size={20} />
+            </button>
+         
         </div>
       </div>
     </div>

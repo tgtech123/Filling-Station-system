@@ -7,9 +7,8 @@ export default function SalesPage(){
 
 
     return (
-        <div>
+        <div className="">
             <SalesHeader/>
-
             <LubSales/>
         </div>
     )
