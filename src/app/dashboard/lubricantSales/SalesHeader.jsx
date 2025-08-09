@@ -1,9 +1,17 @@
-import React from "react";
+'use client'
+import React, { useState } from "react";
 import { IoIosSearch } from "react-icons/io";
 import { BsPrinter } from "react-icons/bs";
+// import { Link } from "lucide-react";
+import Link from "next/link";
+// import page from '/lubricantSales/reusefilter'
+import Modal from "./reusefilter/Modal";
 
 
 const SalesHeader = () => {
+ const [isModalOpen, setIsModalOpen] = useState(false)
+
+ 
   return (
     <div className="w-full">
       <div className="bg-white w-full h-fit rounded-md p-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-3">
@@ -30,10 +38,16 @@ const SalesHeader = () => {
         </form>
 
         {/* Reprint Button */}
-        <button className="bg-[#0080FF]  flex  gap-2 w-full md:w-auto px-4 py-2 text-white font-semibold hover:bg-blue-700 rounded-lg">
-          Reprint
-          <BsPrinter size={24} />
-        </button>
+        {/* <Link href='/dashboard/lubricantSales/reusefilter'> */}
+          <button onClick={()=> setIsModalOpen(true)} className="bg-[#0080FF]  flex  gap-2 w-full md:w-auto px-4 py-2 text-white font-semibold hover:bg-blue-700 rounded-lg">
+            Reprint
+            <BsPrinter size={24} />
+          </button>
+        {/* </Link> */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}/>
+          
+
+        
       </div>
     </div>
   );
