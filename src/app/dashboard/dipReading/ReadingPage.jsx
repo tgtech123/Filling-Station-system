@@ -3,7 +3,7 @@ import TankCard from "./TankCard"
 
 export default function ReadingPage() {
     return (
-        <div className="mt-3 bg-white p-6 rounded-[24px]">
+        <div className="mt-3 bg-white p-3 lg:p-6 rounded-[24px]">
             {data.map((item) => (
                 <TankCard 
                     key={item.id}
