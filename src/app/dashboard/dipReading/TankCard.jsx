@@ -78,7 +78,7 @@ export default function TankCard({
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4 mt-4">
-        <div className="col-span-3 flex w-full lg:w-3/6 flex-col lg:flex-row items-stretch lg:items-end gap-4 border-2 px-4 py-3 rounded-[12px] border-[#e7e7e7] relative">
+        <div className="flex w-full lg:w-3/6 flex-col lg:flex-row items-stretch lg:items-end gap-4 border-2 px-4 py-3 rounded-[12px] border-[#e7e7e7] relative">
           {/* System Reading */}
           <div className="flex-1">
             <p className="text-sm font-semibold mb-2">System Reading</p>
@@ -113,7 +113,7 @@ export default function TankCard({
           <ArrowRightLeft />
         </div>
         {/* Comparison */}
-        <div className="col-span-2 w-full lg:w-2/6 border-2 px-4 py-3 rounded-[12px] border-[#e7e7e7]">
+        <div className="w-full lg:w-2/6 border-2 px-4 py-3 rounded-[12px] border-[#e7e7e7]">
           <p className="text-sm font-semibold mb-2">Comparison</p>
           <input
             type="text"
