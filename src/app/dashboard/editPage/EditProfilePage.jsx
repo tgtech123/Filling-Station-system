@@ -91,7 +91,7 @@ const EditProfilePage = ({ profileData }) => {
       </div>
 
       {/* Sales Summary */}
-      <div className="mt-6 border-1 rounded-3xl  p-5">
+      <div className="mt-6 border-1 rounded-3xl p-5">
         <label className="text-sm font-semibold text-gray-600">Sales Target</label>
         <div className="flex justify-between text-xs text-gray-500 mt-3">
           <span className="flex flex-col gap-1">

@@ -102,7 +102,9 @@ const ReceiptModal = ({ isOpen, onClose }) => {
           >
             <LiaTimesSolid size={18} /> Cancel
           </button>
+
           <button
+            onClick={onClose}
             className="flex items-center justify-center gap-2 px-6 sm:px-10 font-semibold bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
           >
             <BsPrinter size={18} /> Print receipt
