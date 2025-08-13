@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import { LuPlus } from "react-icons/lu";
 import ReceiptModal from './reusefilter/ReceiptModal';
 
-const DynamicSalesTable = () => {
+const DynamicSalesTable = ({onClose}) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   return (
     <div className="mt-20 w-full px-4 sm:px-6 md:px-0">
@@ -38,10 +38,10 @@ const DynamicSalesTable = () => {
         {/* Record Button */}
         <div className="mt-2 md:mt-0">
           
-            <button onClick={() => setIsModalOpen(true)} className="bg-[#0080FF] hover:bg-blue-700 text-white flex items-center gap-2 px-5 py-2 rounded-lg font-semibold w-full md:w-auto justify-center">
+            <button onClick={() => setIsModalOpen(true)}  className="bg-[#0080FF] hover:bg-blue-700 text-white flex items-center gap-2 px-5 py-2 rounded-lg font-semibold w-full md:w-auto justify-center">
               Record <LuPlus size={20} />
             </button>
-            <ReceiptModal isOpen={isModalOpen} onClose={() => setIsModalOpen(true)}/>
+            <ReceiptModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}/>
          
         </div>
       </div>

@@ -21,7 +21,7 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
         </div>
 
         <Link href="/dashboard">
-          <button className="bg-blue-600 text-white px-4 py-2 text-sm sm:text-xs md:text-sm lg:text-base rounded-md hover:bg-blue-500 whitespace-nowrap">
+          <button className=" text-neutral-800 p-2 text-sm sm:text-xs md:text-sm lg:text-base rounded-full hover:bg-neutral-100 whitespace-nowrap">
             <X size={22} />
           </button>
         </Link>
@@ -56,7 +56,7 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
           </div>
 
       {/* Sales Target Section */}
-          <div className="mt-4 w-[670px] border rounded-3xl px-2 py-2 space-y-5">
+          <div className="mt-6 border-1 rounded-3xl p-5 space-y-5">
             <label className="text-sm font-semibold text-gray-600 block">
               Sales Target
             </label>
