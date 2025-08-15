@@ -30,11 +30,11 @@ export const data = [
     "LUB002",
     "Engine oil (1L) (2 unit), Motor Grease (2 unit), Gametol Oil (3 unit), ...",
     "3000",
-    "Transfer"
+    "Cash"
   ],
   [
     "04/17/23",
-    "LUB002",
+    "LUB003",
     "Engine oil (1L) (2 unit), Motor Grease (2 unit), Gametol Oil (3 unit), ...",
     "3000",
     "Transfer"
@@ -48,7 +48,14 @@ export const data = [
   ],
   [
     "04/17/23",
-    "LUB002",
+    "LUB007",
+    "Engine oil (1L) (2 unit), Motor Grease (2 unit), Gametol Oil (3 unit), ...",
+    "3000",
+    "Transfer"
+  ],
+  [
+    "04/17/23",
+    "LUB004",
     "Engine oil (1L) (2 unit), Motor Grease (2 unit), Gametol Oil (3 unit), ...",
     "3000",
     "Transfer"
@@ -58,27 +65,48 @@ export const data = [
     "LUB002",
     "Engine oil (1L) (2 unit), Motor Grease (2 unit), Gametol Oil (3 unit), ...",
     "3000",
-    "Transfer"
+    "POS"
+  ],
+  [
+    "04/17/23",
+    "LUB001",
+    "Engine oil (1L) (2 unit), Motor Grease (2 unit), Gametol Oil (3 unit), ...",
+    "3000",
+    "Cash"
   ],
   [
     "04/17/23",
     "LUB002",
     "Engine oil (1L) (2 unit), Motor Grease (2 unit), Gametol Oil (3 unit), ...",
     "3000",
-    "Transfer"
+    "POS"
   ],
   [
     "04/17/23",
     "LUB002",
     "Engine oil (1L) (2 unit), Motor Grease (2 unit), Gametol Oil (3 unit), ...",
     "3000",
-    "Transfer"
+    "POS"
   ],
   [
     "04/17/23",
     "LUB002",
     "Engine oil (1L) (2 unit), Motor Grease (2 unit), Gametol Oil (3 unit), ...",
     "3000",
-    "Transfer"
+    "POS"
+  ],
+  [
+    "04/17/23",
+    "LUB002",
+    "Engine oil (1L) (2 unit), Motor Grease (2 unit), Gametol Oil (3 unit), ...",
+    "3000",
+    "POS"
+  ],
+  [
+    "04/17/23",
+    "LUB002",
+    "Engine oil (1L) (2 unit), Motor Grease (2 unit), Gametol Oil (3 unit), ...",
+    "3000",
+    "POS"
   ]
 ];
