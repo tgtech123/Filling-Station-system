@@ -8,6 +8,7 @@ const SearchBar = ({
   exportData,
   exportColumns,
   exportVariant = 'default', // 'default', 'compact', 'outlined', etc.
+  placeholder = 'Search...',
 }) => {
   const handleExport = () => {
     if (exportData?.length && exportColumns?.length) {
@@ -54,7 +55,7 @@ const SearchBar = ({
       <div className="relative w-full sm:max-w-sm">
         <input
           type="text"
-          placeholder="Search product"
+          placeholder={placeholder}
           value={searchTerm}
           onChange={(e) => onSearch(e.target.value)}
           className="w-full border border-gray-300 rounded-lg py-2 pl-3 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -62,7 +63,7 @@ const SearchBar = ({
         <FiSearch className="absolute right-3 mr-3 top-2.5 text-gray-600" />
       </div>
 
-      <div>
+      <div className=''>
         {/* 🔁 Dynamic Export Button */}
         {renderExportButton()}
       </div>
