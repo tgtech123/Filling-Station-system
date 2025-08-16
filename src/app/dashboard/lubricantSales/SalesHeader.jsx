@@ -6,7 +6,6 @@ import { BsPrinter } from "react-icons/bs";
 import Link from "next/link";
 // import page from '/lubricantSales/reusefilter'
 import Modal from "./reusefilter/Modal";
-import CustomFilter from "@/components/Dashboard/CustomFilter";
 
 
 const SalesHeader = () => {

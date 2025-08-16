@@ -89,9 +89,9 @@ const Modal = ({ isOpen, onClose }) => {
 
           <div className="flex justify-between  py-3 flex-col sm:flex-row gap-2">
             {/* SearchBar now only searches by Transaction ID */}
-            <div className='relative '>
+            <div className='relative  '>
               <input type="text" placeholder='Search by Transaction ID' className='border-[1.5px] py-2 outline-none w-[400px] text-neutral-300 pl-3 rounded-lg' />
-                <GrSearch size={22} className='absolute top-1.5 text-neutral-200 right-3'/>
+                <GrSearch size={22} className='absolute top-3 text-neutral-200 right-3'/>
             </div>
 
            <div className=' relative  flex gap-3'>
@@ -123,8 +123,8 @@ const Modal = ({ isOpen, onClose }) => {
                   </div>
                     <hr className='border-[1px] mt-2' />
 
-                    <span className='flex  justify-center cursor-pointer p-2 bg-blue-600 text-white font-semibold rounded-md'>
-                      <button className='flex place-items-center'>Save</button>
+                    <span className='flex hover:bg-blue-400 justify-center cursor-pointer p-2 bg-blue-600 text-white font-semibold rounded-md'>
+                      <button onClick={handleChevron} className='flex place-items-center'>Save</button>
                     </span>
 
                 </div>
