@@ -7,6 +7,7 @@ import ActionButtons from './ActionButtons';
 import FilterModal from '../FilterModal';
 import { BsFilter } from "react-icons/bs";
 import { HiChevronDown, HiChevronUp  } from "react-icons/hi2";
+import { GrSearch } from "react-icons/gr";
 import SearchBar from '@/components/SearchBar';
 import ExportButton from '@/components/ExportButton';
 
@@ -88,28 +89,55 @@ const Modal = ({ isOpen, onClose }) => {
 
           <div className="flex justify-between  py-3 flex-col sm:flex-row gap-2">
             {/* SearchBar now only searches by Transaction ID */}
-            <SearchBar
-              searchTerm={searchTerm}
-              onSearch={handleSearch}
-              exportData={filteredData}
-              exportColumns={columns}
-              exportVariant="compact"
-              placeholder='Search by Transaction ID'
-            />
+            <div className='relative '>
+              <input type="text" placeholder='Search by Transaction ID' className='border-[1.5px] py-2 outline-none w-[400px] text-neutral-300 pl-3 rounded-lg' />
+                <GrSearch size={22} className='absolute top-1.5 text-neutral-200 right-3'/>
+            </div>
 
-           <div className='flex gap-3'>
+           <div className=' relative  flex gap-3'>
               <button onClick={handleChevron} className='flex items-center justify-center px-4 py-2 gap-3 border-[1.5px] border-neutral-300 rounded-xl ' >
                 Duration {toggleChevron ? <HiChevronDown size={24} /> : <HiChevronUp size={24}/> }  
               </button>
 
+              {toggleChevron && (
+                <div className="absolute z-50 top-14 bg-white border-2 rounded-lg w-fit p-3">
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      placeholder="From"
+                      className="flex-1 px-2 py-2 rounded-md border border-neutral-300 outline-none"
+                    />
+                    <input
+                      type="date"
+                      placeholder="To"
+                      className="flex-1 px-2 py-2 rounded-md border border-neutral-300 outline-none"
+                    />
+                  </div>
+                    <hr className='border-[1px] mt-2' />
 
+                  <div className='flex flex-col gap-2 mt-3'>
+                    <button className='flex place-items-start border-2 border-neutral-200 hover:bg-blue-600 hover:text-white font-semibold p-2 rounded-lg hover:shadow-md'>Today</button>
+                    <button className='flex place-items-start border-2 border-neutral-200 hover:bg-blue-600 hover:text-white font-semibold p-2 rounded-lg hover:shadow-md'>This week</button>
+                    <button className='flex place-items-start border-2 border-neutral-200 hover:bg-blue-600 hover:text-white font-semibold p-2 rounded-lg hover:shadow-md'>This month</button>
+                    <button className='flex place-items-start border-2 border-neutral-200 hover:bg-blue-600 hover:text-white font-semibold p-2 rounded-lg hover:shadow-md'>This quarter</button>
+                  </div>
+                    <hr className='border-[1px] mt-2' />
+
+                    <span className='flex  justify-center cursor-pointer p-2 bg-blue-600 text-white font-semibold rounded-md'>
+                      <button className='flex place-items-center'>Save</button>
+                    </span>
+
+                </div>
+              )}
+
+              
               <button
                 onClick={() => setIsFilterOpen(true)}
                 className="flex gap-2 font-semibold items-center border-[1.5px] border-neutral-300 px-4 py-2 rounded-lg"
               >
                 Filter <BsFilter size={24} />
               </button>
-            {/* <button className='flex gap-2'>
+              {/* <button className='flex gap-2'>
               Export <HiOutlineDownload size={24} /> 
             </button> */}
 
