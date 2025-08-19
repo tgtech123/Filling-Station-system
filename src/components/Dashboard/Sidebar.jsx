@@ -550,7 +550,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "staff-performance",
       name: "Staff Performance",
       icon: <TbTargetArrow size={24} />,
-      link: "/dashboard/staff-performance",
+      link: "/dashboard/staffPerformance",
       roles: ["supervisor"],
     },
     {
