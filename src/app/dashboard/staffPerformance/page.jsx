@@ -4,7 +4,6 @@ import FlashCard from "@/components/Dashboard/FlashCard";
 import { Download, ListFilter, TrendingUp, Users } from "lucide-react";
 import { TbTargetArrow } from "react-icons/tb";
 import StaffPerformanceCard from "./StaffPerfomanceCard";
-// import img1 from "/"
 
 export default function staffPerformance() {
 

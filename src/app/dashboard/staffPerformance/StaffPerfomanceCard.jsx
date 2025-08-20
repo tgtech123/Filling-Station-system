@@ -1,4 +1,3 @@
-import { Progress } from "@/components/Dashboard/Progress";
 import { CircleFadingArrowUp, Star, TrendingUp, TriangleAlert } from "lucide-react";
 import { TbTargetArrow } from "react-icons/tb";
 
