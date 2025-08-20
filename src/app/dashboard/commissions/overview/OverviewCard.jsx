@@ -5,6 +5,7 @@ import { Users, AlertCircle, Wallet, TrendingUp } from "lucide-react";
 import { FiAlertTriangle } from "react-icons/fi";
 import { GiSplitArrows } from "react-icons/gi";
 import StatCard from '@/components/StatCard';
+import OverviewChart from './OverviewChart';
 // import { color } from 'framer-motion';
 
 
@@ -71,7 +72,7 @@ const OverviewCard = () => {
         </div>
                   
         <div className='bg-white rounded-2xl mt-4 p-6'>
-          tgtech
+          <OverviewChart/>
         </div>
     </div>
 

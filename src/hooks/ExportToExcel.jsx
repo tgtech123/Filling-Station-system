@@ -1,3 +1,4 @@
+ 
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
@@ -7,11 +8,11 @@ const exportToExcel = (data, columns, fileName = "data") => {
     return;
   }
 
-  // Handle array-of-arrays format
-  const worksheetData = [
-    columns, // Header
-    ...data  // Data rows
-  ];
+  // Convert objects into array-of-arrays
+  const headers = columns.map((col) => col.header);
+  const rows = data.map((row) => columns.map((col) => row[col.accessor]));
+
+  const worksheetData = [headers, ...rows];
 
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
   const workbook = XLSX.utils.book_new();
@@ -19,11 +20,11 @@ const exportToExcel = (data, columns, fileName = "data") => {
 
   const excelBuffer = XLSX.write(workbook, {
     bookType: "xlsx",
-    type: "array"
+    type: "array",
   });
 
   const blob = new Blob([excelBuffer], {
-    type: "application/octet-stream"
+    type: "application/octet-stream",
   });
 
   saveAs(blob, `${fileName}.xlsx`);
