@@ -529,7 +529,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "schedule-shift",
       name: "Schedule Shift",
       icon: <CircleFadingArrowUp />,
-      link: "/dashboard/schedule-shift",
+      link: "/dashboard/scheduleShift",
       roles: ["supervisor"],
     },
     {
