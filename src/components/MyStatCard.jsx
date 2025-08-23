@@ -2,7 +2,10 @@
 "use client";
 import React from "react";
 
-const MyStatCard = ({ title, date, amount, change, changeText, icon }) => {
+const MyStatCard = ({ title, date, amount, change, changeText, icon, trend }) => {
+
+    const numericChange = parseFloat(change);
+
   return (
     <div className="bg-white border-[1px] mt-8 p-4 rounded-xl w-full ">
       <div className="flex items-center justify-between mb-2">
@@ -18,12 +21,17 @@ const MyStatCard = ({ title, date, amount, change, changeText, icon }) => {
           icon
         )}
       </div>
-      <div className="flex items-center gap-1 text-sm mb-[-10px]">
+      <div className="flex items-center justify-between gap-1 text-sm mb-[-10px]">
         <p className="text-xl font-bold text-blue-600 mt-2">{amount}</p>
         
         <div className="flex flex-col items-center gap-1">
-            <span className="text-green-600">{change}</span>
-            <span className="text-gray-400 text-[12px]">{changeText}</span>
+            <span className={ numericChange > 1.5 ? "text-green-600 font-medium" : "text-red-600 font-semibold"}>
+                <p className="flex">
+                    {trend}
+                    {change}
+                </p>
+            </span>
+            <span className="text-gray-400 text-[10px]">{changeText}</span>
         </div>
       </div>
     </div>

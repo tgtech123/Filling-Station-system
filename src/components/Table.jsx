@@ -1,5 +1,5 @@
 // components/Table.jsx
-import React from 'react';
+import React from "react";
 
 const Table = ({ columns = [], data = [], renderActions, highlightedColumnIndex }) => {
   return (
@@ -25,11 +25,28 @@ const Table = ({ columns = [], data = [], renderActions, highlightedColumnIndex 
           ) : (
             data.map((row, rowIndex) => (
               <tr key={rowIndex} className="hover:bg-gray-50">
-                {row.map((cell, cellIndex) => (
-                  <td key={cellIndex} className={`px-4 py-5 whitespace-nowrap ${cellIndex === highlightedColumnIndex ? 'text-red-500' : ""} `}>
-                    {cell}
-                  </td>
-                ))}
+                {row.map((cell, cellIndex) => {
+                  // Check if this is the Profit/Loss column (last column)
+                  if (cellIndex === row.length - 1) {
+                    const isNegative = cell.toString().trim().startsWith("-");
+                    return (
+                      <td
+                        key={cellIndex}
+                        className={`px-4 py-5 whitespace-nowrap font-semibold ${
+                          isNegative ? "text-red-600" : "text-green-600"
+                        }`}
+                      >
+                        {cell}
+                      </td>
+                    );
+                  }
+
+                  return (
+                    <td key={cellIndex} className="px-4 py-5 whitespace-nowrap">
+                      {cell}
+                    </td>
+                  );
+                })}
                 {renderActions && (
                   <td className="px-4 py-3 whitespace-nowrap">
                     {renderActions(row)}

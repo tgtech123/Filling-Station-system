@@ -8,7 +8,7 @@ import DurationBtn from "./DurationBtn";
 export default function ProfitLoss() {
     return (
         <DashboardLayout>
-           <div className="w-full px-4 sm:px-6 lg:px-8">
+           <div className="w-full px-4 sm:px-6 lg:px-1">
             {/* Header */}
             <div className="mb-6">
                 <h1 className="text-xl sm:text-lg lg:text-xl text-neutral-700 font-bold mb-2">
@@ -27,16 +27,15 @@ export default function ProfitLoss() {
                 {/* Left side */}
                 <div className="flex flex-col gap-2">
                     <h1 className="text-lg sm:text-xl text-[#525252] font-semibold">
-                    Income
+                    Profit & Loss
                     </h1>
                     <p className="text-sm sm:text-md text-[#525252]">
-                    View and export all generated income
+                        View and export all profit and loss of flourish station
                     </p>
                 </div>
 
                 {/* Right side buttons */}
                 <div className="flex flex-wrap items-center gap-3">
-                    <ExportButton />
                     <DurationBtn />
                 </div>
                 </div>

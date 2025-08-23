@@ -7,7 +7,7 @@ const FuelIncome = () => {
   return (
     <div className="bg-white rounded-xl p-6 mt-4 grid grid-cols-1 gap-6 ">
       <div className="flex flex-col gap-5">
-        <h1 className="text-xl font-semibold text-neutral-800 ">APRIL, MAY, JUNE, 2025</h1>
+        <h1 className="text-xl font-semibold text-neutral-800 ">JUNE, 2025</h1>
         <span className="flex flex-col gap-5 border-[1px] border-neutral-100 p-2 rounded-xl">
           <p className="text-md font-medium text-neutral-600">
             Fuel Income Report
@@ -16,13 +16,13 @@ const FuelIncome = () => {
         </span>
       </div>
 
-      {/* <div className="flex flex-col gap-5 border-[1px] border-neutral-100 p-2 rounded-xl">
+      <div className="flex flex-col gap-5 border-[1px] border-neutral-100 p-2 rounded-xl">
         <h1 className="text-md text-neutral-600 font-semibold mt-2">
           Lubricant Income Report
         </h1>
 
         <Table columns={lubricantDataColumns} data={lubricantDataRows} />
-      </div> */}
+      </div>
 
       <span>
         <h1 className="text-md text-gray-900 font-bold">Report Summary </h1>
