@@ -23,7 +23,5 @@ export const salesData = [
     changeText: "from last week",
     trend: <HiTrendingDown size={20} />,
     icon: <GiSplitArrows  className="text-neutral-800 text-lg" />,
-  },
- 
-  
+  }, 
 ];
