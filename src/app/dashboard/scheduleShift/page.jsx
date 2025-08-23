@@ -147,11 +147,11 @@ export default function ScheduleShift() {
 
       {/* Mid Section */}
       <div className="my-10 flex flex-col lg:flex-row w-full items-center lg:items-end gap-2">
-        <div className="bg-white w-full lg:w-4/6 flex flex-row gap-4 text-sm lg:text-medium py-2 px-4 rounded-[14px] shadow-xs border-2 border-[#e7e7e7]">
+        <div className="bg-white w-full lg:w-4/6 flex flex-row gap-2 lg:gap-4 text-sm lg:text-medium py-2 px-4 rounded-[14px] shadow-xs border-2 border-[#e7e7e7]">
           <div
             onClick={() => setActive("linkOne")}
             id="linkOne"
-            className={`flex items-center px-8 lg:px-24 gap-2 py-2 ${
+            className={`flex items-center px-4 lg:px-24 gap-2 py-2 ${
               active === "linkOne"
                 ? "bg-[#d9edff] text-[#1a71f6]"
                 : "bg-white text-gray-400"
@@ -163,7 +163,7 @@ export default function ScheduleShift() {
           <div
             onClick={() => setActive("linkTwo")}
             id="linkTwo"
-            className={`flex items-center rounded-[10px] cursor-pointer px-8 lg:px-24 gap-2 ${
+            className={`flex items-center rounded-[10px] cursor-pointer px-4 lg:px-24 gap-2 ${
               active === "linkTwo"
                 ? "bg-[#d9edff] text-[#1a71f6]"
                 : "bg-white text-gray-400"
@@ -188,21 +188,7 @@ export default function ScheduleShift() {
 
       {active === "linkOne" && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 bg-white p-6 rounded-[20px]">
-          {/* {infoData.map((item) => (
-            <ScheduleCard
-              key={item.id}
-              name={item.name}
-              img={item.img}
-              role={item.role}
-              onDuty={item.onDuty}
-              shiftSchedule={item.shiftSchedule}
-              phone={item.phone}
-              email={item.email}
-              responsibilities={item.responsibilities}
-              onOpen={() => handleOpen(item)}
-            />
-          ))} */}
-
+    
           {filteredInfoData.length > 0 ? (
             filteredInfoData.map((item) => (
               <ScheduleCard
