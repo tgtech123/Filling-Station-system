@@ -42,7 +42,7 @@ export default function ProfitLoss() {
 
                 {/* Income Cards (auto adjust grid) */}
                 <div className="mt-6">
-                <IncomeCards />
+                    <IncomeCards />
                 </div>
             </div>
 
