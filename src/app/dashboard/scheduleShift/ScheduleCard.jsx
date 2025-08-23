@@ -11,9 +11,11 @@ export default function ScheduleCard({
   responsibilities,
   shiftSchedule,
   role,
+  onOpen,
+  
 }) {
   return (
-    <div className="px-3 py-4 rounded-[10px] bg-white  border-2 border-[#e7e7e7]">
+    <div className="px-2 lg:px-3 py-4 rounded-[10px] bg-white  border-2 border-[#e7e7e7]">
       {/* first */}
       <div className="flex justify-between items-start pb-6 border-b-1 border-gray-200">
         <div className="flex gap-2 items-center">
@@ -75,7 +77,7 @@ export default function ScheduleCard({
       </div>
 
 
-      <button className="bg-[#0080ff] text-white py-2 px-4 rounded-[10px] w-full my-3 text-sm font-medium">Schedule Attendant</button>
+      <button onClick={onOpen} className="bg-[#0080ff] cursor-pointer hover:bg-[#076dd4] text-white py-2 px-4 rounded-[10px] w-full my-3 text-sm font-medium">Schedule Attendant</button>
     </div>
   );
 }
