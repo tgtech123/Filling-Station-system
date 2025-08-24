@@ -39,7 +39,7 @@ export default function FinancialStatement() {
             </div>
         </header>
 
-        <div className="bg-white w-full grid grid-cols-1 lg:grid-cols-4 gap-2 text-sm  py-2 px-3 rounded-[14px] shadow-xs border-2 border-[#e7e7e7]">
+        <div className="bg-white w-full grid grid-cols-4 gap-2 text-sm  py-2 px-3 rounded-[14px] shadow-xs border-2 border-[#e7e7e7]">
           <div
             onClick={() => setActive("linkOne")}
             id="linkOne"
@@ -49,7 +49,7 @@ export default function FinancialStatement() {
                 : "bg-white text-gray-400"
             } font-semibold cursor-pointer rounded-[10px]`}
           >
-            <House />
+            <House className="hidden lg:flex" />
             Income Statement
           </div>
           <div
@@ -61,7 +61,7 @@ export default function FinancialStatement() {
                 : "bg-white text-gray-400"
             } font-semibold py-2`}
           >
-            <House />
+            <House className="hidden lg:flex"  />
             Balance Sheet
           </div>
           <div
@@ -73,7 +73,7 @@ export default function FinancialStatement() {
                 : "bg-white text-gray-400"
             } font-semibold py-2`}
           >
-            <House />
+            <House className="hidden lg:flex"  />
             Cashflow
           </div>
           <div
@@ -85,7 +85,7 @@ export default function FinancialStatement() {
                 : "bg-white text-gray-400"
             } font-semibold py-2`}
           >
-            <House />
+            <House className="hidden lg:flex"  />
             Key Ratio
           </div>
         </div>
