@@ -7,7 +7,8 @@ import {
   OperatingExpensesDataColumns,
   OperatingExpensesDataRows
 } from "./financeData";
-import Table from "@/components/Table";
+// import Table from "@/components/Table";
+import Table from "./Table";
 import { ArrowDownUp } from "lucide-react";
 
 
@@ -22,17 +23,18 @@ export default function IncomeStatement({showFilter}) {
         <Table
           data={IncomeStatementDataRows}
           columns={IncomeStatementDataColumns}
+          highlightedRowIndices={[3]}
         />
       </div>
 
       <div className="border-1 border-[#e7e7e7] rounded-[10px] p-4">
         <h4 className="font-semibold mb-4 text-gray-600">COST OF GOODS SOLD</h4>
-        <Table data={COGDataRows} columns={COGDataColumns} />
+        <Table data={COGDataRows} columns={COGDataColumns} highlightedRowIndices={[2,3]} />
       </div>
 
       <div className="border-1 border-[#e7e7e7] rounded-[10px] p-4">
         <h4 className="font-semibold mb-4 text-gray-600">OPERATING EXPENSES</h4>
-        <Table data={OperatingExpensesDataRows} columns={OperatingExpensesDataColumns} />
+        <Table data={OperatingExpensesDataRows} columns={OperatingExpensesDataColumns} highlightedRowIndices={[3, 4, 5]} />
       </div>
 
       {showFilter && (
