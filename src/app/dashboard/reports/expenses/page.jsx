@@ -1,12 +1,21 @@
+    "use client"
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import { RxTriangleRight } from "react-icons/rx";
 import { GoPlus } from "react-icons/go";
 import ExpenseCards from "./ExpenseCards";
 import ExpensePage from "./ExpensePage";
+import { useState } from "react";
+import AddExpenseModal from "./AddExpenseModal";
 
 
 
 export default function Expenses() {
+    const [isModalOpen, setIsModalOpen] = useState(false)
+
+    const handleOpen = () => setIsModalOpen(true);
+    const handleClose = () => setIsModalOpen(false);
+
+   
     return (
         <DashboardLayout>
             <div>
@@ -29,10 +38,11 @@ export default function Expenses() {
                         </span>
 
                         <span >
-                            <button className="border-[1.5px] font-bold cursor-pointer text-neutral-800 border-neutral-300 rounded-xl px-4 py-2 flex gap-2 ">
+                            <button onClick={handleOpen} className="border-[1.5px] font-bold cursor-pointer text-neutral-800 border-neutral-300 rounded-xl px-4 py-2 flex gap-2 ">
                                 Add expense
                                 <GoPlus size={27} />
                             </button>
+                            <AddExpenseModal isOpen={isModalOpen} onClose={handleClose}/>
                         </span>
                     </div>
                         {/* the cards section */}
