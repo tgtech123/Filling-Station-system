@@ -5,7 +5,7 @@ import { GoChevronDown, GoChevronUp  } from "react-icons/go";
 
 
 
-const AddExpenseModal = ({isOpen, onClose, tittle, children}) => {
+const AddExpenseModal = ({isOpen, onClose,}) => {
     if(!isOpen) return null
     
     const [isToggleChevron, setIsToggleChevron] = useState(false)
@@ -39,7 +39,7 @@ const AddExpenseModal = ({isOpen, onClose, tittle, children}) => {
                 {/* Close button */}
                 <button
                 onClick={onClose}
-                className="absolute top-3 right-6 text-gray-600 hover:text-gray-900"
+                className="absolute top-3 right-6 cursor-pointer text-gray-600 hover:text-gray-900"
                 >
                 <IoCloseOutline size={32} />
 
@@ -72,12 +72,12 @@ const AddExpenseModal = ({isOpen, onClose, tittle, children}) => {
                                {isToggleChevron ? <GoChevronUp size={26} /> : <GoChevronDown size={26} />} 
                             </span> 
                             {isToggleChevron && (
-                                <div className='absolute mt-1 flex flex-col gap-2 w-full bg-white border-[1px] border-blue-600 rounded-lg shadow-md z-10 max-h-60 overflow-y-auto'>
+                                <div className='absolute mt-1 flex flex-col gap-2 w-full bg-white border-[1.5px] border-blue-600 rounded-lg shadow-md z-10 max-h-60 overflow-y-auto'>
                                     {categories.map((category, index) => (
                                         <div
                                         key={index}
                                         onClick={() => handleSelect(category)}
-                                        className="px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm sm:text-base"
+                                        className="px-4 py-2 hover:bg-blue-600 hover:text-white cursor-pointer text-sm sm:text-base"
                                         >
                                         {category}
                                         </div>
@@ -94,7 +94,7 @@ const AddExpenseModal = ({isOpen, onClose, tittle, children}) => {
                             <input
                             type="number"
                             placeholder="₦0.00"
-                            className="w-full border rounded-lg px-3 py-2 mt-1 focus:ring focus:ring-blue-200"
+                            className="w-full border-[1.5px] rounded-lg px-3 py-2 mt-1 outline-none  focus:border-blue-700"
                             required
                             />
                         </div>
@@ -105,7 +105,7 @@ const AddExpenseModal = ({isOpen, onClose, tittle, children}) => {
                             </label>
                             <textarea
                             placeholder="Payment of staff salaries for the month of July"
-                            className="w-full border rounded-lg px-3 py-2 mt-1 focus:ring focus:ring-blue-200"
+                            className="w-full border rounded-lg px-3 py-2 mt-1 focus:ring focus:ring-blue-700"
                             rows="3"
                             required
                             ></textarea>

@@ -10,6 +10,7 @@ export default function Filter({
   currentFilters = {},
   onApplyFilter,
   handleClose,
+  showReset = true,
 }) {
   const initializeFilterState = (options, current = {}) => {
     const baseState = options.reduce((acc, option) => {
@@ -115,12 +116,14 @@ export default function Filter({
 
         {/* Actions */}
         <div className="flex gap-4">
-          <button
-            onClick={resetFilters}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-4 rounded-lg"
-          >
-            Reset
-          </button>
+          {showReset !== false && (
+              <button
+                onClick={handleReset}
+                className="px-4 py-1.5 border border-neutral-300 rounded-lg text-neutral-600 hover:bg-neutral-100"
+              >
+                Reset
+              </button>
+            )}
           <button
             onClick={applyFilters}
             className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg"
