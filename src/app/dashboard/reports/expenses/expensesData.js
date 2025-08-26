@@ -12,7 +12,7 @@ export const rowsData = [
   [
     "04/17/23",
     "#exp1232",
-    "Maintenance & Repair",
+    "Administrative",
     "Renovation of station structure",
     "₦120,000,000",
     "John Dave - Manager",
