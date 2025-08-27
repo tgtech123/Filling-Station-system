@@ -80,7 +80,6 @@ export const LongLiabilitiesDataRows = [
   ["Total Long Term Liabilities", "₦120,000,000"],
 ]
 
-
 export const EquityDataColumn = ["Equity", ""]
 
 export const EquityDataRows = [
@@ -88,4 +87,38 @@ export const EquityDataRows = [
    ["Retained Earnings", "₦120,000,000"],
    ["Current Year Earnings", "₦120,000,000"],
    ["Total Equity", "₦120,000,000"],
+]
+
+export const profitabilityDataColumn = ["Profitability Ratio", ""]
+
+export const profitabilityDataRows = [
+  ["Gross Profit Margin", "15.5%"],
+  ["Operating Profit Margin", "5.5%"],
+  ["Net Profit", "2.5%"],
+  ["Return on Assets", "4.4%"],
+  ["Return on Equity", "2.2%"]
+]
+export const liquidityDataColumn = ["Liquidity Ratio", ""]
+
+export const liquidityDataRows = [
+  ["Current Ratio", "2.44"],
+  ["Quick Ratio", "1.28"],
+  ["Cash Ratio", "1.19"],
+  ["Working Capital", "₦120,000,000"],
+]
+export const efficiencyDataColumn = ["Efficiency Ratio", ""]
+
+export const efficiencyDataRows = [
+  ["Inventory Turnover", "3.7x"],
+  ["Asset Turnover", "0.48x"],
+  ["Receivables Turnover", "54.4%"],
+  ["Day Sales Outstanding", "6.8 days"],
+]
+export const leverageDataColumn = ["Leverage Ratio", ""]
+
+export const leverageDataRows = [
+  ["Detbs-to-Assets", "29%"],
+  ["Debt-to-Equity", "40.9%"],
+  ["Interest Coverage", "1.4x"],
+  ["Equity Multiplier", "24.8x"],
 ]
