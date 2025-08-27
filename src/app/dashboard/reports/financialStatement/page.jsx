@@ -43,7 +43,7 @@ export default function FinancialStatement() {
           <div
             onClick={() => setActive("linkOne")}
             id="linkOne"
-            className={`flex items-end  justify-center px-4 lg:px-12 gap-2 py-2 ${
+            className={`flex items-end justify-center px-4 lg:px-12 gap-2 py-2 ${
               active === "linkOne"
                 ? "bg-[#d9edff] text-[#1a71f6]"
                 : "bg-white text-gray-400"
