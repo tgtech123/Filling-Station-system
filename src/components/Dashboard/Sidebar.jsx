@@ -451,7 +451,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "attendant-report",
       name: "Attendant Report",
       icon: <CircleFadingArrowUp />,
-      link: "/dashboard/attendant-report",
+      link: "/dashboard/attendantReport",
       roles: ["cashier"],
     },
     {
