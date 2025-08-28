@@ -48,7 +48,7 @@ export default function Navbar() {
       </div>
 
       {isOpen && (
-        <div className="absolute top-2 px-4 py-6 rounded-md bg-[#FFFAF4] right-3 z-40 flex flex-col">
+        <div className="absolute top-2 px-4 py-6 rounded-md bg-[#FFFAF4] right-3 z-40 flex flex-col gap-3">
           <div className="flex justify-end my-2 cursor-pointer" onClick={handleClose} >
             <X size={32} className="bg-[#0080ff] text-white p-[2px] rounded-md" />
           </div>
