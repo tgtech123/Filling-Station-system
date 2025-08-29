@@ -1,6 +1,6 @@
 export const columnsData = [
   "Date",
-  "EXP ID",
+  "EXP_ID",
   "Category",
   "Description",
   "Amount",

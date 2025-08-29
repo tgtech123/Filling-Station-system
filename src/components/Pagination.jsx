@@ -31,7 +31,7 @@ export default function Pagination({
   return (
     <div className={`flex flex-col sm:flex-row items-center justify-between mt-4 text-sm text-gray-600 gap-3 ${className}`}>
       {showItemCount && (
-        <p className="text-center sm:text-left text-xs sm:text-sm">
+        <p className="text-center sm:text-left text-xs sm:text-sm">pg
          <span className='text-[#1a71f6] font-semibold'> {currentPage} </span> - {totalPages}  of {totalItems} items
         </p>
       )}
