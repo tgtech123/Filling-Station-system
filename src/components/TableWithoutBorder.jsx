@@ -1,14 +1,43 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
+import StatusModal from "./StatusModal ";
+
 
 const TableWithoutBorder = ({ columns = [], data = [] }) => {
+  // ✅ store table data in state so we can update rows
+  const [tableData, setTableData] = useState(
+    data.map((row) => {
+      const updatedRow = [...row];
+      // Force status (last column) to "Pending" by default
+      updatedRow[updatedRow.length - 1] = "Pending";
+      return updatedRow;
+    })
+  );
+
+  const [selectedRow, setSelectedRow] = useState(null); // which row is clicked
+
+  const updateStatus = (row, status) => {
+  const rowIndex = tableData.indexOf(row);
+  if (rowIndex !== -1) {
+    const newData = [...tableData];
+    newData[rowIndex][newData[rowIndex].length - 1] = status;
+    setTableData(newData);
+  }
+  setSelectedRow(null); // close modal
+};
+
+
   return (
     <div className="overflow-x-auto w-full rounded-xl">
-      <table className="min-w-full text-sm text-left border-[1px]  border-neutral-50 text-gray-700">
+      <table className="min-w-full text-sm text-left border-[1px] border-neutral-50 text-gray-700">
         {/* Table Header */}
         <thead className="text-md font-semibold text-gray-600">
           <tr>
             {columns.map((col, index) => (
-              <th key={index} className="px-4 py-3 bg-neutral-100 whitespace-nowrap">
+              <th
+                key={index}
+                className="px-4 py-3 bg-neutral-100 whitespace-nowrap"
+              >
                 {col}
               </th>
             ))}
@@ -17,7 +46,7 @@ const TableWithoutBorder = ({ columns = [], data = [] }) => {
 
         {/* Table Body */}
         <tbody>
-          {data.length === 0 ? (
+          {tableData.length === 0 ? (
             <tr>
               <td
                 colSpan={columns.length}
@@ -27,20 +56,27 @@ const TableWithoutBorder = ({ columns = [], data = [] }) => {
               </td>
             </tr>
           ) : (
-            data.map((row, rowIndex) => (
+            tableData.map((row, rowIndex) => (
               <tr key={rowIndex} className="hover:bg-gray-50 py-5">
                 {row.map((cell, cellIndex) => {
-                  // Status column (last column)
+                  // ✅ Status column (last column)
                   if (cellIndex === row.length - 1) {
-                    const isApproved = cell.toLowerCase().includes("approved");
+                    const status = cell.toLowerCase();
+                    const isApproved = status.includes("approved");
+                    const isRejected = status.includes("rejected");
+                    const isPending = status.includes("pending");
+
                     return (
                       <td
                         key={cellIndex}
-                        className={`px-3 py-2 whitespace-nowrap flex rounded-lg ${
+                        className={`px-3 py-2 whitespace-nowrap flex rounded-lg cursor-pointer ${
                           isApproved
                             ? "bg-[#B2FFB4] text-[#04901C] font-semibold"
-                            : "text-gray-700"
+                            : isRejected
+                            ? "bg-red-50 text-red-600 font-semibold"
+                            : "bg-yellow-50 text-yellow-600 font-semibold"
                         }`}
+                        onClick={() => isPending && setSelectedRow(row)} // open modal only if pending
                       >
                         {cell}
                       </td>
@@ -58,6 +94,16 @@ const TableWithoutBorder = ({ columns = [], data = [] }) => {
           )}
         </tbody>
       </table>
+
+      {/* Modal (if row is selected) */}
+      {selectedRow !== null && (
+        <StatusModal
+          row={selectedRow}
+          onClose={() => setSelectedRow(null)}
+          onApprove={() => updateStatus(selectedRow, "Approved ✓")}
+          onReject={() => updateStatus(selectedRow, "Rejected")}
+              />
+      )}
     </div>
   );
 };
