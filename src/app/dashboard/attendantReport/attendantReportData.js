@@ -22,3 +22,29 @@ export const fuelSalesData = [
   ["04/17/23", "Jane Doe", "10","Diesel", "22", "148", "90,000,000",  "90,000,000",  "-1,000", "Flagged"],
   ["04/17/23", "Jane Doe", "11","Fuel",   "38", "158", "160,000,000", "160,000,000", "0", "Matched"],
 ];
+
+// attendantReportFilterConfig.ts
+export const attendantReportFilterConfig = [
+  {
+    key: "attendant",
+    label: "Attendant",
+    options: [
+      "John Melo",
+      "Adamu Ukasha",
+      "Jona Kuma",
+      "Demeyongu Adoo",
+      "Oboh ThankGod",
+      "Chukwu Prosper",
+    ],
+  },
+  {
+    key: "shiftType",
+    label: "Shift type",
+    options: ["One-Day", "Morning", "Evening", "Day-Off"],
+  },
+  {
+    key: "status",
+    label: "Status",
+    options: ["Matched", "Flagged"],
+  },
+];
