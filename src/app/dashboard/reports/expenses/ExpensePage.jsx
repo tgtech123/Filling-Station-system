@@ -1,53 +1,38 @@
-'use client'
-import React, { useState, useMemo } from 'react'
-import TableWithoutBorder from '@/components/TableWithoutBorder'
-import SearchBar from '@/hooks/SearchBar'
-import DurationButton from './DurationButton'
-import { columnsData, rowsData } from './expensesData'
+"use client";
+import React, { useState, useEffect } from "react";
+import TableWithoutBorder from "@/components/TableWithoutBorder";
+import SearchBar from "@/hooks/SearchBar";
+import DurationButton from "./DurationButton";
+import { columnsData, rowsData } from "./expensesData";
+import Pagination from "@/components/Pagination";
 
 const ExpensePage = () => {
-  const [appliedFilters, setAppliedFilters] = useState({})
-  const [searchQuery, setSearchQuery] = useState("")
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const itemsPerPage = 5;
 
-  // ✅ Use useMemo to ensure filtering happens on every search change
-  const filteredData = useMemo(() => {
-    let result = [...rowsData] // Create a copy to avoid mutating original data
+  // ✅ filter only EXP_ID & Category (using index-based access)
+  const filteredData = rowsData.filter((item) => {
+    if (!searchTerm) return true;
 
-    // 🔍 Live search by Expense ID (index 1) and Category (index 2)
-    if (searchQuery.trim()) {
-      const lowerSearch = searchQuery.trim().toLowerCase()
-      
-      result = result.filter((row) => {
-        const expenseId = (row[1] || "").toString().toLowerCase()
-        const category = (row[2] || "").toString().toLowerCase()
-        
-        return expenseId.includes(lowerSearch) || category.includes(lowerSearch)
-      })
-    }
+    const lowerSearch = searchTerm.trim().toLowerCase();
+    const EXP_ID = String(item[1] || "").toLowerCase(); // index 1 = EXP_ID
+    const Category = String(item[2] || "").toLowerCase(); // index 2 = Category
 
-    // ✅ Category filter (index 2)
-    if (appliedFilters.category?.length) {
-      result = result.filter((row) => {
-        const category = (row[2] || "").toString().toLowerCase()
-        return appliedFilters.category.map(x => x.toLowerCase()).includes(category)
-      })
-    }
+    return EXP_ID.includes(lowerSearch) || Category.includes(lowerSearch);
+  });
 
-    // ✅ Expense ID filter (index 1)
-    if (appliedFilters.expenseId?.length) {
-      result = result.filter((row) => {
-        const expenseId = (row[1] || "").toString().toLowerCase()
-        return appliedFilters.expenseId.map(x => x.toLowerCase()).includes(expenseId)
-      })
-    }
+  // ✅ reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
-    return result
-  }, [searchQuery, appliedFilters, rowsData]) // ✅ Include all dependencies
+  const totalItems = filteredData.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 
-  // ✅ Handle search change - this should trigger immediately
-  const handleSearchChange = (newValue) => {
-    setSearchQuery(newValue)
-  }
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentData = filteredData.slice(startIndex, endIndex);
 
   return (
     <div className="bg-white rounded-xl p-4 mt-4">
@@ -55,30 +40,42 @@ const ExpensePage = () => {
       <div className="flex justify-between flex-col md:flex-row gap-3">
         <span className="w-full md:w-1/2">
           <SearchBar
-            value={searchQuery}
-            placeholder="Search by Expense ID or Category"
-            onChange={handleSearchChange}
+            value={searchTerm}
+            placeholder="Search by Expense ID/Category"
+            onChange={setSearchTerm} // ✅ controlled input
           />
         </span>
 
         {/* Duration + Filter */}
         <span>
-          <DurationButton onApplyFilter={setAppliedFilters} />
+          <DurationButton  />
         </span>
       </div>
 
       {/* 📊 Table */}
       <div className="mt-5">
-        {filteredData.length > 0 ? (
-          <TableWithoutBorder columns={columnsData} data={filteredData} />
+        {currentData.length > 0 ? (
+          <TableWithoutBorder
+            key={currentPage + searchTerm}
+            columns={columnsData}
+            data={currentData}
+          />
         ) : (
           <div className="text-center text-gray-500 py-4">
-            {searchQuery ? "No match found" : "No records found"}
+            {searchTerm ? "No match found" : "No records found"}
           </div>
         )}
       </div>
-    </div>
-  )
-}
 
-export default ExpensePage
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+      />
+    </div>
+  );
+};
+
+export default ExpensePage;
