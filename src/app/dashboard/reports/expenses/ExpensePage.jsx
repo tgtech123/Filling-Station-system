@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import TableWithoutBorder from '@/components/TableWithoutBorder'
 import SearchBar from '@/hooks/SearchBar'
 import DurationButton from './DurationButton'
@@ -9,60 +9,73 @@ const ExpensePage = () => {
   const [appliedFilters, setAppliedFilters] = useState({})
   const [searchQuery, setSearchQuery] = useState("")
 
-  const filteredData = rowsData.filter((row) => {
-    const expenseId = row[1].toString().toLowerCase()   // Expense ID
-    const category = row[2].toLowerCase()               // Category
-                                // Status
+  // ✅ Use useMemo to ensure filtering happens on every search change
+  const filteredData = useMemo(() => {
+    let result = [...rowsData] // Create a copy to avoid mutating original data
 
-    // ✅ Search by Expense ID or Category
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      if (!expenseId.includes(query) && !category.includes(query)) {
-        return false
-      }
+    // 🔍 Live search by Expense ID (index 1) and Category (index 2)
+    if (searchQuery.trim()) {
+      const lowerSearch = searchQuery.trim().toLowerCase()
+      
+      result = result.filter((row) => {
+        const expenseId = (row[1] || "").toString().toLowerCase()
+        const category = (row[2] || "").toString().toLowerCase()
+        
+        return expenseId.includes(lowerSearch) || category.includes(lowerSearch)
+      })
     }
 
-    // ✅ Category filter
-    if (appliedFilters.category?.length && !appliedFilters.category.includes(row[2])) {
-      return false
+    // ✅ Category filter (index 2)
+    if (appliedFilters.category?.length) {
+      result = result.filter((row) => {
+        const category = (row[2] || "").toString().toLowerCase()
+        return appliedFilters.category.map(x => x.toLowerCase()).includes(category)
+      })
     }
 
-    // ✅ Submitted By filter
-    if (appliedFilters.submittedBy?.length) {
-      const role = submittedBy.split("-").pop().trim()
-      if (!appliedFilters.submittedBy.includes(role)) {
-        return false
-      }
+    // ✅ Expense ID filter (index 1)
+    if (appliedFilters.expenseId?.length) {
+      result = result.filter((row) => {
+        const expenseId = (row[1] || "").toString().toLowerCase()
+        return appliedFilters.expenseId.map(x => x.toLowerCase()).includes(expenseId)
+      })
     }
 
-    // ✅ Status filter
-    if (appliedFilters.status?.length && !appliedFilters.status.includes(status)) {
-      return false
-    }
+    return result
+  }, [searchQuery, appliedFilters, rowsData]) // ✅ Include all dependencies
 
-    return true
-  })
+  // ✅ Handle search change - this should trigger immediately
+  const handleSearchChange = (newValue) => {
+    setSearchQuery(newValue)
+  }
 
   return (
-    <div className='bg-white rounded-xl p-4 mt-4'>
-      {/* search and buttons here */}
-      <div className='flex justify-between'>
-        <span className='mt-1'>
+    <div className="bg-white rounded-xl p-4 mt-4">
+      {/* 🔍 Search & Actions */}
+      <div className="flex justify-between flex-col md:flex-row gap-3">
+        <span className="w-full md:w-1/2">
           <SearchBar
-            placeholder="Search by Expense ID/Category"
-            onChange={ setSearchQuery }
+            value={searchQuery}
+            placeholder="Search by Expense ID or Category"
+            onChange={handleSearchChange}
           />
         </span>
 
-        {/* Duration + Filter + Export */}
+        {/* Duration + Filter */}
         <span>
           <DurationButton onApplyFilter={setAppliedFilters} />
         </span>
       </div>
 
-      {/* Table */}
-      <div className='mt-5'>
-        <TableWithoutBorder columns={columnsData} data={filteredData} />
+      {/* 📊 Table */}
+      <div className="mt-5">
+        {filteredData.length > 0 ? (
+          <TableWithoutBorder columns={columnsData} data={filteredData} />
+        ) : (
+          <div className="text-center text-gray-500 py-4">
+            {searchQuery ? "No match found" : "No records found"}
+          </div>
+        )}
       </div>
     </div>
   )
