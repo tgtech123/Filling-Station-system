@@ -472,7 +472,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "fuel-management",
       name: "Fuel Management",
       icon: <FaFire size={24} />,
-      link: "/dashboard/fuel-management",
+      link: "/dashboard/fuelManagement",
       roles: ["manager"],
     },
     {
