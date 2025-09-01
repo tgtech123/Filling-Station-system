@@ -151,7 +151,7 @@ export default function RegisterManagerModal({ onclose }) {
                 placeholder="your city..."
                 className="border-2 border-[#c0bebe] p-2 bg-[#e4e3e3] rounded-[8px] w-full "
               />
-              <MapPin className="text-gray-400 absolute top-7 left-2" />
+        
             </div>
             <div className="">
               <p className="text-sm font-semibold">State</p>
@@ -285,7 +285,6 @@ export default function RegisterManagerModal({ onclose }) {
                 placeholder="your station city..."
                 className="border-2 border-[#c0bebe] p-2 bg-[#e4e3e3] rounded-[8px] w-full "
               />
-              <MapPin className="text-gray-400 absolute top-7 left-2" />
             </div>
             <div className="">
               <p className="text-sm font-semibold">Station Country</p>
@@ -330,7 +329,7 @@ export default function RegisterManagerModal({ onclose }) {
             {/* </div> */}
           </form>
 
-          <div className="flex justify-between gap-3 p-6">
+          <div className="flex text-sm lg:text-md justify-center lg:justify-between gap-3 p-0 mt-8 lg:mt-0 lg:p-6">
             <button
               onClick={handlePreviousStep}
               className="cursor-pointer py-2 px-4 rounded-md flex items-center gap-2 border-1 border-[#0080ff]"
@@ -445,7 +444,7 @@ export default function RegisterManagerModal({ onclose }) {
             <div className="cols-span-1 lg:col-span-3">
               <p className="text-sm font-semibold">Fuel types offered</p>
 
-              <div className="flex gap-3 lg:gap-10 text-[#737373] font-medium">
+              <div className="flex flex-wrap gap-3 lg:gap-10 text-[#737373] font-medium">
                 <label className="flex gap-1 items-center">
                   <span>
                     <input type="checkbox" />
@@ -524,7 +523,7 @@ export default function RegisterManagerModal({ onclose }) {
             {/* </div> */}
           </form>
 
-          <div className="flex justify-between gap-3 p-6">
+          <div className="flex text-sm lg:text-md justify-center lg:justify-between gap-3 p-0 mt-8 lg:mt-0 lg:p-6">
             <button
               onClick={handlePreviousStep}
               className="cursor-pointer py-2 px-4 rounded-md flex items-center gap-2 border-1 border-[#0080ff]"
@@ -643,7 +642,7 @@ export default function RegisterManagerModal({ onclose }) {
             <p>I agree to the <span className="text-[#0080ff]">Terms of Service</span> and <span className="text-[#0080ff]">Privacy Policy</span></p>
           </div>
 
-          <div className="flex justify-between gap-3 p-6">
+          <div className="flex text-sm lg:text-md justify-center lg:justify-between gap-3 p-0 mt-8 lg:mt-0 lg:p-6">
             <button
               onClick={handlePreviousStep}
               className="cursor-pointer py-2 px-4 rounded-md flex items-center gap-2 border-1 border-[#0080ff]"
@@ -690,7 +689,7 @@ export default function RegisterManagerModal({ onclose }) {
               </div>
           </div>
 
-          <div className="flex justify-start lg:justify-end my-6" onClick={onclose}>
+          <div className="flex justify-center lg:justify-end my-6" onClick={onclose}>
                 <Link href="/role-selection" className="bg-[#0080ff] rounded-[8px] p-2 text-white">Access Dashboard</Link>
           </div>
 
