@@ -7,13 +7,34 @@ import { useState } from "react";
 import FuelTank from "./FuelTank";
 import Deliveries from "./Deliveries";
 import { GiExpense, GiFuelTank } from "react-icons/gi";
+import AddTankModal from "./AddTankModal";
+import ScheduleDeliveryModal from "./ScheduleDeliveryModal";
 
 export default function FuelManagement() {
-    const [activeTab, setActiveTab] = useState("fuelTank")
+    const [activeTab, setActiveTab] = useState("fuelTank");
+    const [isFuelModalOpen, setIsFuelModalOpen] = useState(false);
+    const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+
+    const handleOpenFuelModal = () => {
+      setIsFuelModalOpen(true);
+    }
+
+    const handleCloseFuelModal = () => {
+      setIsFuelModalOpen(false);
+    }
+
+    const handleOpenDeliveryModal = () => {
+      setIsDeliveryModalOpen(true);
+    }
+
+    const handleCloseDeliveryModal = () => {
+      setIsDeliveryModalOpen(false);
+    }
 
     const handleClick = (id) => {
         setActiveTab(id)
     }
+
   const fuelManagementData = [
     {
       id: 1,
@@ -49,7 +70,7 @@ export default function FuelManagement() {
           <h4 className="text-2xl font-semibold">Fuel Management</h4>
         </div>
         <div>
-          <button className="cursor-pointer border-3 flex gap-2 border-[#0080ff] hover:bg-[#0080ff] hover:text-white py-2 px-6 rounded-[12px] text-[#0080ff] font-semibold">
+          <button onClick={handleOpenDeliveryModal} className="cursor-pointer border-3 flex gap-2 border-[#0080ff] hover:bg-[#0080ff] hover:text-white py-2 px-6 rounded-[12px] text-[#0080ff] font-semibold">
             Schedule Delivery
             <Plus />
           </button>
@@ -76,7 +97,7 @@ export default function FuelManagement() {
       </div>
 
       {/* Navigation Tab */}
-      <div className="mt-10 px-6 lg:px-[40px] flex flex-col gap-3 lg:gap-0 lg:flex-row justify-between items-start lg:items-center">
+      <div className="mt-10 px-6 lg:px-[40px] flex flex-col text-sm lg:text-md gap-3 lg:gap-0 lg:flex-row justify-between items-start lg:items-center">
         <div className="bg-white border-2 border-gray-300 flex gap-4 py-2 px-6 rounded-[10px]">
             <div id="fuelTank" onClick={() => handleClick("fuelTank")}  className={`px-6 py-2 rounded-[8px] cursor-pointer ${activeTab === "fuelTank" ? "bg-[#d9edff] font-semibold text-[#0080ff]" : "bg-transparent text-inherit"} flex gap-2`}>
                 <House />
@@ -89,17 +110,26 @@ export default function FuelManagement() {
         </div>
 
         <div>
-            <button className="flex border-3 py-2 px-6 rounded-[10px] gap-1 font-semibold text-[#0080ff] cursoor-pointer border-[#0080ff] bg-white">
+            <button onClick={handleOpenFuelModal} className="flex border-3 py-2 px-6 rounded-[10px] gap-1 font-semibold text-[#0080ff] cursor-pointer border-[#0080ff] bg-white">
                 Add Fuel Tank
                 <Plus />
             </button>
         </div>
 
       </div>
-        <div className="mt-10 px-6 lg:px-[40px]">
+        <div className=" min-h-screen h-auto mt-10 px-6 lg:px-[40px]">
             {activeTab === "fuelTank" && <FuelTank />}
             {activeTab === "Deliveries" && <Deliveries />}
         </div>
+
+        {isFuelModalOpen && (
+          <AddTankModal onclose={handleCloseFuelModal} />
+        )}
+
+        {isDeliveryModalOpen && (
+          <ScheduleDeliveryModal onclose={handleCloseDeliveryModal} />
+        )}
     </div>
+
   );
 }
