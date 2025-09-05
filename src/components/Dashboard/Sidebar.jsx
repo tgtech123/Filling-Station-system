@@ -564,7 +564,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "lubricant-management",
       name: "Lubricant Management",
       icon: <RiOilLine size={24} />,
-      link: "/dashboard/lubricant-management",
+      link: "/dashboard/lubricantManagement",
       roles: ["manager"],
     },
     {
