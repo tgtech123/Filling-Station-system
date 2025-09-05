@@ -4,6 +4,8 @@ import { Mail, Phone, Clock, Trash2, Edit2 } from "lucide-react";
 import { TbCurrencyNaira } from "react-icons/tb";
 
 import SalesTargetCard from "./SalesTargetCard"; // import the separate component
+import { useState } from "react";
+import TerminateStaffModal from "@/app/dashboard/staffManagement/TerminateStaffModal";
 
 export default function EmployeeCard({
   name,
@@ -19,12 +21,15 @@ export default function EmployeeCard({
   onDelete,
   onToggleDuty,
 }) {
+
+  const [isModalOpen, setIsModalOpen] =useState(false)
+
   return (
-    <div className=" bg-white rounded-2xl p-4 w-auto max-w-sm border">
+    <div className=" bg-white text-neutral-800 rounded-2xl p-4 w-auto max-w-sm border-[1.5px]">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex gap-3">
-           <span className="bg-[#D9D9D9] h-12 w-12 rounded-full">
+        <div className="flex gap-1">
+           <span className="bg-[#D9D9D9] h-10 w-10 rounded-full">
             </span> 
             <div>
               <h2 className="font-semibold text-lg">{name}</h2>
@@ -34,7 +39,7 @@ export default function EmployeeCard({
         <div className="flex flex-col items-center gap-2">
           <span
             className={`text-xs px-2 py-1 rounded-full ${
-              dutyStatus ? "bg-green-100 text-green-600" : "bg-gray-200 text-gray-600"
+              dutyStatus ? "bg-[#B2FFB4] text-[#04910C] font-semibold " : "bg-neutral-200 font-semibold text-neutral-400"
             }`}
           >
             {dutyStatus ? "On Duty" : "Off Duty"}
@@ -42,8 +47,8 @@ export default function EmployeeCard({
           {/* Simple toggle button */}
           <button
             onClick={onToggleDuty}
-            className={`w-10 h-5 flex items-center rounded-full p-1 transition ${
-              dutyStatus ? "bg-green-500" : "bg-gray-400"
+            className={`w-11 h-5 flex items-center rounded-full p-1 transition ${
+              dutyStatus ? "bg-[#1154D4]" : "bg-[#D0D5DD]"
             }`}
           >
             <div
@@ -55,6 +60,9 @@ export default function EmployeeCard({
         </div>
       
       </div>
+
+            <hr className="px-2 py-3"/>
+
 
       {/* Info */}
       <div className="text-sm space-y-2">
@@ -73,9 +81,10 @@ export default function EmployeeCard({
         </p>
       </div>
 
+
       {/* Sales Target (reused component) */}
       {salesTarget && (
-        <div className="mt-2">
+        <div className="">
           <SalesTargetCard
             current={salesTarget.current}
             target={salesTarget.total}
@@ -86,12 +95,13 @@ export default function EmployeeCard({
 
       {/* Responsibilities */}
       <div className="">
-        <h3 className="font-medium text-gray-700 text-sm mb-1">Responsibilities</h3>
-        <ul className="text-gray-600 text-sm list-disc list-inside space-y-1">
+        <h3 className="font-semibold text-gray-700 text-md mb-1">Responsibilities</h3>
+        <p className="text-[12px]">{responsibilities}</p>
+        {/* <ul className="text-gray-600 text-sm list-disc list-inside space-y-1">
           {responsibilities.map((item, idx) => (
-            <li key={idx}>{item}</li>
+            <p key={idx}>{item}</p>
           ))}
-        </ul>
+        </ul> */}
       </div>
 
       {/* Actions */}
@@ -103,11 +113,12 @@ export default function EmployeeCard({
            Edit
         </button>
         <button
-          onClick={onDelete}
+          onClick={()=> setIsModalOpen(true)}
           className="flex items-center gap-1 px-3 py-1 rounded-full border-[1.5px] border-neutral-700 bg-transparent text-neutral-700 hover:bg-red-600 hover:text-white hover:border-white"
         >
           <Trash2 className="w-4 h-8" /> 
         </button>
+          <TerminateStaffModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}/>
       </div>
     </div>
   );

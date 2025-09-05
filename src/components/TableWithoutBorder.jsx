@@ -3,10 +3,12 @@ import React, { useState } from "react";
 import StatusModal from "./StatusModal ";
 
 
-const TableWithoutBorder = ({ columns = [], data = [] }) => {
-  // ✅ store table data in state so we can update rows
+const TableWithoutBorder = ({ columns = [], data = [], enableStatus = false }) => {
+  // ✅ If enableStatus is true → replace last column with "Pending"
   const [tableData, setTableData] = useState(
     data.map((row) => {
+
+      if(!enableStatus) return row
       const updatedRow = [...row];
       // Force status (last column) to "Pending" by default
       updatedRow[updatedRow.length - 1] = "Pending";
@@ -60,7 +62,7 @@ const TableWithoutBorder = ({ columns = [], data = [] }) => {
               <tr key={rowIndex} className="hover:bg-gray-50 py-5">
                 {row.map((cell, cellIndex) => {
                   // ✅ Status column (last column)
-                  if (cellIndex === row.length - 1) {
+                  if (enableStatus && cellIndex === row.length - 1) {
                     const status = cell.toLowerCase();
                     const isApproved = status.includes("approved");
                     const isRejected = status.includes("rejected");

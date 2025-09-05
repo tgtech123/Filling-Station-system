@@ -16,7 +16,7 @@ const DirectoryCard = () => {
     );
   };
   return (
-    <div className='mt-5'>
+    <div className='mt-5 bg-white p-4 rounded-2xl'>
 
         <div className='grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-5'>
 

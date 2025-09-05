@@ -59,6 +59,7 @@ const ExpensePage = () => {
             key={currentPage + searchTerm}
             columns={columnsData}
             data={currentData}
+            enableStatus= {true}
           />
         ) : (
           <div className="text-center text-gray-500 py-4">
