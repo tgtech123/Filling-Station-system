@@ -11,15 +11,15 @@ export default function SalesTargetCard({
   const progressClamped = Math.min(progress, 100);
 
   return (
-    <div className="bg-transparent rounded-2xl p-4 w-full">
+    <div className="bg-transparent rounded-2xl py-5 w-full">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-0.5">
         <h3 className="text-gray-700 font-medium text-sm">{title}</h3>
         <span className="text-gray-500 font-medium text-sm">{period}</span>
       </div>
       
       {/* Progress Bar */}
-      <div className="mb-4">
+      <div className="mb-0.5">
         <div className="relative">
           {/* Background track */}
           <div className="w-full h-3 bg-gray-300 rounded-full">

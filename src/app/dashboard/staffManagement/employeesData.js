@@ -10,7 +10,7 @@ const employeesData = [
     email: "sammelo@gmail.com",
     earnings: "₦40,000",
     salesTarget: { current: 120000, total: 350000 },
-    responsibilities: ["Fuel and diesel sales", "Pump operations", "Lubricant sales"],
+    responsibilities: "Fuel and diesel sales, pump operations  Fuel and diesel sales",
   },
   {
     id: 2,
@@ -22,7 +22,7 @@ const employeesData = [
     email: "graceobi@gmail.com",
     earnings: "₦45,000",
     salesTarget: { current: 80000, total: 250000 },
-    responsibilities: ["Cash handling", "Customer support", "Report keeping"],
+    responsibilities: "Reconcile cash from attendants record lubricant sales",
   },
   {
     id: 3,
@@ -34,7 +34,7 @@ const employeesData = [
     email: "johndoe@gmail.com",
     earnings: "₦120,000",
     salesTarget: { current: 200000, total: 500000 },
-    responsibilities: ["Team supervision", "Sales monitoring", "Report submission"],
+    responsibilities: "Fuel and diesel sales, pump operations  Fuel and diesel sales",
   },
   {
     id: 4,
@@ -46,7 +46,7 @@ const employeesData = [
     email: "johndoe@gmail.com",
     earnings: "₦120,000",
     salesTarget: { current: 200000, total: 500000 },
-    responsibilities: ["Team supervision", "Sales monitoring", "Report submission"],
+    responsibilities: "Overseas operations of other staffs, approves reconciled  shifts and give report to manager",
   },
   {
     id: 5,
@@ -58,7 +58,7 @@ const employeesData = [
     email: "johndoe@gmail.com",
     earnings: "₦120,000",
     salesTarget: { current: 200000, total: 500000 },
-    responsibilities: ["Team supervision", "Sales monitoring", "Report submission"],
+    responsibilities: "Fuel and diesel sales, pump operations  Fuel and diesel sales",
   },
   {
     id: 6,
@@ -70,7 +70,7 @@ const employeesData = [
     email: "johndoe@gmail.com",
     earnings: "₦120,000",
     salesTarget: { current: 200000, total: 500000 },
-    responsibilities: ["Team supervision", "Sales monitoring", "Report submission"],
+    responsibilities: "Fuel and diesel sales, pump operations  Fuel and diesel sales",
   },
 ];
 

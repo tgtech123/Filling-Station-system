@@ -3,6 +3,8 @@ import SearchBar from '@/hooks/SearchBar';
 import React, { useState } from 'react'
 import { LuHouse } from "react-icons/lu";
 import DirectoryCard from './DirectoryCard';
+import ShiftManagement from './ShiftManagement';
+import StaffCommision from './StaffCommision';
 
 
 const SwitchButton = () => {
@@ -34,6 +36,19 @@ const SwitchButton = () => {
         {isActive === "pageOne" && (
             <div>
                <DirectoryCard/>
+            </div>
+        )}
+
+        {isActive === 'pageTwo' && (
+                <div>
+                    <ShiftManagement/>
+                </div>
+        )}
+
+        {/* the staff commission button toggle */}
+        {isActive === "pageThree" && (
+            <div>
+                <StaffCommision/>
             </div>
         )}
 
