@@ -557,7 +557,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "pump-control",
       name: "Pump Control",
       icon: <BsFillFuelPumpFill size={24} />,
-      link: "/dashboard/pump-control",
+      link: "/dashboard/pumpControl",
       roles: ["manager"],
     },
     {

@@ -127,7 +127,7 @@ export default function AddLubricantModal({ onclose }) {
             type="button"
             className="mt-6 flex justify-center p-2 bg-blue-600 hover:bg-blue-400 text-white font-semibold rounded-md"
           >
-            Add Tank
+            Add Lubricant
           </button>
         </form>
       </div>
