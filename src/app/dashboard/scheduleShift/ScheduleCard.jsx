@@ -8,6 +8,7 @@ export default function ScheduleCard({
   onDuty,
   email,
   phone,
+  Naira,
   responsibilities,
   shiftSchedule,
   role,

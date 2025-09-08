@@ -594,6 +594,13 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <Wrench />,
       link: "/dashboard/system-settings",
       roles: ["manager"]
+    },
+    {
+      id: "Staff Management",
+      name: "Staff Management",
+      icon: <Wrench />,
+      link: "/dashboard/staffManagement",
+      roles: ["manager"]
     }
   ];
 
