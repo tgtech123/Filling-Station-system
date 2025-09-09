@@ -108,7 +108,7 @@ export default function LubricantManagement() {
         </div>
       </div>
 
-       <div className=" min-h-screen h-auto mt-10 px-6 lg:px-[40px]">
+       <div className=" min-h-screen h-auto mt-10 px-6 pb-10 lg:px-[40px]">
                   {activeTab === "Lubricant sales" && <LubricantSales />}
                   {activeTab === "Inventory" && <Inventory />}
        </div>

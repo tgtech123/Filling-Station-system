@@ -12,7 +12,7 @@ export default function GlobalPriceManagement() {
                         <p className="font-semibold text-sm">PMS</p>
                         <input 
                             type="text" 
-                            className="border-2 border-gray-400 p-2 rounded-[8px] w-full"
+                            className="border-2 border-gray-400 focus:border-3 focus:border-[#0080ff] p-2 rounded-[8px] w-full"
                             placeholder="120"
                         />
                     </div>
@@ -20,7 +20,7 @@ export default function GlobalPriceManagement() {
                         <p className="font-semibold text-sm">Diesel</p>
                         <input 
                             type="text" 
-                            className="border-2 border-gray-400 p-2 rounded-[8px] w-full"
+                            className="border-2 border-gray-400 focus:border-3 focus:border-[#0080ff] p-2 rounded-[8px] w-full"
                             placeholder="250"
                         />
                     </div>
@@ -28,7 +28,7 @@ export default function GlobalPriceManagement() {
                         <p className="font-semibold text-sm">Kerosense</p>
                         <input 
                             type="text" 
-                            className="border-2 border-gray-400 p-2 rounded-[8px] w-full"
+                            className="border-2 border-gray-400 focus:border-3 focus:border-[#0080ff] p-2 rounded-[8px] w-full"
                             placeholder="180"
                         />
                     </div>
@@ -36,14 +36,14 @@ export default function GlobalPriceManagement() {
                         <p className="font-semibold text-sm">Gas</p>
                         <input 
                             type="text" 
-                            className="border-2 border-gray-400 p-2 rounded-[8px] w-full"
+                            className="border-2 focus:border-3 focus:border-[#0080ff] border-gray-400 p-2 rounded-[8px] w-full"
                             placeholder="120"
                         />
                     </div>
                 </div>
 
                 <div className="flex justify-end mt-10">
-                    <button className="bg-[#0080ff] text-white text-sm py-3 px-4 rounded-[8px]">Update All Prices</button>
+                    <button className="cursor-pointer hover:bg-[#0a71d8] bg-[#0080ff] text-white text-sm py-3 px-4 rounded-[8px]">Update All Prices</button>
                 </div>
             </form>
         </div>
