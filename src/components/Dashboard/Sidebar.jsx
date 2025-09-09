@@ -510,7 +510,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "sales-and-cash-report",
       name: "Sales & Cash Report",
       icon: <TbCurrencyNaira size={24} />,
-      link: "/dashboard/sales-and-currency-report",
+      link: "/dashboard/sales-and-cash-report",
       roles: ["manager"],
     },
     {
