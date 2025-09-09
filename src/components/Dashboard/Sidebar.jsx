@@ -585,7 +585,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "export-reports",
       name: "Export Reports",
       icon: <IoDocumentText size={24} />,
-      link: "/dashboard/export-reports",
+      link: "/dashboard/exportReport",
       roles: ["manager"]
     },
     {
