@@ -41,7 +41,7 @@ const TableHere = ({
                     return (
                       <td key={cellIndex} className="px-4 py-5 whitespace-nowrap">
                         <span
-                          className={`p-2 flex gap-1 items-center font-semibold justify-center rounded-[10px] text-xs font-medium
+                          className={`p-2 flex gap-1 items-center justify-center rounded-[10px] text-xs font-medium
                             ${
                               cellString === "matched" || cellString === "success"
                                 ? "bg-[#dcd2ff] text-[#7f27ff] "

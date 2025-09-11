@@ -15,7 +15,7 @@ const page = () => {
           </Link>
           <h4 className="text-xl font-semibold">Activity Logs</h4>
         </div>
-        <div className="flex gap-2 items-center">
+        {/* <div className="flex gap-2 items-center">
           <button 
         //   onClick={() => setShowEmergencyModal(true)} 
           className="text-sm lg:text-md cursor-pointer border-3 flex gap-2 items-center border-[#f00] hover:bg-[#f00] hover:text-white py-2 px-6 rounded-[12px] text-[#f00]">
@@ -29,7 +29,7 @@ const page = () => {
             Schedule Maintenance
             <Wrench size={18} />
           </button>
-        </div>
+        </div> */}
       </header>
     
      <ActivityLogs/>

@@ -1,6 +1,6 @@
 import Table from '@/components/Table'
 import React from 'react'
-import TableHere from '.@//TableHere'
+import TableHere from '.@/components/TableHere'
 import cashData from './cashTableData'
 import SearchBar from '@/hooks/SearchBar'
 const CashRecord = () => {
