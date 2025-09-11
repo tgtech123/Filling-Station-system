@@ -35,7 +35,7 @@ const Table = ({
               <tr key={rowIndex} className="hover:bg-gray-50">
                 {row.map((cell, cellIndex) => {
                   // Check if this is the Profit/Loss column (last column)
-                  if (cellIndex === row.length - 1) {
+                  if (cellIndex === row.length - 1 ) {
                     const isNegative = cell.toString().trim().startsWith("-");
                     return (
                       <td
@@ -44,7 +44,9 @@ const Table = ({
                           cellIndex === highlightedColumnIndex
                             ? "text-red-500"
                             : ""
-                        } ${isNegative ? "text-red-600" : "text-green-600"}`}
+                        } 
+                        ${isNegative ? "text-red-600" : "text-green-600"}
+                        `}
                       >
                         {cell}
                       </td>
