@@ -13,7 +13,7 @@ import { cashData } from "./cashReportData";
 const SalesReportMan = () => {
   const [isActiveTab, setIsActiveTab] = useState("TabOne");
   return (
-    <div>
+    <div className="px-10 mt-[2.125rem]">
       <div className="bg-white rounded-2xl mt-[1.5rem] p-4 w-full">
         <div className="lg:flex flex-wrap lg:justify-between">
           {isActiveTab === "TabOne" ? (
