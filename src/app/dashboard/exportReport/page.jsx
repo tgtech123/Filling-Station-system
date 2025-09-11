@@ -42,7 +42,7 @@ export default function ExportReport() {
             </DisplayCard>
         </div>
 
-        <div className="mt-10 px-6 lg:px-[40px]">
+        <div className="mt-10 px-6 lg:px-[40px] pb-20">
             <CustomReportBuilder />
         </div>
     </div>

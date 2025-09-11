@@ -27,13 +27,13 @@ export default function PumpControl() {
           <h4 className="text-2xl font-semibold">Pump Control</h4>
         </div>
         <div className="flex gap-2 items-center">
-          <button onClick={() => setShowEmergencyModal(true)} className="text-sm lg:text-md cursor-pointer border-3 flex gap-2 items-center border-[#f00] hover:bg-[#f00] hover:text-white py-2 px-6 rounded-[12px] text-[#f00]">
+          <button onClick={() => setShowEmergencyModal(true)} className="text-sm lg:text-md cursor-pointer border-3 flex gap-2 items-center border-[#f00] hover:bg-[#f00] hover:text-white py-2 px-3 lg:px-6 rounded-[12px] text-[#f00]">
             Emergency Stop All
             <div className="border-2 text-sm border-[#f00] rounded=[14px]"><X size={16} className="text-[#f00]" /></div>
           </button>
           <button
             onClick={() => setShowMaintenanceModal(true)}
-            className="cursor-pointer text-sm lg:text-md flex gap-2 bg-[#0080ff] text-white py-3 px-6 rounded-[12px] font-semibold"
+            className="cursor-pointer text-sm lg:text-md flex gap-2 bg-[#0080ff] text-white py-3 px-3 lg:px-6 rounded-[12px] font-semibold"
           >
             Schedule Maintenance
             <Wrench size={18} />
@@ -49,7 +49,7 @@ export default function PumpControl() {
                     <h4 className="text-xl font-semibold">Lubricant Management</h4>
                     <p className="mb-6">Monitor lubricant inventory and track cashier sales</p>
                   </div>
-                  <button onClick={() => setShowPumpModal(true)} className="cursor-pointer text-sm lg:text-md flex items-center gap-2 border-3 border-[#0080ff] text-[#0080ff] py-3 px-6 rounded-[12px] font-semibold">
+                  <button onClick={() => setShowPumpModal(true)} className="cursor-pointer text-sm lg:text-md flex items-center gap-2 border-3 border-[#0080ff] text-[#0080ff] py-3 px-3 lg:px-6 rounded-[12px] font-semibold">
                     Add new Pump
                     <Plus size={22} />
                   </button>

@@ -80,7 +80,7 @@ export default function LubricantManagement() {
           <h4 className="text-xl font-semibold">Lubricant Management</h4>
           <p className="mb-6">Monitor lubricant inventory and track cashier sales</p>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {lubricantManagementData.map((item) => (
               <FlashCard
                 key={item.id}
