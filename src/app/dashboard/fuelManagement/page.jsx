@@ -83,7 +83,7 @@ export default function FuelManagement() {
           <h4 className="text-xl font-semibold">Fuel Management</h4>
           <p className="mb-6">Monitor fuel levels and manage inventory</p>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
             {fuelManagementData.map((item) => (
               <FlashCard
                 key={item.id}
