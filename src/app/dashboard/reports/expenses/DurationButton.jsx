@@ -82,11 +82,11 @@ const DurationButton = ({ setTableData }) => {
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+    <div className="flex  sm:flex-row gap-2 w-full md:w-auto">
       {/* Duration Dropdown */}
       <div
         onClick={handleToggleOn}
-        className="relative flex justify-between items-center gap-3 px-4 py-2 text-neutral-600 font-bold border-2 border-neutral-300 rounded-xl cursor-pointer"
+        className="relative hidden  lg:flex items-center gap-3 px-4 py-2 text-neutral-600 font-bold border-2 border-neutral-300 rounded-xl cursor-pointer"
       >
         Duration
         {isToggleOn ? (
@@ -138,12 +138,12 @@ const DurationButton = ({ setTableData }) => {
       </div>
 
       {/* Custom Filter Button */}
-      <div>
+      <div className="flex">
         <button
           onClick={() => setShowFilter(true)}
-          className="flex gap-3 cursor-pointer font-semibold px-4 py-2 border-2 border-neutral-300 rounded-xl hover:bg-neutral-100"
+          className="flex gap-2 cursor-pointer font-semibold px-4 py-2 border-2 border-neutral-300 rounded-xl hover:bg-neutral-100"
         >
-          Filter
+          <span className="hidden lg:inline">Filter</span>
           <IoFilter size={26} />
         </button>
       </div>
@@ -151,9 +151,10 @@ const DurationButton = ({ setTableData }) => {
       {/* Export Button */}
       <button
         onClick={handleExport}
-        className="px-4 py-2 flex justify-center items-center gap-2 font-bold bg-[#0080FF] text-white rounded-lg hover:bg-blue-700"
+        className="px-4 py-1 flex justify-center items-center w-fit gap-2 font-bold bg-[#0080FF] text-white rounded-lg hover:bg-blue-700"
       >
-        Export <FiDownload size={20} />
+        <span className="hidden lg:inline">Export</span>
+         <FiDownload size={20} />
       </button>
 
       {/* Render Reusable Filter Modal */}

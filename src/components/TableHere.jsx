@@ -61,26 +61,25 @@ const TableHere = ({
 
                   
                   // Check if this is the discrepancies column (second to last)
-                  if (cellIndex === row.length - 2) {
-                    const value = parseFloat(cell.toString().replace(/[^-\d.]/g, ''));
-                    let textColor = "text-gray-500"; // default for 0
-                    
-                    if (value > 0) {
-                      textColor = "text-green-600";
-                    } else if (value < 0) {
-                      textColor = "text-red-600";
+                if (cellIndex === row.length - 2) {
+                      const rawValue = cell.toString().trim();
+
+                      let textColor = "text-gray-500"; // default if no sign
+                      if (rawValue.startsWith("+")) {
+                        textColor = "text-green-600";
+                      } else if (rawValue.startsWith("-")) {
+                        textColor = "text-red-600";
+                      }
+
+                      return (
+                        <td
+                          key={cellIndex}
+                          className={`px-4 py-5 whitespace-nowrap font-semibold ${textColor}`}
+                        >
+                          {cell}
+                        </td>
+                      );
                     }
-                    
-                    return (
-                      <td
-                        key={cellIndex}
-                        className={`px-4 py-5 whitespace-nowrap font-semibold ${textColor}`}
-                      >
-                        {cell}
-                      </td>
-                    );
-                  }
-                  
                   return (
                     <td key={cellIndex} className="px-4 py-5 whitespace-nowrap">
                       {cell}

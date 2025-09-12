@@ -37,8 +37,8 @@ const ExpensePage = () => {
   return (
     <div className="bg-white rounded-xl p-4 mt-4">
       {/* 🔍 Search & Actions */}
-      <div className="flex justify-between flex-col md:flex-row gap-3">
-        <span className="w-full md:w-1/2">
+      <div className="flex justify-between  flex-row gap-2">
+        <span className="w-full ">
           <SearchBar
             value={searchTerm}
             placeholder="Search by Expense ID/Category"

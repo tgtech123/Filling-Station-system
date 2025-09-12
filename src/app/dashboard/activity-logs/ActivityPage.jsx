@@ -52,25 +52,29 @@ const ActivityPage = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 mt-[1.5rem] mx-10 mb-[1rem]">
-      <div className="lg:flex gap-3 justify-between">
+    <div className="bg-white rounded-2xl p-4 mt-[1.5rem] max-x-full mx-8 mb-[1rem]">
+      <div className="lg:flex flex-wrap gap-3  justify-between">
         <div className="flex-wrap gap-3">
           <h1 className="text-[1.375rem] font-semibold">Recent Transactions</h1>
           <p className="text-[1rem] font-[400px]">Latest activities logs</p>
         </div>
 
-        <div className="lg:flex flex-wrap lg:gap-3 gap-3 lg:mt-[1rem]">
+        <div className="lg:flex lg:gap-3 gap-3  max-w-full">
           <SearchBar />
-          <button className="border-2 border-neutral-300  mt-0 px-4 py-2 rounded-2xl font-semibold">
-            Duration
-          </button>
-          <button className="border-2 border-neutral-300 ml-1 px-4 py-2 rounded-2xl font-semibold flex gap-2">
-            Filter <IoFilter size={26} />{" "}
-          </button>
-          <button className="border-2 border-neutral-300 ml-1 bg-blue-600 text-white px-4 py-2 rounded-2xl font-semibold">
-            Export
-          </button>
+            <div className="flex  lg:mt-0 mt-[0.75rem]">
+                <button className="border-2 border-neutral-300  mt-0 px-4 py-2 rounded-2xl font-semibold">
+                    Duration
+                </button>
+                <button className="border-2 border-neutral-300 ml-1 px-4 py-2 rounded-2xl font-semibold flex gap-2">
+                    Filter <IoFilter size={26} />{" "}
+                </button>
+                <button className="border-2 border-neutral-300 ml-1 bg-blue-600 text-white px-4 py-2 rounded-2xl font-semibold">
+                    Export
+                </button>
+            </div>
+
         </div>
+      
       </div>
 
       <span className="mt-[1rem]">

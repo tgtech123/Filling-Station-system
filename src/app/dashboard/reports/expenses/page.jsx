@@ -39,7 +39,7 @@ export default function Expenses() {
 
                         <span >
                             <button onClick={handleOpen} className="border-[1.5px] font-bold cursor-pointer text-neutral-800 border-neutral-300 rounded-xl px-4 py-2 flex gap-2 ">
-                                Add expense
+                               <span className="hidden lg:inline"> Add expense</span>
                                 <GoPlus size={27} />
                             </button>
                             <AddExpenseModal isOpen={isModalOpen} onClose={handleClose}/>

@@ -23,7 +23,7 @@ export const activityData = [
   {
     name: "Failed Attempt",
     period: "   ",
-    number: "N2,000,000",
+    number: "N2,000, 000",
     icon: < CgDanger size={25} />
     
   },
