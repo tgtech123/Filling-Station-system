@@ -4,7 +4,7 @@ import FlashCard from "@/components/Dashboard/FlashCard";
 
 const ActivityLogs = () => {
   return (
-    <div className="bg-white mx-10  rounded-2xl p-5">
+    <div className="bg-white mx-8  rounded-2xl p-5">
       <div className=" mb-[1.5rem] ">
         <h1 className="text-xl text-neutral-800 font-semibold mb-[0.75rem]">
           Activity Logs
