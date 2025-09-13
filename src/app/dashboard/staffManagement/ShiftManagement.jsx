@@ -7,7 +7,7 @@ import { HiOutlineBriefcase } from "react-icons/hi2";
 const ShiftManagement = () => {
   return (
     <div className="flex bg-white p-4 mt-4 rounded-2xl">
-      <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 w-full gap-3 ">
+      <div className="grid grid-cols-2 lg:grid-cols-3 w-full gap-3 ">
         {shiftSchedule.map((item, index) => (
           <div
             key={index}
