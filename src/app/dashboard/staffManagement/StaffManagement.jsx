@@ -11,7 +11,7 @@ const StaffManagement = () => {
             <h1 className='text-xl mb-2 font-bold text-neutral-700'>Staff Management</h1>
             <p className='text-md font-meidum text-neutral-700'>Manage staff schedules and responsibilities</p>
             
-            <span className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <span className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {salesData.map((item, index) =>
                 <MyStatCard
                     key={index}
