@@ -1,11 +1,21 @@
+"use client";
+
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { reportType } from "./exportReportData";
 import ExportReportCard from "./ExportReportCard";
 import CustomReportBuilder from "./CustomReportBuilder";
+import { useState } from "react";
+import ManagerProfileModal from "./ManagerProfileModal";
+
 
 export default function ExportReport() {
+  const [showProfileModal, setShowProfileModal] = useState(false)
+
+  function toggleProfileModal() {
+    setShowProfileModal(true)
+  }
   return (
     <div className="bg-gray-100 min-h-screen">
       <header className="px-4 lg:px-[40px] mb-10 bg-white shadow-sm h-[150px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
@@ -18,6 +28,7 @@ export default function ExportReport() {
             Back to Dashboard
           </Link>
           <h4 className="text-2xl font-semibold">Export Reports</h4>
+          <div onClick={toggleProfileModal} className="cursor-pointer text-[#0080ff]">View Profile</div>
         </div>
         
       </header>
@@ -45,6 +56,11 @@ export default function ExportReport() {
         <div className="mt-10 px-6 lg:px-[40px] pb-20">
             <CustomReportBuilder />
         </div>
+
+
+        {showProfileModal && (
+          <ManagerProfileModal onclose={() => setShowProfileModal(false)} />
+        )}
     </div>
   );
 }
