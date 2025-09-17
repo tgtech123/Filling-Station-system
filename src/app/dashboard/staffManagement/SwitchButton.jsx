@@ -10,8 +10,8 @@ import StaffCommision from './StaffCommision';
 const SwitchButton = () => {
     const [isActive, setIsActive] = useState("pageOne")
   return (
-    <div>
-        <div className='flex-wrap lg:flex justify-between mt-[2rem] '>
+    <div className=''>
+        <div className='flex-wrap lg:flex justify-between mt-[2rem] mx-4 '>
             <div className='bg-white lg:w-[30.188rem]  lg:h-[3.0625rem] w-full h-[1.2rem]  items-center justify-center flex gap-2 lg:gap-4 text-[12px] lg:text-medium  rounded-[14px] shadow-xs border-2 border-[#e7e7e7]'>
 
                 <div id='pageOne' onClick={() => setIsActive("pageOne")} className={`flex items-center py-1.5 justify-center  lg:px-2 gap-2  ${isActive === "pageOne" ? "bg-[#d9edff]  text-[#1a71f6]" : "bg-white text-neutral-200"} font-medium cursor-pointer rounded-lg`  }>

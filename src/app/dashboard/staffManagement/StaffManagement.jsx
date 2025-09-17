@@ -6,8 +6,8 @@ import SwitchButton from './SwitchButton'
 
 const StaffManagement = () => {
   return (
-    <div>
-        <div className='p-4 bg-white rounded-xl w-full mt-3'>
+    <div className='bg-neutral-100 p-6'>
+        <div className='p-4 bg-white rounded-xl w-full mt-3 shadow-md'>
             <h1 className='text-xl mb-2 font-bold text-neutral-700'>Staff Management</h1>
             <p className='text-md font-meidum text-neutral-700'>Manage staff schedules and responsibilities</p>
             
