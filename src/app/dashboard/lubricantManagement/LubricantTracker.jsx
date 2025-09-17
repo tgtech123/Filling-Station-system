@@ -1,5 +1,14 @@
 import DisplayCard from "@/components/Dashboard/DisplayCard";
-import { ChevronDown, Download, Filter, ListFilter, Search, X } from "lucide-react";
+import Table from "@/components/Table";
+import {
+  ChevronDown,
+  Download,
+  Eye,
+  ListFilter,
+  Search,
+  X,
+} from "lucide-react";
+import { lubricantTrackerColumns, lubricantTrackerData } from "./lubricantData";
 
 export default function LubricantTracker({ onclose }) {
   return (
@@ -15,8 +24,7 @@ export default function LubricantTracker({ onclose }) {
         </header>
 
         <DisplayCard>
-          <div className="flex flex-col lg:flex-row justify-between items-center">
-
+          <div className="flex flex-col gap-4 lg:flex-row justify-between items-center">
             <div className="relative w-full lg:w-1/2">
               <input
                 type="text"
@@ -26,20 +34,41 @@ export default function LubricantTracker({ onclose }) {
             </div>
 
             <div className="flex gap-4">
-                <button className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
-                    Duration
-                    <ChevronDown />
-                </button>
-                <button className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
-                    Filter
-                    <ListFilter />
-                </button>
-                <button className="flex gap-2 items-center p-2 rounded-[10px] bg-[#0080ff] text-white">
-                    Export
-                    <Download />
-                </button>
+              <button className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
+                Duration
+                <ChevronDown />
+              </button>
+              <button className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
+                Filter
+                <ListFilter />
+              </button>
+              <button className="flex gap-2 items-center p-2 rounded-[10px] bg-[#0080ff] text-white">
+                Export
+                <Download />
+              </button>
             </div>
           </div>
+
+          <Table
+            columns={lubricantTrackerColumns}
+            data={lubricantTrackerData}
+            renderActions={(row) => (
+              <div className="flex gap-6">
+                <button
+                  onClick={() => console.log("Preview", row)}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  <Eye size={18} />
+                </button>
+                <button
+                  onClick={() => console.log("Export", row)}
+                  className="text-green-500 hover:text-green-700"
+                >
+                  <Download size={18} />
+                </button>
+              </div>
+            )}
+          />
         </DisplayCard>
       </div>
     </div>

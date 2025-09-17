@@ -179,3 +179,98 @@ export const bestSellingLubricantRows = [
         "19"
     ]
 ]
+
+export const lubricantTrackerColumns = ["Date", "Supplier", "Invoice No", "Products", "Payment type", "Action"]
+export const lubricantTrackerData = [
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+    [
+        "12/12/2025",
+        "AJ Rano Oil",
+        "765432",
+        "Engine Oil, Motor Gas...",
+        "POS"
+    ],
+]
