@@ -111,7 +111,7 @@ export default function LubricantManagement() {
               activeTab === "Lubricant sales"
                 ? "bg-[#d9edff] font-semibold text-[#0080ff]"
                 : "bg-transparent text-inherit"
-            } flex gap-2`}
+            } flex items-center gap-2`}
           >
             <House className="hidden lg:flex" />
             Lubricant sales
@@ -123,7 +123,7 @@ export default function LubricantManagement() {
               activeTab === "Inventory"
                 ? "bg-[#d9edff] font-semibold text-[#0080ff]"
                 : "bg-transparent text-inherit"
-            } flex gap-2`}
+            } flex items-center gap-2`}
           >
             <House className="hidden lg:flex" />
             Inventory
