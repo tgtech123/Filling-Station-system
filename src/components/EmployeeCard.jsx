@@ -6,6 +6,7 @@ import { TbCurrencyNaira } from "react-icons/tb";
 import SalesTargetCard from "./SalesTargetCard"; // import the separate component
 import { useState } from "react";
 import TerminateStaffModal from "@/app/dashboard/staffManagement/TerminateStaffModal";
+import EditStaffModal from "@/app/dashboard/staffManagement/EditStaffModal";
 
 export default function EmployeeCard({
   name,
@@ -23,6 +24,7 @@ export default function EmployeeCard({
 }) {
 
   const [isModalOpen, setIsModalOpen] =useState(false)
+  const [isOpen, setIsOpen] =useState(false)
 
   return (
     <div className=" bg-white text-neutral-800 rounded-2xl p-4 w-auto max-w-sm border-[1.5px]">
@@ -107,11 +109,13 @@ export default function EmployeeCard({
       {/* Actions */}
       <div className="flex justify-between gap-2 mt-4">
         <button
-          onClick={onEdit}
+          onClick={()=> setIsOpen(true)}
           className="flex font-semibold justify-center items-center w-full gap-1 px-3 py-1 rounded-xl bg-[#0080FF] text-white hover:bg-blue-700"
         >
            Edit
         </button>
+        <EditStaffModal isOpen={isOpen} onClose={() =>setIsOpen(false)} />
+
         <button
           onClick={()=> setIsModalOpen(true)}
           className="flex items-center gap-1 px-3 py-1 rounded-full border-[1.5px] border-neutral-700 bg-transparent text-neutral-700 hover:bg-red-600 hover:text-white hover:border-white"
