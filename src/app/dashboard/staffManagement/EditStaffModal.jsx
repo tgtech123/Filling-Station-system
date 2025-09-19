@@ -1,16 +1,11 @@
+
+
 "use client";
 import React, { useState } from "react";
 import { Plus, X, ChevronUp, ChevronDown, EyeOff, Eye } from "lucide-react";
-import { BsToggleOn, BsToggleOff } from "react-icons/bs";
-import SuccessMessageModal from "./SuccessMessageModal";
 
-
-const NewStaffModal = ({ isOpen, onClose, children }) => {
+const EditStaffModal = ({ isOpen, onClose, }) => {
   if (!isOpen) return null;
-
-    const [isModalOpen, setIsModalOpen] = useState(false)
-
-  const [toggleOn, setToggleOn] = useState(false)
 
   const [isToggleOne, setIsToggleOne] = useState("");
   const [isToggleTwo, setIsToggleTwo] = useState(false);
@@ -35,10 +30,10 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
           <p className="mb-[2rem] flex justify-between">
             <span className="flex flex-col">
               <span className="text-[1.5rem] font-semibold leading-[100%] mb-[0.75rem]">
-                Add New Staff Member
+                Edit Staff Member Details
               </span>
               <span className="text-[1.125rem] leading-[100%]">
-                Enter details of the new staff
+                Update Sam Melo’s Information, pay details and settings
               </span>
             </span>
 
@@ -189,17 +184,6 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                 className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
               />
             </span>
-            
-            <hr className="border-[1px] border-neutral-100 mb-[1rem]" />
-              <p className="flex justify-between">
-                    <span className="text-[1.5rem] font-semibold ">Add sales target</span>
-                    
-                  <span onClick={() => setToggleOn(!toggleOn)} className="">
-                    {toggleOn ? <BsToggleOn size={25} className="text-blue-600" /> :  <BsToggleOff  size={25} className="text-neutral-500 "/> }
-                  </span>                
-              </p>  
-            <hr className="border-[1px] border-neutral-100 mt-[1rem]" />
-
           </div>
 
           <div>
@@ -244,11 +228,10 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                 Cancel
               </button>
 
-              <button onClick={() => setIsModalOpen(true)}  className="bg-blue-600 outline-none cursor-pointer h-[3rem] rounded-2xl font-bold text-white ">
-                Add Staff Member
+              <button  className="bg-blue-600 outline-none cursor-pointer h-[3rem] rounded-2xl font-bold text-white ">
+                Save Changes
               </button>
             </p>
-            <SuccessMessageModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
           </div>
         </div>
       </div>
@@ -256,4 +239,4 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
   );
 };
 
-export default NewStaffModal;
+export default EditStaffModal;
