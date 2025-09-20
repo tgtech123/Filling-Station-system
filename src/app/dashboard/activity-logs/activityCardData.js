@@ -16,7 +16,7 @@ export const activityData = [
   },
   {
     name: "Active User",
-    perios: "",
+    period: "",
     number: "7",
     icon: <MdOutlinePersonOutline size={25} className="text-lg" />
   },
