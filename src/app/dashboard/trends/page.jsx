@@ -2,6 +2,7 @@ import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import { trendsData } from "./trendsData";
 import MyStatCard from "@/components/MyStatCard";
 import SalesProfitPage from "./SalesProfitPage";
+import PaymentCommissionPage from "./PaymentCommissionPage";
 
 export default function Trends() {
     return (
@@ -24,6 +25,9 @@ export default function Trends() {
                 <div>
                     <SalesProfitPage />
                 </div>
+                
+                    <PaymentCommissionPage />
+                
             </div>
         </DashboardLayout>
     )
