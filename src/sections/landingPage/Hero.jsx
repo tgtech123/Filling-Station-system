@@ -5,7 +5,6 @@ import bgImg from "../../assets/main-bg.png"
 import liveDb from "../../assets/LiveDashboard.png";
 import { ArrowRight, BriefcaseBusiness } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import RegisterManagerModal from "@/components/RegisterManagerModal";
 import { useState } from "react";
 
