@@ -8,3 +8,11 @@ export default function LoginPage() {
         </div>
     )
 }
+
+// const API = process.env.NEXT_PUBLIC_API
+
+//    const handleLogin = async (e) => {
+//     e.preventDefault();
+//     setLoading(true)
+//     setError(null)
+//    }
