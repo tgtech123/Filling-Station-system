@@ -41,6 +41,9 @@ export default function Navbar() {
         <Link href="/contact" className="text-lg font-semibold text-gray-500">
           Contact
         </Link>
+        <Link href="/login" className="text-lg font-semibold text-gray-500">
+          Login
+        </Link>
 
         <div className="flex bg-[#0080ff] gap-2 py-3 px-6 rounded-[8px] text-white items-center cursor-pointer" onClick={openModal}>
           Get Started Now
@@ -73,6 +76,7 @@ export default function Navbar() {
           <Link href="/">Home</Link>
           <Link href="/features">Features</Link>
           <Link href="/contact">Contact</Link>
+          <Link href="/login">Login</Link>
 
           
         <div className="cursor-pointer flex bg-[#0080ff] py-3 px-6 rounded-[8px] text-white items-center" onClick={openModal}>

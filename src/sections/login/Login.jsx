@@ -133,9 +133,9 @@ const Login = () => {
             {/* Forgot Password */}
             <p className="flex justify-center text-sm font-semibold text-gray-500">
               Forgotten Password?{" "}
-              <span className="text-blue-600 ml-2 cursor-pointer hover:text-blue-950">
+              <Link href="/reset-password" className="text-blue-600 ml-2 cursor-pointer hover:text-blue-950">
                 Reset Here
-              </span>
+              </Link>
             </p>
           </form>
         </div>

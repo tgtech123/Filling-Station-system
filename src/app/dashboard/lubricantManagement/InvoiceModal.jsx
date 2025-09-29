@@ -1,7 +1,7 @@
+import { Download } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 // import logo from "../../../../public/station-logo.png"
-
 
 export default function InvoiceModal({ open = true, onClose, invoice = null }) {
   const sample = {
@@ -31,8 +31,6 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
   };
 
   const handleDownload = () => {
-    // Option A: just print the window (better if the modal occupies full page in print CSS)
-    // We'll open a new window with the invoice markup and call print to keep it simple.
     const content = document.getElementById("invoice-print-area");
     if (!content) return;
 
@@ -49,7 +47,9 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
       </style>
     `;
 
-    w.document.write(`<html><head><title>Invoice ${inv.invoiceNumber}</title>${style}</head><body>`);
+    w.document.write(
+      `<html><head><title>Invoice ${inv.invoiceNumber}</title>${style}</head><body>`
+    );
     w.document.write(content.innerHTML);
     w.document.write(`</body></html>`);
     w.document.close();
@@ -61,12 +61,31 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white w-full max-w-[700px] scrollbar-hide rounded-2xl shadow-2xl border p-6 max-h-[90vh] overflow-y-auto" role="dialog" aria-modal="true">
+      <div
+        className="bg-white w-full max-w-[700px] scrollbar-hide rounded-2xl shadow-2xl border p-6 max-h-[90vh] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+      >
         <div className="flex justify-end">
-          <button onClick={onClose} aria-label="Close" className="p-1 rounded-full hover:bg-gray-100">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="p-1 rounded-full hover:bg-gray-100"
+          >
             {/* simple X icon */}
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-gray-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -74,37 +93,37 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
         <div id="invoice-print-area">
           {/* Header */}
           <div className="flex items-center justify-center flex-col mb-6">
-            {/* <div className="text-center">
-              <div className="font-extrabold text-2xl tracking-tight">FLOURISH</div>
-              <div className="text-xl text-yellow-500 font-semibold flex items-center justify-center gap-2">
-                Station
-                <span className="inline-flex items-center justify-center bg-blue-100 text-blue-700 rounded-full w-6 h-6 text-xs">⛽</span>
-              </div>
-            </div> */}
-            <Image src="/station-logo.png" height={100} width={100} alt="logo img" />
+            <Image
+              src="/station-logo.png"
+              height={100}
+              width={100}
+              alt="logo img"
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start mb-6">
             <div>
               <p className="text-sm text-gray-500">Invoice receipt for</p>
-              <h3 className="text-2xl text-gray-600 font-bold mt-1">{inv.invoiceNumber}</h3>
+              <h3 className="text-2xl text-gray-600 font-bold mt-1">
+                {inv.invoiceNumber}
+              </h3>
             </div>
 
             <div className="md:col-span-2 flex justify-end flex-col text-right">
               <p className="text-sm text-gray-500">{inv.date}</p>
             </div>
+          </div>
 
-            <div className="col-span-1">
+          <div className="flex justify-between mb-6 items-center">
+            <div>
               <p className="text-sm text-gray-500">Cashier</p>
-              <p className="font-medium">{inv.cashier}</p>
-            </div>
-            <div className="col-span-1">
               <p className="text-sm text-gray-500">Supplier</p>
-              <p className="font-medium">{inv.supplier}</p>
-            </div>
-            <div className="col-span-1">
               <p className="text-sm text-gray-500">Payment type</p>
-              <p className="font-medium">{inv.paymentType}</p>
+            </div>
+            <div className="flex flex-col items-end">
+              <p className="font-medium text-sm">{inv.cashier}</p>
+              <p className="font-medium text-sm">{inv.supplier}</p>
+              <p className="font-medium text-sm">{inv.paymentType}</p>
             </div>
           </div>
 
@@ -113,21 +132,37 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
             <table className="w-full min-w-[600px]">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="text-xs text-left px-4 py-3 text-gray-600">Barcode</th>
-                  <th className="text-xs text-left px-4 py-3 text-gray-600">Product name</th>
-                  <th className="text-xs text-left px-4 py-3 text-gray-600">Amount</th>
-                  <th className="text-xs text-left px-4 py-3 text-gray-600">Qty</th>
-                  <th className="text-xs text-left px-4 py-3 text-gray-600">Unit Cost</th>
+                  <th className="text-xs text-left px-4 py-3 text-gray-600">
+                    Barcode
+                  </th>
+                  <th className="text-xs text-left px-4 py-3 text-gray-600">
+                    Product name
+                  </th>
+                  <th className="text-xs text-left px-4 py-3 text-gray-600">
+                    Amount
+                  </th>
+                  <th className="text-xs text-left px-4 py-3 text-gray-600">
+                    Qty
+                  </th>
+                  <th className="text-xs text-left px-4 py-3 text-gray-600">
+                    Unit Cost
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r, i) => (
                   <tr key={i} className="hover:bg-white">
-                    <td className="px-4 py-4 text-sm text-gray-600">{r.barcode}</td>
+                    <td className="px-4 py-4 text-sm text-gray-600">
+                      {r.barcode}
+                    </td>
                     <td className="px-4 py-4 text-sm font-medium">{r.name}</td>
-                    <td className="px-4 py-4 text-sm">{formatNgn(rowAmount(r))}</td>
+                    <td className="px-4 py-4 text-sm">
+                      {formatNgn(rowAmount(r))}
+                    </td>
                     <td className="px-4 py-4 text-sm">{r.qty}</td>
-                    <td className="px-4 py-4 text-sm">{formatNgn(r.unitCost)}</td>
+                    <td className="px-4 py-4 text-md">
+                      {formatNgn(r.unitCost)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -135,24 +170,26 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
           </div>
 
           {/* Total */}
-          <div className="mt-6">
+          <div className="mt-6 bg-[#d9edff] rounded-[14px]">
             <div className="total-box rounded-lg p-4">
               <p className="text-sm text-blue-700">Total Amount</p>
-              <div className="text-2xl font-extrabold text-blue-700 mt-2">₦{formatNgn(total)}</div>
+              <div className="text-2xl font-semibold text-blue-700 mt-2">
+                ₦{formatNgn(total)}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Download button */}
         <div className="mt-6">
-          <button onClick={handleDownload} className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-blue-600 text-white font-medium hover:opacity-95">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M12 3v12" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M8 11l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M21 21H3" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+          <button
+            onClick={handleDownload}
+            className="w-full flex items-center cursor-pointer  justify-center gap-2 p-3 rounded-lg bg-blue-600 text-white font-medium hover:opacity-95"
+          >
+           
             Download Invoice
-n          </button>
+            <Download />
+          </button>
         </div>
       </div>
     </div>
