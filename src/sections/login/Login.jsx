@@ -44,12 +44,24 @@ const Login = () => {
 
       const data = await res.json()
       console.log("res:", data?.token)
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user))
+
       if(res.status === 200 ) {
         setMessage(data.message)
       }
 
       // Redirect to dashboard
       // window.location.href = "/dashboard"
+      if(data.user?.role === "manager"){
+        window.location.href = "/dashboard";
+      } else if(data.user?.role === "accountant"){
+        window.location.href = "/dashboard";
+      } else {
+        window.location.href = "/dashbaord"
+      }
+
     } catch (err) {
       setError(err.message)
       
