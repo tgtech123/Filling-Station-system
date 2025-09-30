@@ -8,7 +8,7 @@ export default function ClientLayout({ children }) {
   const pathname = usePathname();
 
   const hideOnExactRoutes = ["/login"];
-  const hideOnPrefixRoutes = ["/dashboard"];
+  const hideOnPrefixRoutes = ["/dashboard", "/reset-password"];
 
   const hideNavAndFooter =
     hideOnExactRoutes.includes(pathname) ||
