@@ -38,6 +38,10 @@ export default function Navbar() {
         <Link href="/features" className="text-lg font-semibold text-gray-500">
           Features
         </Link>
+        <Link href="/pricing" className="text-lg font-semibold text-gray-500">
+          Plans & Pricing
+        </Link>
+
         <Link href="/contact" className="text-lg font-semibold text-gray-500">
           Contact
         </Link>
@@ -73,6 +77,7 @@ export default function Navbar() {
           <Link href="/">Home</Link>
           <Link href="/features">Features</Link>
           <Link href="/contact">Contact</Link>
+          <Link href="/pricing">Pricing</Link>
 
           
         <div className="cursor-pointer flex bg-[#0080ff] py-3 px-6 rounded-[8px] text-white items-center" onClick={openModal}>
