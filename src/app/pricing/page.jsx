@@ -16,7 +16,7 @@ const page = () => {
 
         {/* the switch section */}
         <div className='border-2 mb-[2.8125rem] rounded-full border-neutral-200 bg-[#e7e7e7] max-w-[23.0625rem] w-full h-[3.5rem]'>
-            <div className='flex justify-between p-1 ' >
+            <div className='flex justify-between ' >
                 <span id='buttonOne' onClick={() => setButtonOne("buttonOne")} className={`flex gap-2 items-center justify-center p-1.5 rounded-full font-semibold ${buttonOne === "buttonOne"? "bg-white text-neutral-600 text-[1.125rem] border-0 " :"text-neutral-400 border border-neutral-400 "}`}>
                   <button className='items-center'>Bill annually</button>
                   <button className='bg-neutral-100 p-1 rounded-full text-neutral-500'>Save 10%</button>

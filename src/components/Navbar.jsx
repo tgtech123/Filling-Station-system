@@ -87,8 +87,7 @@ export default function Navbar() {
           <Link href="/">Home</Link>
           <Link href="/features">Features</Link>
           <Link href="/contact">Contact</Link>
- Tgtech-Branch
-          <Link href="/pricing">Pricing</Link>
+          <Link href="/pricing">Plans & Pricing</Link>
           <Link href="/login">Login</Link>
 
           <div
