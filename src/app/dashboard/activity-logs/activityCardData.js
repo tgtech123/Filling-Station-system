@@ -10,7 +10,7 @@ import { TrendingUp } from "lucide-react";
 export const activityData = [
   {
     name: "Total Activities",
-    perios: "",
+    period: "",
     number: "1334",
     icon: <TrendingUp size={25} className="text-neutral-800 text-lg" />,
   },

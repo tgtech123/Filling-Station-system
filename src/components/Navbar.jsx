@@ -40,7 +40,7 @@ export default function Navbar() {
           Features
         </Link>
         <Link href="/pricing" className="text-lg font-semibold text-gray-500">
-          Plans & Pricing
+          Pricing
         </Link>
         <Link href="/contact" className="text-lg font-semibold text-gray-500">
           Contact
@@ -48,9 +48,7 @@ export default function Navbar() {
         <Link href="/login" className="text-lg font-semibold text-gray-500">
           Login
         </Link>
-        <Link href="/login" className="text-lg font-semibold text-gray-500">
-          Login
-        </Link>
+        
 
         <div
           className="flex bg-[#0080ff] gap-2 py-3 px-6 rounded-[8px] text-white items-center cursor-pointer"
