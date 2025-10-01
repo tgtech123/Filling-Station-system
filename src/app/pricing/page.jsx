@@ -15,15 +15,23 @@ const page = () => {
         </div>
 
         {/* the switch section */}
-        <div className='border-2 mb-[2.8125rem] rounded-full border-neutral-200 bg-[#e7e7e7] max-w-[23.0625rem] w-full h-[3.5rem]'>
-            <div className='flex justify-between ' >
-                <span id='buttonOne' onClick={() => setButtonOne("buttonOne")} className={`flex gap-2 items-center justify-center p-1.5 rounded-full font-semibold ${buttonOne === "buttonOne"? "bg-white text-neutral-600 text-[1.125rem] border-0 " :"text-neutral-400 border border-neutral-400 "}`}>
+        <div className='border-2 mb-[2.8125rem] rounded-full border-neutral-200 bg-[#e7e7e7] max-w-[22.0625rem] lg:max-w-[28.0625rem] w-full h-[3.5rem]'>
+            <div className='flex justify-between items-center p-0.5' >
+                <span id='buttonOne' onClick={() => setButtonOne("buttonOne")} className={`flex gap-2 items-center text-center mt-2 md:mt-0 justify-center p-1.5 rounded-full font-semibold ${buttonOne === "buttonOne" ? "bg-white text-neutral-600 text-[0.725rem] lg:text-[1.125rem] border-0 items-center justify-center mt-2 md:mt-0 " :"text-neutral-400 "}`}>
                   <button className='items-center'>Bill annually</button>
                   <button className='bg-neutral-100 p-1 rounded-full text-neutral-500'>Save 10%</button>
                 </span>
 
-                <span id='buttonTwo' onClick={()=> setButtonOne("buttonTwo")} className={`flex items-center p-1.5 font-semibold rounded-full ${buttonOne === "buttonTwo" ? "bg-white rounded-full text-neutral-600 text-[1.125rem] " : "text-neutral-400 border border-neutral-400"}`}>
-                      {buttonOne === "buttonTwo" ? "Save 20%" : "Bill monthly"}
+                <span id='buttonTwo' onClick={()=> setButtonOne("buttonTwo")} className={`flex items-center p-1.5  font-semibold rounded-full ${buttonOne === "buttonTwo" ? "bg-white rounded-full text-neutral-600 text-[0.725rem] lg:text-[1.125rem] border-0 " : "text-neutral-400"}`}>
+                  {buttonOne === "buttonTwo" ? (
+                    <div className='flex gap-4'>
+                      <button className='bg-neutral-100 p-1 rounded-full text-neutral-500'>Save 20%</button>
+                      <button className='items-center'>Bill monthly </button>
+                    </div>
+                  ) : (
+                    <button className='items-center'>Bill monthly </button>
+                    
+                  )}
                 </span>
             </div>
         </div>

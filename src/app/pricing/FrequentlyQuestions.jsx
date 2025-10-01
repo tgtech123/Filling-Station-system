@@ -15,7 +15,7 @@ const FrequentlyQuestions = () => {
             <div className='flex flex-col mb-[6.625rem] gap-4'>
                 <div className='bg-white p-3 rounded-md h-auto '>
                     <p  className='flex justify-between '>
-                        <p className='lg:text-[1.6rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</p>
+                        <span className='lg:text-[1.6rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</span>
                         <button onClick={() => setIsShown(!isShown)}>
                             {isShown ? <ChevronDown  className='text-neutral-500 mb-10' size={28}/> : <ChevronUp  className='text-neutral-500 mb-10' size={28}/> } 
                         </button>
@@ -38,7 +38,7 @@ const FrequentlyQuestions = () => {
                 
                 <div className='bg-white p-3 rounded-md h-auto '>
                     <p  className='flex justify-between '>
-                        <p className='lg:text-[1.6rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</p>
+                        <span className='lg:text-[1.6rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</span>
                         <button onClick={() => setIsShownTwo(!isShownTwo)}>
                             {isShownTwo ? <ChevronDown  className='text-neutral-500 mb-10' size={28}/> : <ChevronUp  className='text-neutral-500 mb-10' size={28}/> } 
                         </button>
@@ -61,7 +61,7 @@ const FrequentlyQuestions = () => {
                 
                 <div className='bg-white p-3 rounded-md h-auto '>
                     <p  className='flex justify-between '>
-                        <p className='lg:text-[1.6rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</p>
+                        <span className='lg:text-[1.6rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</span>
                         <button onClick={() => setIsShownThree(!isShownThree)}>
                             {isShownThree ? <ChevronDown  className='text-neutral-500 mb-10' size={28}/> : <ChevronUp  className='text-neutral-500 mb-10' size={28}/> } 
                         </button>
@@ -84,7 +84,7 @@ const FrequentlyQuestions = () => {
                 
                 <div className='bg-white p-3 rounded-md h-auto '>
                     <p  className='flex justify-between '>
-                        <p className='lg:text-[1.6rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</p>
+                        <span className='lg:text-[1.6rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</span>
                         <button onClick={() => setIsShownFour(!isShownFour)}>
                             {isShownFour ? <ChevronDown  className='text-neutral-500 mb-10' size={28}/> : <ChevronUp  className='text-neutral-500 mb-10' size={28}/> } 
                         </button>
@@ -107,7 +107,7 @@ const FrequentlyQuestions = () => {
                 
                 <div className='bg-white p-3 rounded-md h-auto '>
                     <p  className='flex justify-between '>
-                        <p className='lg:text-[1.6rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</p>
+                        <span className='lg:text-[1.6rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</span>
                         <button onClick={() => setIsShownFive(!isShownFive)}>
                             {isShownFive ? <ChevronDown  className='text-neutral-500 mb-10' size={28}/> : <ChevronUp  className='text-neutral-500 mb-10' size={28}/> } 
                         </button>
