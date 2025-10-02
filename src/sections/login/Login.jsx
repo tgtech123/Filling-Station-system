@@ -55,11 +55,11 @@ const Login = () => {
       // Redirect to dashboard
       // window.location.href = "/dashboard"
       if(data.user?.role === "manager"){
-        window.location.href = "/dashboard";
+        window.location.href = "/dashboard/manager";
       } else if(data.user?.role === "accountant"){
-        window.location.href = "/dashboard";
+        window.location.href = "/dashboard/accountant";
       } else {
-        window.location.href = "/dashbaord"
+        window.location.href = "/dashboard"
       }
 
     } catch (err) {
