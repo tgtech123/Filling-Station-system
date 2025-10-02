@@ -48,7 +48,7 @@ export default function Contact() {
         <div className="bg-[#0080ff] h-auto min-h-[500px] w-full lg:min-h-[600px] relative text-white rounded-[24px] p-6">
           <div>
             <h2 className="text-2xl mb-4 font-semibold">Contact Information</h2>
-            <p className="text-gray-100">Say something to start a live chart</p>
+            <p className="text-gray-100">Say something to start a live chat</p>
           </div>
 
           <div className="mt-20 text-gray-100 flex flex-col gap-4">
