@@ -82,11 +82,11 @@ export default function Navbar() {
             />
           </div>
 
-          <Link href="/">Home</Link>
-          <Link href="/features">Features</Link>
-          <Link href="/contact">Contact</Link>
-          <Link href="/pricing">Plans & Pricing</Link>
-          <Link href="/login">Login</Link>
+          <Link href="/" onClick={() => setIsOpen(false)}>Home</Link>
+          <Link href="/features" onClick={() => setIsOpen(false)}>Features</Link>
+          <Link href="/contact" onClick={() => setIsOpen(false)}>Contact</Link>
+          <Link href="/pricing" onClick={() => setIsOpen(false)}>Plans & Pricing</Link>
+          <Link href="/login" onClick={() => setIsOpen(false)}>Login</Link>
 
           <div
             className="cursor-pointer flex bg-[#0080ff] py-3 px-6 rounded-[8px] text-white items-center"
