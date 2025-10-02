@@ -17,6 +17,7 @@ import {
   Landmark,
   Pyramid,
   History,
+  LogOut,
 } from "lucide-react";
 import { RiOilLine } from "react-icons/ri";
 import { PiToggleLeftFill } from "react-icons/pi";
@@ -382,6 +383,10 @@ const visibleLinks = getVisibleLinks(userRole);
     }
   }, [userRole, roleInfo, visibleLinks]);
 
+  const fullName = userData?.firstName && userData?.lastName 
+  ? `${userData.firstName} ${userData.lastName}` 
+  : userData?.firstName || userData?.lastName || "User";
+
   if (isLoading) {
     return (
       <div className="fixed z-30 w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md flex items-center justify-center">
@@ -517,14 +522,14 @@ const visibleLinks = getVisibleLinks(userRole);
         <div className="flex items-center justify-between">
           <UserAvatar
             userAvatarImg={userAvatarImg}
-            username={userData?.name || "User"}
+            username={fullName}
             userRole={userRole}
           />
           <button
             onClick={handleLogout}
-            className="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors"
+            className="text-red-500 rounded-lg transition-colors"
           >
-            Logout
+            <LogOut size={32} className="cursor-pointer" />
           </button>
         </div>
       </div>
