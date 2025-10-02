@@ -5,8 +5,16 @@ import userAvatarImg from "../../assets/userAvatar.png"
 import Image from "next/image";
 import stroke from "../../assets/stroke.png"
 import LogoutButton from "./LogoutButton";
+import { useRouter } from "next/navigation";
 
 export default function Header({toggleSidebar, showSidebar}) {
+    const router = useRouter();
+    const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/");
+  };
+
     return (
         <div className="px-4 z-10 pl-0 lg:pl-[280px] fixed shadow-md h-[90px] w-full bg-white flex items-center justify-end gap-4">
             <div className="hidden lg:flex gap-2">
@@ -24,7 +32,7 @@ export default function Header({toggleSidebar, showSidebar}) {
             <div className="hidden lg:flex">
                 <Image src={stroke} alt="stroke"/>
             </div>
-            <div className="border-2 border-red-400 p-2 rounded-[12px] hidden lg:flex items-center gap-3">
+            <div onClick={handleLogout} className="cursor-pointer border-2 border-red-400 p-2 rounded-[12px] hidden lg:flex items-center gap-3">
                 <p className="text-[#ff1f1f] font-semibold">Logout</p>
                 <LogoutButton />
             </div>
