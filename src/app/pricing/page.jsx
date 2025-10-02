@@ -9,8 +9,8 @@ const page = () => {
   const [showBlue, setShowBlue] = useState("linkOne")
   return (
     <div className='bg-neutral-100 flex flex-col items-center justify-center '>
-        <div className='flex flex-col w-full justify-center items-center text-center mb-[1.5rem]'>
-            <h1 className='text-[1.875rem] sm:text-[2.25rem] md:text-[3rem] lg:text-[4rem] text-neutral-800 font-semibold'>Plans & Pricing</h1>
+        <div className='flex flex-col mt-20 w-full justify-center items-center text-center mb-[1.5rem]'>
+            <h1 className='text-[1.875rem] sm:text-[2.25rem] md:text-[3rem] lg:text-[4rem] text-[#454545] font-semibold'>Plans & Pricing</h1>
             <p className='text-[1.5rem] sm:text-[1.125rem] md:text-[1.25rem] lg:text-[1.5rem] text-neutral-500 text-center '>Flexible plans to fit your business needs, whether you’re just <br /> starting or scaling up </p>
         </div>
 
