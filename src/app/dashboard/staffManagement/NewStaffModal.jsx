@@ -133,8 +133,6 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
         twoFactorAuthEnabled: formData.twoFactorAuthEnabled,
         notificationPreferences: formData.notificationPreferences,
       };
-
-      // Replace with your actual backend URL
       
       const response = await fetch(`${API}/api/auth`, {
         method: "POST",
