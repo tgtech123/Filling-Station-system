@@ -10,9 +10,45 @@ import { useRouter } from "next/navigation";
 export default function ResetPassword() {
   const router = useRouter();
        const [email, setEmail] = useState("");
-      //  const handleNagivate = () => {
-      //     router.push("/reset-password/code-page")
-      //  }
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState(null);
+        const [message, setMessage] = useState("");
+      
+      const handleResetPassword = async (e) => {
+            e.preventDefault();
+            setMessage("");
+            setLoading(true);
+            setError(null);
+
+            try {
+              const API = process.env.NEXT_PUBLIC_API;
+
+              const res = await fetch(`${API}/api/auth/forgot-password`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email }),
+              });
+
+              const data = await res.json();
+
+              if (!res.ok) {
+                throw new Error(data.message || "Forgot password failed");
+              }
+
+              setMessage(data.message || "Reset link sent! Check your email.");
+            } catch (err) {
+              setError(err.message);
+            } finally {
+              setLoading(false);
+              setTimeout(()=>{
+                setMessage("")
+              }, 3000)
+            }
+          };
+
+      
    
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 h-screen overflow-hidden">
@@ -30,17 +66,7 @@ export default function ResetPassword() {
       
                 <form  className="flex flex-col gap-4 mt-6 w-full">
                   {/* Email */}
-                  <div className="relative flex flex-col">
-                    <label className="text-sm font-bold text-[#323130]">Select user type</label>
-  
-                    <select className="pl-2 border-[1.6px] rounded-md h-[43px] w-full focus:border-blue-600 outline-none">
-                      <option>Attendant</option>
-                      <option>Cashier</option>
-                      <option>Supervisor</option>
-                      <option>Accountant</option>
-                      <option>Manager</option>
-                    </select>
-                  </div>
+                
                   <div className="relative flex flex-col">
                     <label className="text-sm font-bold text-[#323130]">Email</label>
                     <input
@@ -52,12 +78,16 @@ export default function ResetPassword() {
                       required
                     />
                   </div>
-      
-      
+                {error && <p className="text-sm text-red-600">
+                    {error}
+                  </p>}
+                {message && <p className="text-green-600 text-sm">
+                    {message}
+                  </p>}
                   {/* Sign In Button */}
-                   <Link href="/reset-password/code-page" type='submit' className="bg-blue-600 flex justify-center items-center rounded-md font-semibold text-white h-[45px] hover:bg-blue-500 transition">
+                   <button onClick={handleResetPassword} type='submit' className="bg-blue-600 flex justify-center items-center rounded-md font-semibold text-white h-[45px] hover:bg-blue-500 transition">
                     Reset
-                  </Link> 
+                  </button> 
       
                   {/* Forgot Password */}
                   <p className="flex justify-center text-sm font-semibold text-gray-500">
@@ -72,7 +102,6 @@ export default function ResetPassword() {
       <div className="hidden md:flex w-full h-full">
         <LoginTwo />
       </div> 
-      {/* hi */}
     </div>
   );
 }
