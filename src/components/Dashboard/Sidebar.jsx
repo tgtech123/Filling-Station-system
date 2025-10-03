@@ -303,7 +303,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     {
       id: "sales-and-cash-report",
       name: "Sales & Cash Report",
-      icon: <TbCurrencyNaira size={20} />,
+      icon: <TbCurrencyNaira size={24} />,
       link: "/dashboard/sales-and-cash-report",
       roles: ["manager"],
     },
@@ -352,7 +352,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     {
       id: "staff-management",
       name: "Staff Management",
-      icon: <MdOutlinePeopleAlt />,
+      icon: <MdOutlinePeopleAlt size={24} />,
       link: "/dashboard/staffManagement",
       roles: ["manager"],
     },
