@@ -112,3 +112,55 @@ import { RiOilLine } from "react-icons/ri";
         link: "/dashboard/system-settings"
     },
 ]
+
+export const recentActivityData = [
+  {
+    id: 1,
+    activity: "Inventory Alert",
+    description: "Diesel below 20%",
+    category: "alert",
+    time: "Just now"
+  },
+  {
+    id: 2,
+    activity: "Morning shift sales completed - Pump 5",
+    description: "Diesel - 453 Ltrs sold",
+    category: "shiftComplete",
+    time: "2 mins ago"
+  },
+  {
+    id: 3,
+    activity: "Maintenance scheduled",
+    description: "Pump 2 - Routine service",
+    category: "maintenance",
+    time: "5 mins ago"
+  },
+  {
+    id: 4,
+    activity: "Stock Added",
+    description: "Engine oil (1L) - 45 units added to stock",
+    category: "newStock",
+    time: "1 hour ago"
+  },
+  {
+    id: 5,
+    activity: "Unauthorized access alert",
+    description: "Access trial from IP-2324434 address",
+    category: "alert",
+    time: "1 hour ago"
+  },
+   {
+    id: 6,
+    activity: "Morning shift sales completed - Pump 5",
+    description: "Diesel - 453 Ltrs sold",
+    category: "shiftComplete",
+    time: "2 mins ago"
+  },
+  {
+    id: 7,
+    activity: "Stock Added",
+    description: "Engine oil (1L) - 45 units added to stock",
+    category: "newStock",
+    time: "1 hour ago"
+  },
+]
