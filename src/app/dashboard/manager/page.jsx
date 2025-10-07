@@ -58,7 +58,7 @@ export default function ManagerDashboard() {
             <h2 className="text-2xl font-semibold">Quick Actions</h2>
             <p>Perform overall operations in one click</p>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
               {reportType.map((item) => (
                 <QuickActionsCard key={item.id} {...item} />
               ))}

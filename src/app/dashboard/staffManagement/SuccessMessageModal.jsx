@@ -1,7 +1,7 @@
 import React from 'react'
 import { X, Check } from 'lucide-react';
 
-const SuccessMessageModal = ({isOpen, onClose}) => {
+const SuccessMessageModal = ({isOpen, onClose, staffName}) => {
     if(!isOpen) return null;
   return (
     <div className='w-full inset-0 fixed z-50 bg-black/50 flex items-center justify-center h-auto'>
@@ -20,7 +20,10 @@ const SuccessMessageModal = ({isOpen, onClose}) => {
                 </h1>
 
                 <p className='text-[1.125rem] text-neutral-800'>
-                    Ekuase Maxwell has joined your team of staff in Flourish Station. Track and monitor staff progress on-the-go
+                    {staffName ? `${staffName} has joined your team of staff in Flourish Station. Track and monitor staff progress on-the-go`
+                    
+                    : "A new staff has joined your team in FLourish Station"
+                }
                 </p>
             </div>
 

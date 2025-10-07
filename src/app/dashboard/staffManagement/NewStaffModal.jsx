@@ -60,7 +60,8 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
   // Handle responsibility input (convert to array)
   const handleResponsibilityChange = (e) => {
     const value = e.target.value;
-    const responsibilityArray = value.split(",").map((item) => item.trim());
+    // const responsibilityArray = value.split(",").map((item) => item.trim());
+    const responsibilityArray = value.split(/\s+/).map((item) => item.trim());
     setFormData((prev) => ({
       ...prev,
       responsibility: responsibilityArray,
@@ -94,99 +95,112 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
     return null;
   };
 
-  // Submit form
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validate form
-    const validationError = validateForm();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+  
+    // Submit form
+     const handleSubmit = async (e) => {
+        e.preventDefault();
 
-    setIsLoading(true);
-    setError("");
+        // Validate form
+        const validationError = validateForm();
+        if (validationError) {
+          setError(validationError);
+          alert(validationError);
+          return;
+        }
 
-    try {
-      // Get token from localStorage - try different possible keys
-      const token = localStorage.getItem("token")
-      
-      if (!token) {
-        throw new Error("Authentication token not found. Please login again.");
-      }
+        setIsLoading(true);
+        setError("");
 
-      // Prepare payload (exclude confirmPassword)
-      const payload = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        image: formData.image || undefined,
-        role: formData.role,
-        password: formData.password,
-        shiftType: formData.shiftType,
-        responsibility: formData.responsibility,
-        addSaleTarget: formData.addSaleTarget,
-        payType: formData.payType,
-        amount: parseFloat(formData.amount),
-        twoFactorAuthEnabled: formData.twoFactorAuthEnabled,
-        notificationPreferences: formData.notificationPreferences,
-      };
-      
-      const response = await fetch(`${API}/api/auth`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+        try {
+          // Get token from localStorage
+          const token = localStorage.getItem("token");
 
-      const data = await response.json();
+          if (!token) {
+            throw new Error("Authentication token not found. Please login again.");
+          }
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to create staff");
-      }
+          // Prepare payload
+          const payload = {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+            image: formData.image || undefined,
+            role: formData.role,
+            password: formData.password,
+            shiftType: formData.shiftType,
+            responsibility: formData.responsibility,
+            addSaleTarget: formData.addSaleTarget,
+            payType: formData.payType,
+            amount: parseFloat(formData.amount),
+            twoFactorAuthEnabled: formData.twoFactorAuthEnabled,
+            notificationPreferences: formData.notificationPreferences,
+          };
 
-      // Success - show success modal
-      setIsModalOpen(true);
-      
-      // Reset form
-      setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        image: "",
-        role: "",
-        password: "",
-        confirmPassword: "",
-        shiftType: "",
-        responsibility: [],
-        addSaleTarget: false,
-        payType: "",
-        amount: "",
-        twoFactorAuthEnabled: false,
-        notificationPreferences: {
-          email: false,
-          sms: false,
-          push: false,
-          lowStock: false,
-          mail: false,
-          sales: false,
-          staffs: false,
-        },
-      });
-      setToggleOn(false);
+          // Send request
+          const response = await fetch(`${API}/api/auth`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload),
+          });
 
-    } catch (err) {
-      setError(err.message || "An error occurred while creating staff");
-      console.error("Error creating staff:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+          const data = await response.json();
+          console.log("API Response:", data); // 🪵 Debugging line
+
+          if (!response.ok) {
+            // Check if server provided a custom message
+            const errorMsg =
+              data.message ||
+              data.error ||
+              `Server error (${response.status}): ${response.statusText}`;
+            throw new Error(errorMsg);
+          }
+
+          // ✅ Success
+          alert("✅ Staff created successfully!");
+          setIsModalOpen(true);
+
+          // Reset form
+          setFormData({
+            firstName: "",
+            lastName: "",
+            email: "",
+            phone: "",
+            image: "",
+            role: "",
+            password: "",
+            confirmPassword: "",
+            shiftType: "",
+            responsibility: [],
+            addSaleTarget: false,
+            payType: "",
+            amount: "",
+            twoFactorAuthEnabled: false,
+            notificationPreferences: {
+              email: false,
+              sms: false,
+              push: false,
+              lowStock: false,
+              mail: false,
+              sales: false,
+              staffs: false,
+            },
+          });
+          setToggleOn(false);
+        } catch (err) {
+          const errMsg = err.message || "An unexpected error occurred";
+          setError(errMsg);
+          alert(`❌ ${errMsg}`);
+          console.error("❌ Error creating staff:", err);
+        } finally {
+          setIsLoading(false);
+        }
+            };
+
+
 
   return (
     <div
@@ -386,12 +400,12 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
 
             <span className="flex flex-col gap-2">
               <span className="font-bold text-[0.875rem]">
-                Responsibilities (separate with commas)
+                Responsibilities
               </span>
               <input
                 type="text"
                 name="responsibility"
-                value={formData.responsibility.join(", ")}
+                value={formData.responsibility.join(" ")}
                 onChange={handleResponsibilityChange}
                 placeholder="Overseas operations of other staffs, approves reconciled shifts and give report to manager"
                 className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
