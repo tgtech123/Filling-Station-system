@@ -26,8 +26,8 @@ const TableWithoutBorder = ({ columns = [], data = [], enableStatus = false }) =
   };
 
   return (
-    <div className="overflow-x-auto w-full rounded-xl">
-      <table className="min-w-full text-sm text-left border-[1px] border-neutral-50 text-gray-700">
+    <div className="max-w-full overflow-x-auto rounded-xl">
+      <table className="min-w-full rounded-t-2xl text-sm text-left border-[1px] border-neutral-50 text-gray-700">
         {/* Table Header */}
         <thead className="text-md font-semibold text-gray-600">
           <tr>
