@@ -389,7 +389,7 @@ const visibleLinks = getVisibleLinks(userRole);
 
   if (isLoading) {
     return (
-      <div className="fixed z-30 w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md flex items-center justify-center">
+      <div className=" z-30 md:w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -397,7 +397,7 @@ const visibleLinks = getVisibleLinks(userRole);
 
   return (
     <div
-      className={`fixed z-30 w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md transform transition-transform duration-300 ease-in-out ${
+      className={` md:w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md transform transition-transform duration-300 ease-in-out ${
         isVisible ? "translate-x-0" : "-translate-x-full"
       } lg:translate-x-0 lg:transition-none flex flex-col`}
     >
