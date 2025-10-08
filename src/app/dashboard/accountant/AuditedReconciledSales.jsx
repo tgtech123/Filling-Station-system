@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Eye, Check, AlertTriangle } from "lucide-react";
 import AuditModal from "./AuditModal";
+import Link from "next/link";
 
 const salesData = [
   { date: "04/17/23", attendant: "John Dave", shiftType: "Morning", pumpNo: 1, litres: 30, amount: "123,000,000", cashReceived: "120,000,000", discrepancy: -3000, status: "Flagged" },
@@ -42,9 +43,9 @@ const AuditReconciledSales = () => {
             Verify and audit daily attendant sales
           </p>
         </div>
-        <button className="border border-gray-400 font-semibold rounded-lg text-sm px-4 py-2 text-gray-600 hover:bg-gray-100 transition">
+        <Link href="/dashboard/accountant/auditedReconciledPage" className="border border-gray-400 font-semibold rounded-lg text-sm px-4 py-2 text-gray-600 hover:bg-gray-100 transition">
           View all report
-        </button>
+        </Link>
       </div>
 
       {/* Table */}
