@@ -1,6 +1,14 @@
 // AuditModal.jsx
-import { X } from "lucide-react";
+import { Check, TriangleAlert, X } from "lucide-react";
+import Image from "next/image";
 import React from "react";
+import fuelux from "../../../../public/dip.png"
+import fuel from "../../../../public/fuel.png"
+import pump from "../../../../public/pump.png"
+import pumpNozzle from "../../../../public/pumpNozzle.png"
+import { GoHourglass, GoTag } from "react-icons/go";
+import { TbCurrencyNaira } from "react-icons/tb";
+import { GiReceiveMoney } from "react-icons/gi";
 
 const AuditModal = ({ isOpen, onClose, record, onAudit, isAudited }) => {
   if (!isOpen) return null;
@@ -15,7 +23,7 @@ const AuditModal = ({ isOpen, onClose, record, onAudit, isAudited }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-end mb-4">
-            <X onClick={onclose} />
+            <X onClick={onClose} className="cursor-pointer" />
         </div>
         <h2 className="text-lg font-semibold text-gray-800">
           Shift Summary
@@ -25,44 +33,110 @@ const AuditModal = ({ isOpen, onClose, record, onAudit, isAudited }) => {
             <p>{record.date}</p>
         </div>
 
-        <div className="space-y-2 text-sm text-gray-700">
-          <p>
-          </p>
-          <p>
-            <span className="font-medium">Attendant:</span> {record.attendant}
-          </p>
-          <p>
-            <span className="font-medium">Shift:</span> {record.shiftType}
-          </p>
-          <p>
-            <span className="font-medium">Pump No:</span> {record.pumpNo}
-          </p>
-          <p>
-            <span className="font-medium">Litres Sold:</span> {record.litres}
-          </p>
-          <p>
-            <span className="font-medium">Amount:</span> ₦{record.amount}
-          </p>
-          <p>
-            <span className="font-medium">Cash Received:</span> ₦{record.cashReceived}
-          </p>
-          <p>
-            <span className="font-medium">Discrepancy:</span> {record.discrepancy}
-          </p>
+        <div className="space-y-2 text-sm mt-6 text-gray-700">
+          <div className="flex justify-between">
+            <div className="flex gap-2 items-center">
+                <Image src={fuelux} height={20} width={20} alt="fuelux img" />
+                <p>Opening Meter reading</p>
+            </div>
+            <p>33,200 Litres</p>
+          </div>
+          
+          <div className="flex justify-between">
+            <div className="flex gap-2 items-center">
+                <Image src={fuelux} height={20} width={20} alt="fuelux img" />
+                <p>Closing Meter reading</p>
+            </div>
+            <p>32,200 Litres</p>
+          </div>
+          
+          <div className="flex justify-between">
+            <div className="flex gap-2 items-center">
+                <Image src={pump} height={20} width={20} alt="fuelux img" />
+                <p>Pump no</p>
+            </div>
+            <p>Pump {record.pumpNo}</p>
+          </div>
+
+          <div className="flex justify-between">
+            <div className="flex gap-2 items-center">
+                <GoTag size={20} />
+                <p>Product type</p>
+            </div>
+                <p>Diesel</p>
+          </div>
+          
+
+          <div className="flex justify-between">
+            <div className="flex gap-2 items-center">
+                <Image src={fuel} height={20} width={20} alt="fuelux img" />
+                <p>Price/litre</p>
+            </div>
+                <p>₦120</p>
+          </div>
+          
+          <div className="flex justify-between">
+            <div className="flex gap-2 items-center">
+                <Image src={pumpNozzle} height={20} width={20} alt="fuelux img" />
+                <p>Litres sold</p>
+            </div>
+                <p>{record.litres} Litres</p>
+          </div>
+
+          <div className="flex justify-between">
+            <div className="flex gap-2 items-center">
+                <TbCurrencyNaira size={20} />
+                <p>Amount</p>
+            </div>
+                <p>₦{record.amount}</p>
+          </div>
+
+          <div className="flex justify-between">
+            <div className="flex gap-2 items-center">
+                <GiReceiveMoney size={20} />
+                <p>Reconciled Cash</p>
+            </div>
+                <p>₦{record.cashReceived}</p>
+          </div>
+          
+
+          <div className="flex justify-between">
+            <div className="flex gap-2 items-center">
+                <TriangleAlert size={20} />
+                <p>Discrepancy</p>
+            </div>
+                <p className="text-red-500 font-semibold">{record.discrepancy}NGN</p>
+          </div>
+
+          <div className="flex justify-between">
+            <div className="flex gap-2 items-center">
+                <GoHourglass size={20} />
+                <p>Status</p>
+            </div>
+            <div>
+                {record.status === "Matched" ? (
+                      <span className="bg-purple-100 text-purple-600 text-xs font-semibold px-3 py-1 rounded-md inline-flex justify-center items-center space-x-1">
+                        <Check size={12} />
+                        <span>Matched</span>
+                      </span>
+                    ) : (
+                      <span className="bg-red-100 text-red-600 text-xs font-semibold px-3 py-1 rounded-md inline-flex justify-center items-center space-x-1">
+                        <TriangleAlert size={12} />
+                        <span>Flagged</span>
+                      </span>
+                    )}
+            </div>
+          </div>
+          
+        
         </div>
 
-        <div className="flex justify-between items-center mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-100"
-          >
-            Close
-          </button>
-
+        <div className="flex justify-between w-full mt-6">
+       
           <button
             onClick={onAudit}
             disabled={isAudited}
-            className={`px-4 py-2 rounded-lg text-white font-semibold ${
+            className={`px-4 py-2 w-full rounded-lg text-white font-semibold ${
               isAudited
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-[#0080ff]"

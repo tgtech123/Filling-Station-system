@@ -111,7 +111,7 @@ export default function FuelManagement() {
         </div>
 
         <div>
-            <button onClick={handleOpenFuelModal} className="flex border-3 py-2 px-6 rounded-[10px] gap-1 font-semibold text-[#0080ff] cursor-pointer border-[#0080ff] bg-white">
+            <button onClick={handleOpenFuelModal} className="flex border-3 items-center py-2 px-6 rounded-[10px] gap-1 font-semibold text-[#0080ff] cursor-pointer border-[#0080ff] bg-white">
                 Add Fuel Tank
                 <Plus />
             </button>
