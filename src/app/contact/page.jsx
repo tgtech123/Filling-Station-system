@@ -12,7 +12,7 @@ export default function Contact() {
       name: "Oboh ThankGod",
       instaLink: "https://instagram.com/d-sentiment-guy",
       linkedInLink: "https://linkedin.com/d-sentiment-guy",
-      twitterLink: "https://twitter.com/d-sentiment-guy",
+      twitterLink: "https://twitter.com/Utdgsentiment",
     },
     {
       id: 2,
@@ -34,12 +34,15 @@ export default function Contact() {
   return (
     <div className="bg-[#f8f8f8] px-4 sm:px-6 lg:px-40">
       {/* header */}
-      <header className="flex flex-col py-30 items-center justify-center">
+      <header className="flex flex-col py-10 items-center justify-center">
         <h1 className="font-semibold mb-2 text-center text-[#454545] text-[34px] lg:text-[54px]">
           Contact Us
         </h1>
-        <p className="text-[20px] text-center lg:text-[26px] text-[#454545]">
-          Any questions or remarks? Just write us a message
+          <span className="text-[1.5rem] font-semibold text-orange-400">We’re Here to Help!</span>
+        <p className="text-[0.5rem] text-center lg:text-[1.125rem] text-[#454545]">
+          Have questions, feedback, or need assistance with our <span className="text-[1.45rem] font-semibold text-[#0080ff] pr-2">Filling Station <br /> Management System?</span>  
+          Reach out to us anytime, our support team is ready <br />
+          to respond promptly and ensure you get the help you need.
         </p>
       </header>
 
@@ -54,15 +57,15 @@ export default function Contact() {
           <div className="mt-20 text-gray-100 flex flex-col gap-4">
             <div className="flex gap-4 items-center">
               <Phone />
-              <p>+234905042192</p>
+              <p>+234 7068690589</p>
             </div>
             <div className="flex gap-4 items-center">
               <Mail />
-              <p>obohthankgod@gmail.com</p>
+              <p>oboh.thankgod1@gmail.com</p>
             </div>
             <div className="flex gap-4 items-center">
               <MapPin />
-              <p>89 Suites case, calabar, Cross River State</p>
+              <p>Km 2 Airport Road, Rukpokwu, Port Harcourt, Rivers State</p>
             </div>
           </div>
 
@@ -130,23 +133,28 @@ export default function Contact() {
         </div>
 
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {teamData.map((item) => (
-                <div key={item.id} className="flex flex-col items-center justify-center">
-                    <div className="bg-[#d9d9d9] h-[150px] w-[150px] rounded-full"></div>
-                    <h3 className="my-4 font-semibold text-xl text-[#737373]">{item.name}</h3>
-                    <div className="flex gap-3 text-2xl text-[#ffaf51] font-semibold">
-                        <a href={item.instaLink}>
-                            <FaInstagram />
-                        </a>
-                        <a href={item.twitterLink}>
-                            <FaXTwitter />
-                        </a>
-                        <a href={item.linkedInLink}>
-                            <FaLinkedin />
-                        </a>
-                    </div>
-                </div>
-            ))}
+          {teamData.map((item) => (
+            <div
+              key={item.id}
+              className="flex flex-col items-center justify-center"
+            >
+              <div className="bg-[#d9d9d9] h-[150px] w-[150px] rounded-full"></div>
+              <h3 className="my-4 font-semibold text-xl text-[#737373]">
+                {item.name}
+              </h3>
+              <div className="flex gap-3 text-2xl text-[#ffaf51] font-semibold">
+                <a href={item.instaLink}>
+                  <FaInstagram />
+                </a>
+                <a href={item.twitterLink}>
+                  <FaXTwitter />
+                </a>
+                <a href={item.linkedInLink}>
+                  <FaLinkedin />
+                </a>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
