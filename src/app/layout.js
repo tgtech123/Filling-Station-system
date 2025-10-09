@@ -1,6 +1,7 @@
 import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import ClientLayout from "@/components/ClientLayout";
+import { Toaster } from "react-hot-toast";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
       >
         <ClientLayout>
           {children}
+          <Toaster position="top-right" reverseOrder={false} />
         </ClientLayout>
       </body>
     </html>
