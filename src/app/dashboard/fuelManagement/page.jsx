@@ -100,11 +100,11 @@ export default function FuelManagement() {
       {/* Navigation Tab */}
       <div className="mt-10 px-6 lg:px-[40px] flex flex-col text-sm lg:text-md gap-3 lg:gap-0 lg:flex-row justify-between items-start lg:items-center">
         <div className="bg-white border-2 border-gray-300 flex gap-4 py-2 px-6 rounded-[10px]">
-            <div id="fuelTank" onClick={() => handleClick("fuelTank")}  className={`px-6 py-2 rounded-[8px] cursor-pointer ${activeTab === "fuelTank" ? "bg-[#d9edff] font-semibold text-[#0080ff]" : "bg-transparent text-inherit"} flex gap-2`}>
+            <div id="fuelTank" onClick={() => handleClick("fuelTank")}  className={`px-6 py-2 rounded-[8px] cursor-pointer ${activeTab === "fuelTank" ? "bg-[#d9edff] font-semibold text-[#0080ff]" : "bg-transparent text-inherit"} flex items-center gap-2`}>
                 <House />
                 Fuel Tank
             </div>
-            <div id="Deliveries" onClick={() => handleClick("Deliveries")} className={`px-6 py-2 rounded-[8px] cursor-pointer ${activeTab === "Deliveries" ? "bg-[#d9edff] font-semibold text-[#0080ff]" : "bg-transparent text-inherit"} flex gap-2`}>
+            <div id="Deliveries" onClick={() => handleClick("Deliveries")} className={`px-6 py-2 rounded-[8px] cursor-pointer ${activeTab === "Deliveries" ? "bg-[#d9edff] font-semibold text-[#0080ff]" : "bg-transparent text-inherit"} flex items-center gap-2`}>
                 <House />
                 Order & Deliveries
             </div>

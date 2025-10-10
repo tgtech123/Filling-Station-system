@@ -1,70 +1,77 @@
+"use client";
+import { useEffect, useState } from "react";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import CustomTable from "./CustomTable";
 
 export default function Deliveries() {
-    const deliveryColumn = ["Tank No", "Fuel Type", "No of Litres", "Suppliers", "Expected Delivery", "Action"]
-    const deliveryData = [
-        [
-            "Tank A",
-            "Diesel",
-            "20,000 L",
-            "PetroMax Supply",
-            "28/12/2025",
-            "Pending"
-        ],
-        [
-            "Tank B",
-            "PMS",
-            "20,000 L",
-            "PetroMax Supply",
-            "28/12/2025",
-            "Completed"
-        ],
-        [
-            "Tank E",
-            "AGO",
-            "20,000 L",
-            "PetroMax Supply",
-            "28/12/2025",
-            "Pending"
-        ],
-        [
-            "Tank C",
-            "Diesel",
-            "20,000 L",
-            "PetroMax Supply",
-            "28/12/2025",
-            "Canceled"
-        ]
-    ]
+  const [deliveryData, setDeliveryData] = useState([]);
+  const API_URL = process.env.NEXT_PUBLIC_API;
+  const deliveryColumn = ["Tank Title", "Fuel Type", "Quantity (L)", "Supplier", "Expected Delivery", "Status"];
 
-    const handleStatusAction = (action, row, rowIndex) => {
-  console.log(`${action} action for order:`, row[0]); // row[0] is the order ID
-  
-  switch(action) {
-    case 'edit':
-      // Open edit modal/page
-      break;
-    case 'view':
-      // Open view modal/page  
-      break;
-    case 'delete':
-      // Show delete confirmation
-      break;
-  }
-};
+  useEffect(() => {
+    const fetchDeliveries = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.error("No token found in localStorage");
+          return;
+        }
 
-    return (
-        <DisplayCard>
-            <h3 className="text-xl font-semibold">Recent Deliveries</h3>
-            <p>Track fuel schedules and deliveries</p>
+        const res = await fetch(`${API_URL}/api/delivery`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-            <CustomTable 
-                data={deliveryData} 
-                columns={deliveryColumn} 
-                onStatusAction={handleStatusAction} 
-                lastColumnType="status"
-            />
-        </DisplayCard>
-    )
+        const result = await res.json();
+        console.log("Fetched deliveries:", result);
+
+        if (res.ok && Array.isArray(result.data)) {
+          const formatted = result.data.map((delivery) => [
+            delivery.tankTitle || "N/A",
+            delivery.fuelType || "N/A",
+            `${delivery.quantity || 0} L`,
+            delivery.supplier || "N/A",
+            new Date(delivery.deliveryDate).toLocaleDateString() || "N/A",
+            delivery.status || "Pending",
+          ]);
+          setDeliveryData(formatted);
+        } else {
+          console.error("Error fetching deliveries:", result.message || result.error);
+        }
+      } catch (error) {
+        console.error("Error fetching deliveries:", error);
+      }
+    };
+
+    fetchDeliveries();
+  }, [API_URL]);
+
+  const handleStatusAction = (action, row, rowIndex) => {
+    console.log(`${action} action for delivery:`, row[0]);
+    switch (action) {
+      case "edit":
+        break;
+      case "view":
+        break;
+      case "delete":
+        break;
+      default:
+        break;
+    }
+  };
+
+  return (
+    <DisplayCard>
+      <h3 className="text-xl font-semibold">Recent Deliveries</h3>
+      <p>Track fuel schedules and deliveries</p>
+
+      <CustomTable
+        data={deliveryData}
+        columns={deliveryColumn}
+        onStatusAction={handleStatusAction}
+        lastColumnType="status"
+      />
+    </DisplayCard>
+  );
 }
