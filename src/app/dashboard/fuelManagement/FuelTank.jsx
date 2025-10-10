@@ -35,6 +35,7 @@ export default function FuelTank() {
 
         const data = await response.json();
         setTanks(data.data || []); 
+        console.log(data)
       } catch (err) {
         setError(err.message);
       } finally {

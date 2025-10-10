@@ -59,7 +59,7 @@ export default function Header({toggleSidebar, showSidebar}) {
   : userData?.firstName || userData?.lastName || "User";
 
     return (
-        <div className="px-4 z-10 pl-0 lg:pl-[280px] fixed shadow-md h-[90px] w-full bg-white flex items-center justify-end gap-4">
+        <div className="px-4 z-10  shadow-md h-[90px] w-full bg-white flex items-center justify-end gap-4">
             <div className="hidden lg:flex gap-2">
             <NotificationsIcon iconName={<Mail />} messageCount={2} />
             <NotificationsIcon iconName={<Bell />} messageCount={8} />

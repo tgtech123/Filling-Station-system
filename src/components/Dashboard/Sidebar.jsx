@@ -396,11 +396,18 @@ const visibleLinks = getVisibleLinks(userRole);
   }
 
   return (
+    // <div
+    //   className={` lg:w-[280px] lg:flex lg:relative h-[100vh] top-0 left-0 bg-white shadow-md transform transition-transform duration-300 ease-in-out ${
+    //     isVisible ? "flex fixed z-50 translate-x-0" : "hidden -translate-x-full"
+    //   } lg:translate-x-0 lg:transition-none flex flex-col`}
+    // >
+
     <div
-      className={` md:w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md transform transition-transform duration-300 ease-in-out ${
-        isVisible ? "translate-x-0" : "-translate-x-full"
-      } lg:translate-x-0 lg:transition-none flex flex-col`}
-    >
+  className={`lg:w-[280px] lg:flex lg:relative h-[100vh] top-0 left-0 bg-white shadow-md transform transition-transform duration-500 ease-in-out ${
+    isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+  } lg:translate-x-0 lg:opacity-100 fixed z-50 lg:transition-none flex flex-col`}
+>
+
       {/* Header */}
       <div className="flex-shrink-0 flex justify-between items-start pt-2 px-2">
         <Image src={logo} width={130} alt="logo image" />

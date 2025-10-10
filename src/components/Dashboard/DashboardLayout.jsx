@@ -19,7 +19,7 @@ function DashboardLayout({ children }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         <Header toggleSidebar={toggleSidebar} showSidebar={showSidebar} />
-        <main className=" overflow pt-[100px] py-4 px-4 h-full overflow-y-auto overflow-x-auto">
+        <main className="overflow pt-[50px] py-4 px-4 h-full overflow-y-auto overflow-x-auto">
           {children}
         </main>
       </div>
@@ -28,3 +28,6 @@ function DashboardLayout({ children }) {
 }
 
 export default DashboardLayout;
+
+
+
