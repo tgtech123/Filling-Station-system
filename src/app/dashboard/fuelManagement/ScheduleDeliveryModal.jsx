@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useTankStore } from "@/store/tankStore";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function ScheduleDeliveryModal({ onclose }) {
   const [tank, setTank] = useState("");
@@ -102,7 +103,7 @@ export default function ScheduleDeliveryModal({ onclose }) {
 
         <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
           {/* ✅ Tank dropdown */}
-          <div>
+          {/* <div>
             <p className="text-sm font-semibold">Select Tank</p>
             <select
               className="w-full border-2 p-2 rounded-[8px] border-gray-300"
@@ -120,7 +121,33 @@ export default function ScheduleDeliveryModal({ onclose }) {
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
+
+          <div>
+  <p className="text-sm font-semibold">Select Tank</p>
+  <select
+    className="w-full border-2 p-2 rounded-[8px] border-gray-300"
+    value={formData.tankId}
+    onChange={(e) =>
+      setFormData((prev) => ({ ...prev, tankId: e.target.value }))
+    }
+    required
+    disabled={tankLoading}
+  >
+    <option value="">
+      {tankLoading ? "Loading tanks..." : "Select tank"}
+    </option>
+
+    {tanks.map((t) => (
+      <option key={t._id} value={t._id}>
+        {t.fuelType
+          ? `${t.fuelType} ${t.title ? `— ${t.title}` : ""}`
+          : t.title || "Untitled Tank"}
+      </option>
+    ))}
+  </select>
+</div>
+
 
           <div>
             <p className="text-sm font-semibold">Fuel Type</p>
