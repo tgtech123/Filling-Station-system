@@ -1,8 +1,8 @@
+
 "use client";
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useTankStore } from "@/store/tankStore";
-import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function ScheduleDeliveryModal({ onclose }) {
   const [tank, setTank] = useState("");
@@ -22,13 +22,12 @@ export default function ScheduleDeliveryModal({ onclose }) {
     fetchTanks();
   }, [fetchTanks]);
 
-  // ✅ When tank changes, auto-display its fuelType
+  // ✅ Auto-update fuelType when tank changes
   useEffect(() => {
     const selectedTank = tanks.find((t) => t._id === tank);
     setFuelType(selectedTank?.fuelType || "");
   }, [tank, tanks]);
 
-  // ✅ Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -53,7 +52,7 @@ export default function ScheduleDeliveryModal({ onclose }) {
         body: JSON.stringify({
           tank, // ✅ send tank _id
           pricePerLtr: price,
-          quantity, // ✅ changed from amount
+          quantity,
           supplier,
           deliveryDate,
           status: "Pending",
@@ -65,16 +64,14 @@ export default function ScheduleDeliveryModal({ onclose }) {
       if (response.ok) {
         setMessage("✅ Delivery scheduled successfully!");
         setMessageType("success");
-        // Reset fields
+        // Reset form
         setTank("");
         setFuelType("");
         setPrice("");
         setQuantity("");
         setSupplier("");
         setDeliveryDate("");
-        setTimeout(() => {
-          onclose(); // close modal after short delay
-        }, 1500);
+        setTimeout(() => onclose(), 1500);
       } else {
         setMessage(data.error || data.message || "❌ Something went wrong!");
         setMessageType("error");
@@ -89,11 +86,11 @@ export default function ScheduleDeliveryModal({ onclose }) {
   };
 
   return (
-    <div className="fixed px-4 lg:px-0 inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 lg:px-0">
       {/* Modal box */}
       <div className="bg-white border-2 rounded-lg w-full max-w-[400px] p-3">
-        <div className="mt-2 mb-4 flex justify-end" onClick={onclose}>
-          <X className="cursor-pointer" />
+        <div className="mt-2 mb-4 flex justify-end">
+          <X className="cursor-pointer" onClick={onclose} />
         </div>
 
         <div className="mb-4">
@@ -102,8 +99,8 @@ export default function ScheduleDeliveryModal({ onclose }) {
         </div>
 
         <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
-          {/* ✅ Tank dropdown */}
-          {/* <div>
+          {/* Tank selection */}
+          <div>
             <p className="text-sm font-semibold">Select Tank</p>
             <select
               className="w-full border-2 p-2 rounded-[8px] border-gray-300"
@@ -115,40 +112,18 @@ export default function ScheduleDeliveryModal({ onclose }) {
               <option value="">
                 {tankLoading ? "Loading tanks..." : "Select tank"}
               </option>
+
               {tanks.map((t) => (
                 <option key={t._id} value={t._id}>
-                  {t.title}
+                  {t.fuelType
+                    ? `${t.fuelType} ${t.title ? `— ${t.title}` : ""}`
+                    : t.title || "Untitled Tank"}
                 </option>
               ))}
             </select>
-          </div> */}
+          </div>
 
-          <div>
-  <p className="text-sm font-semibold">Select Tank</p>
-  <select
-    className="w-full border-2 p-2 rounded-[8px] border-gray-300"
-    value={formData.tankId}
-    onChange={(e) =>
-      setFormData((prev) => ({ ...prev, tankId: e.target.value }))
-    }
-    required
-    disabled={tankLoading}
-  >
-    <option value="">
-      {tankLoading ? "Loading tanks..." : "Select tank"}
-    </option>
-
-    {tanks.map((t) => (
-      <option key={t._id} value={t._id}>
-        {t.fuelType
-          ? `${t.fuelType} ${t.title ? `— ${t.title}` : ""}`
-          : t.title || "Untitled Tank"}
-      </option>
-    ))}
-  </select>
-</div>
-
-
+          {/* Fuel type (read-only) */}
           <div>
             <p className="text-sm font-semibold">Fuel Type</p>
             <input
@@ -158,6 +133,7 @@ export default function ScheduleDeliveryModal({ onclose }) {
             />
           </div>
 
+          {/* Price per litre */}
           <div>
             <p className="text-sm font-semibold">Price / litre (₦)</p>
             <input
@@ -170,6 +146,7 @@ export default function ScheduleDeliveryModal({ onclose }) {
             />
           </div>
 
+          {/* Quantity */}
           <div>
             <p className="text-sm font-semibold">Quantity (Litres)</p>
             <input
@@ -182,6 +159,7 @@ export default function ScheduleDeliveryModal({ onclose }) {
             />
           </div>
 
+          {/* Supplier */}
           <div>
             <p className="text-sm font-semibold">Supplier</p>
             <input
@@ -194,6 +172,7 @@ export default function ScheduleDeliveryModal({ onclose }) {
             />
           </div>
 
+          {/* Delivery date */}
           <div className="mb-6">
             <p className="text-sm font-semibold">Delivery Date</p>
             <input
@@ -205,6 +184,7 @@ export default function ScheduleDeliveryModal({ onclose }) {
             />
           </div>
 
+          {/* Message */}
           {message && (
             <p
               className={`text-sm text-center mb-2 ${
@@ -215,10 +195,11 @@ export default function ScheduleDeliveryModal({ onclose }) {
             </p>
           )}
 
+          {/* Submit button */}
           <button
             type="submit"
             disabled={loading}
-            className="flex justify-center p-2 bg-blue-600 hover:bg-blue-400 text-white font-semibold rounded-md"
+            className="flex justify-center p-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-md"
           >
             {loading ? "Submitting..." : "Add Supply"}
           </button>
