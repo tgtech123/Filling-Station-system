@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { X } from "lucide-react";
+import { useTankStore } from "@/store/tankStore";
 
 export default function AddTankModal({ onclose }) {
   const [title, setTitle] = useState("");
@@ -10,7 +11,8 @@ export default function AddTankModal({ onclose }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
+  
+  const { fetchTanks } = useTankStore();
   const handleAddTank = async () => {
     if (!title || !fuelType || !cappedLimit || !threshold) {
       setError("Please fill in all fields");
@@ -51,6 +53,9 @@ export default function AddTankModal({ onclose }) {
       }
 
       setSuccess("Tank added successfully!");
+
+      await fetchTanks();
+      
       setTitle("");
       setFuelType("");
       setCappedLimit("");
