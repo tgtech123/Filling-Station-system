@@ -82,7 +82,7 @@ export default function PumpControlCard({
       <section className="mt-4 flex flex-col gap-2">
         <div className="flex justify-between items-center">
           <h4 className="text-sm font-semibold">Online Status</h4>
-          <BlueToggleSwitch enabled={enabled} />
+          <BlueToggleSwitch enabled={status === "Active" ? true : false} pumpId={pumpId} />
         </div>
 
         <div className="flex justify-between items-center">

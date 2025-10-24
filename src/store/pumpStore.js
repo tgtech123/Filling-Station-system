@@ -139,7 +139,7 @@ const usePumpStore = create((set) => ({
       set({ loading: true, error: null });
       const token = localStorage.getItem("token");
 
-      await axios.put(`${API_URL}/update-pump`, pumpData, {
+      await axios.post(`${API_URL}/update-pump`, pumpData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

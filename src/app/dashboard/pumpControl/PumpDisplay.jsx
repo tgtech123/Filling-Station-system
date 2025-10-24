@@ -35,7 +35,7 @@ export default function PumpDisplay({fuelType}) {
               pumpId={pump.pumpId}
               pumpName={pump.title || `Pump ${index + 1}`}
               productType={pump.fuelType || "Unknown"}
-              status={pump.status || "Idle"}
+              status={pump.status}
               pricePerLtr={`₦${pump.pricePerLtr}`}
               salesToday={`₦${pump.totalSales || 0}`}
               ltsSold={`${pump.totalLtrSold || 0} Ltrs`}
