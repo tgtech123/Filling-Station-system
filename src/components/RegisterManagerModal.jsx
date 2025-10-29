@@ -10,6 +10,8 @@ import {
   TriangleAlert,
   X,
   Loader2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useState } from "react";
 import ToggleSwitch from "./ToggleSwtich";
@@ -20,6 +22,8 @@ export default function RegisterManagerModal({ onclose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const API = process.env.NEXT_PUBLIC_API;
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [formData, setFormData] = useState({
     // Step 1 - Personal Information
@@ -821,10 +825,10 @@ export default function RegisterManagerModal({ onclose }) {
               <h3 className="font-semibold">Password and Security</h3>
               <p className="text-sm text-gray-600">Set up strong password for your account</p>
 
-              <div className="mt-6">
+              <div className="mt-6 relative">
                 <p className="text-sm font-semibold">New password</p>
                 <input
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
@@ -832,12 +836,15 @@ export default function RegisterManagerModal({ onclose }) {
                   className="border-2 border-gray-300 rounded-[8px] w-full p-2"
                   required
                 />
+                <div className="absolute top-8 right-4" onClick={() => setShowNewPassword(!showNewPassword)}>
+                  {showNewPassword ? <Eye size={19} className="cursor-pointer text-gray-600"  /> : <EyeOff size={19} className="cursor-pointer text-gray-600" />}        
+                </div>
               </div>
 
-              <div className="mt-4">
+              <div className="mt-4 relative">
                 <p className="text-sm font-semibold">Confirm new password</p>
                 <input
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
@@ -845,6 +852,9 @@ export default function RegisterManagerModal({ onclose }) {
                   className="border-2 border-gray-300 rounded-[8px] w-full p-2"
                   required
                 />
+                <div className="absolute top-8 right-4" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  {showConfirmPassword ? <Eye size={19} className="cursor-pointer text-gray-600"  /> : <EyeOff size={19} className="cursor-pointer text-gray-600" />}        
+                </div>
               </div>
 
               <div className="mt-8 flex justify-between items-center">
