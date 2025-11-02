@@ -99,11 +99,7 @@ export default function EmployeeCard({
       <div className="">
         <h3 className="font-semibold text-gray-700 text-md mb-1">Responsibilities</h3>
         <p className="text-[12px]">{responsibilities}</p>
-        {/* <ul className="text-gray-600 text-sm list-disc list-inside space-y-1">
-          {responsibilities.map((item, idx) => (
-            <p key={idx}>{item}</p>
-          ))}
-        </ul> */}
+       
       </div>
 
       {/* Actions */}
