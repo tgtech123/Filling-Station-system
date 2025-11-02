@@ -11,7 +11,6 @@ export default function PumpDisplay({fuelType}) {
 
 
   // fetch pumps when the component mounts
-
   useEffect(()=> {
     getPumps();
   }, [getPumps])

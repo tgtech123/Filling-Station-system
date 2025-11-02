@@ -1,12 +1,14 @@
-'use client'
+
+"use client"
 import React, { useState } from 'react'
-import { X, ArrowLeft, Wrench, ChevronDown, Plus } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import Link from 'next/link';
 import StaffManagement from './StaffManagement'
 import NewStaffModal from './NewStaffModal';
 
-const page = () => {
+const Page = () => {
   const [isOpen, setIsOpen] = useState(false)
+  
   return (
         <div>
             <header className="px-4 lg:px-[40px] fixed w-full inset-0 z-50 bg-white shadow-sm h-[170px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
@@ -42,4 +44,4 @@ const page = () => {
   )
 }
 
-export default page
+export default Page

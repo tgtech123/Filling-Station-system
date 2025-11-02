@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import usePumpStore from "@/store/pumpStore";
 
 export default function GlobalPriceManagement() {
-  const {pumps, getPumps, updatePriceByFuel, loading } = usePumpStore();
+  const {pumps, getPumps, updatePriceByFuel, } = usePumpStore();
+  const [isUpdating, setIsUpdating] =useState(false)
 
   // each fuel type state
   const [prices, setPrices] = useState({
@@ -43,7 +44,9 @@ export default function GlobalPriceManagement() {
   //  Handle submit
   const handleUpdateAll = async (e) => {
     e.preventDefault();
+    setIsUpdating(true)
     await updatePriceByFuel(prices);
+    setIsUpdating(false)
   };
 
 //   const handleChange = (e) => {
@@ -134,11 +137,11 @@ export default function GlobalPriceManagement() {
 
         <div className="flex justify-end mt-10">
           <button
-            disabled={loading}
+            disabled={isUpdating}
             type="submit"
             className="cursor-pointer font-semibold hover:bg-[#0a71d8] bg-[#0080ff] text-white text-sm py-3 px-4 rounded-[8px]"
           >
-            {loading ? "Updating..." : "Update All Prices"}
+            {isUpdating ? "Updating..." : "Update All Prices"}
           </button>
         </div>
       </form>
