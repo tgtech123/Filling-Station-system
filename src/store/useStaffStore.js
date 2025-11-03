@@ -85,7 +85,7 @@ const useStaffStore = create((set, get) => ({
     }));
 
     try {
-      const res = await axios.post(`${API}/api/staff/update-staff/${id}`, updatedData, {
+      const res = await axios.post(`${API}/api/auth/update-staff/${id}`, updatedData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -116,8 +116,7 @@ const useStaffStore = create((set, get) => ({
     }));
 
     try {
-      await axios.post(
-        `${API}/api/staff/delete-staff/${id}`,
+      await axios.post(`${API}/api/auth/delete-staff/${id}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
