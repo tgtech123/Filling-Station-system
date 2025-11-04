@@ -1,6 +1,5 @@
 "use client";
 
-import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import FlashCard from "@/components/Dashboard/FlashCard";
 import { ArrowLeft, House, Plus, TrendingUp } from "lucide-react";
