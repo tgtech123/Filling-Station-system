@@ -6,6 +6,7 @@ const TerminateStaffModal = ({ isOpen, onClose, staffId, deleteStaff, token, sta
   if (!isOpen) return null;
 
   const [isLoading, setIsLoading] = useState(false)
+  
   const handleDelete = async () =>{
       try {
         setIsLoading(true)
@@ -38,7 +39,7 @@ const TerminateStaffModal = ({ isOpen, onClose, staffId, deleteStaff, token, sta
 
         <p className="py-4 text-[15px]">
           Terminating <span className="font-bold ">{staffName}</span> account would remove the details from your
-          lists of staff, and will deny the staff access to login or perform his
+          lists of staff, and will deny the staff access to login or perform 
           necessary operations
         </p>
 
