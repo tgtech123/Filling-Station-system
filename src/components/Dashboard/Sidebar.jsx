@@ -41,6 +41,7 @@ import { CiGrid41 } from "react-icons/ci";
 import { CgTrack } from "react-icons/cg";
 import { GiExpense, GiTakeMyMoney } from "react-icons/gi";
 import { useState, useEffect } from "react";
+import { useImageStore } from "@/store/useImageStore";
 
 export default function Sidebar({ isVisible, toggleSidebar }) {
   const pathname = usePathname();
@@ -49,6 +50,8 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [openDropdown, setOpenDropdown] = useState(null);
+
+  const { getUserImage } = useImageStore();
 
   // Get user data from localStorage
   useEffect(() => {
@@ -528,7 +531,7 @@ const visibleLinks = getVisibleLinks(userRole);
       <div className="flex-shrink-0 absolute bottom-4 left-4 right-4 p-3 rounded-[12px] border-2 border-gray-200 bg-white shadow-sm">
         <div className="flex items-center justify-between">
           <UserAvatar
-            userAvatarImg={userAvatarImg}
+            userId={userData?.id || userData?.employeeId || userData?._id}
             username={fullName}
             userRole={userRole}
           />
