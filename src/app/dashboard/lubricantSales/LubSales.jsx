@@ -75,105 +75,71 @@ const LubSales = () => {
     }
   };
 
-  // const handleSubmit = async () => {
-  //   try {
-  //     const token = localStorage.getItem("token");
-  //     const res = await fetch(`${API_URL}/api/lubricant/sell-lubricant`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify({
-  //         lubricantId,
-  //         paymentMethod,
-  //         priceSold: Number(unitPrice),
-  //         qtySold: Number(quantity),
-  //       }),
-  //     });
-
-  //     const result = await res.json();
-
-  //     if (res.ok) {
-  //       setMessage("✅ Sale recorded successfully!");
-  //       setIsModalOpen(true); // open receipt modal after success
-  //       // clear fields
-  //       setBarcode("");
-  //       setProductName("");
-  //       setUnitPrice("");
-  //       setQuantity("1");
-  //       setAmount("");
-  //       setLubricantId("");
-  //     } else {
-  //       setMessage(result.error || result.message || "❌ Error recording sale");
-  //     }
-  //   } catch (err) {
-  //     setMessage("❌ Server error, please try again.");
-  //   }
-  // };
-
+  let normalizedPaymentMethod = paymentMethod;
+  if (paymentMethod.toLowerCase() === "cash") normalizedPaymentMethod = "cash";
+  else if (paymentMethod.toLowerCase() === "transfer")
+    normalizedPaymentMethod = "transfer";
+  else if (paymentMethod.toLowerCase() === "pos")
+    normalizedPaymentMethod = "POS";
 
   const handleSubmit = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user")); // ✅ get logged-in user
-    const res = await fetch(`${API_URL}/api/lubricant/sell-lubricant`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        lubricantId,
-        paymentMethod,
-        priceSold: Number(unitPrice),
-        qtySold: Number(quantity),
-      }),
-    });
+    try {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user")); 
+      const res = await fetch(`${API_URL}/api/lubricant/sell-lubricant`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          lubricantId,
+          paymentMethod: normalizedPaymentMethod,
+          priceSold: Number(unitPrice),
+          qtySold: Number(quantity),
+        }),
+      });
 
-    const result = await res.json();
+      const result = await res.json();
 
-    if (res.ok) {
-      // ✅ Build receipt data manually
-      const receiptPayload = {
-        cashier: `${user.firstName} ${user.lastName}`,
-        station: user.station?.name || "N/A",
-        address: user.station?.address || "N/A",
-        date: new Date().toLocaleString(),
-        transactionId: result.transactionId || "N/A",
-        paymentType: paymentMethod,
-        items: [
-          {
-            sn: 1,
-            product: productName,
-            unitPrice: unitPrice,
-            qty: quantity,
-            amount: amount,
-          },
-        ],
-        total: amount,
-      };
+      if (res.ok) {
+        const receiptPayload = {
+          cashier: `${user.firstName} ${user.lastName}`,
+          station: user.station?.name || "N/A",
+          address: user.station?.address || "N/A",
+          date: new Date().toLocaleString(),
+          transactionId: result.transactionId || "N/A",
+          paymentType: paymentMethod,
+          items: [
+            {
+              sn: 1,
+              name: productName,
+              unitPrice: unitPrice,
+              quantity: quantity,
+              amount: amount,
+            },
+          ],
+          total: amount,
+        };
 
-      // ✅ Pass to modal
-      setMessage("✅ Sale recorded successfully!");
-      setIsModalOpen(true);
-      setReceiptData(receiptPayload); // <--- add this new state
+        setMessage("✅ Sale recorded successfully!");
+        setIsModalOpen(true);
+        setReceiptData(receiptPayload); 
 
-      // clear fields
-      setBarcode("");
-      setProductName("");
-      setUnitPrice("");
-      setQuantity("1");
-      setAmount("");
-      setLubricantId("");
-    } else {
-      setMessage(result.error || result.message || "❌ Error recording sale");
+        // clear fields
+        setBarcode("");
+        setProductName("");
+        setUnitPrice("");
+        setQuantity("1");
+        setAmount("");
+        setLubricantId("");
+      } else {
+        setMessage(result.error || result.message || "❌ Error recording sale");
+      }
+    } catch (err) {
+      setMessage("❌ Server error, please try again.");
     }
-  } catch (err) {
-    setMessage("❌ Server error, please try again.");
-  }
-};
-
+  };
 
   const handleBarcodeChange = (e) => {
     const value = e.target.value;
@@ -199,7 +165,7 @@ const LubSales = () => {
         </p>
       </div>
 
-      {/* ✅ Message Display */}
+     
       {message && (
         <div
           className={`p-3 rounded-lg text-sm font-semibold ${
@@ -291,26 +257,6 @@ const LubSales = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         receiptData={receiptData}
-        // isOpen={isModalOpen}
-        // onClose={() => setIsModalOpen(false)}
-        // receiptData={{
-        //   cashier: user ? `${user.firstName} ${user.lastName}` : "Unknown",
-        //   station: user?.station?.name || "N/A",
-        //   address: user?.station?.address || "",
-        //   date: new Date().toLocaleString(),
-        //   transactionId: lubricantId || "N/A",
-        //   paymentType: paymentMethod,
-        //   items: [
-        //     {
-        //       sn: 1,
-        //       product: productName,
-        //       unitPrice: unitPrice,
-        //       qty: quantity,
-        //       amount: amount,
-        //     },
-        //   ],
-        //   total: amount,
-        // }}
       />
     </div>
   );

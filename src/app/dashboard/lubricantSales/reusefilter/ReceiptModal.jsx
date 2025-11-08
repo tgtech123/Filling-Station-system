@@ -20,13 +20,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
   } = receiptData || {};
 
   console.log("receipt data is: ", receiptData)
-  // ✅ Auto close after 4 seconds
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     onClose();
-  //   }, 4000);
-  //   return () => clearTimeout(timer);
-  // }, [onClose]);
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
@@ -39,12 +33,10 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-lg p-4 sm:p-6 w-[460px] max-w-md md:max-w-lg lg:max-w-xl z-50">
 
-        {/* ✅ Checkmark Icon */}
         <div className="absolute flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 place-self-center -top-8 text-white bg-green-700 rounded-full shadow-lg">
           <IoMdCheckmark size={36} className="sm:size-[50px]" />
         </div>
 
-        {/* ✅ Header / Logo */}
         <div className="text-center mt-6">
           <Image
             src="/station-logo.png"
@@ -56,7 +48,6 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
           <p className="text-xl sm:text-2xl font-bold mb-4">Lubricant Sales Receipt</p>
         </div>
 
-        {/* ✅ Details */}
         <div className="text-xs sm:text-sm text-gray-700 mb-4">
           <div className="flex flex-col sm:flex-row sm:justify-between">
             <p>Cashier: {cashier}</p>
@@ -70,7 +61,6 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
           {address && <p className="text-center">{address}</p>}
         </div>
 
-        {/* ✅ Table */}
         <div className="overflow-x-auto">
           <table className="w-full border border-gray-200 text-xs sm:text-sm mb-4">
             <thead className="bg-gray-100">
@@ -106,7 +96,6 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
           </table>
         </div>
 
-        {/* ✅ Total */}
         <div className="flex justify-between text-neutral-800 font-bold mb-2">
           <p>TOTAL</p>
           <span className="text-right">
@@ -117,7 +106,6 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
           </span>
         </div>
 
-        {/* ✅ Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mt-4">
           <button
             onClick={onClose}
