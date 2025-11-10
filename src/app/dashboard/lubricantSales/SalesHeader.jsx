@@ -6,6 +6,7 @@ import { BsPrinter } from "react-icons/bs";
 import Link from "next/link";
 // import page from '/lubricantSales/reusefilter'
 import Modal from "./reusefilter/Modal";
+import { Plus } from "lucide-react";
 
 
 const SalesHeader = () => {
@@ -39,10 +40,17 @@ const SalesHeader = () => {
 
         {/* Reprint Button */}
         {/* <Link href='/dashboard/lubricantSales/reusefilter'> */}
+        <div className="flex gap-4">
+
           <button onClick={()=> setIsModalOpen(true)} className="bg-[#0080FF]  flex  gap-2 w-full md:w-auto px-4 py-2 text-white font-semibold hover:bg-blue-700 rounded-lg">
             Reprint
             <BsPrinter size={24} />
           </button>
+          <button className="border-2 border-[#0080FF]  flex  gap-2 w-full md:w-auto px-4 py-2 text-[#0080ff] font-semibold hover:bg-blue-700 rounded-lg">
+            Add Stock
+            <Plus size={24} />
+          </button>
+        </div>
         {/* </Link> */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}/>
           
