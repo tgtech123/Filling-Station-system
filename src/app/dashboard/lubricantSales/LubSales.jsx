@@ -419,59 +419,157 @@ const LubSales = () => {
     );
   };
 
+  // const handleSubmit = async () => {
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     const user = JSON.parse(localStorage.getItem("user"));
+
+  //     const validItems = rows.filter((row) => row.lubricantId);
+  //     if (!validItems.length) {
+  //       setMessage("❌ Please scan at least one valid product");
+  //       return;
+  //     }
+
+  //     // Record each sale
+  //     for (const item of validItems) {
+
+  //       const normalizedPaymentMethod = paymentMethod === "POS" ? "POS" : paymentMethod.toLowerCase(); 
+
+  //       await fetch(`${API_URL}/api/lubricant/sell-lubricant`, {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify({
+  //           lubricantId: item.lubricantId,
+  //           paymentMethod: normalizedPaymentMethod,
+  //           priceSold: Number(item.unitPrice),
+  //           qtySold: Number(item.quantity),
+  //         }),
+  //       });
+  //     }
+
+  //     const totalAmount = validItems.reduce(
+  //       (sum, item) => sum + Number(item.amount),
+  //       0
+  //     );
+
+  //     // Generate receipt
+  //     const receiptPayload = {
+  //       cashier: `${user.firstName} ${user.lastName}`,
+  //       station: user.station?.name || "N/A",
+  //       address: user.station?.address || "N/A",
+  //       date: new Date().toLocaleString(),
+  //       paymentType: paymentMethod,
+  //       items: validItems.map((item, i) => ({
+  //         sn: i + 1,
+  //         name: item.productName,
+  //         unitPrice: item.unitPrice,
+  //         quantity: item.quantity,
+  //         amount: item.amount,
+  //       })),
+  //       total: totalAmount,
+  //     };
+
+  //     setMessage("✅ Sale recorded successfully!");
+  //     // setIsModalOpen(true);
+  //     // setReceiptData(receiptPayload);
+  //     // setRows([
+  //     //   {
+  //     //     barcode: "",
+  //     //     productName: "",
+  //     //     unitPrice: "",
+  //     //     quantity: "1",
+  //     //     amount: "",
+  //     //     lubricantId: null,
+  //     //   },
+  //     // ]);
+  //      setTimeout(() => {
+  //     setReceiptData(receiptPayload);
+  //     setIsModalOpen(true);
+  //     setRows([
+  //       {
+  //         barcode: "",
+  //         productName: "",
+  //         unitPrice: "",
+  //         quantity: "1",
+  //         amount: "",
+  //         lubricantId: null,
+  //       },
+  //     ]);
+  //     setMessage(""); // Clear the message
+  //   }, 2000); 
+
+  //   } catch (err) {
+  //     setMessage("❌ Server error, please try again.");
+  //   }
+  // };
+
   const handleSubmit = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user"));
+  try {
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user"));
 
-      const validItems = rows.filter((row) => row.lubricantId);
-      if (!validItems.length) {
-        setMessage("❌ Please scan at least one valid product");
-        return;
-      }
+    const validItems = rows.filter((row) => row.lubricantId);
+    if (!validItems.length) {
+      setMessage("❌ Please scan at least one valid product");
+      return;
+    }
 
-      // Record each sale
-      for (const item of validItems) {
-        await fetch(`${API_URL}/api/lubricant/sell-lubricant`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            lubricantId: item.lubricantId,
-            paymentMethod,
-            priceSold: Number(item.unitPrice),
-            qtySold: Number(item.quantity),
-          }),
-        });
-      }
+    const normalizedPaymentMethod = paymentMethod === "POS" ? "POS" : paymentMethod.toLowerCase();
 
-      const totalAmount = validItems.reduce(
-        (sum, item) => sum + Number(item.amount),
-        0
-      );
-
-      // Generate receipt
-      const receiptPayload = {
-        cashier: `${user.firstName} ${user.lastName}`,
-        station: user.station?.name || "N/A",
-        address: user.station?.address || "N/A",
-        date: new Date().toLocaleString(),
-        paymentType: paymentMethod,
-        items: validItems.map((item, i) => ({
-          sn: i + 1,
-          name: item.productName,
-          unitPrice: item.unitPrice,
-          quantity: item.quantity,
-          amount: item.amount,
+    // ✅ Send ALL items in ONE request
+    const response = await fetch(`${API_URL}/api/lubricant/sell-lubricant-transaction`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        items: validItems.map(item => ({
+          lubricantId: item.lubricantId,
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.unitPrice),
         })),
-        total: totalAmount,
-      };
+        paymentMethod: normalizedPaymentMethod,
+      }),
+    });
 
-      setMessage("✅ Sale recorded successfully!");
-      setIsModalOpen(true);
+    const result = await response.json();
+    
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || result.error || "Failed to record sale");
+    }
+
+    const totalAmount = validItems.reduce(
+      (sum, item) => sum + Number(item.amount),
+      0
+    );
+
+    // Generate receipt
+    const receiptPayload = {
+      cashier: `${user.firstName} ${user.lastName}`,
+      station: user.station?.name || "N/A",
+      address: user.station?.address || "N/A",
+      date: new Date().toLocaleString(),
+      paymentType: paymentMethod,
+      txnId: result.data.txnId, // ✅ Use the transaction ID from backend
+      items: validItems.map((item, i) => ({
+        sn: i + 1,
+        name: item.productName,
+        unitPrice: item.unitPrice,
+        quantity: item.quantity,
+        amount: item.amount,
+      })),
+      total: totalAmount,
+    };
+
+    setMessage("✅ Sale recorded successfully!");
+    
+    setTimeout(() => {
       setReceiptData(receiptPayload);
+      setIsModalOpen(true);
       setRows([
         {
           barcode: "",
@@ -482,10 +580,14 @@ const LubSales = () => {
           lubricantId: null,
         },
       ]);
-    } catch (err) {
-      setMessage("❌ Server error, please try again.");
-    }
-  };
+      setMessage("");
+    }, 2000);
+    
+  } catch (err) {
+    setMessage(`❌ ${err.message || "Server error, please try again."}`);
+    console.error("Sale error:", err);
+  }
+};
 
   return (
     <div className="bg-white p-4 sm:p-6 md:p-8 flex flex-col rounded-xl gap-8 text-neutral-800 w-full">
