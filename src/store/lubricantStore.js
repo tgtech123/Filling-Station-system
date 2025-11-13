@@ -18,20 +18,24 @@ export const useLubricantStore = create((set, get) => ({
     };
   },
 
-  // 🔹 Fetch all lubricants
-  fetchLubricants: async () => {
-    set({ loading: true, error: null });
-    try {
-      const res = await fetch(`${API_URL}/api/lubricant/`, {
-        headers: get().getAuthHeaders(),
-      });
-      if (!res.ok) throw new Error("Failed to fetch lubricants");
-      const data = await res.json();
-      set({ lubricants: data, loading: false });
-    } catch (err) {
-      set({ error: err.message, loading: false });
-    }
-  },
+//fetch lubricants
+ fetchLubricants: async () => {
+  set({ loading: true, error: null });
+  try {
+    const res = await fetch(`${API_URL}/api/lubricant`, {
+      method: "GET",
+      headers: get().getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error("Failed to fetch lubricants");
+    const result = await res.json();
+
+    // Grab the array inside data
+    set({ lubricants: result.data || [], loading: false });
+  } catch (err) {
+    set({ error: err.message, loading: false });
+  }
+},
+
 
   // 🔹 Get lubricant by barcode
   getLubricantByBarcode: async (barcode) => {
@@ -132,4 +136,29 @@ export const useLubricantStore = create((set, get) => ({
       set({ error: err.message, loading: false });
     }
   },
+  // 🔹 Search lubricants by product name or barcode
+searchLubricants: async (searchTerm) => {
+  const lower = searchTerm.toLowerCase();
+
+  try {
+    // Fetch all lubricants if not already loaded
+    let lubricants = get().lubricants;
+    if (!lubricants.length) {
+      await get().fetchLubricants();
+      lubricants = get().lubricants;
+    }
+
+    // Filter by productName or barcode
+    const filtered = lubricants.filter((lub) => 
+      lub.productName.toLowerCase().includes(lower) ||
+      (lub.barcode && lub.barcode.includes(searchTerm))
+    );
+
+    return filtered;
+  } catch (err) {
+    console.error("Error searching lubricants:", err);
+    return [];
+  }
+}
+
 }));
