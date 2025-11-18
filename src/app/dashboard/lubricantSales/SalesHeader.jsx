@@ -2,19 +2,29 @@
 import React, { useState, useEffect, useRef } from "react";
 import { IoIosSearch } from "react-icons/io";
 import { BsPrinter } from "react-icons/bs";
-import { Plus } from "lucide-react";
+import { Calendar, Plus } from "lucide-react";
 import Link from "next/link";
 import Modal from "./reusefilter/Modal";
 import { useLubricantStore } from "@/store/lubricantStore";
+import LubricantStockModal from "./LubricantStockModal";
 
 const SalesHeader = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [stockModalOpen, setStockModalOpen] = useState(false);
   const inputRef = useRef(null);
 
   const { searchLubricants, setSelectedProductForSale } = useLubricantStore(); // 🆕 Added setSelectedProductForSale
+
+
+  const d = new Date();
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+
+  const formattedDate = `${day}/${month}/${year}`;
 
   // handle search
   const handleSearch = async () => {
@@ -61,10 +71,12 @@ const SalesHeader = () => {
           ref={inputRef}
         >
           {/* Date Input */}
-          <input
-            type="date"
-            className="border p-2 rounded-md text-purple-500 font-semibold w-full md:w-auto"
-          />
+          <div className="flex items-center gap-1">
+            <Calendar className="text-purple-600" />
+            <p className="text-purple-600 text-sm font-semibold">
+              {formattedDate}
+            </p>
+          </div>
 
           {/* Search Input */}
           <div className="flex relative w-full md:w-[400px]">
@@ -92,7 +104,7 @@ const SalesHeader = () => {
                     className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
                     onClick={() => handleProductSelect(item)} // 🆕 Updated to use new handler
                   >
-                    {item.productName} - {item.barcode}
+                    {item.productName}
                   </li>
                 ))}
               </ul>
@@ -110,7 +122,7 @@ const SalesHeader = () => {
             <BsPrinter size={24} />
           </button>
 
-          <button className="border-2 border-[#0080FF] flex gap-2 w-full md:w-auto px-4 py-2 text-[#0080ff] font-semibold hover:bg-blue-700 rounded-lg">
+          <button onClick={() => setStockModalOpen(true)} className="border-2 border-[#0080FF] flex gap-2 w-full md:w-auto px-4 py-2 text-[#0080ff] font-semibold hover:bg-blue-700 hover:text-white hover:border-blue-700 rounded-lg">
             Add Stock
             <Plus size={24} />
           </button>
@@ -118,6 +130,7 @@ const SalesHeader = () => {
 
         {/* Modal */}
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+        {stockModalOpen && <LubricantStockModal onClose={() => setStockModalOpen(false)} />}
       </div>
     </div>
   );
