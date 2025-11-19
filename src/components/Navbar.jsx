@@ -40,7 +40,7 @@ export default function Navbar() {
           Features
         </Link>
         <Link href="/pricing" className="text-lg font-semibold text-gray-500">
-          Plans & Pricing
+          Pricing
         </Link>
         <Link href="/contact" className="text-lg font-semibold text-gray-500">
           Contact
@@ -48,6 +48,7 @@ export default function Navbar() {
         <Link href="/login" className="text-lg font-semibold text-gray-500">
           Login
         </Link>
+        
 
         <div
           className="flex bg-[#0080ff] gap-2 py-3 px-6 rounded-[8px] text-white items-center cursor-pointer"
@@ -81,11 +82,11 @@ export default function Navbar() {
             />
           </div>
 
-          <Link href="/">Home</Link>
-          <Link href="/features">Features</Link>
-          <Link href="/contact">Contact</Link>
-          <Link href="/pricing">Pricing</Link>
-          <Link href="/login">Login</Link>
+          <Link href="/" onClick={() => setIsOpen(false)}>Home</Link>
+          <Link href="/features" onClick={() => setIsOpen(false)}>Features</Link>
+          <Link href="/contact" onClick={() => setIsOpen(false)}>Contact</Link>
+          <Link href="/pricing" onClick={() => setIsOpen(false)}>Plans & Pricing</Link>
+          <Link href="/login" onClick={() => setIsOpen(false)}>Login</Link>
 
           <div
             className="cursor-pointer flex bg-[#0080ff] py-3 px-6 rounded-[8px] text-white items-center"

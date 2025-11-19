@@ -14,7 +14,7 @@ export const overviewCardData = [
   },
   {
     name: "Total Expenses",
-    perios: "",
+    period: "",
     number: "N4,234",
     icon: (
         <Image 

@@ -1,35 +1,188 @@
-// import DisplayCard from "@/components/Dashboard/DisplayCard";
-// import Table from "@/components/Table";
-// import {
-//   ChevronDown,
-//   Download,
-//   Eye,
-//   ListFilter,
-//   Search,
-//   X,
-// } from "lucide-react";
-// import { lubricantTrackerColumns, lubricantTrackerData } from "./lubricantData";
+import { useState, useEffect } from "react";
+import DisplayCard from "@/components/Dashboard/DisplayCard";
+import Table from "@/components/Table";
+import Pagination from "@/components/Pagination";
+import { ChevronDown, Download, Eye, ListFilter, Search, X } from "lucide-react";
+import InvoiceModal from "./InvoiceModal";
+import FilterModal from "./FilterModal";
+import { useLubricantStore } from "@/store/lubricantStore"; // your Zustand store
 
 // export default function LubricantTracker({ onclose }) {
+//   const itemsPerPage = 10;
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+//   const [showFilterModal, setShowFilterModal] = useState(false);
+//   const [searchTerm, setSearchTerm] = useState("");
+
+//   const { getAllPurchases, purchases } = useLubricantStore();
+
+//   // Fetch purchases from backend on mount
+//   useEffect(() => {
+//     getAllPurchases();
+//   }, []);
+
+//   // Filter purchases by search term
+//   const filteredData = purchases.filter((purchase) =>
+//     purchase.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//     purchase.invoiceNo.includes(searchTerm)
+//   );
+
+//   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+//   const startIndex = (currentPage - 1) * itemsPerPage;
+//   const endIndex = startIndex + itemsPerPage;
+//   const currentData = filteredData.slice(startIndex, endIndex);
+
+//   // Table columns definition
+//   const columns = [
+//     { header: "Supplier", accessor: "supplier" },
+//     { header: "Invoice No", accessor: "invoiceNo" },
+//     { header: "Payment Method", accessor: "paymentMethod" },
+//     { header: "Purchase Date", accessor: "purchaseDate" },
+//     { 
+//       header: "Products",
+//       accessor: "items",
+//       cell: (items) => (
+//         <div className="max-w-[250px] truncate" title={items.map(i => i.productName).join(", ")}>
+//           {items.map((i) => i.productName).join(", ")}
+//         </div>
+//       )
+//     },
+//     { header: "Total Amount", accessor: "totalAmount" },
+//   ];
+
 //   return (
-//     <div className="fixed px-4 lg:px-0 inset-0  z-50 flex items-center justify-center bg-black/50">
-//       {/* modal box */}
+//     <div className="fixed px-4 lg:px-0 inset-0 z-50 flex items-center justify-center bg-black/50">
 //       <div className="bg-[#f6f6f6] border-2 rounded-lg w-full max-w-[400px] lg:max-w-[1000px] p-3 lg:p-6 max-h-[80vh] scrollbar-hide overflow-y-auto">
 //         <div className="mb-4 flex justify-end cursor-pointer">
 //           <X onClick={onclose} />
 //         </div>
+
 //         <header className="mb-8">
-//           <h2 className="font-semibold text-2xl"> Lubricant Tracker</h2>
+//           <h2 className="font-semibold text-2xl">Lubricant Tracker</h2>
 //           <p>Track lubricant purchases and records</p>
 //         </header>
 
 //         <DisplayCard>
-//           <div className="flex flex-col gap-4 lg:flex-row justify-between items-center">
+//           <div className="flex flex-col gap-4 lg:flex-row justify-between items-center mb-4">
 //             <div className="relative w-full lg:w-1/2">
 //               <input
 //                 type="text"
 //                 className="w-full border-2 border-gray-300 p-2 rounded-xl"
+//                 placeholder="Search by supplier or invoice..."
+//                 value={searchTerm}
+//                 onChange={(e) => setSearchTerm(e.target.value)}
 //               />
+//               <Search className="absolute top-2 right-3" />
+//             </div>
+
+//             <div className="flex gap-4">
+//               <button className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
+//                 Duration <ChevronDown />
+//               </button>
+//               <button onClick={() => setShowFilterModal(true)} className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
+//                 Filter <ListFilter />
+//               </button>
+//               <button className="flex gap-2 items-center p-2 rounded-[10px] bg-[#0080ff] text-white">
+//                 Export <Download />
+//               </button>
+//             </div>
+//           </div>
+
+//           <Table
+//             columns={columns}
+//             data={currentData}
+//             renderActions={(row) => (
+//               <div className="flex gap-6">
+//                 <button onClick={() => setShowInvoiceModal(true)} className="text-gray-500">
+//                   <Eye size={18} />
+//                 </button>
+//                 <button onClick={() => console.log("Export", row)} className="text-orange-500">
+//                   <Download size={18} />
+//                 </button>
+//               </div>
+//             )}
+//           />
+
+//           <Pagination
+//             currentPage={currentPage}
+//             totalPages={totalPages}
+//             totalItems={filteredData.length}
+//             itemsPerPage={itemsPerPage}
+//             onPageChange={setCurrentPage}
+//             className="mt-6"
+//           />
+//         </DisplayCard>
+//       </div>
+
+//       {showInvoiceModal && <InvoiceModal onClose={() => setShowInvoiceModal(false)} />}
+//       {showFilterModal && <FilterModal onClose={() => setShowFilterModal(false)} />}
+//     </div>
+//   );
+// }
+
+
+
+// import { useState, useEffect } from "react";
+// import DisplayCard from "@/components/Dashboard/DisplayCard";
+// import Table from "@/components/Table";
+// import Pagination from "@/components/Pagination";
+// import { ChevronDown, Download, Eye, ListFilter, Search, X } from "lucide-react";
+// import { useLubricantStore } from "@/store/lubricantStore"; // import your store
+
+// import InvoiceModal from "./InvoiceModal";
+// import FilterModal from "./FilterModal";
+
+// export default function LubricantTracker({ onclose }) {
+//   const itemsPerPage = 10;
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+//   const [showFilterModal, setShowFilterModal] = useState(false);
+//   const [tableData, setTableData] = useState([]);
+//   const { getAllPurchases } = useLubricantStore();
+
+//   useEffect(() => {
+//     const fetchPurchases = async () => {
+//       try {
+//         const response = await getAllPurchases();
+//         // Transform object data into array-of-arrays for Table.jsx
+//         const formatted = response.data.map((purchase) => [
+//           purchase.invoiceNo,
+//           purchase.supplier,
+//           purchase.paymentMethod,
+//           purchase.purchaseDate,
+//           purchase.items.map((i) => i.productName).join(", "), // ellipsis handled in table
+//           purchase.totalAmount,
+//         ]);
+//         setTableData(formatted);
+//       } catch (err) {
+//         console.error("Failed to fetch purchases:", err);
+//       }
+//     };
+
+//     fetchPurchases();
+//   }, [getAllPurchases]);
+
+//   const totalPages = Math.ceil(tableData.length / itemsPerPage);
+//   const startIndex = (currentPage - 1) * itemsPerPage;
+//   const endIndex = startIndex + itemsPerPage;
+//   const currentData = tableData.slice(startIndex, endIndex);
+
+//   return (
+//     <div className="fixed px-4 lg:px-0 inset-0 z-50 flex items-center justify-center bg-black/50">
+//       <div className="bg-[#f6f6f6] border-2 rounded-lg w-full max-w-[400px] lg:max-w-[1000px] p-3 lg:p-6 max-h-[80vh] scrollbar-hide overflow-y-auto">
+//         <div className="mb-4 flex justify-end cursor-pointer">
+//           <X onClick={onclose} />
+//         </div>
+
+//         <header className="mb-8">
+//           <h2 className="font-semibold text-2xl">Lubricant Tracker</h2>
+//           <p>Track lubricant purchases and records</p>
+//         </header>
+
+//         <DisplayCard>
+//           <div className="flex flex-col gap-4 lg:flex-row justify-between items-center mb-4">
+//             <div className="relative w-full lg:w-1/2">
+//               <input type="text" className="w-full border-2 border-gray-300 p-2 rounded-xl" placeholder="Search..." />
 //               <Search className="absolute top-2 right-3" />
 //             </div>
 
@@ -38,7 +191,7 @@
 //                 Duration
 //                 <ChevronDown />
 //               </button>
-//               <button className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
+//               <button onClick={() => setShowFilterModal(true)} className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
 //                 Filter
 //                 <ListFilter />
 //               </button>
@@ -50,141 +203,150 @@
 //           </div>
 
 //           <Table
-//             columns={lubricantTrackerColumns}
-//             data={lubricantTrackerData}
+//             columns={["Invoice No", "Supplier", "Payment Method", "Date", "Products", "Total Amount"]}
+//             data={currentData}
 //             renderActions={(row) => (
 //               <div className="flex gap-6">
-//                 <button
-//                   onClick={() => console.log("Preview", row)}
-//                   className="text-gray-500"
-//                 >
+//                 <button onClick={() => setShowInvoiceModal(true)} className="text-gray-500">
 //                   <Eye size={18} />
 //                 </button>
-//                 <button
-//                   onClick={() => console.log("Export", row)}
-//                   className="text-orange-500"
-//                 >
+//                 <button onClick={() => console.log("Export", row)} className="text-orange-500">
 //                   <Download size={18} />
 //                 </button>
 //               </div>
 //             )}
 //           />
+
+//           <Pagination
+//             currentPage={currentPage}
+//             totalPages={totalPages}
+//             totalItems={tableData.length}
+//             itemsPerPage={itemsPerPage}
+//             onPageChange={setCurrentPage}
+//             className="mt-6"
+//           />
 //         </DisplayCard>
 //       </div>
+
+//       {showInvoiceModal && <InvoiceModal onClose={() => setShowInvoiceModal(false)} />}
+//       {showFilterModal && <FilterModal onClose={() => setShowFilterModal(false)} />}
 //     </div>
 //   );
 // }
 
 
-
-import { useState } from "react";
-import DisplayCard from "@/components/Dashboard/DisplayCard";
-import Table from "@/components/Table";
-import Pagination from "@/components/Pagination"; // import your pagination
-import {
-  ChevronDown,
-  Download,
-  Eye,
-  ListFilter,
-  Search,
-  X,
-} from "lucide-react";
-import {
-  lubricantTrackerColumns,
-  lubricantTrackerData,
-} from "./lubricantData";
-import InvoiceModal from "./InvoiceModal";
+// import { useState, useEffect } from "react";
+// import { useLubricantStore } from "@/store/lubricantStore";
 
 export default function LubricantTracker({ onclose }) {
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [tableData, setTableData] = useState([]);
+  const [selectedInvoice, setSelectedInvoice] = useState(null); // <-- add this
+  const { getAllPurchases } = useLubricantStore();
 
-  // total pages
-  const totalPages = Math.ceil(lubricantTrackerData.length / itemsPerPage);
+  useEffect(() => {
+    const fetchPurchases = async () => {
+      try {
+        const response = await getAllPurchases();
+        setTableData(response.data); // store the raw data
+      } catch (err) {
+        console.error("Failed to fetch purchases:", err);
+      }
+    };
 
-  // slice data for current page
+    fetchPurchases();
+  }, [getAllPurchases]);
+
+  const totalPages = Math.ceil(tableData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentData = lubricantTrackerData.slice(startIndex, endIndex);
-
+  const currentData = tableData.slice(startIndex, endIndex);
 
   return (
     <div className="fixed px-4 lg:px-0 inset-0 z-50 flex items-center justify-center bg-black/50">
-      {/* modal box */}
       <div className="bg-[#f6f6f6] border-2 rounded-lg w-full max-w-[400px] lg:max-w-[1000px] p-3 lg:p-6 max-h-[80vh] scrollbar-hide overflow-y-auto">
         <div className="mb-4 flex justify-end cursor-pointer">
-          <X onClick={onclose} />
-        </div>
-        <header className="mb-8">
-          <h2 className="font-semibold text-2xl">Lubricant Tracker</h2>
-          <p>Track lubricant purchases and records</p>
-        </header>
+           <X onClick={onclose} />
+         </div>
 
-        <DisplayCard>
-          <div className="flex flex-col gap-4 lg:flex-row justify-between items-center">
-            <div className="relative w-full lg:w-1/2">
-              <input
-                type="text"
-                className="w-full border-2 border-gray-300 p-2 rounded-xl"
-                placeholder="Search..."
-              />
-              <Search className="absolute top-2 right-3" />
+         <header className="mb-8">
+           <h2 className="font-semibold text-2xl">Lubricant Tracker</h2>
+           <p>Track lubricant purchases and records</p>
+         </header>
+
+         <DisplayCard>
+           <div className="flex flex-col gap-4 lg:flex-row justify-between items-center mb-4">
+             <div className="relative w-full lg:w-1/2">
+               <input type="text" className="w-full border-2 border-gray-300 p-2 rounded-xl" placeholder="Search..." />
+               <Search className="absolute top-2 right-3" />
+             </div>
+
+             <div className="flex gap-4">
+               <button className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
+                 Duration
+                 <ChevronDown />
+               </button>
+               <button onClick={() => setShowFilterModal(true)} className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
+                 Filter
+                 <ListFilter />
+               </button>
+               <button className="flex gap-2 items-center p-2 rounded-[10px] bg-[#0080ff] text-white">
+                 Export
+                 <Download />
+               </button>
+             </div>
+           </div>
+
+
+        <Table
+          columns={["Invoice No", "Supplier", "Payment Method", "Date", "Products", "Total Amount"]}
+          data={currentData.map((purchase) => [
+            purchase.invoiceNo,
+            purchase.supplier,
+            purchase.paymentMethod,
+            purchase.purchaseDate,
+            purchase.items.map((i) => i.productName).join(", "),
+            purchase.totalAmount,
+          ])}
+          renderActions={(row, rowIndex) => (
+            <div className="flex gap-6">
+              <button
+                onClick={() => {
+                  setSelectedInvoice(currentData[rowIndex]); // <-- pass the selected purchase
+                  setShowInvoiceModal(true);
+                }}
+                className="text-gray-500"
+              >
+                <Eye size={18} />
+              </button>
+              <button onClick={() => console.log("Export", row)} className="text-orange-500">
+                <Download size={18} />
+              </button>
             </div>
+          )}
+        />
 
-            <div className="flex gap-4">
-              <button className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
-                Duration
-                <ChevronDown />
-              </button>
-              <button className="flex gap-2 items-center p-2 rounded-[10px] border-2 border-gray-300">
-                Filter
-                <ListFilter />
-              </button>
-              <button className="flex gap-2 items-center p-2 rounded-[10px] bg-[#0080ff] text-white">
-                Export
-                <Download />
-              </button>
-            </div>
-          </div>
-
-          {/* Pass paginated data here */}
-          <Table
-            columns={lubricantTrackerColumns}
-            data={currentData}
-            renderActions={(row) => (
-              <div className="flex gap-6">
-                <button
-                  onClick={() => setShowInvoiceModal(true)}
-                  className="text-gray-500"
-                >
-                  <Eye size={18} />
-                </button>
-                <button
-                  onClick={() => console.log("Export", row)}
-                  className="text-orange-500"
-                >
-                  <Download size={18} />
-                </button>
-              </div>
-            )}
-          />
-
-          {/* Pagination below table */}
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={lubricantTrackerData.length}
-            itemsPerPage={itemsPerPage}
-            onPageChange={setCurrentPage}
-            className="mt-6"
-          />
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={tableData.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+          className="mt-6"
+        />
         </DisplayCard>
       </div>
 
       {showInvoiceModal && (
-        <InvoiceModal onClose={() => setShowInvoiceModal(false)} />
+        <InvoiceModal
+          invoice={selectedInvoice} // <-- pass selected invoice here
+          onClose={() => setShowInvoiceModal(false)}
+        />
       )}
+      {showFilterModal && <FilterModal onClose={() => setShowFilterModal(false)} />}
     </div>
   );
 }

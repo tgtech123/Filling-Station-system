@@ -4,9 +4,8 @@ import Link from 'next/link';
 import { FiPhone } from 'react-icons/fi';
 import { HiOutlineMail } from "react-icons/hi";
 import EditFormField from './EditFormField';
-import {ProfileImageUpload} from './ProfileImageUpload ';
+import ProfileImageUpload from './ProfileImageUpload';
 import { Save, X } from 'lucide-react';
-import ImageUpload from './ImageUpload';
 
 const EditProfilePage = ({ profileData }) => {
   const [formData, setFormData] = useState(profileData);
@@ -52,7 +51,7 @@ const EditProfilePage = ({ profileData }) => {
           <p className="text-sm text-gray-500">Personal and employment information</p>
         </div>
         <Link href="/dashboard/profile">
-          <button className=" text-gray-700 cursor-pointer hover:text-red-500 px-3 py-2 rounded-md">
+          <button className="text-gray-700 cursor-pointer hover:text-red-500 px-3 py-2 rounded-md">
             <X size={20} />
           </button>
         </Link>
@@ -61,11 +60,15 @@ const EditProfilePage = ({ profileData }) => {
       {/* Profile Summary */}
       <div className="flex flex-col md:flex-row justify-between items-center rounded-md p-4 space-y-2 md:space-y-0 md:space-x-4">
         <div className="flex flex-col sm:flex-row items-center gap-2 md:mr-14 text-center sm:text-left">
-          {/* <ProfileImageUpload /> */}
-          <ImageUpload/>
+          {/* Fixed: Use profileData instead of staffData */}
+          <ProfileImageUpload 
+            userId={profileData.id || profileData.employeeId || profileData._id} 
+            currentImage={profileData.profileImage}
+            size="large" 
+          />
           <div>
             <h3 className="font-semibold text-gray-700 text-base sm:text-lg">
-              {formData.fullName}
+              {formData.fullName || `${formData.firstName} ${formData.lastName}`}
             </h3>
             <p className="text-sm text-gray-500">{formData.position}</p>
           </div>
@@ -77,16 +80,13 @@ const EditProfilePage = ({ profileData }) => {
             </button>
           </Link>
           
-          <Link href="/dashboard/profile">
-            <button
-              onClick={handleSave}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-500"
-            >
-              <Save />
-              Save Changes
-            </button>
-          </Link>
-
+          <button
+            onClick={handleSave}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-500"
+          >
+            <Save />
+            Save Changes
+          </button>
         </div>
       </div>
 
@@ -102,7 +102,12 @@ const EditProfilePage = ({ profileData }) => {
           </span>
         </div>
         <div className="w-full h-2 bg-gray-200 rounded-full mt-1">
-          <div className="h-2 bg-blue-600 rounded-full" style={{ width: '25%' }} />
+          <div 
+            className="h-2 bg-blue-600 rounded-full" 
+            style={{ 
+              width: `${Math.min((formData.currentSales / formData.targetSales) * 100, 100)}%` 
+            }} 
+          />
         </div>
       </div>
 
@@ -145,7 +150,7 @@ const EditProfilePage = ({ profileData }) => {
               label="Email address"
               name="email"
               value={formData.email}
-              icon={<HiOutlineMail className=' mt-0.5' size={20}/>}
+              icon={<HiOutlineMail className='mt-0.5' size={20}/>}
               onChange={handleChange}
               formData={formData}
               errors={errors}
@@ -159,7 +164,7 @@ const EditProfilePage = ({ profileData }) => {
               label="Phone number"
               name="phone"
               value={formData.phone}
-              icon={<FiPhone className=' mt-0.5' size={20}/>}
+              icon={<FiPhone className='mt-0.5' size={20}/>}
               onChange={handleChange}
               formData={formData}
               errors={errors}

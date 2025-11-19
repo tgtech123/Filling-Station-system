@@ -9,21 +9,29 @@ const page = () => {
   const [showBlue, setShowBlue] = useState("linkOne")
   return (
     <div className='bg-neutral-100 flex flex-col items-center justify-center '>
-        <div className='flex flex-col w-full justify-center items-center text-center mb-[1.5rem]'>
-            <h1 className='text-[1.875rem] sm:text-[2.25rem] md:text-[3rem] lg:text-[4rem] text-neutral-800 font-semibold'>Plans & Pricing</h1>
+        <div className='flex flex-col mt-20 w-full justify-center items-center text-center mb-[1.5rem]'>
+            <h1 className='text-[1.875rem] sm:text-[2.25rem] md:text-[3rem] lg:text-[4rem] text-[#454545] font-semibold'>Plans & Pricing</h1>
             <p className='text-[1.5rem] sm:text-[1.125rem] md:text-[1.25rem] lg:text-[1.5rem] text-neutral-500 text-center '>Flexible plans to fit your business needs, whether you’re just <br /> starting or scaling up </p>
         </div>
 
         {/* the switch section */}
-        <div className='border-2 mb-[2.8125rem] rounded-full border-neutral-200 bg-[#e7e7e7] max-w-[23.0625rem] w-full h-[3.5rem]'>
-            <div className='flex justify-between p-1 ' >
-                <span id='buttonOne' onClick={() => setButtonOne("buttonOne")} className={`flex gap-2 items-center justify-center p-1.5 rounded-full font-semibold ${buttonOne === "buttonOne"? "bg-white text-neutral-600 text-[1.125rem] border-0 " :"text-neutral-400 border border-neutral-400 "}`}>
+        <div className='border-2 mb-[2.8125rem] rounded-full border-neutral-200 bg-[#e7e7e7] max-w-[22.0625rem] lg:max-w-[28.0625rem] w-full h-[3.5rem]'>
+            <div className='flex justify-between items-center p-0.5' >
+                <span id='buttonOne' onClick={() => setButtonOne("buttonOne")} className={`flex gap-2 items-center text-center mt-2 md:mt-0 justify-center p-1.5 rounded-full font-semibold ${buttonOne === "buttonOne" ? "bg-white text-neutral-600 text-[0.725rem] lg:text-[1.125rem] border-0 items-center justify-center mt-2 md:mt-0 " :"text-neutral-400 "}`}>
                   <button className='items-center'>Bill annually</button>
                   <button className='bg-neutral-100 p-1 rounded-full text-neutral-500'>Save 10%</button>
                 </span>
 
-                <span id='buttonTwo' onClick={()=> setButtonOne("buttonTwo")} className={`flex items-center p-1.5 font-semibold rounded-full ${buttonOne === "buttonTwo" ? "bg-white rounded-full text-neutral-600 text-[1.125rem] " : "text-neutral-400 border border-neutral-400"}`}>
-                      {buttonOne === "buttonTwo" ? "Save 20%" : "Bill monthly"}
+                <span id='buttonTwo' onClick={()=> setButtonOne("buttonTwo")} className={`flex items-center p-1.5  font-semibold rounded-full ${buttonOne === "buttonTwo" ? "bg-white rounded-full text-neutral-600 text-[0.725rem] lg:text-[1.125rem] border-0 " : "text-neutral-400"}`}>
+                  {buttonOne === "buttonTwo" ? (
+                    <div className='flex gap-4'>
+                      <button className='bg-neutral-100 p-1 rounded-full text-neutral-500'>Save 20%</button>
+                      <button className='items-center'>Bill monthly </button>
+                    </div>
+                  ) : (
+                    <button className='items-center'>Bill monthly </button>
+                    
+                  )}
                 </span>
             </div>
         </div>

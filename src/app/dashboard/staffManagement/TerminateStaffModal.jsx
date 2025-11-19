@@ -1,8 +1,23 @@
-import React from "react";
+"use client"
+import React, { useState } from "react";
 import { LiaTimesSolid } from "react-icons/lia";
 
-const TerminateStaffModal = ({ isOpen, onClose }) => {
+const TerminateStaffModal = ({ isOpen, onClose, staffId, deleteStaff, token, staffName }) => {
   if (!isOpen) return null;
+
+  const [isLoading, setIsLoading] = useState(false)
+  
+  const handleDelete = async () =>{
+      try {
+        setIsLoading(true)
+        await deleteStaff(staffId, token)
+        setIsLoading(false)
+        onClose();
+      } catch (error) {
+        console.log("Failed to delete staff:", error)
+        setIsLoading(false)
+      }
+  }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
@@ -23,8 +38,8 @@ const TerminateStaffModal = ({ isOpen, onClose }) => {
         </span>
 
         <p className="py-4 text-[15px]">
-          Terminating John Melo’s account would remove his details from your
-          lists of staff, and will deny the staff access to login or perform his
+          Terminating <span className="font-bold ">{staffName}</span> account would remove the details from your
+          lists of staff, and will deny the staff access to login or perform 
           necessary operations
         </p>
 
@@ -39,10 +54,10 @@ const TerminateStaffModal = ({ isOpen, onClose }) => {
 
             {/* Delete staff button */}
             <button
-            onClick={onClose}
+            onClick={handleDelete}
                 className="w-full px-4 py-2 rounded-xl bg-[#F00] text-white font-bold hover:bg-red-300"
             >
-                Delete Staff
+                {isLoading ? "Deleting" : "Delete Staff"}
             </button>
         </div>
 

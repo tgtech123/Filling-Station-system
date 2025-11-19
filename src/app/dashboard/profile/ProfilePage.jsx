@@ -1,13 +1,248 @@
+// // components/ProfileForm.jsx
+// import React from "react";
+// import Link from "next/link";
+// import FormField from "./FormField";
+// import { FiPhone } from "react-icons/fi";
+// import { HiOutlineMail } from "react-icons/hi";
+// import { X } from "lucide-react";
+// import { useImageStore } from "@/store/useImageStore";
+// import Image from "next/image";
+
+// const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
+//   const sectionStyle = "grid grid-cols-1 sm:grid-cols-2 gap-4";
+
+//   const { getUserImage} = useImageStore()
+
+//   const userId = profileData?.employeeId || profileData?.id
+
+//   const userImage = getUserImage(userId)
+
+//   return (
+//     <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-3xl mx-auto space-y-6 overflow-hidden">
+//       {/* Header */}
+//       <div className="flex justify-between items-start">
+//         <div>
+//           <h2 className="text-lg font-bold">Attendant Profile</h2>
+//           <p className="text-sm text-gray-500">
+//             Personal and employment information
+//           </p>
+//         </div>
+
+//         <Link href="/dashboard">
+//           <button className=" text-neutral-800 p-2 text-sm sm:text-xs md:text-sm lg:text-base rounded-full hover:bg-neutral-100 whitespace-nowrap">
+//             <X size={22} />
+//           </button>
+//         </Link>
+//       </div>
+
+//       {/* Top Summary */}
+//         <div className=" p-4 rounded-md space-y-4">
+//       {/* Top Section */}
+//           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+//             {/* Profile Info */}
+//             <div className="flex items-center gap-4">
+             
+//               {userImage ? (
+//               <Image 
+//                   src={userImage} 
+//                   height={14} 
+//                   width={14} 
+//                   alt="User" 
+//                   className="w-14 h-14 rounded-full object-cover" 
+//                   />
+//                 ): (
+//                     <div className="w-14 h-14 rounded-full text-center bg-gray-400">No image</div>
+//                   )
+//               }
+
+//               <div>
+//                 <h3 className="font-semibold text-gray-700">
+//                   {profileData?.fullName}
+//                 </h3>
+//                 <p className="text-sm text-gray-500">{profileData?.position}</p>
+//               </div>
+//             </div>
+
+//             {/* Edit Button */}
+//             <div className="flex sm:justify-end">
+//               <Link href="/dashboard/editPage">
+//                 <button className="bg-blue-600 text-white px-4 py-2 text-sm md:text-base rounded-md hover:bg-blue-500 whitespace-nowrap w-full sm:w-auto">
+//                   Edit Profile
+//                 </button>
+//               </Link>
+//             </div>
+//           </div>
+
+//       {/* Sales Target Section */}
+//           <div className="mt-6 border-1 rounded-3xl p-5 space-y-5">
+//             <label className="text-sm font-semibold text-gray-600 block">
+//               Sales Target
+//             </label>
+
+//             <div className="flex flex-col sm:flex-row justify-between gap-4 text-xs text-gray-500">
+//               <span className="flex flex-col gap-1">
+//                 In Progress
+//                 <h2 className="text-gray-700 font-semibold text-sm">
+//                   ₦{profileData?.currentSales}
+//                 </h2>
+//               </span>
+//               <span className="flex flex-col gap-1">
+//                 Sales Target
+//                 <h2 className="text-gray-700 font-semibold text-sm">
+//                   ₦{profileData?.targetSales}
+//                 </h2>
+//               </span>
+//             </div>
+
+//             {/* Progress Bar */}
+//             <div className="w-full h-2 bg-gray-200 rounded-full">
+//               <div
+//                 className="h-2 bg-blue-600 rounded-full"
+//                 style={{ width: "25%" }}
+//               />
+//             </div>
+//           </div>
+//         </div>
+
+//         <div className='bg-neutral-100 rounded py-2 pl-3 text-neutral-800 font-semibold'>
+//            STAFF DETAILS
+//         </div>
+//       {/* Personal Info */}
+//       <section>
+//         <h4 className="text-sm font-semibold text-gray-700 mb-2">
+//           Personal Information
+//         </h4>
+//         <div className={sectionStyle}>
+//           <FormField
+//             label="First name"
+//             value={profileData?.firstName}
+//             disabled={!isEditable}
+//           />
+//           <FormField
+//             label="Last name"
+//             value={profileData?.lastName}
+//             disabled={!isEditable}
+//           />
+//           <FormField
+//             label="Email address"
+//             value={profileData?.email}
+//             icon={<HiOutlineMail className=' mt-0.5' size={20}/>}
+//             disabled={!isEditable}
+//           />
+//           <FormField
+//             label="Phone number"
+//             value={profileData?.phone}
+//             icon={<FiPhone />}
+//             disabled={!isEditable}
+//           />
+//         </div>
+//       </section>
+
+//       {/* Employment Info */}
+//       <section>
+//         <h4 className="text-sm font-semibold text-gray-700 mb-2">
+//           Employment Information
+//         </h4>
+//         <div className={sectionStyle}>
+//           <FormField
+//             label="Employee ID"
+//             value={profileData?.employeeId}
+//             disabled
+//           />
+//           <FormField
+//             label="Role/Position"
+//             value={profileData?.position}
+//             disabled
+//           />
+//           <FormField
+//             label="Start date"
+//             value={profileData?.startDate}
+//             disabled
+//           />
+//           <FormField
+//             label="Shift type"
+//             value={profileData?.shiftType}
+//             disabled
+//           />
+//           <FormField
+//             label="Responsibilities"
+//             value={profileData?.responsibilities}
+//             disabled
+//           />
+//           <FormField
+//             label="Pay frequency"
+//             value={profileData?.payFrequency}
+//             disabled
+//           />
+//           <FormField
+//             label="Average amount"
+//             value={profileData?.avgAmount}
+//             disabled
+//           />
+//           <FormField
+//             label="Sales Target"
+//             value={profileData?.monthlyTarget}
+//             disabled
+//           />
+//         </div>
+//       </section>
+
+//       {/* Password */}
+//       <section>
+//         <h4 className="text-sm font-semibold text-gray-700 mb-2">
+//           Password and Security
+//         </h4>
+//         <div className={sectionStyle}>
+//           <FormField
+//             label="Current password"
+//             type="password"
+//             value={"*****************"}
+//             disabled={true}
+//           />
+//           <FormField
+//             label="New password"
+//             type="password"
+//             value={"**************"}
+//             disabled={true}
+//           />
+//           <FormField
+//             label="Confirm new password"
+//             type="password"
+//             value={"***************"}
+//             disabled={true}
+//           />
+//         </div>
+//       </section>
+//     </div>
+//   );
+// };
+
+// export default ProfilePage;
+
+
 // components/ProfileForm.jsx
 import React from "react";
 import Link from "next/link";
 import FormField from "./FormField";
 import { FiPhone } from "react-icons/fi";
 import { HiOutlineMail } from "react-icons/hi";
-import { X } from "lucide-react";
+import { X, User } from "lucide-react";
+import Image from "next/image";
+import { useImageStore } from "@/store/useImageStore";
 
 const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
   const sectionStyle = "grid grid-cols-1 sm:grid-cols-2 gap-4";
+
+  const { getUserImage } = useImageStore();
+
+const userId = profileData?.id || profileData?.employeeId || profileData?._id;
+
+const userImage = getUserImage(userId);
+
+  // Calculate progress percentage
+  const progressPercentage = profileData?.currentSales && profileData?.targetSales
+    ? Math.min((profileData.currentSales / profileData.targetSales) * 100, 100)
+    : 0;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-3xl mx-auto space-y-6 overflow-hidden">
@@ -21,74 +256,90 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
         </div>
 
         <Link href="/dashboard">
-          <button className=" text-neutral-800 p-2 text-sm sm:text-xs md:text-sm lg:text-base rounded-full hover:bg-neutral-100 whitespace-nowrap">
+          <button className="text-neutral-800 p-2 text-sm sm:text-xs md:text-sm lg:text-base rounded-full hover:bg-neutral-100 whitespace-nowrap">
             <X size={22} />
           </button>
         </Link>
       </div>
 
       {/* Top Summary */}
-        <div className=" p-4 rounded-md space-y-4">
-      {/* Top Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            {/* Profile Info */}
-            <div className="flex items-center gap-4">
-              <div className="h-14 w-14 bg-gray-500 rounded-full text-gray-300 flex items-center justify-center text-[10px]">
-                No Image
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-gray-700">
-                  {profileData?.fullName}
-                </h3>
-                <p className="text-sm text-gray-500">{profileData?.position}</p>
-              </div>
+      <div className="p-4 rounded-md space-y-4">
+        {/* Top Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Profile Info */}
+          <div className="flex items-center gap-4">
+            {/* Profile Image */}
+            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-gray-300 bg-gray-100 flex items-center justify-center">
+              {userImage ? (
+                <Image
+                  src={userImage}
+                  alt={profileData?.fullName || "User"}
+                  fill
+                  className="object-cover"
+                  sizes="56px"
+                  priority
+                />
+              ) : (
+                <User size={28} className="text-gray-400" />
+              )}
             </div>
 
-            {/* Edit Button */}
-            <div className="flex sm:justify-end">
-              <Link href="/dashboard/editPage">
-                <button className="bg-blue-600 text-white px-4 py-2 text-sm md:text-base rounded-md hover:bg-blue-500 whitespace-nowrap w-full sm:w-auto">
-                  Edit Profile
-                </button>
-              </Link>
+            <div>
+              <h3 className="font-semibold text-gray-700">
+                {profileData?.fullName || `${profileData?.firstName || ''} ${profileData?.lastName || ''}`.trim() || 'User'}
+              </h3>
+              <p className="text-sm text-gray-500">{profileData?.position || 'N/A'}</p>
             </div>
           </div>
 
-      {/* Sales Target Section */}
-          <div className="mt-6 border-1 rounded-3xl p-5 space-y-5">
-            <label className="text-sm font-semibold text-gray-600 block">
+          {/* Edit Button */}
+          <div className="flex sm:justify-end">
+            <Link href="/dashboard/editPage">
+              <button className="bg-blue-600 text-white px-4 py-2 text-sm md:text-base rounded-md hover:bg-blue-500 whitespace-nowrap w-full sm:w-auto">
+                Edit Profile
+              </button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Sales Target Section */}
+        <div className="mt-6 border-1 rounded-3xl p-5 space-y-5">
+          <label className="text-sm font-semibold text-gray-600 block">
+            Sales Target
+          </label>
+
+          <div className="flex flex-col sm:flex-row justify-between gap-4 text-xs text-gray-500">
+            <span className="flex flex-col gap-1">
+              In Progress
+              <h2 className="text-gray-700 font-semibold text-sm">
+                ₦{profileData?.currentSales?.toLocaleString() || '0'}
+              </h2>
+            </span>
+            <span className="flex flex-col gap-1">
               Sales Target
-            </label>
-
-            <div className="flex flex-col sm:flex-row justify-between gap-4 text-xs text-gray-500">
-              <span className="flex flex-col gap-1">
-                In Progress
-                <h2 className="text-gray-700 font-semibold text-sm">
-                  ₦{profileData?.currentSales}
-                </h2>
-              </span>
-              <span className="flex flex-col gap-1">
-                Sales Target
-                <h2 className="text-gray-700 font-semibold text-sm">
-                  ₦{profileData?.targetSales}
-                </h2>
-              </span>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="w-full h-2 bg-gray-200 rounded-full">
-              <div
-                className="h-2 bg-blue-600 rounded-full"
-                style={{ width: "25%" }}
-              />
-            </div>
+              <h2 className="text-gray-700 font-semibold text-sm">
+                ₦{profileData?.targetSales?.toLocaleString() || '0'}
+              </h2>
+            </span>
           </div>
-        </div>
 
-        <div className='bg-neutral-100 rounded py-2 pl-3 text-neutral-800 font-semibold'>
-           STAFF DETAILS
+          {/* Progress Bar */}
+          <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-2 bg-blue-600 rounded-full transition-all duration-300"
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 text-right">
+            {progressPercentage.toFixed(1)}% Complete
+          </p>
         </div>
+      </div>
+
+      <div className="bg-neutral-100 rounded py-2 pl-3 text-neutral-800 font-semibold">
+        STAFF DETAILS
+      </div>
+
       {/* Personal Info */}
       <section>
         <h4 className="text-sm font-semibold text-gray-700 mb-2">
@@ -97,24 +348,24 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
         <div className={sectionStyle}>
           <FormField
             label="First name"
-            value={profileData?.firstName}
+            value={profileData?.firstName || 'N/A'}
             disabled={!isEditable}
           />
           <FormField
             label="Last name"
-            value={profileData?.lastName}
+            value={profileData?.lastName || 'N/A'}
             disabled={!isEditable}
           />
           <FormField
             label="Email address"
-            value={profileData?.email}
-            icon={<HiOutlineMail className=' mt-0.5' size={20}/>}
+            value={profileData?.email || 'N/A'}
+            icon={<HiOutlineMail className="mt-0.5" size={20} />}
             disabled={!isEditable}
           />
           <FormField
             label="Phone number"
-            value={profileData?.phone}
-            icon={<FiPhone />}
+            value={profileData?.phone || 'N/A'}
+            icon={<FiPhone className="mt-0.5" />}
             disabled={!isEditable}
           />
         </div>
@@ -128,42 +379,42 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
         <div className={sectionStyle}>
           <FormField
             label="Employee ID"
-            value={profileData?.employeeId}
+            value={profileData?.employeeId || 'N/A'}
             disabled
           />
           <FormField
             label="Role/Position"
-            value={profileData?.position}
+            value={profileData?.position || 'N/A'}
             disabled
           />
           <FormField
             label="Start date"
-            value={profileData?.startDate}
+            value={profileData?.startDate || 'N/A'}
             disabled
           />
           <FormField
             label="Shift type"
-            value={profileData?.shiftType}
+            value={profileData?.shiftType || 'N/A'}
             disabled
           />
           <FormField
             label="Responsibilities"
-            value={profileData?.responsibilities}
+            value={profileData?.responsibilities || 'N/A'}
             disabled
           />
           <FormField
             label="Pay frequency"
-            value={profileData?.payFrequency}
+            value={profileData?.payFrequency || 'N/A'}
             disabled
           />
           <FormField
             label="Average amount"
-            value={profileData?.avgAmount}
+            value={profileData?.avgAmount || 'N/A'}
             disabled
           />
           <FormField
             label="Sales Target"
-            value={profileData?.monthlyTarget}
+            value={profileData?.monthlyTarget || 'N/A'}
             disabled
           />
         </div>
@@ -178,19 +429,19 @@ const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
           <FormField
             label="Current password"
             type="password"
-            value={"*****************"}
+            value="*****************"
             disabled={true}
           />
           <FormField
             label="New password"
             type="password"
-            value={"**************"}
+            value="**************"
             disabled={true}
           />
           <FormField
             label="Confirm new password"
             type="password"
-            value={"***************"}
+            value="***************"
             disabled={true}
           />
         </div>
