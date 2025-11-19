@@ -4,6 +4,7 @@ const API_URL = process.env.NEXT_PUBLIC_API;
 
 export const useLubricantStore = create((set, get) => ({
   lubricants: [],
+  purchases: [],
   sales: [],
   weeklySummary: {},
   loading: false,
@@ -170,5 +171,116 @@ export const useLubricantStore = create((set, get) => ({
       console.error("Error searching lubricants:", err);
       return [];
     }
+  },
+
+  // Save lubricant purchase transaction
+  // saveLubricantPurchase: async (purchaseData) => {
+  //   set({ loading: true, error: null });
+  //   try {
+  //     const response = await fetch('/api/lubricants/purchases', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         // Add your auth token here
+  //         'Authorization': `Bearer ${localStorage.getItem('token')}`,
+  //       },
+  //       body: JSON.stringify(purchaseData),
+  //     });
+
+  //     const data = await response.json();
+
+  //     if (!response.ok) {
+  //       throw new Error(data.error || 'Failed to save purchase');
+  //     }
+
+  //     set({ loading: false });
+  //     return data;
+  //   } catch (error) {
+  //     set({ error: error.message, loading: false });
+  //     throw error;
+  //   }
+  // },
+
+
+  saveLubricantPurchase: async (purchaseData) => {
+  set({ loading: true, error: null });
+  try {
+    const response = await fetch(`${API_URL}/api/lubricant/purchases`, {
+      method: 'POST',
+      headers: get().getAuthHeaders(),
+      body: JSON.stringify(purchaseData),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to save purchase');
+    }
+
+    set((state) => ({
+      purchases: [...(state.purchases || []), data.data],
+      loading: false,
+    }));
+
+    return { success: true, data: data.data };
+  } catch (error) {
+    set({ error: error.message, loading: false });
+    return { success: false, error: error.message };
   }
+},
+
+
+  // Optional: Get all purchases
+  getAllPurchases: async () => {
+    set({ loading: true, error: null });
+    try {
+      const response = await fetch(`${API_URL}/api/lubricant/purchases`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch purchases');
+      }
+
+      set({ purchases: data.data, loading: false });
+      return data;
+    } catch (error) {
+      set({ error: error.message, loading: false });
+      throw error;
+    }
+  },
+
+  // Optional: Get single purchase by ID
+  getPurchaseById: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await fetch(`${API_URL}/api/lubricant/purchases/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch purchase');
+      }
+
+      set({ loading: false });
+      return data;
+    } catch (error) {
+      set({ error: error.message, loading: false });
+      throw error;
+    }
+  },
+
+
 }));
