@@ -173,34 +173,6 @@ export const useLubricantStore = create((set, get) => ({
     }
   },
 
-  // Save lubricant purchase transaction
-  // saveLubricantPurchase: async (purchaseData) => {
-  //   set({ loading: true, error: null });
-  //   try {
-  //     const response = await fetch('/api/lubricants/purchases', {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         // Add your auth token here
-  //         'Authorization': `Bearer ${localStorage.getItem('token')}`,
-  //       },
-  //       body: JSON.stringify(purchaseData),
-  //     });
-
-  //     const data = await response.json();
-
-  //     if (!response.ok) {
-  //       throw new Error(data.error || 'Failed to save purchase');
-  //     }
-
-  //     set({ loading: false });
-  //     return data;
-  //   } catch (error) {
-  //     set({ error: error.message, loading: false });
-  //     throw error;
-  //   }
-  // },
-
 
   saveLubricantPurchase: async (purchaseData) => {
   set({ loading: true, error: null });

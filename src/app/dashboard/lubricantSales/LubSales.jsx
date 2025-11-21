@@ -55,7 +55,7 @@ const LubSales = () => {
 
   // 🆕 Function to add product from search to table
   const addProductToTable = (product) => {
-    const price = product.sellingPrice || product.unitPrice || 0;
+   const price = Number(product.unitPrice ?? 0);
     
     // Find the first empty row
     const emptyRowIndex = rows.findIndex(row => !row.barcode && !row.productName);
@@ -132,7 +132,7 @@ const LubSales = () => {
 
       if (res.ok && result.data) {
         const item = result.data;
-        const price = item.sellingPrice || item.unitPrice || 0;
+        const price = Number(item.unitPrice ?? 0);
 
         const updatedRows = [...rows];
         updatedRows[index] = {
