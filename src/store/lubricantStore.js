@@ -6,7 +6,9 @@ export const useLubricantStore = create((set, get) => ({
   lubricants: [],
   purchases: [],
   sales: [],
+  transactions: [],
   weeklySummary: {},
+  dailySummary: {},
   loading: false,
   error: null,
   selectedProductForSale: null, 
@@ -20,17 +22,17 @@ export const useLubricantStore = create((set, get) => ({
     };
   },
 
-  // 🆕 Set selected product for sale
+  // Set selected product for sale
   setSelectedProductForSale: (product) => {
     set({ selectedProductForSale: product });
   },
 
-  // 🆕 Clear selected product
+  // Clear selected product
   clearSelectedProductForSale: () => {
     set({ selectedProductForSale: null });
   },
 
-  //fetch lubricants
+  // Fetch lubricants
   fetchLubricants: async () => {
     set({ loading: true, error: null });
     try {
@@ -41,14 +43,15 @@ export const useLubricantStore = create((set, get) => ({
       if (!res.ok) throw new Error("Failed to fetch lubricants");
       const result = await res.json();
 
-      // Grab the array inside data
-      set({ lubricants: result.data || [], loading: false });
+      // Handle both { data: [...] } and direct array responses
+      const lubricantsData = Array.isArray(result) ? result : (result.data || []);
+      set({ lubricants: lubricantsData, loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
     }
   },
 
-  // 🔹 Get lubricant by barcode
+  // Get lubricant by barcode
   getLubricantByBarcode: async (barcode) => {
     set({ loading: true, error: null });
     try {
@@ -67,7 +70,7 @@ export const useLubricantStore = create((set, get) => ({
     }
   },
 
-  // 🔹 Add lubricant
+  // Add lubricant
   addLubricant: async (lubricantData) => {
     set({ loading: true, error: null });
     try {
@@ -92,7 +95,7 @@ export const useLubricantStore = create((set, get) => ({
     }
   },
 
-  // 🔹 Sell lubricant
+  // Sell lubricant
   sellLubricant: async (saleData) => {
     set({ loading: true, error: null });
     try {
@@ -117,7 +120,7 @@ export const useLubricantStore = create((set, get) => ({
     }
   },
 
-  // 🔹 Get all lubricant sales
+  // Get all lubricant sales
   fetchAllSales: async () => {
     set({ loading: true, error: null });
     try {
@@ -126,13 +129,23 @@ export const useLubricantStore = create((set, get) => ({
       });
       if (!res.ok) throw new Error("Failed to fetch lubricant sales");
       const data = await res.json();
-      set({ sales: data, loading: false });
+      
+      console.log("Raw sales response:", data);
+      
+      // Handle both { data: [...] } and direct array responses
+      const salesData = Array.isArray(data) ? data : (data.data || data.sales || []);
+      
+      console.log("Processed sales data:", salesData);
+      
+      set({ sales: salesData, loading: false });
+      return salesData;
     } catch (err) {
+      console.error("Error fetching sales:", err);
       set({ error: err.message, loading: false });
     }
   },
 
-  // 🔹 Get weekly summary (includes top 3 sales)
+  // Get weekly summary (includes top 3 sales) - NOW USES TRANSACTIONS
   fetchWeeklySummary: async () => {
     set({ loading: true, error: null });
     try {
@@ -142,13 +155,45 @@ export const useLubricantStore = create((set, get) => ({
       );
       if (!res.ok) throw new Error("Failed to fetch weekly summary");
       const data = await res.json();
-      set({ weeklySummary: data, loading: false });
+      
+      console.log("Weekly summary response:", data);
+      
+      // Handle nested data structure - the summary is in data.data
+      const summaryData = data.data || data;
+      set({ weeklySummary: summaryData, loading: false });
+      
+      return summaryData;
     } catch (err) {
+      console.error("Error fetching weekly summary:", err);
       set({ error: err.message, loading: false });
     }
   },
 
-  // 🔹 Search lubricants by product name or barcode
+  // Get daily summary (today's sales, inventory value, low stock count)
+  fetchDailySummary: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await fetch(
+        `${API_URL}/api/lubricant/lubricant-daily-summary`,
+        { headers: get().getAuthHeaders() }
+      );
+      if (!res.ok) throw new Error("Failed to fetch daily summary");
+      const data = await res.json();
+      
+      console.log("Daily summary response:", data);
+      
+      // Handle nested data structure
+      const summaryData = data.summary || data;
+      set({ dailySummary: summaryData, loading: false });
+      
+      return summaryData;
+    } catch (err) {
+      console.error("Error fetching daily summary:", err);
+      set({ error: err.message, loading: false });
+    }
+  },
+
+  // Search lubricants by product name or barcode
   searchLubricants: async (searchTerm) => {
     const lower = searchTerm.toLowerCase();
 
@@ -173,45 +218,41 @@ export const useLubricantStore = create((set, get) => ({
     }
   },
 
-
+  // Save lubricant purchase
   saveLubricantPurchase: async (purchaseData) => {
-  set({ loading: true, error: null });
-  try {
-    const response = await fetch(`${API_URL}/api/lubricant/purchases`, {
-      method: 'POST',
-      headers: get().getAuthHeaders(),
-      body: JSON.stringify(purchaseData),
-    });
+    set({ loading: true, error: null });
+    try {
+      const response = await fetch(`${API_URL}/api/lubricant/purchases`, {
+        method: 'POST',
+        headers: get().getAuthHeaders(),
+        body: JSON.stringify(purchaseData),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to save purchase');
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save purchase');
+      }
+
+      set((state) => ({
+        purchases: [...(state.purchases || []), data.data],
+        loading: false,
+      }));
+
+      return { success: true, data: data.data };
+    } catch (error) {
+      set({ error: error.message, loading: false });
+      return { success: false, error: error.message };
     }
+  },
 
-    set((state) => ({
-      purchases: [...(state.purchases || []), data.data],
-      loading: false,
-    }));
-
-    return { success: true, data: data.data };
-  } catch (error) {
-    set({ error: error.message, loading: false });
-    return { success: false, error: error.message };
-  }
-},
-
-
-  // Optional: Get all purchases
+  // Get all purchases
   getAllPurchases: async () => {
     set({ loading: true, error: null });
     try {
       const response = await fetch(`${API_URL}/api/lubricant/purchases`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+        headers: get().getAuthHeaders(),
       });
 
       const data = await response.json();
@@ -220,7 +261,8 @@ export const useLubricantStore = create((set, get) => ({
         throw new Error(data.error || 'Failed to fetch purchases');
       }
 
-      set({ purchases: data.data, loading: false });
+      const purchasesData = Array.isArray(data) ? data : (data.data || []);
+      set({ purchases: purchasesData, loading: false });
       return data;
     } catch (error) {
       set({ error: error.message, loading: false });
@@ -228,16 +270,13 @@ export const useLubricantStore = create((set, get) => ({
     }
   },
 
-  // Optional: Get single purchase by ID
+  // Get single purchase by ID
   getPurchaseById: async (id) => {
     set({ loading: true, error: null });
     try {
       const response = await fetch(`${API_URL}/api/lubricant/purchases/${id}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+        headers: get().getAuthHeaders(),
       });
 
       const data = await response.json();
@@ -254,5 +293,25 @@ export const useLubricantStore = create((set, get) => ({
     }
   },
 
+  // Get all lubricant transactions (sales grouped)
+  fetchAllTransactions: async () => {
+    set({ loading: true, error: null });
+    try {
+      const res = await fetch(`${API_URL}/api/lubricant/transactions`, {
+        method: "GET",
+        headers: get().getAuthHeaders(),
+      });
 
+      if (!res.ok) throw new Error("Failed to fetch transactions");
+
+      const data = await res.json();
+
+      // Save only the array into store
+      const transactionsData = Array.isArray(data) ? data : (data.data || []);
+      set({ transactions: transactionsData, loading: false });
+
+    } catch (err) {
+      set({ error: err.message, loading: false });
+    }
+  },
 }));
