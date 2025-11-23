@@ -8,6 +8,7 @@ import {
   Edit2,
   Trash2,
   SquarePen,
+  AlertCircle,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLubricantStore } from "@/store/lubricantStore";
@@ -38,6 +39,7 @@ export default function LubricantStockModal({ onClose }) {
       unitPrice: "",
       lubricantId: null,
       isEditing: false,
+      error: "", // Row-specific error
     },
   ]);
 
@@ -47,6 +49,7 @@ export default function LubricantStockModal({ onClose }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [searchError, setSearchError] = useState(""); // Search error
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -63,6 +66,7 @@ export default function LubricantStockModal({ onClose }) {
   const handleBarcodeChange = (e, index) => {
     const newRows = [...rows];
     newRows[index].barcode = e.target.value;
+    newRows[index].error = ""; // Clear error on change
     setRows(newRows);
   };
 
@@ -86,10 +90,6 @@ export default function LubricantStockModal({ onClose }) {
       if (response && response.data) {
         const lubricant = response.data;
         console.log("🔍 Full Lubricant data:", lubricant);
-        console.log("📊 unitCost:", lubricant.unitCost);
-        console.log("💰 sellingPrice:", lubricant.sellingPrice);
-        console.log("💵 unitPrice:", lubricant.unitPrice);
-        console.log("📈 sellingPercentage from DB:", lubricant.sellingPercentage);
 
         setRows((prevRows) => {
           const newRows = [...prevRows];
@@ -99,22 +99,13 @@ export default function LubricantStockModal({ onClose }) {
           let sellingPercentageValue = lubricant.sellingPercentage || "0";
           
           const cost = parseFloat(lubricant.unitCost || 0);
-          // Use unitPrice instead of sellingPrice for calculation
           const price = parseFloat(lubricant.unitPrice || lubricant.sellingPrice || 0);
-          
-          console.log("🧮 Parsed cost:", cost);
-          console.log("🧮 Parsed price:", price);
           
           // If sellingPercentage is 0 or not set, calculate it from existing prices
           if (!sellingPercentageValue || sellingPercentageValue === "0" || sellingPercentageValue === 0) {
             if (cost > 0 && price > cost) {
               sellingPercentageValue = (((price - cost) / cost) * 100).toFixed(2);
-              console.log("✅ Calculated sellingPercentage:", sellingPercentageValue);
-            } else {
-              console.log("❌ Cannot calculate: cost or price invalid");
             }
-          } else {
-            console.log("✅ Using DB sellingPercentage:", sellingPercentageValue);
           }
 
           newRows[index] = {
@@ -128,9 +119,8 @@ export default function LubricantStockModal({ onClose }) {
             amount: "",
             lubricantId: lubricant._id,
             isEditing: false,
+            error: "", // Clear error on success
           };
-
-          console.log("Updated row:", newRows[index]);
 
           // Add new empty row if this is the last row
           if (index === prevRows.length - 1) {
@@ -145,17 +135,23 @@ export default function LubricantStockModal({ onClose }) {
               unitPrice: "",
               lubricantId: null,
               isEditing: false,
+              error: "",
             });
           }
 
           return newRows;
         });
       } else {
-        alert("Lubricant not found with this barcode");
+        // Product not found
+        const newRows = [...rows];
+        newRows[index].error = `Product with barcode "${barcode}" not found`;
+        setRows(newRows);
       }
     } catch (error) {
       console.error("Error fetching lubricant:", error);
-      alert("Failed to fetch lubricant: " + error.message);
+      const newRows = [...rows];
+      newRows[index].error = error.message || "Failed to fetch product";
+      setRows(newRows);
     }
   };
 
@@ -238,11 +234,25 @@ export default function LubricantStockModal({ onClose }) {
   const handleSearch = async (e) => {
     const term = e.target.value;
     setSearchTerm(term);
+    setSearchError(""); // Clear previous error
 
     if (term.trim().length > 0) {
-      const results = await searchLubricants(term);
-      setSearchResults(results);
-      setShowSearchDropdown(true);
+      try {
+        const results = await searchLubricants(term);
+        
+        if (results.length === 0) {
+          setSearchError(`No products found matching "${term}"`);
+          setSearchResults([]);
+          setShowSearchDropdown(false);
+        } else {
+          setSearchResults(results);
+          setShowSearchDropdown(true);
+        }
+      } catch (error) {
+        setSearchError("Failed to search products");
+        setSearchResults([]);
+        setShowSearchDropdown(false);
+      }
     } else {
       setSearchResults([]);
       setShowSearchDropdown(false);
@@ -252,6 +262,7 @@ export default function LubricantStockModal({ onClose }) {
   // Select product from search
   const selectProductFromSearch = (lubricant) => {
     console.log("Selecting product:", lubricant);
+    setSearchError(""); // Clear search error
 
     setRows((prevRows) => {
       const newRows = [...prevRows];
@@ -272,6 +283,7 @@ export default function LubricantStockModal({ onClose }) {
           unitPrice: "",
           lubricantId: null,
           isEditing: false,
+          error: "",
         });
       }
 
@@ -301,6 +313,7 @@ export default function LubricantStockModal({ onClose }) {
         lubricantId: lubricant._id,
         quantity: "1",
         isEditing: false,
+        error: "",
       };
 
       // Add another empty row
@@ -315,6 +328,7 @@ export default function LubricantStockModal({ onClose }) {
         unitPrice: "",
         lubricantId: null,
         isEditing: false,
+        error: "",
       });
 
       return newRows;
@@ -407,6 +421,16 @@ export default function LubricantStockModal({ onClose }) {
               placeholder="Search product name"
             />
             <Search className="text-gray-300 absolute top-3 right-3" />
+
+            {/* Search Error */}
+            {searchError && (
+              <div className="absolute top-full left-0 right-0 bg-red-50 border border-red-300 rounded-md mt-1 p-3 z-50 shadow-lg">
+                <div className="flex items-center gap-2 text-red-700">
+                  <AlertCircle size={18} />
+                  <p className="text-sm font-medium">{searchError}</p>
+                </div>
+              </div>
+            )}
 
             {/* Search dropdown */}
             {showSearchDropdown && searchResults.length > 0 && (
@@ -512,102 +536,119 @@ export default function LubricantStockModal({ onClose }) {
 
               <tbody className="bg-white divide-y divide-gray-200">
                 {rows.map((row, index) => (
-                  <tr key={index} className="text-sm">
-                    <td className="px-4 py-2">
-                      <input
-                        type="text"
-                        value={row.barcode}
-                        onChange={(e) => handleBarcodeChange(e, index)}
-                        onKeyDown={(e) => handleBarcodeKeyPress(e, index)}
-                        placeholder="Enter barcode + Enter"
-                        className="w-full px-3 py-2 border border-neutral-300 rounded-xl"
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="text"
-                        value={row.productName}
-                        disabled
-                        className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl text-gray-700"
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        value={row.amount}
-                        onChange={(e) => handleAmountChange(e, index)}
-                        placeholder="Enter amount"
-                        className="w-full px-3 py-2 border border-neutral-300 rounded-xl"
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        min="1"
-                        value={row.quantity}
-                        onChange={(e) => handleQtyChange(e, index)}
-                        className="w-full px-3 py-2 border border-neutral-300 rounded-xl"
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        value={row.unitCost}
-                        disabled
-                        className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl text-gray-700"
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="text"
-                        value={row.oldUnitCost}
-                        disabled
-                        className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl text-gray-700"
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        value={row.sellingPercentage}
-                        onChange={(e) =>
-                          handleSellingPercentageChange(e, index)
-                        }
-                        disabled={!row.isEditing}
-                        className={`w-full px-3 py-2 border border-neutral-300 rounded-xl ${
-                          !row.isEditing ? "bg-neutral-100 text-gray-700" : ""
-                        }`}
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <input
-                        type="number"
-                        value={row.unitPrice}
-                        onChange={(e) => handleUnitPriceChange(e, index)}
-                        disabled={!row.isEditing}
-                        className={`w-full px-3 py-2 border border-neutral-300 rounded-xl ${
-                          !row.isEditing ? "bg-neutral-100 text-gray-700" : ""
-                        }`}
-                      />
-                    </td>
-                    <td className="px-4 py-2">
-                      <div className="flex items-center gap-2">
-                        <SquarePen
-                          size={18}
-                          className={`cursor-pointer ${
-                            row.isEditing
-                              ? "text-green-600 hover:text-green-800"
-                              : "text-blue-600 hover:text-blue-800"
+                  <>
+                    <tr key={index} className="text-sm">
+                      <td className="px-4 py-2">
+                        <input
+                          type="text"
+                          value={row.barcode}
+                          onChange={(e) => handleBarcodeChange(e, index)}
+                          onKeyDown={(e) => handleBarcodeKeyPress(e, index)}
+                          placeholder="Enter barcode + Enter"
+                          className={`w-full px-3 py-2 border rounded-xl ${
+                            row.error
+                              ? "border-red-300 bg-red-50"
+                              : "border-neutral-300"
                           }`}
-                          onClick={() => toggleEdit(index)}
                         />
-                        <Trash2
-                          size={18}
-                          className="cursor-pointer text-red-500 hover:text-red-400"
-                          onClick={() => handleDeleteRow(index)}
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="text"
+                          value={row.productName}
+                          disabled
+                          className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl text-gray-700"
                         />
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="number"
+                          value={row.amount}
+                          onChange={(e) => handleAmountChange(e, index)}
+                          placeholder="Enter amount"
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-xl"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="number"
+                          min="1"
+                          value={row.quantity}
+                          onChange={(e) => handleQtyChange(e, index)}
+                          className="w-full px-3 py-2 border border-neutral-300 rounded-xl"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="number"
+                          value={row.unitCost}
+                          disabled
+                          className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl text-gray-700"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="text"
+                          value={row.oldUnitCost}
+                          disabled
+                          className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl text-gray-700"
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="number"
+                          value={row.sellingPercentage}
+                          onChange={(e) =>
+                            handleSellingPercentageChange(e, index)
+                          }
+                          disabled={!row.isEditing}
+                          className={`w-full px-3 py-2 border border-neutral-300 rounded-xl ${
+                            !row.isEditing ? "bg-neutral-100 text-gray-700" : ""
+                          }`}
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <input
+                          type="number"
+                          value={row.unitPrice}
+                          onChange={(e) => handleUnitPriceChange(e, index)}
+                          disabled={!row.isEditing}
+                          className={`w-full px-3 py-2 border border-neutral-300 rounded-xl ${
+                            !row.isEditing ? "bg-neutral-100 text-gray-700" : ""
+                          }`}
+                        />
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="flex items-center gap-2">
+                          <SquarePen
+                            size={18}
+                            className={`cursor-pointer ${
+                              row.isEditing
+                                ? "text-green-600 hover:text-green-800"
+                                : "text-blue-600 hover:text-blue-800"
+                            }`}
+                            onClick={() => toggleEdit(index)}
+                          />
+                          <Trash2
+                            size={18}
+                            className="cursor-pointer text-red-500 hover:text-red-400"
+                            onClick={() => handleDeleteRow(index)}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                    {/* Row Error Message */}
+                    {row.error && (
+                      <tr>
+                        <td colSpan="9" className="px-4 py-2">
+                          <div className="bg-red-50 border border-red-300 rounded-lg p-2 flex items-center gap-2 text-red-700">
+                            <AlertCircle size={16} />
+                            <p className="text-xs font-medium">{row.error}</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
             </table>

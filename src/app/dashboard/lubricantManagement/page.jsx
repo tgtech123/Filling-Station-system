@@ -3,7 +3,7 @@
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import FlashCard from "@/components/Dashboard/FlashCard";
 import { ArrowLeft, House, Plus, TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { TbCurrencyNaira } from "react-icons/tb";
 import LubricantSales from "./LubricantSales";
 import Inventory from "./Inventory";
@@ -11,11 +11,63 @@ import AddLubricantModal from "./AddLubricantModal";
 import Link from "next/link";
 import { CgTrack } from "react-icons/cg";
 import LubricantTracker from "./LubricantTracker";
+import { useLubricantStore } from "@/store/lubricantStore";
 
 export default function LubricantManagement() {
   const [isLubricantModalOpen, setIsLubricantModalOpen] = useState(false);
   const [showLubricantTracker, setShowLubricantTracker] = useState(false);
   const [activeTab, setActiveTab] = useState("Lubricant sales");
+
+  const { lubricants, dailySummary, fetchLubricants, fetchDailySummary } = useLubricantStore();
+
+  useEffect(() => {
+    fetchLubricants();
+    fetchDailySummary();
+  }, [fetchLubricants, fetchDailySummary]);
+
+  // Use data from API daily summary or calculate from lubricants
+  const summaryData = useMemo(() => {
+    // If we have daily summary from API, use it
+    if (dailySummary && Object.keys(dailySummary).length > 0) {
+      return {
+        todaySales: dailySummary.totalAmountSold || 0,
+        totalProducts: dailySummary.totalLubricants || lubricants.length,
+        totalInventoryValue: dailySummary.totalInventoryValue || 0,
+        lowStockCount: dailySummary.lowStockCount || 0,
+      };
+    }
+
+    // Otherwise calculate from lubricants data
+    if (!lubricants.length) {
+      return {
+        todaySales: 0,
+        totalProducts: 0,
+        totalInventoryValue: 0,
+        lowStockCount: 0,
+      };
+    }
+
+    const totalProducts = lubricants.length;
+
+    const totalInventoryValue = lubricants.reduce((sum, lub) => {
+      const qty = Number(lub.qtyInStock) || 0;
+      const price = Number(lub.unitPrice) || 0;
+      return sum + qty * price;
+    }, 0);
+
+    const lowStockCount = lubricants.filter((lub) => {
+      const qty = Number(lub.qtyInStock) || 0;
+      const reorder = Number(lub.reOrderLevel) || 0;
+      return qty < reorder;
+    }).length;
+
+    return {
+      todaySales: 0,
+      totalProducts,
+      totalInventoryValue,
+      lowStockCount,
+    };
+  }, [lubricants, dailySummary]);
 
   const handleOpenLubricantModal = () => {
     setIsLubricantModalOpen(true);
@@ -34,27 +86,32 @@ export default function LubricantManagement() {
       id: 1,
       title: "Today Sales",
       icon: <TbCurrencyNaira />,
-      number: "₦120,000",
+      number: `₦${summaryData.todaySales.toLocaleString()}`,
     },
     {
       id: 2,
       title: "Total Products",
       icon: <TrendingUp />,
-      number: "7",
+      number: summaryData.totalProducts.toString(),
     },
     {
       id: 3,
       title: "Total Inventory Value",
       icon: <TrendingUp />,
-      number: "₦120,000,000",
+      number: `₦${Math.round(summaryData.totalInventoryValue).toLocaleString()}`,
     },
     {
       id: 4,
       title: "Low Stock",
       icon: <TrendingUp />,
-      number: <span className="text-red-500">0</span>,
+      number: (
+        <span className={summaryData.lowStockCount > 0 ? "text-red-500" : ""}>
+          {summaryData.lowStockCount}
+        </span>
+      ),
     },
   ];
+
   return (
     <div className="bg-gray-100 min-h-screen">
       <header className="px-4 lg:px-[40px] mb-10 bg-white shadow-sm h-[150px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
@@ -129,7 +186,10 @@ export default function LubricantManagement() {
           </div>
         </div>
 
-        <div onClick={() => setShowLubricantTracker(true)} className="p-2 flex font-semibold cursor-pointer text-[#0080ff] items-center border-2 rounded-[8px] border-[#0080ff]">
+        <div
+          onClick={() => setShowLubricantTracker(true)}
+          className="p-2 flex font-semibold cursor-pointer text-[#0080ff] items-center border-2 rounded-[8px] border-[#0080ff]"
+        >
           Track Invoice Record
           <CgTrack size={24} className="text-[#0080ff]" />
         </div>
