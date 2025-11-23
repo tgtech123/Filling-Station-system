@@ -1,0 +1,167 @@
+[33m4da89fb[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mTgtech-Branch[m[33m, [m[1;31morigin/Tgtech-Branch[m[33m)[m HEAD@{0}: commit (merge): done
+[33m8b0840a[m HEAD@{1}: rebase (abort): returning to refs/heads/Tgtech-Branch
+[33m8b0840a[m HEAD@{2}: rebase (abort): returning to refs/heads/Tgtech-Branch
+[33m392e550[m HEAD@{3}: commit (amend): Merge branch 'master' of https://github.com/tgtech123/Filling-Station-system into Tgtech-Branch
+[33m84cd53a[m HEAD@{4}: pull origin master: Merge made by the 'ort' strategy.
+[33m267d18f[m HEAD@{5}: commit (merge): Merge completed
+[33m879f89c[m HEAD@{6}: rebase (continue): pricing page completed
+[33m61715b9[m HEAD@{7}: pull origin master: Fast-forward
+[33m4ba021a[m HEAD@{8}: pull origin master: Fast-forward
+[33mf4e7368[m HEAD@{9}: pull origin master: Fast-forward
+[33m2a95f32[m HEAD@{10}: pull origin master: Fast-forward
+[33m34fdd9b[m HEAD@{11}: commit: dashboard done
+[33m6e40c2a[m HEAD@{12}: pull origin master: Fast-forward
+[33m4596268[m HEAD@{13}: commit: user images complete
+[33mdf62542[m HEAD@{14}: pull origin master: Fast-forward
+[33m5012625[m HEAD@{15}: pull origin master: Fast-forward
+[33m422fe31[m HEAD@{16}: commit: update and delete completed
+[33md0f7652[m HEAD@{17}: pull origin master: Fast-forward
+[33m8a5d43a[m HEAD@{18}: commit: creating staff
+[33m7c23e2b[m HEAD@{19}: pull origin master: Fast-forward
+[33mfd123ed[m HEAD@{20}: pull origin master: Fast-forward
+[33m1330c14[m HEAD@{21}: commit: status toggle completed
+[33m080ef7f[m HEAD@{22}: pull origin master: Fast-forward
+[33m1ec5a43[m HEAD@{23}: commit: pump api consumed
+[33m9f85a10[m HEAD@{24}: pull origin master: Fast-forward
+[33m2f77543[m HEAD@{25}: pull origin master: Fast-forward
+[33m7436594[m HEAD@{26}: commit: contact Api consumed
+[33macb5b00[m HEAD@{27}: pull origin master: Fast-forward
+[33me2ba520[m HEAD@{28}: commit: contact us adjusted
+[33m0479425[m HEAD@{29}: pull origin master: Fast-forward
+[33m1028761[m HEAD@{30}: pull origin master: Fast-forward
+[33m2c229cd[m HEAD@{31}: commit: manager & cashier dashboard
+[33m8a6076d[m HEAD@{32}: pull origin master: Fast-forward
+[33md09b1fd[m HEAD@{33}: reset: moving to HEAD
+[33md09b1fd[m HEAD@{34}: pull origin master: Fast-forward
+[33m3236097[m HEAD@{35}: commit: now done
+[33ma119e89[m HEAD@{36}: commit: reset and forgot password backend integrated
+[33m5c14504[m HEAD@{37}: pull origin master: Fast-forward
+[33m7203faa[m HEAD@{38}: pull origin master: Fast-forward
+[33mb7127a7[m HEAD@{39}: commit: cors error corrected
+[33m06cfc25[m HEAD@{40}: pull origin master: Fast-forward
+[33m4634fb5[m HEAD@{41}: commit: cash flow
+[33m6fd7485[m HEAD@{42}: commit: done now
+[33md4dd781[m HEAD@{43}: reset: moving to d4dd781
+[33m8b0840a[m HEAD@{44}: checkout: moving from Tgtech-Branch to Tgtech-Branch
+[33m8b0840a[m HEAD@{45}: checkout: moving from d4dd78111c1b082d7ab52738fff007e8e6c21366 to Tgtech-Branch
+[33md4dd781[m HEAD@{46}: commit (merge): Merge branch 'master' into Tgtech-Branch
+[33mfad4df4[m HEAD@{47}: commit: completed
+[33m019edcf[m HEAD@{48}: commit: pricing page completed
+[33m4c49413[m HEAD@{49}: pull origin Tgtech-Branch --rebase (start): checkout 4c49413fde7a31efe0265be9baaef6dc57778221
+[33m8b0840a[m HEAD@{50}: commit: pricing page completed
+[33m7fa3b70[m HEAD@{51}: commit: pricing page done
+[33m8a79fad[m HEAD@{52}: commit: edit mode done
+[33mf7c968b[m HEAD@{53}: commit: login api call
+[33m3f12c80[m HEAD@{54}: pull origin master: Fast-forward
+[33m001b358[m HEAD@{55}: commit: chart done
+[33m67ce8e6[m HEAD@{56}: pull origin master: Fast-forward
+[33m5b5792f[m HEAD@{57}: commit: trend page1
+[33mc0350d1[m HEAD@{58}: pull origin master: Fast-forward
+[33mbb10286[m HEAD@{59}: commit: success message done -
+[33m0fade23[m HEAD@{60}: pull origin master: Fast-forward
+[33ma44656d[m HEAD@{61}: commit: success message done
+[33mc7194fd[m HEAD@{62}: commit: Add staff
+[33m4c66926[m HEAD@{63}: pull origin master: Fast-forward
+[33m04dfa2a[m HEAD@{64}: commit: Add New Staff
+[33m79e5074[m HEAD@{65}: pull origin master: Fast-forward
+[33m676b71a[m HEAD@{66}: pull origin master: Fast-forward
+[33m7f33ae3[m HEAD@{67}: commit: financial overview completed
+[33m298807e[m HEAD@{68}: pull origin master: Fast-forward
+[33m78c7280[m HEAD@{69}: commit: new
+[33m81da92c[m HEAD@{70}: pull origin master: Fast-forward
+[33mdba6727[m HEAD@{71}: commit: financial-overview page
+[33m4bd7b4f[m HEAD@{72}: pull origin master: Fast-forward
+[33m68a663a[m HEAD@{73}: commit: ActivityLogs done yes
+[33med565da[m HEAD@{74}: commit: ActivityLogs done now
+[33m234a796[m HEAD@{75}: commit: ActivityLogs done
+[33mf3a8786[m HEAD@{76}: pull origin master: Fast-forward
+[33md148ab8[m HEAD@{77}: commit: new
+[33m54f6740[m HEAD@{78}: pull origin master: Fast-forward
+[33m39213d6[m HEAD@{79}: commit: new
+[33ma1665fe[m HEAD@{80}: pull origin master: Fast-forward
+[33m01819a5[m HEAD@{81}: commit: new
+[33mf50fdcd[m HEAD@{82}: pull origin master: Fast-forward
+[33m80bee60[m HEAD@{83}: commit: new new
+[33md393c12[m HEAD@{84}: pull origin master: Fast-forward
+[33m20cff72[m HEAD@{85}: pull origin master: Fast-forward
+[33mdd4d8a2[m HEAD@{86}: pull origin master: Fast-forward
+[33mc098f25[m HEAD@{87}: pull origin master: Fast-forward
+[33m778de97[m HEAD@{88}: commit: new
+[33m19c84e6[m HEAD@{89}: commit: new new
+[33mff6dbbd[m HEAD@{90}: pull origin master: Fast-forward
+[33m66c2ff3[m HEAD@{91}: pull origin master: Fast-forward
+[33m47201c9[m HEAD@{92}: pull origin master: Fast-forward
+[33m80e07d7[m HEAD@{93}: commit: new
+[33m77fa66d[m HEAD@{94}: pull origin master: Fast-forward
+[33m692c9f2[m HEAD@{95}: commit: new new
+[33m69d3d70[m HEAD@{96}: pull origin master: Fast-forward
+[33m39b8407[m HEAD@{97}: commit: new new
+[33m4ff4fe7[m HEAD@{98}: commit: new
+[33ma662578[m HEAD@{99}: pull origin master: Fast-forward
+[33mb1638f1[m HEAD@{100}: commit: new now
+[33m0aa86cc[m HEAD@{101}: pull origin master: Fast-forward
+[33m4fe9e78[m HEAD@{102}: commit: new now
+[33m5313ef3[m HEAD@{103}: pull origin master: Fast-forward
+[33m1f841a3[m HEAD@{104}: commit: new now
+[33m964b40d[m HEAD@{105}: pull origin master: Fast-forward
+[33m54282bf[m HEAD@{106}: commit: new now
+[33m09a828a[m HEAD@{107}: pull origin master: Fast-forward
+[33md17225d[m HEAD@{108}: pull origin master: Fast-forward
+[33m43467dd[m HEAD@{109}: commit: new now
+[33m0231e27[m HEAD@{110}: commit: new now
+[33m6a6f50e[m HEAD@{111}: commit (merge): Merge branch 'master' of https://github.com/tgtech123/Filling-Station-system into Tgtech-Branch
+[33mfe2a98a[m HEAD@{112}: commit (merge): Merge branch 'master' of https://github.com/tgtech123/Filling-Station-system into Tgtech-Branch
+[33mf7c686f[m HEAD@{113}: commit: new
+[33me16d098[m HEAD@{114}: pull origin master: Fast-forward
+[33m5d630cd[m HEAD@{115}: commit: new
+[33m9c76552[m HEAD@{116}: pull origin master: Fast-forward
+[33me8cedce[m HEAD@{117}: commit: new
+[33m27a21e1[m HEAD@{118}: commit: new today
+[33m83e4e37[m HEAD@{119}: pull origin master: Fast-forward
+[33me84deaa[m HEAD@{120}: commit: new
+[33m49f4644[m HEAD@{121}: pull origin master: Fast-forward
+[33m948b2fd[m HEAD@{122}: pull origin master: Fast-forward
+[33mcd971ab[m HEAD@{123}: commit: new now
+[33ma1e0638[m HEAD@{124}: pull origin master: Fast-forward
+[33m564a6de[m HEAD@{125}: commit: new
+[33m02182fe[m HEAD@{126}: pull origin master: Fast-forward
+[33mf603120[m HEAD@{127}: pull origin master: Fast-forward
+[33m7e2d6e9[m HEAD@{128}: commit: new
+[33m61d349d[m HEAD@{129}: pull origin master: Fast-forward
+[33mfd46175[m HEAD@{130}: commit: new
+[33m4a85930[m HEAD@{131}: pull origin master: Fast-forward
+[33m7045262[m HEAD@{132}: pull origin master: Fast-forward
+[33m7de4e93[m HEAD@{133}: commit: new
+[33m6b63ccd[m HEAD@{134}: pull origin master: Fast-forward
+[33m736085a[m HEAD@{135}: commit: new
+[33m6ed8047[m HEAD@{136}: pull origin master: Fast-forward
+[33m5048c8a[m HEAD@{137}: commit: new
+[33maa409a7[m HEAD@{138}: pull origin master: Fast-forward
+[33m33c4b91[m HEAD@{139}: pull origin master: Fast-forward
+[33mdb0dd76[m HEAD@{140}: commit: new done
+[33m1b4c8bc[m HEAD@{141}: pull origin master: Fast-forward
+[33m69f4614[m HEAD@{142}: commit (merge): Merge branch 'master' of https://github.com/tgtech123/Filling-Station-system into Tgtech-Branch
+[33m289c92a[m HEAD@{143}: commit: neww
+[33mc799a0e[m HEAD@{144}: commit: new
+[33m2ff3cb7[m HEAD@{145}: commit: export work
+[33me5076e8[m HEAD@{146}: commit: Export done
+[33m2ca518e[m HEAD@{147}: commit: new commit
+[33m0ed72db[m HEAD@{148}: commit: end shift done
+[33m9e180f0[m HEAD@{149}: commit: shift page
+[33m3e2e87f[m HEAD@{150}: pull origin master: Fast-forward
+[33md5a52e9[m HEAD@{151}: commit: Profile pages
+[33m197f480[m HEAD@{152}: commit: Login done
+[33m2caff46[m HEAD@{153}: pull origin master: Fast-forward
+[33m7b11525[m HEAD@{154}: commit: new
+[33m02c7cee[m HEAD@{155}: commit: slider done
+[33m8180d1b[m HEAD@{156}: commit: Login added
+[33m1fb174c[m HEAD@{157}: commit: Remove unused SVG assets and update LoginTwo component
+[33m3651bf6[m HEAD@{158}: commit (merge): Merge branch 'Tgtech-Branch' and resolve conflicts
+[33m1ace7dd[m HEAD@{159}: commit: Image added
+[33m42e2aeb[m HEAD@{160}: commit (amend): Merge branch 'master' of https://github.com/tgtech123/Filling-Station-system into Tgtech-Branch
+[33m665edb1[m HEAD@{161}: pull origin master: updating HEAD
+[33m665edb1[m HEAD@{162}: commit (merge): Merge branch 'master' of https://github.com/tgtech123/Filling-Station-system into Tgtech-Branch
+[33mac76396[m HEAD@{163}: commit: Login done
+[33m2d168b5[m HEAD@{164}: pull origin master: Fast-forward
+[33m2b8596a[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{165}: checkout: moving from master to Tgtech-Branch
+[33m2b8596a[m[33m ([m[1;32mmaster[m[33m)[m HEAD@{166}: commit (initial): getting started

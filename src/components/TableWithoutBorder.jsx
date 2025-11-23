@@ -2,27 +2,35 @@
 import React, { useState } from "react";
 import StatusModal from "./StatusModal ";
 
-const TableWithoutBorder = ({ columns = [], data = [], enableStatus = false }) => {
-  // If enableStatus is true → replace last column with "Pending"
-  const [tableData, setTableData] = useState(
-    data.map((row) => {
-      if (!enableStatus) return row;
-      const updatedRow = [...row];
-      updatedRow[updatedRow.length - 1] = "Pending";
-      return updatedRow;
-    })
-  );
-
+const TableWithoutBorder = ({ 
+  columns = [], 
+  data = [], 
+  dataWithIds = [], 
+  enableStatus = false,
+  onApprove,
+  onReject
+}) => {
   const [selectedRow, setSelectedRow] = useState(null);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null);
 
-  const updateStatus = (row, status) => {
-    const rowIndex = tableData.indexOf(row);
-    if (rowIndex !== -1) {
-      const newData = [...tableData];
-      newData[rowIndex][newData[rowIndex].length - 1] = status;
-      setTableData(newData);
+  const handleApprove = () => {
+    if (selectedRow !== null && selectedRowIndex !== null && onApprove) {
+      // Get the full row with ID from dataWithIds
+      const fullRow = dataWithIds[selectedRowIndex];
+      onApprove(fullRow);
     }
-    setSelectedRow(null); // close modal
+    setSelectedRow(null);
+    setSelectedRowIndex(null);
+  };
+
+  const handleReject = () => {
+    if (selectedRow !== null && selectedRowIndex !== null && onReject) {
+      // Get the full row with ID from dataWithIds
+      const fullRow = dataWithIds[selectedRowIndex];
+      onReject(fullRow);
+    }
+    setSelectedRow(null);
+    setSelectedRowIndex(null);
   };
 
   return (
@@ -44,7 +52,7 @@ const TableWithoutBorder = ({ columns = [], data = [], enableStatus = false }) =
 
         {/* Table Body */}
         <tbody>
-          {tableData.length === 0 ? (
+          {data.length === 0 ? (
             <tr>
               <td
                 colSpan={columns.length}
@@ -54,7 +62,7 @@ const TableWithoutBorder = ({ columns = [], data = [], enableStatus = false }) =
               </td>
             </tr>
           ) : (
-            tableData.map((row, rowIndex) => (
+            data.map((row, rowIndex) => (
               <tr key={rowIndex} className="hover:bg-gray-50 py-5">
                 {row.map((cell, cellIndex) => {
                   const isLastCol = cellIndex === row.length - 1;
@@ -70,7 +78,9 @@ const TableWithoutBorder = ({ columns = [], data = [], enableStatus = false }) =
                     return (
                       <td
                         key={cellIndex}
-                        className={`px-3 py-2 whitespace-nowrap flex rounded-lg cursor-pointer ${
+                        className={`px-3 py-2 whitespace-nowrap flex rounded-lg ${
+                          enableStatus && isPending ? 'cursor-pointer' : ''
+                        } ${
                           isApproved || isSuccess
                             ? "bg-[#B2FFB4] text-[#04901C] font-semibold"
                             : isRejected || isFailed
@@ -79,9 +89,12 @@ const TableWithoutBorder = ({ columns = [], data = [], enableStatus = false }) =
                             ? "bg-yellow-50 text-yellow-600 font-semibold"
                             : ""
                         }`}
-                        onClick={() =>
-                          enableStatus && isPending && setSelectedRow(row)
-                        } // only open modal if enableStatus is true
+                        onClick={() => {
+                          if (enableStatus && isPending) {
+                            setSelectedRow(row);
+                            setSelectedRowIndex(rowIndex);
+                          }
+                        }}
                       >
                         {cell}
                       </td>
@@ -104,9 +117,12 @@ const TableWithoutBorder = ({ columns = [], data = [], enableStatus = false }) =
       {selectedRow !== null && (
         <StatusModal
           row={selectedRow}
-          onClose={() => setSelectedRow(null)}
-          onApprove={() => updateStatus(selectedRow, "Approved ✓")}
-          onReject={() => updateStatus(selectedRow, "Rejected")}
+          onClose={() => {
+            setSelectedRow(null);
+            setSelectedRowIndex(null);
+          }}
+          onApprove={handleApprove}
+          onReject={handleReject}
         />
       )}
     </div>

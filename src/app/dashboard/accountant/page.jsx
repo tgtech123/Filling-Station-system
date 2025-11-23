@@ -3,14 +3,17 @@
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import FlashCard from "@/components/Dashboard/FlashCard";
-import { useState, useEffect } from "react";
-import { samplePerformanceData, shiftSalesData } from "./accountantData";
+import { useState, useEffect, useMemo } from "react";
+import { samplePerformanceData, getShiftSalesData } from "./accountantData";
 import SalesExpensesChart from "./SalesExpensesChart";
 import ProductSalesOverviewChart from "./ProductSalesOverviewChart";
 import AuditReconciledSales from "./AuditedReconciledSales";
+import { useExpenseStore } from "@/store/expenseStore";
+
 export default function AccountantDashboard() {
   const [userData, setUserData] = useState(null);
-    const [performanceTimeFilter, setPerformanceTimeFilter] = useState('This month');
+  const [performanceTimeFilter, setPerformanceTimeFilter] = useState('This month');
+  const { expenses, fetchExpenses } = useExpenseStore();
 
   useEffect(() => {
     const getUserData = () => {
@@ -26,11 +29,36 @@ export default function AccountantDashboard() {
     };
 
     getUserData();
-  }, []);
+    fetchExpenses();
+  }, [fetchExpenses]);
+
   const fullName =
     userData?.firstName && userData?.lastName
       ? `${userData.firstName} ${userData.lastName}`
       : userData?.firstName || userData?.lastName || "User";
+
+  // Calculate this week's expenses
+  const thisWeekExpenses = useMemo(() => {
+    const now = new Date();
+    const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Adjust for Monday start
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - diff);
+    weekStart.setHours(0, 0, 0, 0);
+
+    let total = 0;
+    expenses.forEach((expense) => {
+      const expenseDate = new Date(expense.expenseDate || expense.createdAt);
+      if (expenseDate >= weekStart) {
+        total += parseFloat(expense.amount) || 0;
+      }
+    });
+
+    return total;
+  }, [expenses]);
+
+  // Get dynamic shift sales data
+  const shiftSalesData = getShiftSalesData(thisWeekExpenses);
 
   return (
     <DashboardLayout>
@@ -38,24 +66,28 @@ export default function AccountantDashboard() {
 
       <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="col-span-1 lg:col-span-2">
+          {/* Shift and Sales */}
+          <DisplayCard>
+            <h2 className="text-2xl font-semibold">Dashboard</h2>
+            <h4>Shift and sales summary</h4>
 
-        {/* Shift and Sales */}
-        <DisplayCard>
-          <h2 className="text-2xl font-semibold">Dashboard</h2>
-          <h4>Shift and sales summary</h4>
-
-          <div className="mt-10 grid grid-cols-1 lg:grid-cols-4 gap-4">
-            {shiftSalesData.map((item) => (
-              <FlashCard key={item.id} {...item} />
-            ))}
-          </div>
-        </DisplayCard>
+            <div className="mt-10 grid grid-cols-1 lg:grid-cols-4 gap-4">
+              {shiftSalesData.map((item) => (
+                <FlashCard key={item.id} {...item} />
+              ))}
+            </div>
+          </DisplayCard>
         </div>
         
         {/* Sales Expenses Chart */}
         <DisplayCard>
-          <SalesExpensesChart data={samplePerformanceData} timeFilter={performanceTimeFilter} onTimeFilterChange={setPerformanceTimeFilter}  />
+          <SalesExpensesChart 
+            data={samplePerformanceData} 
+            timeFilter={performanceTimeFilter} 
+            onTimeFilterChange={setPerformanceTimeFilter} 
+          />
         </DisplayCard>
+        
         {/* Product Sales Overview */}
         <DisplayCard>
           <ProductSalesOverviewChart />
