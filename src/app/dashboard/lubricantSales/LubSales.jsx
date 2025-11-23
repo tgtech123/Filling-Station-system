@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import DynamicSalesTable from "./DynamicSalesTable";
 import ReceiptModal from "./reusefilter/ReceiptModal";
-import { useLubricantStore } from "@/store/lubricantStore"; // 🆕 Import store
+import { useLubricantStore } from "@/store/lubricantStore";
 
 const API_URL = process.env.NEXT_PUBLIC_API;
 
@@ -45,7 +45,7 @@ const LubSales = () => {
     }
   }, [message]);
 
-  // 🆕 Listen for selected product from search
+
   useEffect(() => {
     if (selectedProductForSale) {
       addProductToTable(selectedProductForSale);
@@ -53,7 +53,6 @@ const LubSales = () => {
     }
   }, [selectedProductForSale]);
 
-  // 🆕 Function to add product from search to table
   const addProductToTable = (product) => {
    const price = Number(product.unitPrice ?? 0);
     

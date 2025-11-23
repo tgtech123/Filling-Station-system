@@ -9,7 +9,7 @@ export const useLubricantStore = create((set, get) => ({
   weeklySummary: {},
   loading: false,
   error: null,
-  selectedProductForSale: null, // 🆕 New state for selected product
+  selectedProductForSale: null, 
 
   // Utility function to get token
   getAuthHeaders: () => {
