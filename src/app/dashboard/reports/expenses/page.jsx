@@ -7,15 +7,12 @@ import ExpensePage from "./ExpensePage";
 import { useState } from "react";
 import AddExpenseModal from "./AddExpenseModal";
 
-
-
 export default function Expenses() {
     const [isModalOpen, setIsModalOpen] = useState(false)
 
     const handleOpen = () => setIsModalOpen(true);
     const handleClose = () => setIsModalOpen(false);
 
-   
     return (
         <DashboardLayout>
             <div>
@@ -45,6 +42,7 @@ export default function Expenses() {
                             <AddExpenseModal isOpen={isModalOpen} onClose={handleClose}/>
                         </span>
                     </div>
+                    
                         {/* the cards section */}
                     <div>
                         <ExpenseCards/>

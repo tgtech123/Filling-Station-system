@@ -4,7 +4,7 @@ import { IoCloseOutline } from "react-icons/io5";
 import { GoChevronDown, GoChevronUp  } from "react-icons/go";
 import { useExpenseStore } from '@/store/expenseStore';
 
-const AddExpenseModal = ({isOpen, onClose}) => {
+const AddExpenseModalPage = ({isOpen, onClose}) => {
     if(!isOpen) return null
     
     const [isToggleChevron, setIsToggleChevron] = useState(false)
@@ -213,4 +213,4 @@ const AddExpenseModal = ({isOpen, onClose}) => {
     )
 }
 
-export default AddExpenseModal
+export default AddExpenseModalPage

@@ -2,7 +2,8 @@ import { TrendingUp, TriangleAlert } from "lucide-react";
 import { GiExpense } from "react-icons/gi";
 import { TbCurrencyNaira } from "react-icons/tb";
 
-export const shiftSalesData = [
+// Function to generate dynamic shift sales data
+export const getShiftSalesData = (thisWeekExpenses) => [
     {
         id: 1,
         name: "Revenue Generated",
@@ -16,7 +17,7 @@ export const shiftSalesData = [
         name: "Expenses",
         period: "This week",
         icon: <GiExpense size={23} />,
-        variable: "₦22,000"
+        variable: `₦${thisWeekExpenses.toLocaleString()}`
     },
     {
         id: 3,
@@ -31,7 +32,7 @@ export const shiftSalesData = [
         icon: <TrendingUp size={23} />,
         variable: "₦12,000"
     },
-]
+];
 
 export const samplePerformanceData = [
     { month: 'Jan', oneDay: 8000, dayOff: 6000, indicator: null },
@@ -46,4 +47,4 @@ export const samplePerformanceData = [
     { month: 'Oct', oneDay: 18000, dayOff: 15000, indicator: null },
     { month: 'Nov', oneDay: 20000, dayOff: 17000, indicator: null },
     { month: 'Dec', oneDay: 22000, dayOff: 19000, indicator: null }
-  ];
+];
