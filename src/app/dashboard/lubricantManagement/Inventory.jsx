@@ -1,6 +1,5 @@
 "use client";
-
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import Table from "./Table";
 import { useLubricantStore } from "@/store/lubricantStore";
@@ -9,37 +8,46 @@ export default function Inventory() {
     const { 
         lubricants, 
         weeklySummary,
+        monthlySummary,
         loading, 
         fetchLubricants, 
-        fetchWeeklySummary
+        fetchWeeklySummary,
+        fetchMonthlySummary
     } = useLubricantStore();
+
+    const [viewMode, setViewMode] = useState("week"); // "week" or "month"
 
     useEffect(() => {
         const loadData = async () => {
             await fetchLubricants();
             await fetchWeeklySummary();
+            await fetchMonthlySummary();
         };
         
         loadData();
-    }, [fetchLubricants, fetchWeeklySummary]);
+    }, [fetchLubricants, fetchWeeklySummary, fetchMonthlySummary]);
 
-    // Use weekly summary data directly (now it's properly calculated from transactions)
-    const weeklySalesMap = useMemo(() => {
+    // 🆕 Use weekly or monthly summary based on viewMode
+    const activeSummary = viewMode === "week" ? weeklySummary : monthlySummary;
+
+    // 🆕 Dynamic sales map based on view mode
+    const salesMap = useMemo(() => {
         const map = new Map();
         
-        console.log("Weekly summary:", weeklySummary);
+        console.log(`${viewMode} summary:`, activeSummary);
         
-        // Weekly summary is an array of lubricants with qtySoldThisWeek
-        const summaryArray = Array.isArray(weeklySummary) ? weeklySummary : [];
+        const summaryArray = Array.isArray(activeSummary) ? activeSummary : [];
         
         if (!summaryArray.length) {
-            console.log("No weekly summary data available");
+            console.log(`No ${viewMode} summary data available`);
             return map;
         }
         
         summaryArray.forEach((item) => {
             const lubricantId = item.lubricantId;
-            const quantity = item.qtySoldThisWeek || 0;
+            const quantity = viewMode === "week" 
+                ? (item.qtySoldThisWeek || 0) 
+                : (item.qtySoldThisMonth || 0);
             const price = item.unitPrice || 0;
             
             if (lubricantId) {
@@ -50,19 +58,19 @@ export default function Inventory() {
             }
         });
         
-        console.log("Weekly sales map:", Array.from(map.entries()));
+        console.log(`${viewMode} sales map:`, Array.from(map.entries()));
         
         return map;
-    }, [weeklySummary]);
+    }, [activeSummary, viewMode]);
+
     const inventoryColumns = [
         "Product Name",
         "Product Type",
         "Qty in Stock",
         "Price Per Unit",
-        "Qty Sold This Week"
+        viewMode === "week" ? "Qty Sold This Week" : "Qty Sold This Month" // 🆕 Dynamic column
     ];
 
-    // Column headers for best selling table
     const bestSellingColumns = [
         "Rank",
         "Product Name",
@@ -78,9 +86,8 @@ export default function Inventory() {
             const quantity = lub.qtyInStock || 0;
             const price = lub.sellingPrice || lub.unitPrice || 0;
             
-            // Get weekly sales from our map using _id
-            const weeklySale = weeklySalesMap.get(lub._id.toString());
-            const soldQty = weeklySale?.quantity || 0;
+            const sale = salesMap.get(lub._id.toString());
+            const soldQty = sale?.quantity || 0;
 
             return [
                 lub.productName,
@@ -90,14 +97,13 @@ export default function Inventory() {
                 soldQty
             ];
         });
-    }, [lubricants, weeklySalesMap]);
+    }, [lubricants, salesMap]);
 
     // Transform top selling products to array of arrays
     const topSellingData = useMemo(() => {
-        if (!lubricants.length || weeklySalesMap.size === 0) return [];
+        if (!lubricants.length || salesMap.size === 0) return [];
         
-        // Convert map to array and sort by quantity sold
-        const salesArray = Array.from(weeklySalesMap.entries()).map(([lubricantId, data]) => {
+        const salesArray = Array.from(salesMap.entries()).map(([lubricantId, data]) => {
             const lubricant = lubricants.find(lub => lub._id === lubricantId);
             return {
                 lubricantId,
@@ -107,7 +113,6 @@ export default function Inventory() {
             };
         });
         
-        // Sort by quantity descending and take top 5
         const sorted = salesArray.sort((a, b) => b.quantity - a.quantity).slice(0, 5);
         
         return sorted.map((item, index) => [
@@ -116,7 +121,7 @@ export default function Inventory() {
             item.quantity,
             `₦${Math.round(item.revenue).toLocaleString()}`
         ]);
-    }, [lubricants, weeklySalesMap]);
+    }, [lubricants, salesMap]);
 
     // Get progress bar data for top 4 products
     const progressData = useMemo(() => {
@@ -124,14 +129,14 @@ export default function Inventory() {
         
         return lubricants.slice(0, 4).map(lub => {
             const quantity = lub.qtyInStock || 0;
-            const maxStock = lub.reOrderLevel ? lub.reOrderLevel * 20 : 100; // Estimate max based on reorder level
+            const maxStock = lub.reOrderLevel ? lub.reOrderLevel * 20 : 100;
             const percentage = quantity > 0 ? Math.min((quantity / maxStock) * 100, 100) : 0;
-            let color = "#7f27ff"; // Purple for high stock
+            let color = "#7f27ff";
             
             if (percentage < 20) {
-                color = "#eb2b0b"; // Red for low stock
+                color = "#eb2b0b";
             } else if (percentage < 50) {
-                color = "#e27d00"; // Orange for medium stock
+                color = "#e27d00";
             }
 
             return {
@@ -160,12 +165,10 @@ export default function Inventory() {
                     <p className="mb-4">
                         Track lubricant stock levels and sales performance
                     </p>
-
                     <Table 
                         columns={inventoryColumns}
                         data={inventoryData}
                     />
-
                     {/* Progress Bars */}
                     <div className="mt-6 space-y-4">
                         {progressData.map((item, index) => (
@@ -196,22 +199,33 @@ export default function Inventory() {
             <div className="w-full lg:w-3/7">
                 <DisplayCard>
                     <h3 className="text-xl font-semibold">Top Selling Products</h3>
-
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-4">
-                        <p>
-                            Best Performing lubricants
-                        </p>
-
+                        <p>Best Performing lubricants</p>
+                        
+                        {/* 🆕 Toggle Buttons */}
                         <div className="p-[4px] bg-[#0080ff] rounded-[8px] flex gap-[4px] text-sm">
-                            <button className="p-2 rounded-[8px] bg-white text-[#0080ff] font-semibold">
+                            <button 
+                                onClick={() => setViewMode("week")}
+                                className={`p-2 rounded-[8px] font-semibold transition-colors ${
+                                    viewMode === "week" 
+                                        ? "bg-white text-[#0080ff]" 
+                                        : "text-white"
+                                }`}
+                            >
                                 This Week
                             </button>
-                            <button className="rounded-[8px] p-2 text-white font-semibold">
+                            <button 
+                                onClick={() => setViewMode("month")}
+                                className={`rounded-[8px] p-2 font-semibold transition-colors ${
+                                    viewMode === "month" 
+                                        ? "bg-white text-[#0080ff]" 
+                                        : "text-white"
+                                }`}
+                            >
                                 This Month
                             </button>
                         </div>
                     </div>
-
                     <Table 
                         columns={bestSellingColumns}
                         data={topSellingData}
