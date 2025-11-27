@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { IoIosSearch } from "react-icons/io";
 import { BsPrinter } from "react-icons/bs";
-import { Calendar, Plus } from "lucide-react";
+import { Calendar, Plus, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import Modal from "./reusefilter/Modal";
 import { useLubricantStore } from "@/store/lubricantStore";
@@ -13,11 +13,11 @@ const SalesHeader = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [results, setResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [searchError, setSearchError] = useState(""); 
   const [stockModalOpen, setStockModalOpen] = useState(false);
   const inputRef = useRef(null);
 
-  const { searchLubricants, setSelectedProductForSale } = useLubricantStore(); // 🆕 Added setSelectedProductForSale
-
+  const { searchLubricants, setSelectedProductForSale } = useLubricantStore();
 
   const d = new Date();
   const day = String(d.getDate()).padStart(2, "0");
@@ -26,12 +26,39 @@ const SalesHeader = () => {
 
   const formattedDate = `${day}/${month}/${year}`;
 
-  // handle search
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) return;
-    const filtered = await searchLubricants(searchTerm.trim());
-    setResults(filtered);
-    setShowDropdown(true);
+  // Enhanced search handler with error handling
+  const handleSearch = async (term) => {
+    const searchValue = term || searchTerm;
+    setSearchError(""); 
+
+    if (searchValue.trim().length > 0) {
+      try {
+        const filtered = await searchLubricants(searchValue.trim());
+        
+        if (filtered.length === 0) {
+          setSearchError(`No products found matching "${searchValue}"`);
+          setResults([]);
+          setShowDropdown(false);
+        } else {
+          setResults(filtered);
+          setShowDropdown(true);
+        }
+      } catch (error) {
+        setSearchError("Failed to search products");
+        setResults([]);
+        setShowDropdown(false);
+      }
+    } else {
+      setResults([]);
+      setShowDropdown(false);
+    }
+  };
+
+  // Handle input change with real-time search
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    handleSearch(value);
   };
 
   // handle key press
@@ -42,12 +69,13 @@ const SalesHeader = () => {
     }
   };
 
-  // 🆕 Handle product selection
+  // Handle product selection
   const handleProductSelect = (item) => {
-    setSelectedProductForSale(item); // Send to store
-    setSearchTerm(""); // Clear search
-    setResults([]); // Clear results
+    setSelectedProductForSale(item);
+    setSearchTerm("");
+    setResults([]);
     setShowDropdown(false);
+    setSearchError(""); // Clear error on selection
   };
 
   // hide dropdown if clicked outside
@@ -85,29 +113,41 @@ const SalesHeader = () => {
               placeholder="Search by product name or barcode"
               className="py-2 pl-3 pr-10 outline-none focus:border-[#FF9D29] w-full border-[1.5px] border-neutral-300 rounded-lg"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              onFocus={() => searchTerm && setShowDropdown(true)}
             />
             <IoIosSearch
               className="absolute text-[#FF9D29] top-1/2 right-3 transform -translate-y-1/2 cursor-pointer"
               size={24}
-              onClick={handleSearch}
+              onClick={() => handleSearch()}
             />
 
-            {/* Dropdown */}
+            {/* 🆕 Search Error Message */}
+            {searchError && (
+              <div className="absolute top-full left-0 right-0 bg-red-50 border border-red-300 rounded-md mt-1 p-3 z-50 shadow-lg">
+                <div className="flex items-center gap-2 text-red-700">
+                  <AlertCircle size={18} />
+                  <p className="text-sm font-medium">{searchError}</p>
+                </div>
+              </div>
+            )}
+
+            {/* 🆕 Enhanced Dropdown with better styling */}
             {showDropdown && results.length > 0 && (
-              <ul className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto z-50 shadow-lg">
+              <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto z-50 shadow-lg">
                 {results.map((item) => (
-                  <li
+                  <div
                     key={item._id}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => handleProductSelect(item)} // 🆕 Updated to use new handler
+                    onClick={() => handleProductSelect(item)}
+                    className="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0"
                   >
-                    {item.productName}
-                  </li>
+                    <p className="font-semibold">{item.productName}</p>
+                    <p className="text-sm text-gray-600">
+                      Barcode: {item.barcode}
+                    </p>
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
         </form>
@@ -122,7 +162,10 @@ const SalesHeader = () => {
             <BsPrinter size={24} />
           </button>
 
-          <button onClick={() => setStockModalOpen(true)} className="border-2 border-[#0080FF] flex gap-2 w-full md:w-auto px-4 py-2 text-[#0080ff] font-semibold hover:bg-blue-700 hover:text-white hover:border-blue-700 rounded-lg">
+          <button 
+            onClick={() => setStockModalOpen(true)} 
+            className="border-2 border-[#0080FF] flex gap-2 w-full md:w-auto px-4 py-2 text-[#0080ff] font-semibold hover:bg-blue-700 hover:text-white hover:border-blue-700 rounded-lg"
+          >
             Add Stock
             <Plus size={24} />
           </button>

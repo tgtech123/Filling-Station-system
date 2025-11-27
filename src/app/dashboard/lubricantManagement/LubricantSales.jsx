@@ -4,14 +4,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import { Search } from "lucide-react";
 import Pagination from "@/components/Pagination";
-import CustomTable from "@/components/Table"; // your existing table
+import CustomTable from "@/components/Table";
 
 const API_URL = process.env.NEXT_PUBLIC_API || "";
 
 export default function LubricantSales() {
   const [loading, setLoading] = useState(false);
   const [transactionsRaw, setTransactionsRaw] = useState([]);
-  const [flatRows, setFlatRows] = useState([]); // now array of arrays
+  const [flatRows, setFlatRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -63,7 +63,7 @@ export default function LubricantSales() {
     return () => { mounted = false; };
   }, []);
 
-  // Flatten transactions -> array of arrays for your CustomTable
+  // Flatten transactions -> array of arrays for CustomTable
   useEffect(() => {
     const rows = [];
     (transactionsRaw || []).forEach((txn) => {
@@ -104,6 +104,14 @@ export default function LubricantSales() {
       row.some((cell) => String(cell ?? "").toLowerCase().includes(lower))
     );
   }, [flatRows, searchTerm]);
+
+  // 🆕 Calculate total amount from filtered data
+  const totalAmount = useMemo(() => {
+    return filteredData.reduce((sum, row) => {
+      const amount = parseFloat(row[6]) || 0; // Amount is at index 6
+      return sum + amount;
+    }, 0);
+  }, [filteredData]);
 
   const totalItems = filteredData.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
@@ -148,6 +156,26 @@ export default function LubricantSales() {
       ) : (
         <>
           <CustomTable columns={columns} data={currentData} />
+          
+          {/* 🆕 Total Amount Display */}
+          {totalItems > 0 && (
+            <div className="mt-6 flex justify-end">
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg px-6 py-4 min-w-[250px]">
+                <p className="text-sm text-gray-600 mb-1">
+                  {searchTerm ? "Filtered Total Amount" : "Total Amount"}
+                </p>
+                <p className="text-2xl font-bold text-blue-600">
+                  ₦{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+                {searchTerm && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Based on {totalItems} transaction{totalItems !== 1 ? "s" : ""}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {totalItems > 0 && totalPages > 1 && (
             <div className="mt-4">
               <Pagination
@@ -159,6 +187,7 @@ export default function LubricantSales() {
               />
             </div>
           )}
+          
           {!loading && flatRows.length === 0 && (
             <div className="text-center py-8 text-gray-500">No transactions recorded yet.</div>
           )}

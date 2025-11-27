@@ -2,7 +2,7 @@
 
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import FlashCard from "@/components/Dashboard/FlashCard";
-import { ArrowLeft, House, Plus, TrendingUp } from "lucide-react";
+import { ArrowLeft, Home, Plus, TrendingUp } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { TbCurrencyNaira } from "react-icons/tb";
 import LubricantSales from "./LubricantSales";
@@ -20,10 +20,33 @@ export default function LubricantManagement() {
 
   const { lubricants, dailySummary, fetchLubricants, fetchDailySummary } = useLubricantStore();
 
+  // 🆕 Initial data load
   useEffect(() => {
     fetchLubricants();
     fetchDailySummary();
   }, [fetchLubricants, fetchDailySummary]);
+
+  // 🆕 Refresh data when Add Lubricant modal closes
+  useEffect(() => {
+    if (!isLubricantModalOpen) {
+      fetchLubricants();
+      fetchDailySummary();
+    }
+  }, [isLubricantModalOpen, fetchLubricants, fetchDailySummary]);
+
+  // 🆕 Refresh data when Tracker modal closes (in case stock was added)
+  useEffect(() => {
+    if (!showLubricantTracker) {
+      fetchLubricants();
+      fetchDailySummary();
+    }
+  }, [showLubricantTracker, fetchLubricants, fetchDailySummary]);
+
+  // 🆕 Refresh data when tab changes (ensures fresh data on each view)
+  useEffect(() => {
+    fetchLubricants();
+    fetchDailySummary();
+  }, [activeTab, fetchLubricants, fetchDailySummary]);
 
   // Use data from API daily summary or calculate from lubricants
   const summaryData = useMemo(() => {
@@ -169,7 +192,7 @@ export default function LubricantManagement() {
                 : "bg-transparent text-inherit"
             } flex items-center gap-2`}
           >
-            <House className="hidden lg:flex" />
+            <Home className="hidden lg:flex" />
             Lubricant sales
           </div>
           <div
@@ -181,7 +204,7 @@ export default function LubricantManagement() {
                 : "bg-transparent text-inherit"
             } flex items-center gap-2`}
           >
-            <House className="hidden lg:flex" />
+            <Home className="hidden lg:flex" />
             Inventory
           </div>
         </div>
