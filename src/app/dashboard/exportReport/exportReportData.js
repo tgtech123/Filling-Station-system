@@ -47,6 +47,15 @@ export const reportType = [
         { value: "Financial summary" },
         { value: "System activity logs" },
     ]
+    export const Role = [
+        { value: "All " },
+        { value: "Pump Attendant" },
+        { value: "Cashier" },
+        { value: "Accountant" },
+        { value: "Supervisor" },
+        { value: "Manager" },
+       
+    ]
     export const pumpNoOptions = [
         { value: "Pump 1" },
         { value: "Pump 2" },
@@ -59,6 +68,8 @@ export const reportType = [
         { value: "Fuel" },
         { value: "Lubricant" },
         { value: "Diesel" },
+        { value: "Gas" },
+        { value: "Kerosene" },
     ]
     export const shiftTypeOptions = [
         { value: "One-Day - Morning (6AM - 2PM)" },

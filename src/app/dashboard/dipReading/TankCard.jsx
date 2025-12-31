@@ -1,25 +1,33 @@
 "use client";
 
-import { ArrowRightLeft, Check, Clock } from "lucide-react";
+import { ArrowRightLeft, Check, Clock, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { IoWarning } from "react-icons/io5";
+import useSupervisorStore from "@/store/useSupervisorStore";
 
 export default function TankCard({
+  tankId,
   tankName,
   productType,
   lastUpdated,
   systemReading,
+  initialStatus = "Pending",
+  onReadingSubmitted,
 }) {
   const [manualReading, setManualReading] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState(false);
-  const [status, setStatus] = useState("Pending");
+  const [status, setStatus] = useState(initialStatus);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleUpdate = () => {
+  const { submitDipReading } = useSupervisorStore();
+
+  const handleUpdate = async () => {
     const systemVal = parseFloat(systemReading);
     const manualVal = parseFloat(manualReading);
 
+    // Validation
     if (isNaN(manualVal)) {
       setMessage("Please enter a valid manual reading.");
       setError(true);
@@ -27,8 +35,16 @@ export default function TankCard({
       return;
     }
 
+    if (manualVal < 0) {
+      setMessage("Reading cannot be negative.");
+      setError(true);
+      setStatus("Deviation");
+      return;
+    }
+
     const diff = Math.abs(systemVal - manualVal);
 
+    // Update UI based on comparison
     if (diff !== 0) {
       setMessage(`${diff} Ltrs Deviation`);
       setErrorMessage(
@@ -40,11 +56,68 @@ export default function TankCard({
       setMessage("Reading Matched");
       setError(false);
       setStatus("Matched");
+      setErrorMessage("");
+    }
+
+    // Submit to API
+    try {
+      setIsSubmitting(true);
+      
+      // Backend expects: { tankId, manualReading, notes (optional) }
+      const readingData = {
+        tankId,
+        manualReading: manualVal,
+        notes: diff !== 0 
+          ? `Deviation detected: ${diff}L difference from system reading` 
+          : "Reading matched system reading",
+      };
+
+      await submitDipReading(readingData);
+      
+      // Notify parent component if callback provided
+      if (onReadingSubmitted) {
+        onReadingSubmitted({
+          tankId,
+          tankName,
+          manualReading: manualVal,
+          deviation: diff,
+          status: diff !== 0 ? "Deviation" : "Matched",
+        });
+      }
+
+      // Show success message briefly
+      if (diff === 0) {
+        setTimeout(() => {
+          setMessage("Reading Submitted Successfully");
+        }, 500);
+      }
+    } catch (err) {
+      setError(true);
+      setStatus("Deviation");
+      setErrorMessage(
+        err.response?.data?.message || 
+        "Failed to submit reading. Please try again."
+      );
+      setMessage("Submission Failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="border-2 my-3 p-3 rounded-[20px] border-[#e7e7e7]">
+    <div className={`border-2 my-3 p-3 rounded-[20px] border-[#e7e7e7] relative ${
+      isSubmitting ? "opacity-75" : ""
+    }`}>
+      {/* Loading Overlay for this specific tank */}
+      {isSubmitting && (
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-[20px] flex items-center justify-center z-10">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <p className="text-sm font-semibold text-blue-600">Submitting Reading...</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
         <div>
           <h4 className="text-xl sm:text-2xl mb-2 font-medium">
@@ -93,19 +166,26 @@ export default function TankCard({
           <div className="flex-1">
             <p className="text-sm font-semibold mb-2">Manual Reading</p>
             <input
-              type="text"
+              type="number"
               value={manualReading}
               onChange={(e) => setManualReading(e.target.value)}
               className="bg-white w-full p-3 rounded-[12px] text-sm border-2 border-[#d5d3d3] placeholder:text-[#e7e7e7]"
               placeholder="Enter Reading"
+              disabled={isSubmitting}
             />
           </div>
           {/* Update Button */}
           <button
             onClick={handleUpdate}
-            className="self-center w-full lg:w-fit lg:self-end cursor-pointer hover:bg-[#004cff] py-3 px-5 text-white text-sm font-semibold rounded-[12px] bg-[#0080ff] transition-colors"
+            disabled={isSubmitting || !manualReading}
+            className={`self-center w-full lg:w-fit lg:self-end py-3 px-5 text-white text-sm font-semibold rounded-[12px] transition-colors flex items-center justify-center gap-2 ${
+              isSubmitting || !manualReading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#0080ff] hover:bg-[#004cff] cursor-pointer"
+            }`}
           >
-            Update
+            {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isSubmitting ? "Submitting..." : "Update"}
           </button>
         </div>
         {/* Arrow (only visible on large screens) */}
@@ -125,7 +205,7 @@ export default function TankCard({
         </div>
       </div>
       {/* Error Message */}
-      {error && message && (
+      {error && errorMessage && (
         <div className="mt-3 bg-[#ffdcdc] text-[#ff0000] w-full sm:w-fit p-2 flex gap-2 items-center rounded">
           <IoWarning />
           <p className="text-[15px]">{errorMessage}</p>
