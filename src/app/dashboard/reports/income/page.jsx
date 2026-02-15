@@ -1,3 +1,5 @@
+'use client'
+
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import ExportButton from "@/components/ExportButton";
 import { RxTriangleRight } from "react-icons/rx";

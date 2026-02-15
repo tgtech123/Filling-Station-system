@@ -1,18 +1,97 @@
 "use client";
+import { useEffect } from "react";
 import {
   RadialBarChart,
   RadialBar,
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import useAccountantStore from "@/store/useAccountantStore";
 
-const data = [
-  { name: "Fuel", value: 140000, fill: "#0080FF" },
-  { name: "Lubricant", value: 80000, fill: "#FF9900" },
-  { name: "Others", value: 20000, fill: "#00C49F" },
-];
+export default function InflowChart({ duration = "today" }) {
+  const { cashflow, loading, errors, fetchCashflow } = useAccountantStore();
 
-export default function InflowChart() {
+  useEffect(() => {
+    fetchCashflow(duration);
+  }, [fetchCashflow, duration]);
+
+  // Prepare chart data from cashflow.inflowBreakdown
+  const chartData = cashflow?.inflowBreakdown
+    ? [
+        { 
+          name: "Fuel", 
+          value: cashflow.inflowBreakdown.fuel || 0, 
+          fill: "#0080FF" 
+        },
+        { 
+          name: "Lubricant", 
+          value: cashflow.inflowBreakdown.lubricant || 0, 
+          fill: "#FF9900" 
+        },
+        { 
+          name: "Others", 
+          value: cashflow.inflowBreakdown.others || 0, 
+          fill: "#00C49F" 
+        },
+      ]
+    : [];
+
+  // Calculate total inflow
+  const totalInflow = cashflow?.summary?.totalInflow || 0;
+
+  // Format currency
+  const formatCurrency = (value) => {
+    return `₦${value.toLocaleString()}`;
+  };
+
+  // Show loading state
+  if (loading.cashflow && !cashflow) {
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-md">
+        <h2 className="text-lg font-semibold mb-4">Inflow</h2>
+        <p className="text-sm text-gray-500 mb-2">Monthly breakdown</p>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <p className="mt-2 text-sm text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (errors.cashflow) {
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-md">
+        <h2 className="text-lg font-semibold mb-4">Inflow</h2>
+        <p className="text-sm text-gray-500 mb-2">Monthly breakdown</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4">
+          <p className="text-red-800 text-sm">Error: {errors.cashflow}</p>
+          <button 
+            onClick={() => fetchCashflow(duration)}
+            className="mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state
+  if (!chartData.length || totalInflow === 0) {
+    return (
+      <div className="bg-white p-6 rounded-xl shadow-md">
+        <h2 className="text-lg font-semibold mb-4">Inflow</h2>
+        <p className="text-sm text-gray-500 mb-2">Monthly breakdown</p>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500">No inflow data available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-md">
       <h2 className="text-lg font-semibold mb-4">Inflow</h2>
@@ -25,7 +104,7 @@ export default function InflowChart() {
           innerRadius="50%"
           outerRadius="90%"
           barSize={15}
-          data={data}
+          data={chartData}
         >
           <RadialBar
             minAngle={15}
@@ -43,7 +122,9 @@ export default function InflowChart() {
         </RadialBarChart>
       </ResponsiveContainer>
 
-      <p className="text-center font-bold text-xl">₦240,000</p>
+      <p className="text-center font-bold text-xl mt-4">
+        {formatCurrency(totalInflow)}
+      </p>
     </div>
   );
 }

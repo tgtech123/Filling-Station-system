@@ -51,10 +51,10 @@ export default function Navbar() {
         
 
         <div
-          className="flex bg-[#0080ff] gap-2 py-3 px-6 rounded-[8px] text-white items-center cursor-pointer"
+          className="flex bg-[#0080ff] font-semibold gap-2 py-3 px-6 rounded-[8px] text-white items-center cursor-pointer"
           onClick={openModal}
         >
-          Get Started Now
+          Get Started Now!
           <button className="bg-[#0080FF]" size="lg">
             <ArrowRight />
           </button>

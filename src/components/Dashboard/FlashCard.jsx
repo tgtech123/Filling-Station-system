@@ -13,7 +13,7 @@ export default function FlashCard({ name, icon, period, variable, trend, number 
           </div>
         </div>
         <span className="text-xl">{icon}</span>
-      </div>
+      </div> 
 
       <div className="flex justify-between">
         <h3 className="text-2xl font-semibold text-[#1a71f6] group-hover:text-white transition-colors">{variable}</h3>
