@@ -1,5 +1,11 @@
 // src/data/fuelData.js
 
+// Format currency
+const formatCurrency = (value) => {
+  if (!value && value !== 0) return "0";
+  return Number(value).toLocaleString('en-US');
+};
+
 export const fuelDataColumns = [
   "Fuel type",
   "Litres sold",
@@ -8,8 +14,20 @@ export const fuelDataColumns = [
   "% of total sales",
 ];
 
-export const fuelDataRows = [
-  ["PMS", "1200 Litres", "₦1,200", "₦120,000,000", "1.2%"],
-  ["Diesel", "234 Litres", "₦1,500", "₦120,000,000", "2.2%"],
-  ["Fuel 99", "435 Litres", "₦1,250", "₦120,000,000", "1.2%"],
-];
+export const getFuelDataRows = (incomeReport) => {
+  if (!incomeReport?.fuelIncomeReport || incomeReport.fuelIncomeReport.length === 0) {
+    return [
+      ["PMS", "0 Litres", "₦0", "₦0", "0%"],
+      ["Diesel", "0 Litres", "₦0", "₦0", "0%"],
+      ["Fuel 99", "0 Litres", "₦0", "₦0", "0%"],
+    ];
+  }
+
+  return incomeReport.fuelIncomeReport.map(item => [
+    item.fuelType || "N/A",
+    `${formatCurrency(item.litresSold)} Litres`,
+    `₦${formatCurrency(item.pricePerLtr)}`,
+    `₦${formatCurrency(item.totalRevenue)}`,
+    `${item.percentageOfTotalSales}%`,
+  ]);
+};

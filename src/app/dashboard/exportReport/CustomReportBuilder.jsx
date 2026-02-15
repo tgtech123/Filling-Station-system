@@ -15,7 +15,7 @@ export default function CustomReportBuilder() {
   const [selectedShiftType, setSelectedShiftType] = useState(shiftTypeOptions[3]); // "All"
   const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
   const [isExporting, setIsExporting] = useState(false);
-
+ 
   const {
     generateSalesReport,
     generateCashReconciliationReport,

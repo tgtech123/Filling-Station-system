@@ -94,7 +94,7 @@ export default function FinancialStatement() {
     <div className="mt-6"></div>
 
       {active === "linkOne" && (
-        <IncomeStatement showFilter={showFilter} />
+        <IncomeStatement showFilter={showFilter} setShowFilter={setShowFilter} />
       )}
 
       {active === "linkTwo" && (

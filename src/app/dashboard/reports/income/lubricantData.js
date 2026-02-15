@@ -9,8 +9,19 @@ export const lubricantDataColumns = [
   "% of Total sales",
 ];
 
-export const lubricantDataRows = [
-  ["Barcode", "Engine oil (1L)", "234 Bottles", "₦1,200", "₦120,000,000", "1.5%"],
-  ["Barcode", "Engine oil (2L)", "234 Bottles", "₦2,500", "₦120,000,000", "10%"],
-  ["Barcode", "Engine oil (5L)", "234 Bottles", "₦8,000", "₦120,000,000", "2.9%"],
-];
+export const getLubricantDataRows = (incomeReport) => {
+  if (!incomeReport?.lubricantIncomeReport || incomeReport.lubricantIncomeReport.length === 0) {
+    return [
+      ["N/A", "No data", "0 Bottles", "₦0", "₦0", "0%"],
+    ];
+  }
+
+  return incomeReport.lubricantIncomeReport.map(item => [
+    item.barcode || "N/A",
+    item.lubricantName || "N/A",
+    `${formatCurrency(item.unitSold)} Units`,
+    `₦${formatCurrency(item.pricePerUnit)}`,
+    `₦${formatCurrency(item.totalRevenue)}`,
+    `${item.percentageOfTotalSales}%`,
+  ]);
+};

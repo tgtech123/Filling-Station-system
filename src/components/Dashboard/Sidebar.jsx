@@ -125,7 +125,12 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
         name: "Manager",
         level: 5,
         color: "bg-red-500",
-      }
+      },
+      Admin: {
+        name: "Admin",
+        level: 6,
+        color: "bg-red-500",
+      },
     };
 
     return roleMap[role] || {
@@ -203,7 +208,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     name: "Dashboard",
     icon: <House />,
     link: `/dashboard/${role}`, 
-    roles: ["cashier", "attendant", "accountant", "supervisor", "manager"],
+    roles: ["cashier", "attendant", "accountant", "supervisor", "manager","admin"],
   },
     // Cashier links
     {
@@ -358,6 +363,42 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <MdOutlinePeopleAlt size={24} />,
       link: "/dashboard/staffManagement",
       roles: ["manager"],
+    },
+    //Admin links
+    {
+      id: "Stations",
+      name: "Stations",
+      icon: <MdOutlinePeopleAlt size={24} />,
+      link: "/dashboard/stations",
+      roles: ["admin"],
+    },
+    {
+      id: "Subscriptions",
+      name: "Subscriptions",
+      icon: <MdOutlinePeopleAlt size={24} />,
+      link: "/dashboard/Subscriptions",
+      roles: ["admin"],
+    },
+    {
+      id: "Payments & Billing",
+      name: "Payments & Billing",
+      icon: <MdOutlinePeopleAlt size={24} />,
+      link: "/dashboard/Payments & Billing",
+      roles: ["admin"],
+    },
+    {
+      id: "Activity Log",
+      name: "Activity Log",
+      icon: <MdOutlinePeopleAlt size={24} />,
+      link: "/dashboard/Activity Log",
+      roles: ["admin"],
+    },
+    {
+      id: "Settings",
+      name: "settings",
+      icon: <MdOutlinePeopleAlt size={24} />,
+      link: "/dashboard/settings",
+      roles: ["admin"],
     },
   ];
 

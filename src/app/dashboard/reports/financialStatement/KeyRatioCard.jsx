@@ -1,26 +1,4 @@
-// export default function KeyRatioCard({ data = [], columns = [] }) {
-//   return (
-//     <div>
-//       <table>
-//         <thead>
-//           <tr>
-//             {columns.map((col, index) => (
-//               <th key={index} className="px-4 py-3 whitespace-nowrap">
-//                 {col}
-//               </th>
-//             ))}
-//           </tr>
-//         </thead>
-//         <tbody>
-//           <td>
-//             {data.map(())}
-//           </td>
-//         </tbody>
-//       </table>
-//     </div>
-//   );
-// }
-// components/KeyRatioCard.jsx
+
 export default function KeyRatioCard({ data = [], columns = [] }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-gray-200 p-4 bg-white">

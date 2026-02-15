@@ -34,6 +34,77 @@ export const getShiftSalesData = (thisWeekExpenses) => [
     },
 ];
 
+// Function to generate dynamic dashboard flash cards from API data
+export const getDashboardFlashCards = (dashboard) => {
+  if (!dashboard?.summary) {
+    return [
+      {
+        id: 1,
+        name: "Revenue Generated",
+        period: "Today",
+        icon: <TbCurrencyNaira size={23} />,
+        variable: "₦0",
+        trend: "0"
+      },
+      {
+        id: 2,
+        name: "Expenses",
+        period: "Today",
+        icon: <GiExpense size={23} />,
+        variable: "₦0"
+      },
+      {
+        id: 3,
+        name: "Discrepancies",
+        period: "Today",
+        icon: <TriangleAlert size={23} />,
+        variable: "0"
+      },
+      {
+        id: 4,
+        name: "Total Stock Value",
+        period: "Today",
+        icon: <TrendingUp size={23} />,
+        variable: "₦0"
+      },
+    ];
+  }
+
+  const { revenueGenerated, expenses, discrepancies, totalStockValue } = dashboard.summary;
+
+  return [
+    {
+      id: 1,
+      name: "Revenue Generated",
+      period: "Today",
+      icon: <TbCurrencyNaira size={23} />,
+      variable: `₦${revenueGenerated.toLocaleString()}`,
+      trend: "1.5" // You can calculate this based on previous data if needed
+    },
+    {
+      id: 2,
+      name: "Expenses",
+      period: "Today",
+      icon: <GiExpense size={23} />,
+      variable: `₦${expenses.toLocaleString()}`
+    },
+    {
+      id: 3,
+      name: "Discrepancies",
+      period: "Today",
+      icon: <TriangleAlert size={23} />,
+      variable: `${discrepancies}`
+    },
+    {
+      id: 4,
+      name: "Total Stock Value",
+      period: "Today",
+      icon: <TrendingUp size={23} />,
+      variable: `₦${totalStockValue.toLocaleString()}`
+    },
+  ];
+};
+
 export const samplePerformanceData = [
     { month: 'Jan', oneDay: 8000, dayOff: 6000, indicator: null },
     { month: 'Feb', oneDay: 9000, dayOff: 7000, indicator: null },
