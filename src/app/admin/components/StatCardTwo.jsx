@@ -9,13 +9,13 @@ const StatCardTwo = ({
   iconBg = "bg-blue-50", 
   iconColor = "text-blue-600", 
   changeColor = "green",
-  showChange = true,
-  changeLabel = "From last month"
+  showChange = false,
+  changeLabel = "from last month"
 }) => {
   const isPositive = changeColor === "green";
   const isNegative = changeColor === "red";
 
-  return (
+  return ( 
     <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
         <div
@@ -24,7 +24,7 @@ const StatCardTwo = ({
           <Icon className={`h-6 w-6 ${iconColor}`} />
         </div>
 
-        {showChange && change && (
+        {showChange && change && changeLabel && (
           <span
             className={`flex items-center gap-1 text-sm font-medium ${
               isPositive

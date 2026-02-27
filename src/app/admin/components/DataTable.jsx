@@ -6,12 +6,22 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import ActionModal from "./stations/ActionModal";
 import ActivateActionModal from "./stations/ActivateActionModal";
+import ResetModal from "./stations/ResetModal";
 
 /* 🔹 Helpers for styling */
 const statusStyles = {
   Active: "text-green-700 bg-green-100",
   Maintenance: "text-orange-700 bg-orange-100",
   Suspended: "text-red-700 bg-red-100",
+  Pending: "text-[#F57C00] bg-[#FEF2E5]",
+  Failed: "text-[#B71C1C] bg-[#FFF1F3]",
+  Success: "text-green-700 bg-green-100",
+  Info: "bg-[#F3F5F9] text-[#0156D1]",
+  Critical: "bg-[#FFF1F3] text-[#B71C1C]",
+  Warning: "text-[#F57C00] bg-[#FEF2E5]"
+
+
+
 };
 
 const planStyles = {
@@ -27,6 +37,7 @@ export default function DataTable({ headers, rows, onActionClick }) {
   const [selectedRow, setSelectedRow] = useState(null)
   const [isActivateModalOpen, setIsActivateModalOpen] = useState(false)
   const [selectedRowForActivate, setSelectedRowForActivate] = useState(null)
+  const [isResetOpen, setIsResetOpen] = useState(false)
 
   useEffect(()=> {
     const handleClickOutside = (e) => {
@@ -63,7 +74,7 @@ const handleCloseActivateModal = () => {
   return (
     <div className="overflow-x-auto bg-white rounded-lg">
       <table className="min-w-full border-collapse">
-        <thead className="bg-gray-50">
+        <thead className="bg-gray-100">
           <tr>
             {headers.map((header) => (
               <th
@@ -76,7 +87,7 @@ const handleCloseActivateModal = () => {
           </tr>
         </thead>
 
-        <tbody className="divide-y">
+        <tbody className="divide">
           {rows.map((row, rowIndex) => (
             <tr key={rowIndex} className="hover:bg-gray-50">
               {headers.map((header) => {
@@ -131,7 +142,7 @@ const handleCloseActivateModal = () => {
                             <hr className="my-2 w-full border-gray-300 mt-[1rem] " />
 
                             <button
-                              onClick={() => onActionClick("reset", row)}
+                              onClick={() => {setIsResetOpen(true); setOpenRowIndex(null)} }
                               className="menu-item flex gap-2 text-neutral-500 cursor-pointer font-medium mt-[1rem]"
                             >
                               <Image src="/reset-password.png" height={20} width={23} alt="reset" />
@@ -164,6 +175,7 @@ const handleCloseActivateModal = () => {
                     </td>
                   );
                 }
+                
                 if (header.key === "status") {
                   return (
                     <td key={header.key} className="px-6 py-4">
@@ -174,6 +186,20 @@ const handleCloseActivateModal = () => {
                       </span>
                     </td>
                   );
+                }
+                
+                // Event Type logic
+                if(header.key === "eventType") {
+                  const Icon = row.icon;
+                  return(
+                    <td key={header.key} className="px-6 py-4 text-sm text-gray-700">
+                        <div className="flex items-center gap-2">
+                          {Icon && <Icon className="h-5 w-5 text-gray-500 shrink-0" />}
+                          {value}
+                        </div>
+                    </td>
+                  )
+
                 }
                 /* 🧾 DEFAULT CELL */
                 return (
@@ -192,6 +218,7 @@ const handleCloseActivateModal = () => {
 
       <ActionModal isOpen={isModalOpen} onClose={handleCloseModal} data={selectedRow} />
       <ActivateActionModal isOpen={isActivateModalOpen} onClose={handleCloseActivateModal} />
+      <ResetModal isOpen={isResetOpen} onClose={() => setIsResetOpen(false)} />
     </div>
   );
 }

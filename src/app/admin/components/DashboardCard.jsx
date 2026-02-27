@@ -26,7 +26,7 @@ export default function DashboardCard() {
             <div className="mt-6 ">
               <p className="text-2xl font-semibold text-gray-900">{value}</p>
               <p className="mt-1 text-sm text-gray-500">{label}</p>
-              <p className="mt-2 text-xs text-gray-400">From last month</p>
+              {/* <p className="mt-2 text-xs text-gray-400">From last month</p> */}
             </div>
           </div>
         )

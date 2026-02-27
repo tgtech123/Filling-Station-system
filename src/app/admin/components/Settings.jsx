@@ -1,8 +1,14 @@
 import React from 'react'
+import PageSettings from './AdminSettings/PageSettings'
 
 const Settings = () => {
   return (
-    <div>Settings</div>
+    <div className='p-10'>
+
+      <div>
+        <PageSettings />
+      </div>
+    </div>
   )
 }
 
