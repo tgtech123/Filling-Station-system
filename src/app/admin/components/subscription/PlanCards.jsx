@@ -3,7 +3,6 @@
 import React, { useState } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { BsToggleOn, BsToggleOff } from "react-icons/bs"
-import PlansCreationModal from './PlansCreationModal'
 
 const PlanCards = ({ plan, onDelete }) => {
   const [isActive, setIsActive] = useState(plan.isActive)
@@ -30,7 +29,7 @@ const PlanCards = ({ plan, onDelete }) => {
       {/* Price */}
       <p className='text-4xl font-bold text-neutral-900'>
         ₦{plan.price}
-        <span className='text-base font-normal text-neutral-500'> /mo</span>
+        <span className={`text-base font-normal text-neutral-500 ${plan.billingCycle === "Monthly" ? "/mo" : "/yr"}`}>{plan.billingCycle === "Monthly" ? "/mo" : "/yr"} </span>
       </p>
 
       {/* User Limit */}

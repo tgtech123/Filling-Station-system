@@ -28,7 +28,7 @@ const SearchBarButtons = ({ searchValue, onSearchChange, onExport }) => {
 
       {/* FILTERS + EXPORT */}
       <div className="flex gap-3">
-        <form className="flex gap-3">
+        <div className="flex gap-3">
           <select className="py-2 px-3 rounded-md font-semibold border-[2px]
                              border-neutral-300 focus:border-blue-600">
             <option value="">All Status</option>
@@ -42,14 +42,8 @@ const SearchBarButtons = ({ searchValue, onSearchChange, onExport }) => {
             <ListFilter size={24} />
             Filter
           </button>
-          {/* <select className="py-2 px-3 rounded-md font-semibold border-[2px]
-                             border-neutral-300 focus:border-blue-600">
-            <option value="">Duration</option>
-            <option>Monthly</option>
-            <option>Weekly</option>
-            <option>Annually</option>
-          </select> */}
-        </form>
+         
+        </div>
 
         <button
           onClick={onExport}
