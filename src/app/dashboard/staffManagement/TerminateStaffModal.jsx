@@ -38,9 +38,9 @@ const TerminateStaffModal = ({ isOpen, onClose, staffId, deleteStaff, token, sta
         </span>
 
         <p className="py-4 text-[15px]">
-          Terminating <span className="font-bold ">{staffName}</span> account would remove the details from your
+          Terminating <span className="font-bold text-blue-600 text-lg ">{staffName}</span> account would remove the details from your
           lists of staff, and will deny the staff access to login or perform 
-          necessary operations
+          necessary operations. Are you sure you want to <span className="text-xl ml-3 font-semibold text-red-500">Delete??</span>
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full">
@@ -49,7 +49,7 @@ const TerminateStaffModal = ({ isOpen, onClose, staffId, deleteStaff, token, sta
                 onClick={onClose}
                 className="w-full px-4 py-2 rounded-xl border-2 border-[#1a7af6] font-bold text-[#1a7af6]"
             >
-                Cancel
+               NO! Cancel
             </button>
 
             {/* Delete staff button */}
@@ -57,7 +57,7 @@ const TerminateStaffModal = ({ isOpen, onClose, staffId, deleteStaff, token, sta
             onClick={handleDelete}
                 className="w-full px-4 py-2 rounded-xl bg-[#F00] text-white font-bold hover:bg-red-300"
             >
-                {isLoading ? "Deleting" : "Delete Staff"}
+                {isLoading ? "Deleting" : "YES!, Delete Staff"}
             </button>
         </div>
 

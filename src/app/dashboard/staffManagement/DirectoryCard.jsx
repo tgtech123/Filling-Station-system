@@ -1,18 +1,30 @@
 'use client'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import EmployeeCard from '@/components/EmployeeCard'
 import useStaffStore from '@/store/useStaffStore'
 
-const DirectoryCard = () => {
-  const { staff, getAllStaff, loading } = useStaffStore()
+const DirectoryCard = ({searchQuery = ""}) => {
+  const { staff, getAllStaff, loading, deleteStaff } = useStaffStore()
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
 
-  const {deleteStaff} = useStaffStore()
+  // const {} = useStaffStore()
 
-  // ✅ Fetch all staff when component mounts
+
+  // Fetch all staff when component mounts
   useEffect(() => {
     if (token) getAllStaff(token)
   }, [token, getAllStaff])
+
+  //Filter Staff by name or role
+  const filteredStaff = staff.filter((item) => {
+    const fullName = `${item.firstName} ${item.lastName}`.toLowerCase()
+    const role =  item.role?.toLowerCase()
+    const query = searchQuery?.toLowerCase()
+
+    return fullName.includes(query) || role.includes(query)
+  })
+
+  
 
   const toggleDuty = (id) => {
     // Optional: You can call updateStaff() from store if duty status should persist to backend
@@ -30,12 +42,14 @@ const DirectoryCard = () => {
   if (loading.fetching) return <p>Loading staff...</p>
 
   return (
-    <div className='mt-5 bg-white p-4 rounded-2xl'>
-      <div className='grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-5'>
-        {staff.length === 0 ? (
-          <p className="text-gray-500">No staff yet. Add your first one!</p>
+    <div className='mt-5 bg-white p-8 rounded-2xl '>
+      <div className='grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-5 items-center justify-center'>
+        {filteredStaff.length === 0 ? (
+          <p className="text-gray-500">
+            {searchQuery ? `No staff found for ${searchQuery}` : "No staff yet. Add your first one!" }
+          </p>
         ) : (
-          staff.map((item) => (
+          filteredStaff.map((item) => (
             <EmployeeCard
               key={item._id}
               name={`${item.firstName} ${item.lastName}`}

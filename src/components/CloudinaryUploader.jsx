@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { useImageStore } from "@/store/useImageStore";
 
-export default function CloudinaryUploader({ user }) {
+export default function CloudinaryUploader({ user, onUploadComplete }) {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const { setUserImage } = useImageStore();
@@ -22,8 +22,9 @@ export default function CloudinaryUploader({ user }) {
       console.log("Cloudinary response:", data); // 👀 Check this in your browser console
 
       if (data.secure_url) {
-        setPreview(data.secure_url); // ✅ updates the local preview
-        setUserImage(user.id, data.secure_url); // ✅ saves to Zustand for reuse
+        setPreview(data.secure_url); //updates the local preview
+        setUserImage(user.id, data.secure_url); // saves to Zustand for reuse
+        onUploadComplete?.(data.secure_url) // send URl back to the modal
       }
     } catch (err) {
       console.error("Upload failed:", err);
@@ -36,7 +37,7 @@ export default function CloudinaryUploader({ user }) {
     <div className="flex flex-col items-center gap-3 border-2 border-dashed border-gray-300 p-6 rounded-2xl hover:border-indigo-500 transition">
       <label className="cursor-pointer">
         <input
-          type="file"
+          type="file" 
           accept="image/*"
           onChange={handleUpload}
           className="hidden"

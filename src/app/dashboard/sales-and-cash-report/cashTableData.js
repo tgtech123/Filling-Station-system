@@ -14,7 +14,7 @@ const cashData = {
   body: [
     [
       "04/17/23",
-      "John Dave",
+      "John Doe",
       "1",
       "Diesel",
       "30",
@@ -26,7 +26,7 @@ const cashData = {
     ],
     [
       "04/17/23",
-      "John Dave",
+      "John Jane",
       "2",
       "Diesel",
       "30",
@@ -38,7 +38,7 @@ const cashData = {
     ],
     [
       "04/17/23",
-      "John Dave",
+      "Michaelvin",
       "5",
       "Fuel",
       "30",
@@ -50,7 +50,7 @@ const cashData = {
     ],
     [
       "04/17/23",
-      "John Dave",
+      "Mallory",
       "7",
       "Fuel",
       "30",
@@ -62,7 +62,7 @@ const cashData = {
     ],
     [
       "04/17/23",
-      "John Dave",
+      "Kimmie",
       "1",
       "Diesel",
       "30",

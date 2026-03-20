@@ -2,6 +2,7 @@
 import MyStatCard from "@/components/MyStatCard";
 import React, { useState } from "react";
 import { LuHouse } from "react-icons/lu";
+import { Search } from "lucide-react";
 import { salesData } from "./salesData";
 import SalesAndProductChart from "./SalesAndProductChart";
 import TableWithoutBorder from "@/components/TableWithoutBorder";
@@ -12,6 +13,15 @@ import { cashData } from "./cashReportData";
 
 const SalesReportMan = () => {
   const [isActiveTab, setIsActiveTab] = useState("TabOne");
+  const [searchQue, setSearchQue] = useState("");
+
+  const filterSearch = dataRows.filter((item) => {
+    const TnxId = item[1]?.toLowerCase();
+    const productType = item[3]?.toLowerCase();
+    const query = searchQue.toLowerCase();
+
+    return TnxId?.includes(query) || productType?.includes(query);
+  });
   return (
     <div className="px-10 mt-[2.125rem]">
       <div className="bg-white rounded-2xl mt-[1.5rem] p-4 w-full">
@@ -94,9 +104,22 @@ const SalesReportMan = () => {
               <h1 className="text-[0.8rem]">Latest sales activities</h1>
             </span>
 
-            <span>search bar here</span>
+            {/* the Search Bar session */}
+            <div className="relative flex items-center ">
+              <input
+                type="text"
+                value={searchQue}
+                onChange={(e) => setSearchQue(e.target.value)}
+                placeholder="Search by TnxId or product type"
+                className="w-[20rem] h-[2.385rem] rounded-lg pl-10 border-[1.7px] border-neutral-300 outline-none focus:border-[1.7px] focus:border-blue-600"
+              />
+              <Search size={24} className="text-neutral-400 absolute ml-2" />
+            </div>
           </div>
-          <TableWithoutBorder columns={columnsHeader} data={dataRows} />
+          <TableWithoutBorder
+            columns={columnsHeader}
+            data={filterSearch}
+          />
         </div>
       )}
 

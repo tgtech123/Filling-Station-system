@@ -29,7 +29,7 @@ const PlanCards = ({ plan, onDelete }) => {
       {/* Price */}
       <p className='text-4xl font-bold text-neutral-900'>
         ₦{plan.price}
-        <span className={`text-base font-normal text-neutral-500 ${plan.billingCycle === "Monthly" ? "/mo" : "/yr"}`}>{plan.billingCycle === "Monthly" ? "/mo" : "/yr"} </span>
+        <span className="text-base font-normal text-neutral-500 ">{plan.billingCycle === "Monthly" ? "/mo" : "/yr"} </span>
       </p>
 
       {/* User Limit */}
@@ -49,7 +49,7 @@ const PlanCards = ({ plan, onDelete }) => {
                 {feature}
               </li>
             ))}
-          </ul>
+          </ul> 
         </div>
       )}
 
