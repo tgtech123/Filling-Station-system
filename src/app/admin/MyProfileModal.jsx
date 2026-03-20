@@ -1,22 +1,28 @@
 "use client";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { X, Save, SquarePen, Mail, Phone, EyeOff, Eye } from "lucide-react";
 import Image from "next/image";
 import CloudinaryUploader from "@/components/CloudinaryUploader";
 import { useImageStore } from "@/store/useImageStore";
 
 const MyProfileModal = ({ isOpen, onClose }) => {
-  if (!isOpen) return null; 
+  
   const [isToggleOne, setIsToggleOne] = useState(false)
   const [isHiddenTwo, setIsHiddenTwo] = useState(false)
   const [isHiddenThree, setIsHiddenThree] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   const [isEditing, setIsEditing] = useState(false);
 
   const USER_ID = "admin-user-1"
   const {getUserImage, setUserImage} = useImageStore()
 
-  const storedImage = getUserImage(USER_ID) || "/john-melo-2.png"
+  
+
+  useEffect(()=>{
+    setMounted(true)
+  })
+  const storedImage = mounted ? getUserImage(USER_ID) || "/john-melo-2.png" : "/john-melo-2.png"
 
   const [formData, setFormData] = useState({
     firstName: "Oboh",
@@ -32,7 +38,11 @@ const MyProfileModal = ({ isOpen, onClose }) => {
   const [tempData, setTempData] = useState(formData);
   const [isMessage, setIsMessage] = useState({type: "", text: ""})
 
+  
+
   const messageTimer = useRef(null)
+
+  if(!isOpen) return null
 
   const handleSave = ()=>{
     clearTimeout(messageTimer.current)
