@@ -1,24 +1,3 @@
-// 'use client'
-// import Sidebar from '@/components/Dashboard/Sidebar'
-// import React, { useState } from 'react'
-// import SidebarTwo from './SidebarTwo'
-// import HeaderTwo from './HeaderTwo'
-
-// const page = () => {
-//   const [activeItem, setActiveItem] =useState("Dashboard")
-//   return (
-    
-//       <div className='h-screen bg-neutral-50 flex'>
-      
-//         <SidebarTwo activeItem={activeItem} setActiveItem={setActiveItem}/>
-
-//         <HeaderTwo />
-//       </div>
-    
-//   )
-// }
-
-// export default page
 
 "use client";
 import { useState } from 'react';

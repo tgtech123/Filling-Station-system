@@ -1,9 +1,39 @@
 "use client"
 import React, { useState } from 'react'
-import { X, Eye, EyeOff } from 'lucide-react'
+import { X, Eye, EyeOff, ChevronDown } from 'lucide-react'
 import { BsToggleOn, BsToggleOff } from "react-icons/bs"
+import Multiselect from 'multiselect-react-dropdown'
+import { removeItem } from 'framer-motion'
+import PlanSuccessModal from './PlanSuccessModal'
 
 const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
+  const [options] = useState([
+            {id: 1, name:"Basic Reporting"},
+            {id: 2, name:"Full Reporting"},
+            {id: 3, name:"Community Support"},
+            {id: 4, name:"Limited Reporting"},
+            {id: 5, name:"24/7 Reporting"},
+            {id: 6, name:"Advance Reporting"},
+            {id: 7, name:"Priority Support"},
+            {id: 8, name:"Email Support"},
+            {id: 9, name:"5 Admin Users"},
+            {id: 10, name:"1 Admin User"},
+            {id: 11, name:"2 Admin Users"},
+            {id: 12, name:"Unlimited Admin Users"},
+  ])
+  const[selectedValue, setSelectedValue] =useState([])
+  const [isSuccessOpen, setIsSuccesOpen] = useState(false)
+  
+  
+  const onSelect = (selectedList, selectedItem) =>{
+    setSelectedValue(selectedList)
+    console.log("Added:", selectedItem)
+  }
+
+  const onRemove =(selectedItem, removeItem) =>{
+    setSelectedValue(selectedItem)
+    console.log("Removed:", removeItem)
+  }
   // Form fields
   const [planName, setPlanName] = useState("")
   const [userLimit, setUserLimit] = useState("")
@@ -26,24 +56,7 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
 
   if (!isOpen) return null
 
-  // ── Feature tag handlers ──
-  const handleAddPlan = () => {
-    if (planInput.trim() === "") return
-    setMyArray(prev => [...prev, planInput.trim()])
-    setPlanInput("")
-  }
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      handleAddPlan()
-    }
-  }
-
-  const handleDelete = (index) => {
-    setMyArray(prev => prev.filter((_, i) => i !== index))
-  }
-
+  
   // ── Reset form ──
   const resetForm = () => {
     setPlanName("")
@@ -58,6 +71,7 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
     setIsEyeOpenTwo(false)
     setIsToggleOn(false)
     setIsMovedOn(false)
+    setSelectedValue([])
   }
 
   // ── Submit handler ──
@@ -66,21 +80,29 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
       alert("Please fill in at least Plan Name and Price.")
       return
     }
-
-    onSubmit({
-      id: Date.now(),
-      planName,
-      userLimit,
-      features: myArray,
-      price,
-      billingCycle: billingCycle || "Monthly",
-      isActive: isToggleOn,
-      freeTrial: isMovedOn,
-    })
-
-    resetForm()
-    onClose()
+    setIsSuccesOpen(true)
   }
+
+    const handleSuccessClose = () => {
+      setIsSuccesOpen(false)
+
+      onSubmit({
+        id: Date.now(),
+        planName,
+        userLimit,
+        features: selectedValue.map(items => items.name),
+        price,
+        billingCycle: billingCycle || "Monthly",
+        isActive: isToggleOn,
+        freeTrial: isMovedOn,
+      })
+
+      resetForm()
+      onClose()
+    }
+
+
+  
 
   // ── Cancel handler ──
   const handleCancel = () => {
@@ -155,44 +177,37 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
           {/* Plan Features */}
           <label className='text-[0.9rem] font-bold leading-[150%]'>Plan Features</label>
           <div className='w-full h-auto mt-[0.5rem] flex flex-col gap-2 rounded-lg border-[2px] border-neutral-500 outline-none p-3'>
-            <span className='flex gap-3'>
-              <input
-                value={planInput}
-                onChange={(e) => setPlanInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                type="text"
-                placeholder='e.g Basic Reporting'
-                className='pl-3 px-5 py-3 rounded-lg border-2 focus:border-2 focus:border-blue-600 outline-none flex-1'
-              />
-              <button
-                type='button'
-                onClick={handleAddPlan}
-                className='flex items-center justify-center bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold cursor-pointer hover:bg-blue-400'
-              >
-                + Add
-              </button>
-            </span>
 
-            {/* Feature Tags */}
-            {myArray.length > 0 && (
-              <ul className='flex flex-wrap gap-2'>
-                {myArray.map((item, index) => (
-                  <li
-                    key={index}
-                    className='text-sm flex items-center gap-2 font-semibold bg-blue-50 px-3 py-1 rounded-md text-blue-700'
-                  >
-                    <p>{item}</p>
-                    <button
-                      type='button'
-                      onClick={() => handleDelete(index)}
-                      className='bg-gray-300 text-xs px-1.5 py-0.5 rounded-full text-red-600 hover:bg-gray-400 leading-none'
-                    >
-                      ✕
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+              <Multiselect
+                  options={options}
+                  selectedValues={selectedValue}
+                  onSelect={onSelect}
+                  onRemove={onRemove}
+                  displayValue='name'
+                  placeholder='Select Features'
+                  customArrow={<ChevronDown size={26}/>}
+
+                  style={{
+                    searchBox: {
+                      border: "1px solid #d1d5db",
+                      borderRadius: "12px",
+                      padding: "8px 12px",
+                      fontSize: "0.875rem",
+                    },
+
+                    chips: {
+                        backgroundColor: "black",
+                        color: "#ffffff",
+                        borderRadius: "9999px",
+                        FontSize: '0.875rem',
+                        fontWeight: '600',
+                    }
+
+                    
+                  }}
+              
+              />
+            
           </div>
 
           {/* Row 2: Passwords + Price + Billing */}
@@ -326,6 +341,7 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
               Create Plan
             </button>
           </div>
+          <PlanSuccessModal isOpen={isSuccessOpen} onClose={handleSuccessClose} planName={planName}/>
         </div>
       </div>
     </div>

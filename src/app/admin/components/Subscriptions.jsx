@@ -1,9 +1,10 @@
 
 'use client'
 import React, { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, ChevronDown } from 'lucide-react'
 import PlansCreationModal from './subscription/PlansCreationModal'
 import PlanCards from './subscription/PlanCards'
+import Multiselect from 'multiselect-react-dropdown'
 
 
 
@@ -11,6 +12,9 @@ const Subscriptions = () => {
   const [isShow, setIsShow] = useState(false)
   const [plans, setPlans] = useState([])
 
+  
+
+  
   const handleCreatePlan = (newPlan) => {
     setPlans(prev => [...prev, newPlan])
   }
@@ -18,6 +22,7 @@ const Subscriptions = () => {
   const handleDeletePlan = (id) => {
     setPlans(prev => prev.filter(plan => plan.id !== id))
   }
+
 
   return (
     <div className='p-9'>
@@ -70,6 +75,17 @@ const Subscriptions = () => {
         onClose={() => setIsShow(false)}
         onSubmit={handleCreatePlan}
       />
+
+
+
+      {/* practicing multiselect react dropdown */}
+
+             
+
+      
+
+   
+   
     </div>
     
   )

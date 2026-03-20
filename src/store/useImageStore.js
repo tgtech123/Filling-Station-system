@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export const useImageStore = create(
-  persist(
+  persist( 
     (set, get) => ({
       userImages: {}, // store images by user ID
       uploading: {}, // track upload status per user

@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { BiSolidToggleRight, BiSolidToggleLeft } from "react-icons/bi";
 import { Plus, X, ChevronUp, ChevronDown, EyeOff, Eye } from "lucide-react";
 import useStaffStore from "@/store/useStaffStore";
 
@@ -7,6 +8,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
   const [isToggleChevron, setIsToggleChevron] = useState(false);
   const [isToggleChevTwo, setIsToggleChevTwo] = useState(false);
   const [togglePayType, setTogglePayType] = useState(false);
+  const [toggleSalesTarget, setToggleSalesTarget] = useState(false);
 
   const { updateStaff, loading } = useStaffStore();
 
@@ -25,7 +27,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
   // Initialize form when modal opens or staffData changes
   useEffect(() => {
     console.log("staffData received:", staffData); // Debug log
-    
+
     if (isOpen && staffData) {
       setFormData({
         firstName: staffData.firstName || "",
@@ -65,9 +67,9 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white lg:w-[60.1875rem] w-fit rounded-2xl max-h-[90vh] overflow-hidden"
+        className="bg-white lg:w-[60.1875rem] w-fit rounded-2xl max-h-[90vh] "
       >
-        <div className="overflow-y-auto max-h-[90vh] p-5">
+        <div className="overflow-y-auto scrollbar-hide max-h-[90vh] p-7">
           <p className="mb-[2rem] flex justify-between">
             <span className="flex flex-col">
               <span className="text-[1.5rem] font-semibold leading-[100%] mb-[0.75rem]">
@@ -91,7 +93,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
               PERSONAL INFORMATION
             </h1>
 
-            <hr className="border-[1px] border-neutral-100" />
+            <hr className="border-[1px] border-neutral-200" />
 
             <form
               onSubmit={handleSave}
@@ -107,7 +109,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   value={formData.firstName}
                   onChange={handleChange}
                   placeholder="First name"
-                  className="text-neutral-800 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
+                  className="text-neutral-800 border-[2px] pl-3 border-neutral-200 outline-none focus:border-1 focus:border-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
                 />
               </span>
               <span className="flex flex-col gap-2">
@@ -120,7 +122,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Last name"
-                  className="text-neutral-800 pl-3 w-full lg:w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 rounded-2xl"
+                  className="text-neutral-800 pl-3 w-full lg:w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-200 outline-none focus:border-1 focus:border-blue-500 rounded-2xl"
                 />
               </span>
               <span className="flex flex-col gap-2">
@@ -133,7 +135,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Email address"
-                  className="text-neutral-800 pl-3 w-full lg:w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 rounded-2xl"
+                  className="text-neutral-800 pl-3 w-full lg:w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-200 outline-none focus:border-1 focus:border-blue-500 rounded-2xl"
                 />
               </span>
               <span className="flex flex-col gap-2">
@@ -146,18 +148,18 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="Phone number"
-                  className="text-neutral-800 pl-3 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
+                  className="text-neutral-800 pl-3 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl border-[2px] border-neutral-200 outline-none focus:border-1 focus:border-blue-500 focus:outline-none"
                 />
               </span>
             </form>
 
-            <hr className="border-[1px] border-neutral-100 mt-[1rem]" />
+            <hr className="border-[1px] border-neutral-200 mt-[1rem]" />
 
             <h1 className="text-[1.125rem] mb-[1rem] text-neutral-800 mt-[1rem]">
               JOB INFORMATION
             </h1>
 
-            <hr className="border-[1px] border-neutral-100" />
+            <hr className="border-[1px] border-neutral-200" />
           </div>
 
           <div>
@@ -170,7 +172,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   value={formData.role}
                   onChange={handleChange}
                   placeholder="Role"
-                  className="text-neutral-800 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
+                  className="text-neutral-800 border-[2px] pl-3 border-neutral-200 outline-none focus:border-1 focus:border-blue-500 focus:outline-none w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
                 />
 
                 <span
@@ -192,7 +194,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   value={formData.shiftType}
                   onChange={handleChange}
                   placeholder="Shift type"
-                  className="text-neutral-800 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
+                  className="text-neutral-800 border-[2px] pl-3 border-neutral-200 outline-none focus:border-1 focus:border-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
                 />
 
                 <span
@@ -217,20 +219,69 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                 value={formData.responsibilities}
                 onChange={handleChange}
                 placeholder="Overseas operations of other staffs, approves reconciled shifts and give report to manager"
-                className="text-neutral-800 border-[2px] pl-3 pt-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full min-h-[3.25rem] rounded-2xl resize-y"
+                className="text-neutral-800 border-[2px] pl-3 pt-3  border-neutral-200 outline-none focus:border-1 focus:border-blue-500 w-full  rounded-2xl resize-y"
                 rows="3"
               />
             </span>
           </div>
 
           <div>
-            <hr className="border-[1px] border-neutral-100 mt-[1rem]" />
+            {/* <hr className="border-[1px] border-neutral-100 mt-[1rem]" /> */}
+
+            <hr className="border-[1px] border-neutral-200 mt-[1.5rem] mb-[1rem]" />
+            <p className="flex justify-between">
+              <span className="text-[1.125rem] font-semibold ">
+                Add sales target
+              </span>
+
+              <span
+                onClick={() => setToggleSalesTarget((prev) => !prev)}
+                className="cursor-pointer"
+              >
+                {toggleSalesTarget ? (
+                  <BiSolidToggleRight className="w-24 h-12 text-[#1154D4] " />
+                ) : (
+                  <BiSolidToggleLeft className="w-24 h-12 text-[#D0D5DD] " />
+                )}
+              </span>
+            </p>
+
+            <hr className="border-[1.6px] border-neutral-200  mb-[2rem] w-full" />
+            
+            {toggleSalesTarget && (
+                
+                <div className="grid lg:grid-cols-2 grid-cols-1 gap-4">
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[0.875rem] font-bold leading-[150%]">
+                      Duration
+                    </label>
+                    <select className="w-[27.718rem] h-[3.25rem] border-[1.8px] rounded-xl border-neutral-200 focus:outline-none focus:border-blue-600 focus:border-[1.7px] pl-3 ">
+                      <option>Select ...</option>
+                      <option>Monthly</option>
+                      <option>Quarterly</option>
+                      <option>Yearly</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <label className="text-[0.875rem] font-bold leading-[150%]">
+                      Amount
+                    </label>
+                    <input
+                      placeholder="Enter amount e.g ₦220,000"
+                      className="w-[27.718rem] h-[3.25rem] border-[1.8px] rounded-xl border-neutral-200 outline-none focus:outline-none focus:border-blue-600 focus:border-[1.7px] pl-3 "
+                    />
+                  </div>
+                </div>
+
+            )}
+
+            <hr className="border-[1.6px] border-neutral-200 mb-[1rem] mt-[2rem] w-full" />
 
             <h1 className="text-[1.125rem] mb-[1rem] text-neutral-800 mt-[1rem]">
               PAY INFORMATION
             </h1>
 
-            <hr className="border-[1px] border-neutral-100 mb-[0.75rem]" />
+            <hr className="border-[1px] border-neutral-200 mb-[0.75rem]" />
 
             <p className="grid grid-cols-1 lg:grid-cols-2 mb-[0.75rem] gap-3">
               <span className="flex flex-col gap-2 relative">
@@ -285,7 +336,9 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                 disabled={loading.updatingId === staffData?._id}
                 className="bg-blue-600 outline-none cursor-pointer h-[3rem] rounded-2xl font-bold text-white hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading.updatingId === staffData?._id ? "Saving..." : "Save Changes"}
+                {loading.updatingId === staffData?._id
+                  ? "Saving..."
+                  : "Save Changes"}
               </button>
             </p>
           </div>

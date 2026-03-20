@@ -21,7 +21,7 @@ function DashboardLayout({ children }) {
         <Header toggleSidebar={toggleSidebar} showSidebar={showSidebar} />
         <main className="overflow pt-[50px] py-4 px-4 h-full overflow-y-auto overflow-x-auto">
           {children}
-        </main>
+        </main> 
       </div>
     </div>
   );
