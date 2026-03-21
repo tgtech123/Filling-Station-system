@@ -5,7 +5,6 @@ import { FiSearch } from "react-icons/fi";
 const SearchBar = ({ value, onChange, placeholder = "Search..." }) => {
   const [searchQuery, setSearchQuery] = useState("")
 
-  // const filteredSearch =
   return (
     <div className="w-full sm:w-1/2 lg:w-[440px]">
       <div className="relative">
