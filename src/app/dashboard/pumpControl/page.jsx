@@ -2,19 +2,27 @@
 
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import FlashCard from "@/components/Dashboard/FlashCard";
-import { X, ArrowLeft, Wrench, Plus } from "lucide-react";
+import { X, ArrowLeft, Wrench, Plus, Gauge, TrendingUp, Droplets } from "lucide-react";
 import Link from "next/link";
-import { pumpControlData } from "./pumpControlData";
+import { FaGasPump } from "react-icons/fa";
 import PumpDisplay from "./PumpDisplay";
 import AddNewPumpModal from "./AddNewPumpModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SchedulePumpMaintenanceModal from "./SchedulePumpMaintenanceModal";
 import EmergencyModal from "./EmergencyModal";
+import usePumpControlStore from "@/store/usePumpControlStore";
 
 export default function PumpControl() {
   const [ showPumpModal, setShowPumpModal ] = useState(false);
   const [ showMaintenanceModal, setShowMaintenanceModal ] = useState(false);
   const [ showEmergencyModal, setShowEmergencyModal ] = useState(false);
+
+  const { pumpData, loading, errors, fetchPumpControl } = usePumpControlStore();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) fetchPumpControl(token);
+  }, [fetchPumpControl]);
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -46,8 +54,8 @@ export default function PumpControl() {
               <DisplayCard>
                 <div className="flex justify-between items-center ">
                   <div>
-                    <h4 className="text-xl font-semibold">Lubricant Management</h4>
-                    <p className="mb-6">Monitor lubricant inventory and track cashier sales</p>
+                    <h4 className="text-xl font-semibold">Pump Control</h4>
+                    <p className="mb-6 text-neutral-600">Monitor pump status, price management & maintenance</p>
                   </div>
                   <button onClick={() => setShowPumpModal(true)} className="cursor-pointer text-sm lg:text-md flex items-center gap-2 border-3 border-[#0080ff] text-[#0080ff] py-3 px-3 lg:px-6 rounded-[12px] font-semibold">
                     Add new Pump
@@ -55,17 +63,34 @@ export default function PumpControl() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                  {pumpControlData.map((item) => (
+                {loading.pumpControl ? (
+                  <p className="text-gray-500">Loading pump data...</p>
+                ) : errors.pumpControl ? (
+                  <p className="text-red-500">{errors.pumpControl}</p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                     <FlashCard
-                      key={item.id}
-                      name={item.title}
-                      icon={item.icon}
-                      period={item.period}
-                      number={item.number}
+                      name="Active Pump"
+                      icon={<FaGasPump />}
+                      number={`${pumpData?.activePumps?.active || 0}/${pumpData?.activePumps?.total || 0}`}
                     />
-                  ))}
-                </div>
+                    <FlashCard
+                      name="Under Maintenance"
+                      icon={<Wrench />}
+                      number={pumpData?.underMaintenance || 0}
+                    />
+                    <FlashCard
+                      name="Total Fuel Sales"
+                      icon={<TrendingUp />}
+                      number={`₦${pumpData?.totalFuelSales?.toLocaleString() || "0"}`}
+                    />
+                    <FlashCard
+                      name="Fuel Dispensed Across"
+                      icon={<Droplets />}
+                      number={`${pumpData?.fuelDispensedAcross?.toLocaleString() || "0"}L`}
+                    />
+                  </div>
+                )}
               </DisplayCard>
         </div>
 

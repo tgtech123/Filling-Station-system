@@ -263,10 +263,17 @@ export default function ScheduleShift() {
     fetchScheduledAttendantsByType,
   } = useSupervisorStore();
 
-  // Fetch data on component mount
+  // Fetch data on mount and poll every 30s so on-duty status updates when attendants log in
   useEffect(() => {
     fetchAttendantDirectory();
     fetchScheduledAttendantsByType();
+
+    const interval = setInterval(() => {
+      fetchAttendantDirectory();
+      fetchScheduledAttendantsByType();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [fetchAttendantDirectory, fetchScheduledAttendantsByType]);
 
   // Transform attendant directory data

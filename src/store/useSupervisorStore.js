@@ -50,6 +50,7 @@ const useSupervisorStore = create((set, get) => ({
   setLoading: (loading) => set({ loading }),
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
+  clearPendingShifts: () => set({ pendingShifts: [] }),
 
   // 1. Dashboard
   fetchDashboard: async () => {
@@ -97,18 +98,36 @@ const useSupervisorStore = create((set, get) => ({
     }
   },
 
+  clearStaleShifts: async () => {
+    try {
+      set({ loading: true, error: null });
+      const response = await api.delete('/shift-approval/clear-stale');
+      set({ loading: false });
+      return response.data;
+    } catch (error) {
+      set({ error: error.response?.data?.message || error.message, loading: false });
+      throw error;
+    }
+  },
+
  approveShift: async (shiftId, data) => {
   try {
     set({ loading: true, error: null });
-    
-    // Debug logs
-    console.log('Approving shift:', shiftId);
-    console.log('Approval data:', data);
-    console.log('Full URL:', `/shift-approval/${shiftId}/approve`);
-    
+
+    console.log("Approving shift:", {
+      shiftId,
+      url: `${BASE_URL}/shift-approval/${shiftId}/approve`,
+      data,
+    });
+
     const response = await api.post(`/shift-approval/${shiftId}/approve`, data);
-    set({ loading: false });
+    // Immediately remove the approved shift from the list so the card disappears at once
+    set((s) => ({
+      loading: false,
+      pendingShifts: s.pendingShifts.filter((shift) => shift._id !== shiftId),
+    }));
     await get().fetchPendingShifts();
+    await get().fetchApprovedShifts();
     return response.data;
   } catch (error) {
     console.error('Approval error:', error.response?.data); // See full error
@@ -157,10 +176,11 @@ const useSupervisorStore = create((set, get) => ({
   scheduleAttendant: async (params) => {
   try {
     set({ loading: true, error: null });
-    const response = await api.post("/schedule/attendant", params); 
+    const response = await api.post("/schedule/attendant", params);
     set({ loading: false });
-    // Refresh scheduled attendants after scheduling
+    // Refresh both — ScheduledAttendantsCard reads from dashboard.scheduledAttendants
     await get().fetchScheduledAttendants();
+    await get().fetchDashboard();
     return response.data;
   } catch (error) {
     set({ error: error.response?.data?.message || error.message, loading: false });

@@ -1,23 +1,22 @@
-// src/app/dashboard/reports/profitLoss/SalesData.js
-import { GoPeople } from "react-icons/go";
-import { GiSplitArrows } from "react-icons/gi";
+// src/app/dashboard/reports/salesReport/cashReportData.js
 import { TbCurrencyNaira } from "react-icons/tb";
-import { FaHandHoldingWater } from "react-icons/fa";
-import { TbTargetArrow } from "react-icons/tb";
-import { PiHouseLineBold } from "react-icons/pi";
 import Image from "next/image";
 
-export const cashData = [
+export const getCashData = (cashOverview) => [
   {
     title: "Expected Cash",
     date: "Today",
-    amount: "N120,000,000",
+    amount: cashOverview
+      ? `₦${cashOverview.expectedCashToday.toLocaleString()}`
+      : "—",
     icon: <TbCurrencyNaira size={25} className="text-neutral-800 text-lg" />,
   },
   {
     title: "Actual Cash",
     date: "Today",
-    amount: "N122,000,000",
+    amount: cashOverview
+      ? `₦${cashOverview.actualCashToday.toLocaleString()}`
+      : "—",
     icon: (
       <Image
         src="/house.png"
@@ -31,7 +30,9 @@ export const cashData = [
   {
     title: "Total Discrepancy",
     date: "   ",
-    amount: "N2,000,000",
+    amount: cashOverview
+      ? `₦${cashOverview.totalDiscrepancy.toLocaleString()}`
+      : "—",
     icon: (
       <Image
         src="/danger.png"
@@ -44,12 +45,12 @@ export const cashData = [
   },
   {
     title: "Reconciliation Rate",
-    amount: "98.8%",
-
+    date: "   ",
+    amount: cashOverview ? `${cashOverview.reconciliationRate}%` : "—",
     icon: (
       <Image
         src="/target.png"
-        alt="danger icon"
+        alt="target icon"
         width={24}
         height={24}
         className="max-w-[1.5rem] max-h-[1.5rem]"

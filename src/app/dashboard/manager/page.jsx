@@ -7,14 +7,100 @@ import FlashCard from "@/components/Dashboard/FlashCard";
 import QuickActionsCard from "@/components/Dashboard/QuickActionsCard";
 import LiveIndicator from "@/components/LiveIndicator";
 import { GoHistory } from "react-icons/go";
-import { CheckCheck, Plus, TriangleAlert, Wrench } from "lucide-react";
+import { CheckCheck, Plus, TriangleAlert, Wrench, History, AlertCircle, XCircle, X } from "lucide-react";
+import Link from "next/link";
 import useDashboardStore from "@/store/useDashboardStore";
-import { reportType, recentActivityData } from "./managerData";
+import useActivityFeedStore from "@/store/useActivityFeedStore";
+import { reportType } from "./managerData";
+
+function SubscriptionBanner() {
+  const [dismissed, setDismissed] = useState(false);
+
+  const expiryDate = (() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      return user.subscriptionExpiry || user.planExpiry || "2026-06-12";
+    } catch {
+      return "2026-06-12";
+    }
+  })();
+
+  const daysLeft = Math.floor(
+    (new Date(expiryDate).getTime() - Date.now()) / 86400000
+  );
+
+  if (dismissed || daysLeft > 30) return null;
+
+  const expired = daysLeft <= 0;
+  const formattedDate = new Date(expiryDate).toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric",
+  });
+
+  return (
+    <div
+      className={`flex items-center justify-between gap-3 rounded-lg px-4 py-3 mb-4 border-l-4 transition-all duration-300 ${
+        expired
+          ? "bg-red-50 border-l-red-500"
+          : "bg-amber-50 border-l-orange-400"
+      }`}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        {expired
+          ? <XCircle size={20} className="text-red-500 shrink-0" />
+          : <AlertCircle size={20} className="text-orange-500 shrink-0" />
+        }
+        <p className={`text-sm font-medium truncate ${expired ? "text-red-700" : "text-amber-800"}`}>
+          {expired
+            ? <>Subscription plan expired. <span className="font-semibold">"View-only"</span> in Free plan.</>
+            : <>Your Plus Monthly Plan expires <span className="font-semibold">{formattedDate}</span>. Renew subscription to continue enjoying benefits.</>
+          }
+        </p>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <Link
+          href="/dashboard/system-settings"
+          className={`text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition-colors ${
+            expired ? "bg-red-500 hover:bg-red-600" : "bg-orange-500 hover:bg-orange-600"
+          }`}
+        >
+          {expired ? "Upgrade Plan" : "Renew Subscription"}
+        </Link>
+        <button
+          onClick={() => setDismissed(true)}
+          className={`cursor-pointer p-1 rounded-md transition-colors ${
+            expired ? "text-red-400 hover:bg-red-100" : "text-orange-400 hover:bg-orange-100"
+          }`}
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function relativeTime(timestamp) {
+  const diff = Date.now() - new Date(timestamp).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min${mins === 1 ? "" : "s"} ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hr${hrs === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
 
 export default function ManagerDashboard() {
   const [userData, setUserData] = useState(null);
 
-  const {tankStatus, metrics, loading, fetchTankStatus, fetchDashboardData, errors } = useDashboardStore();
+  const { tankStatus, metrics, loading, fetchDashboardData, errors } = useDashboardStore();
+  const {
+    activities,
+    loading: activityLoading,
+    errors: activityErrors,
+    fetchActivity,
+    startPolling,
+    stopPolling,
+  } = useActivityFeedStore();
 
   useEffect(() => {
     try {
@@ -27,8 +113,21 @@ export default function ManagerDashboard() {
     }
 
     const token = localStorage.getItem("token");
-    if (token) fetchDashboardData(token);
-  }, [fetchDashboardData]);
+    if (token) {
+      fetchDashboardData(token);
+      const dashboardInterval = setInterval(() => {
+        fetchDashboardData(token);
+      }, 600000);
+      fetchActivity().then(() => startPolling());
+      return () => {
+        clearInterval(dashboardInterval);
+        stopPolling();
+      };
+    }
+
+    fetchActivity().then(() => startPolling());
+    return () => stopPolling();
+  }, [fetchDashboardData, fetchActivity, startPolling, stopPolling]);
 
   const fullName =
     userData?.firstName && userData?.lastName
@@ -56,10 +155,11 @@ export default function ManagerDashboard() {
   }
 
   const data = metrics?.metrics || {};
-
+ 
   return (
     <DashboardLayout>
       <div className="mt-3">
+        <SubscriptionBanner />
         {/* Header Section */}
         <DisplayCard>
           <h2 className="text-2xl font-semibold">Welcome back, {fullName}</h2>
@@ -70,27 +170,25 @@ export default function ManagerDashboard() {
 
           <div className="mt-10 grid grid-cols-1 lg:grid-cols-4 gap-4">
             <FlashCard
-              name="Total Revenue"
+              name="Revenue Generated"
               variable="₦"
               period="Today"
-              number={data.totalRevenueToday?.toLocaleString() || "0"}
+              number={data.revenueGeneratedToday?.toLocaleString() || "0"}
             />
             <FlashCard
-              name="Fuel Revenue"
-              variable="₦"
-              period="Today"
-              number={data.fuelRevenueToday?.toLocaleString() || "0"}
+              name="Active Staff"
+              period="Available for work"
+              number={`${data.activeStaff?.active || 0}/${data.activeStaff?.total || 0}`}
             />
             <FlashCard
-              name="Lubricant Revenue"
-              variable="₦"
-              period="Today"
-              number={data.lubricantRevenueToday?.toLocaleString() || "0"}
+              name="Active Pump"
+              period={`${data.activePumps?.underMaintenance || 0} Under maintenance`}
+              number={`${data.activePumps?.active || 0}/${data.activePumps?.total || 0}`}
             />
             <FlashCard
-              name="Fuel Dispensed"
-              variable={`${data.totalFuelDispensedToday?.toFixed(2) || "0"} L`}
-              period="Today"
+              name="Fuel Dispensed Today"
+              period="Across all fuel types"
+              number={`${data.fuelDispensedToday?.toFixed(0) || "0"} Litres`}
             />
           </div>
         </DisplayCard>
@@ -129,54 +227,65 @@ export default function ManagerDashboard() {
                 </div>
 
                 <section className="mt-6">
-                  {recentActivityData.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex flex-col lg:flex-row mb-4 items-start lg:justify-between lg:items-center"
-                    >
-                      <div className="flex gap-2">
-                        <div className="mt-1">
-                          {item.category === "alert" ? (
-                            <TriangleAlert className="text-[#ff1f1f]" size={20} />
-                          ) : item.category === "shiftComplete" ? (
-                            <CheckCheck className="text-[#7f27ff]" size={20} />
-                          ) : item.category === "maintenance" ? (
-                            <Wrench className="text-[#e27d00]" size={20} />
-                          ) : (
-                            <Plus className="text-[#04910c]" size={20} />
-                          )}
+                  {activityLoading.activities ? (
+                    <p className="text-gray-500">Loading activity...</p>
+                  ) : activityErrors.activities ? (
+                    <p className="text-red-500">{activityErrors.activities}</p>
+                  ) : activities.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No recent activity yet.</p>
+                  ) : (
+                    activities.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex flex-col lg:flex-row mb-4 items-start lg:justify-between lg:items-center"
+                      >
+                        <div className="flex gap-2">
+                          <div className="mt-1">
+                            {item.type === "alert" ? (
+                              <TriangleAlert className="text-[#ff1f1f]" size={20} />
+                            ) : item.type === "sale" ? (
+                              <CheckCheck className="text-[#7f27ff]" size={20} />
+                            ) : item.type === "maintenance" ? (
+                              <Wrench className="text-[#e27d00]" size={20} />
+                            ) : (
+                              <Plus className="text-[#04910c]" size={20} />
+                            )}
+                          </div>
+                          <div>
+                            <h5
+                              className={`text-md font-semibold ${
+                                item.type === "alert"
+                                  ? "text-[#ff1f1f]"
+                                  : item.type === "sale"
+                                  ? "text-[#7f27ff]"
+                                  : item.type === "maintenance"
+                                  ? "text-[#e27d00]"
+                                  : "text-[#04910c]"
+                              }`}
+                            >
+                              {item.title}
+                            </h5>
+                            <p className="text-sm font-semibold text-gray-600">
+                              {item.description}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h5
-                            className={`text-md font-semibold ${
-                              item.category === "alert"
-                                ? "text-[#ff1f1f]"
-                                : item.category === "shiftComplete"
-                                ? "text-[#7f27ff]"
-                                : item.category === "maintenance"
-                                ? "text-[#e27d00]"
-                                : "text-[#04910c]"
-                            }`}
-                          >
-                            {item.activity}
-                          </h5>
-                          <p className="text-sm font-semibold text-gray-600">
-                            {item.description}
-                          </p>
-                        </div>
+                        <p className="text-sm ml-8 lg:ml-0 text-gray-600">
+                          {relativeTime(item.timestamp)}
+                        </p>
                       </div>
-                      <p className="text-sm ml-8 lg:ml-0 text-gray-600">
-                        {item.time}
-                      </p>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </section>
               </div>
 
               {/* Product levels */}
               <div className="border-2 w-full border-gray-300 rounded-[14px] p-4">
                 <div className="mb-8">
-                  <h3 className="text-lg font-semibold">Product Levels</h3>
+                  <h3 className="text-lg font-semibold flex gap-2">
+                    <History size={25} />
+                    Current Product Levels
+                  </h3>
                   <p className="text-sm">Current storage status</p>
                 </div>
 
@@ -186,20 +295,18 @@ export default function ManagerDashboard() {
                   ) : errors.tankStatus ? (
                     <p className="text-red-500">{errors.tankStatus}</p>
                   ) : tankStatus?.tanks?.length > 0 ? (
-                    tankStatus.tanks.map((tank, index) => {
-                      const color =
-                        tank.percentFilled >= 80
-                          ? "#7f27ff"
-                          : tank.percentFilled >= 60
-                          ? "#7f27ff"
-                          : tank.percentFilled >= 30
-                          ? "#e27d00"
-                          : tank.percentFilled >= 20
-                          ? "#eb2b0b"
-                          : "#e27d00";
+                    tankStatus.tanks.map((tank) => {
+                      const fuelTypeColors = {
+                        PMS: "#7f27ff",
+                        AGO: "#1a71f6",
+                        Diesel: "#e27d00",
+                        Gas: "#eb2b0b",
+                        Kerosene: "#04910c",
+                      };
+                      const color = fuelTypeColors[tank.fuelType] || "#7f27ff";
 
                       return (
-                        <div className="mb-5" key={tank._id || `tank-${index}`}>
+                        <div key={tank.fuelType} className="mb-5">
                           <div className="flex justify-between mb-1">
                             <p className="text-sm text-gray-600 font-semibold">
                               {tank.fuelType}

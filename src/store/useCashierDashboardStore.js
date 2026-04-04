@@ -61,12 +61,16 @@ export const useCashierDashboardStore = create((set, get) => ({
   },
   lubricantTransactions: [],
   isLoading: false,
+  isBackgroundRefreshing: false,
   error: null,
+  _pollInterval: null,
 
   // Fetch cashier dashboard data
-  fetchDashboard: async () => {
-    set({ isLoading: true, error: null });
-    
+  fetchDashboard: async ({ silent = false } = {}) => {
+    if (!silent) {
+      set({ isLoading: true, error: null });
+    }
+
     try {
       const response = await api.get('/api/cashier/dashboard');
 
@@ -78,13 +82,13 @@ export const useCashierDashboardStore = create((set, get) => ({
 
       return { success: true, data: response.data.data };
     } catch (error) {
-      const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
-                          error.message || 
+      const errorMessage = error.response?.data?.error ||
+                          error.response?.data?.message ||
+                          error.message ||
                           'Failed to fetch dashboard data';
       set({
         isLoading: false,
-        error: errorMessage,
+        ...(silent ? {} : { error: errorMessage }),
       });
       console.error('Error fetching cashier dashboard:', error);
       return { success: false, error: errorMessage };
@@ -236,12 +240,14 @@ export const useCashierDashboardStore = create((set, get) => ({
   },
 
   // Fetch daily attendant sales for reconciliation
-  fetchDailySales: async (filters = {}) => {
-    set({ isLoading: true, error: null });
-    
+  fetchDailySales: async (filters = {}, { silent = false } = {}) => {
+    if (silent) {
+      set({ isBackgroundRefreshing: true });
+    } else {
+      set({ isLoading: true, error: null });
+    }
+
     try {
-      console.log('🔍 Fetching daily sales with filters:', filters);
-      
       const response = await api.get('/api/cashier/daily-sales', {
         params: {
           page: filters.page,
@@ -253,38 +259,29 @@ export const useCashierDashboardStore = create((set, get) => ({
         },
       });
 
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📡 DAILY SALES API RESPONSE');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('Full Response:', response.data);
-      console.log('Data Array Length:', response.data.data?.length);
-      
-      if (response.data.data && response.data.data.length > 0) {
-        console.log('📋 FIRST SALE ITEM:', response.data.data[0]);
-      }
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-
       set({
         dailySales: response.data.data || [],
         isLoading: false,
+        isBackgroundRefreshing: false,
         error: null,
       });
 
-      return { 
-        success: true, 
-        data: response.data.data, 
-        pagination: response.data.pagination 
+      return {
+        success: true,
+        data: response.data.data,
+        pagination: response.data.pagination,
       };
     } catch (error) {
       console.error('❌ API ERROR:', error);
-      
-      const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
-                          error.message || 
+
+      const errorMessage = error.response?.data?.error ||
+                          error.response?.data?.message ||
+                          error.message ||
                           'Failed to fetch daily sales';
       set({
         isLoading: false,
-        error: errorMessage,
+        isBackgroundRefreshing: false,
+        ...(silent ? {} : { error: errorMessage }),
       });
       return { success: false, error: errorMessage };
     }
@@ -455,6 +452,22 @@ export const useCashierDashboardStore = create((set, get) => ({
     }
   },
 
+  startPolling: () => {
+    if (get()._pollInterval) return;
+    const interval = setInterval(() => {
+      get().fetchDailySales({ limit: 100 }, { silent: true });
+    }, 5000);
+    set({ _pollInterval: interval });
+  },
+
+  stopPolling: () => {
+    const interval = get()._pollInterval;
+    if (interval) {
+      clearInterval(interval);
+      set({ _pollInterval: null });
+    }
+  },
+
   clearError: () => {
     set({ error: null });
   },
@@ -541,11 +554,14 @@ export const useLubricantTransactions = () => {
 export const useDailySales = () => {
   const dailySales = useCashierDashboardStore((state) => state.dailySales);
   const isLoading = useCashierDashboardStore((state) => state.isLoading);
+  const isBackgroundRefreshing = useCashierDashboardStore((state) => state.isBackgroundRefreshing);
   const error = useCashierDashboardStore((state) => state.error);
   const fetchDailySales = useCashierDashboardStore((state) => state.fetchDailySales);
   const reconcileCash = useCashierDashboardStore((state) => state.reconcileCash);
+  const startPolling = useCashierDashboardStore((state) => state.startPolling);
+  const stopPolling = useCashierDashboardStore((state) => state.stopPolling);
 
-  return { dailySales, isLoading, error, fetchDailySales, reconcileCash };
+  return { dailySales, isLoading, isBackgroundRefreshing, error, fetchDailySales, reconcileCash, startPolling, stopPolling };
 };
 
 // Hook for reconciliation report

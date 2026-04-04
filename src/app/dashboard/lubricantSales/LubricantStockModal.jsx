@@ -1,5 +1,5 @@
 "use client";
-
+import React, { useState, useEffect } from "react";
 import {
   Calendar,
   Save,
@@ -10,7 +10,6 @@ import {
   SquarePen,
   AlertCircle,
 } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useLubricantStore } from "@/store/lubricantStore";
 
 export default function LubricantStockModal({ onClose }) {
@@ -536,8 +535,8 @@ export default function LubricantStockModal({ onClose }) {
 
               <tbody className="bg-white divide-y divide-gray-200">
                 {rows.map((row, index) => (
-                  <>
-                    <tr key={index} className="text-sm">
+                  <React.Fragment key={index}>
+                    <tr  className="text-sm">
                       <td className="px-4 py-2">
                         <input
                           type="text"
@@ -648,7 +647,7 @@ export default function LubricantStockModal({ onClose }) {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
