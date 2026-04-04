@@ -8,7 +8,7 @@ const activityLogsTable = {
     "IP address",
     "Status",
   ],
-  body: [
+  body: [ 
     [
       "04/17/23, 8:25 PM",
       "John Melo",

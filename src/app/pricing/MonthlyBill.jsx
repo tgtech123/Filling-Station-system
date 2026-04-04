@@ -4,7 +4,6 @@ import { Check } from 'lucide-react'
 
 const MonthlyBill = () => {
     const [showBlue, setShowBlue] = useState("linkOne")
-    // const [showBlue, setShowBlue] = useState("linkOne")
 
   return (
     <div className='w-full flex items-center justify-center' >

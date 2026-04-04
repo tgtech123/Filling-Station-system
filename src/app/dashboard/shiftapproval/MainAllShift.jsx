@@ -87,25 +87,43 @@ import ShiftApprovalHeader from "./ShiftApprovalHeader";
 import ShiftCard from "./ShiftCard";
 import ApprovedShiftsPage from "./ApprovedShiftsPage";
 import useSupervisorStore from "@/store/useSupervisorStore";
+import toast from "react-hot-toast";
 
 export default function ShiftApprovalPage() {
   const [activeTab, setActiveTab] = useState("pending");
-  
-  // Get data from Zustand store
-  const { 
-    pendingShifts, 
-    loading, 
-    error, 
-    fetchPendingShifts,
-    pagination 
-  } = useSupervisorStore();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [clearingStale, setClearingStale] = useState(false);
 
-  // Fetch pending shifts on component mount
+  // Derive role once on mount
+  const userRole = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user"))?.role?.toLowerCase() || "";
+    } catch {
+      return "";
+    }
+  })();
+  const canClearStale = userRole === "supervisor" || userRole === "manager";
+
+  // Select state and actions with stable individual selectors
+  // to avoid dependency array instability from bulk destructuring
+  const pendingShifts      = useSupervisorStore((s) => s.pendingShifts);
+  const loading            = useSupervisorStore((s) => s.loading);
+  const error              = useSupervisorStore((s) => s.error);
+  const pagination         = useSupervisorStore((s) => s.pagination);
+  const fetchPendingShifts  = useSupervisorStore((s) => s.fetchPendingShifts);
+  const fetchApprovedShifts = useSupervisorStore((s) => s.fetchApprovedShifts);
+  const clearPendingShifts  = useSupervisorStore((s) => s.clearPendingShifts);
+  const clearStaleShifts    = useSupervisorStore((s) => s.clearStaleShifts);
+
+  // Clear stale cards then fetch fresh on mount/tab change
   useEffect(() => {
     if (activeTab === "pending") {
+      clearPendingShifts();
       fetchPendingShifts({ page: 1, limit: 20 });
+    } else {
+      fetchApprovedShifts({ page: 1, limit: 100 });
     }
-  }, [activeTab, fetchPendingShifts]);
+  }, [activeTab, fetchPendingShifts, fetchApprovedShifts, clearPendingShifts]);
 
   // Transform API data to match ShiftCard props
   const transformedShifts = pendingShifts.map((shift) => ({
@@ -130,16 +148,64 @@ export default function ShiftApprovalPage() {
   // Handle loading more shifts (pagination)
   const handleLoadMore = () => {
     if (pagination.page < pagination.pages) {
-      fetchPendingShifts({ 
-        page: pagination.page + 1, 
-        limit: pagination.limit 
+      fetchPendingShifts({
+        page: pagination.page + 1,
+        limit: pagination.limit,
       });
+    }
+  };
+
+  const handleClearStale = async () => {
+    setClearingStale(true);
+    setShowConfirm(false);
+    try {
+      const res = await clearStaleShifts();
+      const count = res?.data?.deletedCount ?? res?.deletedCount ?? 0;
+      toast.success(`${count} stale shift${count !== 1 ? "s" : ""} cleared`);
+      clearPendingShifts();
+      fetchPendingShifts({ page: 1, limit: 20 });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to clear stale shifts");
+    } finally {
+      setClearingStale(false);
     }
   };
 
   return (
     <div>
-      <ShiftApprovalHeader activeTab={activeTab} onTabChange={setActiveTab} />
+      <ShiftApprovalHeader
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        canClearStale={canClearStale}
+        clearingStale={clearingStale}
+        onClearStaleClick={() => setShowConfirm(true)}
+      />
+
+      {/* Confirmation Dialog */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
+            <h2 className="text-lg font-bold text-neutral-800 mb-2">Clear Stale Shifts</h2>
+            <p className="text-sm text-neutral-600 mb-6">
+              This will remove all pending shifts older than 7 days. Continue?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClearStale}
+                className="px-4 py-2 text-sm rounded-lg border border-red-500 text-red-600 hover:bg-red-50 transition font-medium"
+              >
+                Yes, Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="mx-auto p-4 bg-white rounded-xl">
         {activeTab === "pending" ? (
@@ -181,6 +247,23 @@ export default function ShiftApprovalPage() {
             ) : (
               /* Shifts Grid */
               <>
+                {/* Clear stale cards and re-fetch from server */}
+                <div className="flex justify-end mb-3 gap-2">
+                  <button
+                    onClick={() => {
+                      clearPendingShifts();
+                      fetchPendingShifts({ page: 1, limit: 20 });
+                    }}
+                    disabled={loading}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
+                    <svg className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {loading ? "Refreshing..." : "Clear & Refresh"}
+                  </button>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {transformedShifts.map((shift) => (
                     <ShiftCard key={shift.id} data={shift} />

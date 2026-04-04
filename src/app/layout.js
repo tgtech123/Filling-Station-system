@@ -1,6 +1,8 @@
 import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import ClientLayout from "@/components/ClientLayout";
+import ThemeProvider from "@/components/ThemeProvider";
+import ThemeInitializer from "@/components/ThemeInitializer";
 import { Toaster } from "react-hot-toast";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -20,14 +22,17 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${plusJakartaSans.variable} ${manrope.variable} antialiased`}
       >
-        <ClientLayout>
-          {children}
-          <Toaster position="top-right" reverseOrder={false} />
-        </ClientLayout>
+        <ThemeProvider>
+          <ThemeInitializer />
+          <ClientLayout>
+            {children}
+            <Toaster position="top-right" reverseOrder={false} />
+          </ClientLayout>
+        </ThemeProvider>
       </body>
     </html>
   );

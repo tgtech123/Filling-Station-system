@@ -1,14 +1,23 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { BiSolidToggleRight, BiSolidToggleLeft } from "react-icons/bi";
-import { Plus, X, ChevronUp, ChevronDown, EyeOff, Eye } from "lucide-react";
+import { X, ChevronUp, ChevronDown } from "lucide-react";
+import axios from "axios";
 import useStaffStore from "@/store/useStaffStore";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API || "http://localhost:5000";
 
 const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
   const [isToggleChevron, setIsToggleChevron] = useState(false);
   const [isToggleChevTwo, setIsToggleChevTwo] = useState(false);
   const [togglePayType, setTogglePayType] = useState(false);
   const [toggleSalesTarget, setToggleSalesTarget] = useState(false);
+
+  // Sales target state
+  const [targetDuration, setTargetDuration] = useState("Monthly");
+  const [targetAmount, setTargetAmount] = useState("");
+  const [currentTarget, setCurrentTarget] = useState(null);
+  const [savingTarget, setSavingTarget] = useState(false);
 
   const { updateStaff, loading } = useStaffStore();
 
@@ -23,6 +32,28 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
     payType: "",
     amount: "",
   });
+
+  // Fetch current sales target on open
+  useEffect(() => {
+    if (isOpen && staffData?._id) {
+      const token = localStorage.getItem("token");
+      axios
+        .get(`${API_BASE_URL}/api/staff/${staffData._id}/target`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          const t = res.data?.target || null;
+          if (t) {
+            setCurrentTarget(t);
+            setTargetDuration(t.duration || "Monthly");
+            setTargetAmount(t.targetAmount || "");
+          }
+        })
+        .catch((err) => {
+          console.log("No existing target:", err.message);
+        });
+    }
+  }, [isOpen, staffData?._id]);
 
   // Initialize form when modal opens or staffData changes
   useEffect(() => {
@@ -249,30 +280,87 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
             <hr className="border-[1.6px] border-neutral-200  mb-[2rem] w-full" />
             
             {toggleSalesTarget && (
-                
+              <div className="flex flex-col gap-4 mb-4">
+                {/* Current target display */}
+                {currentTarget && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                    <p className="text-sm font-semibold text-blue-700">
+                      Current Active Target
+                    </p>
+                    <p className="text-sm text-blue-600">
+                      ₦{Number(currentTarget.targetAmount).toLocaleString()} — {currentTarget.duration}
+                    </p>
+                    <div className="mt-2 h-2 bg-blue-100 rounded-full">
+                      <div
+                        style={{ width: `${Math.min(((currentTarget.currentProgress || 0) / currentTarget.targetAmount) * 100, 100)}%` }}
+                        className="h-2 bg-blue-500 rounded-full"
+                      />
+                    </div>
+                    <p className="text-xs text-blue-500 mt-1">
+                      {Math.min(((currentTarget.currentProgress || 0) / currentTarget.targetAmount) * 100, 100).toFixed(1)}% achieved
+                      {currentTarget.endDate && (
+                        <> — {Math.max(0, Math.ceil((new Date(currentTarget.endDate) - new Date()) / (1000 * 60 * 60 * 24)))} days remaining</>
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                {/* Duration + Amount inputs */}
                 <div className="grid lg:grid-cols-2 grid-cols-1 gap-4">
                   <div className="flex flex-col gap-3">
-                    <label className="text-[0.875rem] font-bold leading-[150%]">
-                      Duration
-                    </label>
-                    <select className="w-[27.718rem] h-[3.25rem] border-[1.8px] rounded-xl border-neutral-200 focus:outline-none focus:border-blue-600 focus:border-[1.7px] pl-3 ">
-                      <option>Select ...</option>
-                      <option>Monthly</option>
-                      <option>Quarterly</option>
-                      <option>Yearly</option>
+                    <label className="text-[0.875rem] font-bold leading-[150%]">Duration</label>
+                    <select
+                      value={targetDuration}
+                      onChange={(e) => setTargetDuration(e.target.value)}
+                      className="w-full h-[3.25rem] border-[1.8px] rounded-xl border-neutral-200 focus:outline-none focus:border-blue-600 pl-3"
+                    >
+                      <option value="Daily">Daily</option>
+                      <option value="Weekly">Weekly</option>
+                      <option value="Monthly">Monthly</option>
+                      <option value="Quarterly">Quarterly</option>
                     </select>
                   </div>
                   <div className="flex flex-col gap-3">
-                    <label className="text-[0.875rem] font-bold leading-[150%]">
-                      Amount
-                    </label>
-                    <input
-                      placeholder="Enter amount e.g ₦220,000"
-                      className="w-[27.718rem] h-[3.25rem] border-[1.8px] rounded-xl border-neutral-200 outline-none focus:outline-none focus:border-blue-600 focus:border-[1.7px] pl-3 "
-                    />
+                    <label className="text-[0.875rem] font-bold leading-[150%]">Target Amount</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 font-semibold">₦</span>
+                      <input
+                        type="number"
+                        value={targetAmount}
+                        onChange={(e) => setTargetAmount(e.target.value)}
+                        placeholder="Enter target amount"
+                        className="w-full h-[3.25rem] border-[1.8px] rounded-xl border-neutral-200 outline-none focus:border-blue-600 pl-8"
+                      />
+                    </div>
                   </div>
                 </div>
 
+                {/* Save Target button */}
+                <button
+                  type="button"
+                  disabled={savingTarget || !targetAmount}
+                  onClick={async () => {
+                    if (!targetAmount || !staffData?._id) return;
+                    setSavingTarget(true);
+                    try {
+                      const token = localStorage.getItem("token");
+                      const res = await axios.patch(
+                        `${API_BASE_URL}/api/staff/${staffData._id}/target`,
+                        { targetAmount: Number(targetAmount), duration: targetDuration },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                      );
+                      setCurrentTarget(res.data?.target || res.data?.data || res.data);
+                    } catch (err) {
+                      console.error("Failed to save target:", err);
+                    } finally {
+                      setSavingTarget(false);
+                    }
+                  }}
+                  className="self-start px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {savingTarget ? "Saving..." : "Save Target"}
+                </button>
+              </div>
             )}
 
             <hr className="border-[1.6px] border-neutral-200 mb-[1rem] mt-[2rem] w-full" />

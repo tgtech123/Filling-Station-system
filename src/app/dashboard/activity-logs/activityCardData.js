@@ -1,37 +1,34 @@
-// src/app/dashboard/reports/profitLoss/SalesData.js
-import { GoPeople } from "react-icons/go";
-import { GiSplitArrows } from "react-icons/gi";
-import { TbCurrencyNaira } from "react-icons/tb";
+// activityCardData.js
+// Only defines the static parts (label, icon) for each card.
+// The live numbers come from activityLogs.summary in the Zustand store.
+
+import { TrendingUp } from "lucide-react";
 import { MdOutlinePersonOutline } from "react-icons/md";
 import { CgDanger } from "react-icons/cg";
 import Image from "next/image";
-import { TrendingUp } from "lucide-react";
 
-export const activityData = [
+// Keys map 1-to-1 with the API summary fields:
+// totalActivities | activeUsers | failedAttempts | criticalActions
+export const activityCardConfig = [
   {
-    name: "Total Activities",
-    period: "",
-    number: "1334",
-    icon: <TrendingUp size={25} className="text-neutral-800 text-lg" />,
+    summaryKey: "totalActivities",
+    name:       "Total Activities",
+    icon:       <TrendingUp size={25} className="text-neutral-800" />,
   },
   {
-    name: "Active User",
-    period: "",
-    number: "7",
-    icon: <MdOutlinePersonOutline size={25} className="text-lg" />
+    summaryKey: "activeUsers",
+    name:       "Active Users",
+    icon:       <MdOutlinePersonOutline size={25} />,
   },
   {
-    name: "Failed Attempt",
-    period: "   ",
-    number: "N2,000, 000",
-    icon: < CgDanger size={25} />
-    
+    summaryKey: "failedAttempts",
+    name:       "Failed Attempts",
+    icon:       <CgDanger size={25} />,
   },
   {
-    name: "Critical Actions",
-    number: "3",
-
-    icon: (
+    summaryKey: "criticalActions",
+    name:       "Critical Actions",
+    icon:       (
       <Image
         src="/danger.png"
         alt="danger icon"

@@ -3,7 +3,8 @@
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import FlashCard from "@/components/Dashboard/FlashCard";
 import { ArrowLeft, ArrowUp, House, Plus, TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import useFuelManagementStore from "@/store/useFuelManagementStore";
 import FuelTank from "./FuelTank";
 import Deliveries from "./Deliveries";
 import { GiExpense, GiFuelTank } from "react-icons/gi";
@@ -15,6 +16,13 @@ export default function FuelManagement() {
     const [activeTab, setActiveTab] = useState("fuelTank");
     const [isFuelModalOpen, setIsFuelModalOpen] = useState(false);
     const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+
+    const { fuelData, loading, errors, fetchFuelManagement } = useFuelManagementStore();
+
+    useEffect(() => {
+      const token = localStorage.getItem("token");
+      if (token) fetchFuelManagement(token);
+    }, [fetchFuelManagement]);
 
     const handleOpenFuelModal = () => {
       setIsFuelModalOpen(true);
@@ -36,29 +44,6 @@ export default function FuelManagement() {
         setActiveTab(id)
     }
 
-  const fuelManagementData = [
-    {
-      id: 1,
-      title: "Daily Consumption",
-      icon: <GiExpense />,
-      period: "Across all fuel types",
-      number: "4234 Litres",
-    },
-    {
-      id: 2,
-      title: "Weekly Average Consumption",
-      icon: <TrendingUp />,
-      period: "Across all fuel types",
-      number: "34,435 Litres",
-    },
-    {
-      id: 3,
-      title: "Total Capacity Available",
-      icon: <GiFuelTank />,
-      period: "In all tanks",
-      number: "40,000 Litres",
-    },
-  ];
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -83,17 +68,32 @@ export default function FuelManagement() {
           <h4 className="text-xl font-semibold">Fuel Management</h4>
           <p className="mb-6">Monitor fuel levels and manage inventory</p>
 
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-            {fuelManagementData.map((item) => (
+          {loading.fuelManagement ? (
+            <p className="text-gray-500">Loading fuel data...</p>
+          ) : errors.fuelManagement ? (
+            <p className="text-red-500">{errors.fuelManagement}</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
               <FlashCard
-                key={item.id}
-                name={item.title}
-                icon={item.icon}
-                period={item.period}
-                number={item.number}
+                name="Daily Consumption"
+                icon={<GiExpense />}
+                period="Across all fuel types"
+                number={`${fuelData?.dailyConsumption?.toLocaleString() || "0"} Litres`}
               />
-            ))}
-          </div>
+              <FlashCard
+                name="Weekly Average Consumption"
+                icon={<TrendingUp />}
+                period="Across all fuel types"
+                number={`${fuelData?.weeklyAverageConsumption?.toLocaleString() || "0"} Litres`}
+              />
+              <FlashCard
+                name="Total Capacity Available"
+                icon={<GiFuelTank />}
+                period="In all tanks"
+                number={`${fuelData?.totalCapacityAvailable?.toLocaleString() || "0"} Litres`}
+              />
+            </div>
+          )}
         </DisplayCard>
       </div>
 

@@ -54,7 +54,7 @@ const ManagerProfileModal = ({ onclose }) => {
       [field]: value
     }));
   };
-
+ 
   const handleSave = () => {
     // Add your save logic here - e.g., API call
     console.log('Saving manager data:', managerData);

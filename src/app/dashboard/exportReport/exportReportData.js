@@ -2,7 +2,7 @@ export const reportType = [
     {
         id: 1,
         title: "Sales Report",
-        desc: "Complete monthly sales report"
+        desc: "Complete monthly sales report" 
     },
     {
         id: 2,

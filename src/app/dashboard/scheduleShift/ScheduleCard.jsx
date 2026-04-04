@@ -8,12 +8,11 @@ export default function ScheduleCard({
   onDuty,
   email,
   phone,
-  Naira,
   responsibilities,
   shiftSchedule,
   role,
   onOpen,
-  
+  salesTarget,
 }) {
   return (
     <div className="px-2 lg:px-3 py-4 rounded-[10px] bg-white  border-2 border-[#e7e7e7]">
@@ -58,16 +57,20 @@ export default function ScheduleCard({
       <div>
         <div className="flex justify-between text-xs text-gray-500 font-medium">
           <p>Sales Target</p>
-          <p>Monthly</p>
+          <p>{salesTarget?.duration || "—"}</p>
         </div>
         <div className="w-full h-4 bg-gray-200 rounded-full relative overflow-hidden">
           <div
-            className={`h-4 bg-[#0080ff] rounded-full transition-all duration-500`}
-            style={{ width: `40%` }}
+            className="h-4 bg-[#0080ff] rounded-full transition-all duration-500"
+            style={{
+              width: salesTarget?.targetAmount
+                ? `${Math.min((salesTarget.currentProgress / salesTarget.targetAmount) * 100, 100)}%`
+                : "0%"
+            }}
           ></div>
         </div>
         <div className="flex justify-end text-xs text-gray-700 font-medium">
-            ₦120,000/₦350,000
+          ₦{(salesTarget?.currentProgress ?? 0).toLocaleString()}/₦{(salesTarget?.targetAmount ?? 0).toLocaleString()}
         </div>
       </div>
 

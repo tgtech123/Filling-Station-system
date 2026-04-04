@@ -150,7 +150,7 @@ export const recentActivityData = [
     time: "1 hour ago"
   },
    {
-    id: 6,
+    id: 6, 
     activity: "Morning shift sales completed - Pump 5",
     description: "Diesel - 453 Ltrs sold",
     category: "shiftComplete",

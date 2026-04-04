@@ -14,10 +14,10 @@ export default function CustomDropdown({ label, options, selected, onSelect }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full border rounded-md px-3 py-2 text-sm text-gray-700 flex justify-between items-center focus:outline-none focus:ring focus:ring-blue-600"
+        className="w-full border-2 border-neutral-400 rounded-md px-3 py-2 text-sm text-gray-700 flex justify-between items-center focus:outline-none focus:border-2 focus:border-blue-600"
       >
         {selected?.value ?? "Select..."}
-        {open ? <GoChevronUp /> : <GoChevronDown />}
+        {open ? <GoChevronUp size={24}/> : <GoChevronDown size={24} />}
       </button>
       {open && (
         <ul className="absolute z-10 mt-1 w-full bg-white border border-blue-600 rounded-md shadow-md max-h-60 overflow-auto">

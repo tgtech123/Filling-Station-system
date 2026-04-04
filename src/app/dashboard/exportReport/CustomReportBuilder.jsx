@@ -1,105 +1,67 @@
 "use client";
-
 import { useState } from "react";
-import useReportStore from "@/store/useReportStore";
+import useManagerReportsStore from "@/store/useManagerReportsStore";
 import CustomDropdown from "@/components/CustomDropdown";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import DurationDropdown from "@/components/DurationDropdown";
-import { reportTypeOptions, pumpNoOptions, prodTypeOptions, shiftTypeOptions, Role } from "./exportReportData";
+import {
+  reportTypeOptions,
+  pumpNoOptions,
+  prodTypeOptions,
+  shiftTypeOptions,
+  Role,
+} from "./exportReportData";
+
+// ── Map dropdown labels → API reportType strings ──────────────────────────────
+const LABEL_TO_API_TYPE = {
+  "Sales report":         "sales",
+  "Cash reconciliation":  "cash_reconciliation",
+  "Lubricant sales":      "lubricant_inventory",
+  "Inventory report":     "fuel_inventory",
+  "Shift report":         "shift",
+  "Staff performance":    "staff_performance",
+  "Financial summary":    "financial_summary",
+  "System activity logs": "activity_logs",
+};
 
 export default function CustomReportBuilder() {
   const [selectedReportType, setSelectedReportType] = useState(reportTypeOptions[0]);
-  const [selectedRole, setSelectedRole] = useState(Role[0]);
-  const [selectedPumpNo, setSelectedPumpNo] = useState(pumpNoOptions[4]); // "All"
-  const [selectedProdType, setSelectedProdType] = useState(prodTypeOptions[0]); // "All"
-  const [selectedShiftType, setSelectedShiftType] = useState(shiftTypeOptions[3]); // "All"
-  const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
-  const [isExporting, setIsExporting] = useState(false);
- 
-  const {
-    generateSalesReport,
-    generateCashReconciliationReport,
-    generateShiftReport,
-    generateFuelInventoryReport,
-    generateStaffPerformanceReport,
-    generateActivityLogsReport,
-    generateLubricantInventoryReport,
-    exportReportAsCSV,
-    getAllReports,
-  } = useReportStore();
+  const [selectedRole,       setSelectedRole]       = useState(Role[0]);
+  const [selectedPumpNo,     setSelectedPumpNo]     = useState(pumpNoOptions[4]);
+  const [selectedProdType,   setSelectedProdType]   = useState(prodTypeOptions[0]);
+  const [selectedShiftType,  setSelectedShiftType]  = useState(shiftTypeOptions[3]);
+  const [dateRange,          setDateRange]          = useState({ startDate: "", endDate: "" });
+
+  const downloadReportCsv = useManagerReportsStore((state) => state.downloadReportCsv);
+  const exportLoading     = useManagerReportsStore((state) => state.loading.export);
+  const exportError       = useManagerReportsStore((state) => state.errors.export);
+  const clearError        = useManagerReportsStore((state) => state.clearError);
 
   const handleExport = async () => {
-    const reportType = selectedReportType.value.toLowerCase();
+    const reportType = LABEL_TO_API_TYPE[selectedReportType.value];
 
-    // Validate date range for reports that need it
-    const needsDateRange = ![
-      "all reports",
-      "inventory report",
-      "lubricant sales",
-    ].includes(reportType);
-
-    if (needsDateRange && (!dateRange.startDate || !dateRange.endDate)) {
-      alert("Please select a date range for this report type");
+    if (!reportType) {
+      alert("Please select a valid report type.");
       return;
     }
 
-    setIsExporting(true);
+    const params = {
+      reportType,
+      ...(dateRange.startDate && { startDate: dateRange.startDate }),
+      ...(dateRange.endDate   && { endDate:   dateRange.endDate   }),
+      ...(!dateRange.startDate && !dateRange.endDate && { duration: "thismonth" }),
+      ...(selectedPumpNo.value    !== "All" && { pumpNumber:  selectedPumpNo.value    }),
+      ...(selectedProdType.value  !== "All" && { productType: selectedProdType.value  }),
+      ...(selectedShiftType.value !== "All" && { shiftType:   selectedShiftType.value }),
+      ...(selectedRole.value.trim() !== "All" && { role:      selectedRole.value.trim() }),
+    };
+
+    const filename = `${reportType}_${new Date().toISOString().split("T")[0]}.csv`;
 
     try {
-      let reportData;
-      const params = {
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-      };
-
-      // Generate report based on selected type
-      if (reportType === "sales report") {
-        reportData = await generateSalesReport({
-          ...params,
-          productType: selectedProdType.value !== "All" ? selectedProdType.value : undefined,
-          pumpNo: selectedPumpNo.value !== "All" ? selectedPumpNo.value : undefined,
-        });
-      } else if (reportType === "cash reconciliation") {
-        reportData = await generateCashReconciliationReport(params);
-      } else if (reportType === "shift report") {
-        reportData = await generateShiftReport({
-          ...params,
-          shiftType: selectedShiftType.value !== "All" ? selectedShiftType.value : undefined,
-        });
-      } else if (reportType === "inventory report") {
-        reportData = await generateFuelInventoryReport();
-      } else if (reportType === "staff performance") {
-        reportData = await generateStaffPerformanceReport({
-          ...params,
-          role: selectedRole.value !== "All " ? selectedRole.value : undefined,
-        });
-      } else if (reportType === "system activity logs") {
-        reportData = await generateActivityLogsReport(params);
-      } else if (reportType === "lubricant sales") {
-        reportData = await generateLubricantInventoryReport();
-      } else if (reportType === "all reports") {
-        alert("Please select a specific report type");
-        return;
-      } else {
-        alert("Report type not supported yet");
-        return;
-      }
-
-      // Download the report as CSV (Excel format)
-      if (reportData) {
-        const filename = `${selectedReportType.value.replace(/\s+/g, "_")}_${
-          new Date().toISOString().split("T")[0]
-        }`;
-        exportReportAsCSV(reportData, filename);
-        alert("✅ Report exported successfully as CSV! Check your downloads folder. You can open it in Excel.");
-      }
-    } catch (error) {
-      console.error("Export error:", error);
-      const errorMessage =
-        error.response?.data?.error || error.message || "Failed to export report. Please try again.";
-      alert(`❌ Export failed: ${errorMessage}`);
-    } finally {
-      setIsExporting(false);
+      await downloadReportCsv(params, filename);
+    } catch {
+      // Error is already surfaced in exportError via the store
     }
   };
 
@@ -107,8 +69,21 @@ export default function CustomReportBuilder() {
     <DisplayCard>
       <section>
         <h3 className="mb-2 text-2xl font-semibold">Custom Report Builder</h3>
-        <p className="text-gray-600">Create and generate report</p>
+        <p className="text-gray-600">Create and generate a tailored report</p>
       </section>
+
+      {/* Error banner */}
+      {exportError && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex justify-between items-center">
+          <span>{exportError}</span>
+          <button
+            onClick={() => clearError("export")}
+            className="ml-4 text-red-400 hover:text-red-600 font-bold text-lg leading-none"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <CustomDropdown
@@ -149,23 +124,24 @@ export default function CustomReportBuilder() {
         />
       </div>
 
-      <div className="flex justify-end">
+      {/* Export button */}
+      <div className="flex items-center justify-end mt-2">
         <button
           onClick={handleExport}
-          disabled={isExporting}
-          className={`${
-            isExporting
+          disabled={exportLoading}
+          className={`text-white text-md py-2 px-6 rounded-[8px] font-semibold  transition-colors ${
+            exportLoading
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-[#0080ff] hover:bg-blue-600"
-          } text-white text-sm py-2 px-6 rounded-[8px] transition-colors`}
+          }`}
         >
-          {isExporting ? "Exporting..." : "Export Report"}
+          {exportLoading ? "Exporting…" : "Export Report as CSV"}
         </button>
       </div>
 
-      {isExporting && (
+      {exportLoading && (
         <p className="text-sm text-blue-600 text-right mt-2">
-          Generating your report, please wait...
+          Generating your report, please wait…
         </p>
       )}
     </DisplayCard>

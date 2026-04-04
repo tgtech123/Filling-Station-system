@@ -2,8 +2,7 @@ import { useEffect } from "react";
 import DisplayCard from "./DisplayCard";
 import { CircleFadingArrowUp, CircleGauge, TrendingUp } from "lucide-react";
 import FlashCard from "./FlashCard";
-import { TbTargetArrow } from "react-icons/tb";
-import { Progress } from "./Progress";
+import SalesTargetCard from "./SalesTargetCard";
 import { useAttendantDashboard } from "@/store/useAttendantDashboardStore";
 
 export default function SalesSummary() {
@@ -58,17 +57,6 @@ export default function SalesSummary() {
       variable: `${dashboardData.shiftsCompleted.current}/${dashboardData.shiftsCompleted.target}`,
       trend: null, // No trend for shifts
     },
-    {
-      id: 5,
-      name: "Sales Target",
-      icon: <TbTargetArrow />,
-      period: <Progress 
-        current={dashboardData.salesTarget.current} 
-        target={dashboardData.salesTarget.target}
-        status={dashboardData.salesTarget.status}
-      />,
-      salesTargetData: dashboardData.salesTarget, // Pass full data for custom rendering
-    },
   ] : [
     // Fallback data while loading or on error
     {
@@ -102,12 +90,6 @@ export default function SalesSummary() {
       period: "For this quarter",
       variable: "0/0",
       trend: null,
-    },
-    {
-      id: 5,
-      name: "Sales Target",
-      icon: <TbTargetArrow />,
-      period: <Progress current={0} target={0} status="In Progress" />,
     },
   ];
 
@@ -152,6 +134,7 @@ export default function SalesSummary() {
             {data.slice(3).map((item) => (
               <FlashCard key={item.id} {...item} />
             ))}
+            <SalesTargetCard />
           </div>
         </>
       )}

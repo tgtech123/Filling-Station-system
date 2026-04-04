@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Check } from "lucide-react";
 import MonthlyBill from "./MonthlyBill";
 import FrequentlyQuestions from "./FrequentlyQuestions";
+import Link from "next/link";
 
 const page = () => {
   const [buttonOne, setButtonOne] = useState("buttonOne");
@@ -55,7 +56,7 @@ const page = () => {
           {buttonOne === "buttonTwo" ? (
             <div className="flex lg:justify-between text-[1rem] font-semibold justify-center p-2 bg-white lg:w-[224px] text-sm rounded-full items-center text-center w-fit lg:h-[48px] h-[44px]">
                 <h1 className="font-semibold lg:text-[1rem] text-[0.575rem] text-neutral-800">Bill monthly</h1>
-                <span className="flex text-neutral-500 items-center justify-center lg:text-[1rem] text-[0.575rem] font-semibold lg:w-[95px] w-[47px] lg:h-[40px] h-[20px] p-1 bg-neutral-100 rounded-full ">
+                <span className="flex text-neutral-500 items-center justify-center lg:text-[1rem] text-[0.475rem] font-semibold lg:w-[95px] w-[47px] lg:h-[40px] h-[20px] p-1 bg-neutral-100 rounded-full ">
                     Save 0%
                 </span>
             </div>
@@ -74,7 +75,7 @@ const page = () => {
           <div
             id="linkOne"
             onClick={() => setShowBlue("linkOne")}
-            className={`flex flex-col ${showBlue === "linkOne" ? "bg-[#1A71F6] text-white" : "bg-white"} rounded-xl lg:p-4 p-2 max-w-[22.438rem] border border-neutral-100 `}
+            className={`flex flex-col hover:scale-105 transition ${showBlue === "linkOne" ? "bg-[#1A71F6] text-white" : "bg-white"} rounded-xl lg:p-4 p-2 max-w-[22.438rem] border border-neutral-100 `}
           >
             <h1 className="text-[1.5rem] font-semibold mb-[1rem]">Basic</h1>
             <h3
@@ -98,11 +99,14 @@ const page = () => {
               VAT may apply
             </span>
 
-            <button
-              className={` rounded-full ${showBlue === "linkOne" ? "text-[#0080FF] bg-white" : "text-[#0080FF] border-[2px] border-[#0080FF]"}   font-semibold text-[1.25rem] py-3 mt-[2.25rem]`}
-            >
-              Get Basic
-            </button>
+            <Link href='/pricing/paymentPages' >
+              <button
+                className={` rounded-full w-full ${showBlue === "linkOne" ? "text-[#0080FF] bg-white" : "text-[#0080FF] border-[2px] border-[#0080FF]"}   font-semibold text-[1.25rem] py-3 mt-[2.25rem]`}
+              >
+                Get Basic
+              </button>
+            
+            </Link>
 
             <h1
               className={`mt-[2.25rem] mb-[2.25rem] font-medium text-[1rem] ${showBlue === "linkOne" ? "text-white" : "text-[#6B6B6B]"} `}
@@ -120,7 +124,7 @@ const page = () => {
           <div
             id="linkTwo"
             onClick={() => setShowBlue("linkTwo")}
-            className={`flex flex-col ${showBlue === "linkTwo" ? "bg-[#1A71F6] text-white" : "bg-white"} rounded-xl p-4 max-w-[22.438rem] border border-neutral-100 `}
+            className={`flex flex-col hover:scale-105 transition ${showBlue === "linkTwo" ? "bg-[#1A71F6] text-white" : "bg-white"} rounded-xl p-4 max-w-[22.438rem] border border-neutral-100 `}
           >
             <div className="flex justify-between">
               <h1 className="text-[1.5rem] font-semibold mb-[1rem]">Plus</h1>
@@ -186,7 +190,7 @@ const page = () => {
           <div
             id="linkThree"
             onClick={() => setShowBlue("linkThree")}
-            className={`flex flex-col ${showBlue === "linkThree" ? "bg-[#1A71F6] text-white" : "bg-white"} rounded-xl p-4 max-w-[22.438rem] border border-neutral-100 `}
+            className={`flex flex-col hover:scale-105 transition ${showBlue === "linkThree" ? "bg-[#1A71F6] text-white" : "bg-white"} rounded-xl p-4 max-w-[22.438rem] border border-neutral-100 `}
           >
             <h1 className="text-[1.5rem] font-semibold mb-[1rem]">Prime</h1>
             <h3
@@ -239,7 +243,12 @@ const page = () => {
         </div>
       )}
 
-      {buttonOne === "buttonTwo" && <MonthlyBill />}
+      {buttonOne === "buttonTwo" && 
+        <div>
+          <MonthlyBill />
+
+        </div>
+      }
 
       <FrequentlyQuestions />
     </div>

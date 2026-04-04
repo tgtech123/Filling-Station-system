@@ -6,7 +6,7 @@ const LoginTwo = () => {
   return (
     <div className="h-screen w-full overflow-hidden relative">
       {/* Background Image */}
-      <div className="h-full w-[720px]">
+      <div className="relative h-full w-[720px]">
         <Image
           src="/Onboarding.png"
           alt="Onboarding"
@@ -14,12 +14,13 @@ const LoginTwo = () => {
           className="object-cover"
           priority
         />
+
+      <div className="absolute bottom-0 w-full px-4">
+        <TextSlider />
+      </div>
       </div>
 
       {/* TextSlider Positioned at Bottom */}
-      <div className="absolute bottom-[-88px] w-full px-4">
-        <TextSlider />
-      </div>
     </div>
   );
 };

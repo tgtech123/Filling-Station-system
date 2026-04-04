@@ -20,7 +20,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { RiOilLine } from "react-icons/ri";
-import { PiToggleLeftFill } from "react-icons/pi";
+import { PiToggleLeftFill, PiToggleRightFill } from "react-icons/pi";
 import { HiOutlineChartBar } from "react-icons/hi";
 import { FaFire, FaHandHoldingUsd } from "react-icons/fa";
 import { BsFillFuelPumpFill } from "react-icons/bs";
@@ -42,6 +42,7 @@ import { CgTrack } from "react-icons/cg";
 import { GiExpense, GiTakeMyMoney } from "react-icons/gi";
 import { useState, useEffect } from "react";
 import { useImageStore } from "@/store/useImageStore";
+import useThemePersistence from "@/hooks/useThemePersistence";
 
 export default function Sidebar({ isVisible, toggleSidebar }) {
   const pathname = usePathname();
@@ -52,6 +53,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
   const [openDropdown, setOpenDropdown] = useState(null);
 
   const { getUserImage } = useImageStore();
+  const { theme, setTheme } = useThemePersistence();
 
   // Get user data from localStorage
   useEffect(() => {
@@ -447,7 +449,7 @@ const visibleLinks = getVisibleLinks(userRole);
     // >
 
     <div
-  className={`lg:w-[280px] lg:flex lg:relative h-[100vh] top-0 left-0 bg-white shadow-md transform transition-transform duration-500 ease-in-out ${
+  className={`lg:w-[280px] lg:flex lg:relative h-[100vh] top-0 left-0 bg-white dark:bg-gray-900 shadow-md transform transition-transform duration-500 ease-in-out ${
     isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
   } lg:translate-x-0 lg:opacity-100 fixed z-50 lg:transition-none flex flex-col`}
 >
@@ -554,22 +556,31 @@ const visibleLinks = getVisibleLinks(userRole);
               <CircleQuestionMark size={18} />
               <span>Help & Support</span>
             </div>
-            <div className="flex items-center justify-between gap-2 rounded-[12px] px-4 py-3 hover:bg-gray-50 transition-all duration-200">
+            <div className="flex items-center justify-between gap-2 rounded-[12px] px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200">
               <div className="flex gap-3 items-center cursor-pointer">
                 <Moon size={18} />
                 <span>Dark Mode</span>
               </div>
-              <PiToggleLeftFill
-                size={30}
-                className="text-[#d0d5dd] font-semibold cursor-pointer hover:text-[#b0b5bd]"
-              />
+              {theme === "dark" ? (
+                <PiToggleRightFill
+                  size={30}
+                  className="text-blue-500 cursor-pointer"
+                  onClick={() => setTheme("light")}
+                />
+              ) : (
+                <PiToggleLeftFill
+                  size={30}
+                  className="text-[#d0d5dd] cursor-pointer hover:text-[#b0b5bd]"
+                  onClick={() => setTheme("dark")}
+                />
+              )}
             </div>
           </div>
         </aside>
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 absolute bottom-4 left-4 right-4 p-3 rounded-[12px] border-2 border-gray-200 bg-white shadow-sm">
+      <div className="flex-shrink-0 absolute bottom-4 left-4 right-4 p-3 rounded-[12px] border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
         <div className="flex items-center justify-between">
           <UserAvatar
             userId={userData?.id || userData?.employeeId || userData?._id}
