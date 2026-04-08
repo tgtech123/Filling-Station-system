@@ -9,6 +9,7 @@ export default function ShiftApprovalHeader({
   canClearStale,
   clearingStale,
   onClearStaleClick,
+  pendingCount
 }) {
   return (
     <div className="flex items-center justify-between gap-4 mb-3 bg-white rounded-xl p-4">
@@ -26,7 +27,7 @@ export default function ShiftApprovalHeader({
             }`}
           >
             <AlarmClock />
-            Pending (3)
+            Pending ({pendingCount || 0})
           </button>
           <button
             onClick={() => onTabChange("approved")}
@@ -55,3 +56,4 @@ export default function ShiftApprovalHeader({
     </div>
   );
 }
+ 

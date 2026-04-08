@@ -41,19 +41,36 @@ const DailyAttendantSales = () => {
 
   const getDateLabel = (dateStr) => {
     if (!dateStr) return { label: "—", overdue: false };
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const d = new Date(dateStr);
-    d.setHours(0, 0, 0, 0);
-    const diff = Math.round((today - d) / 86400000);
-    if (diff === 0) return { label: "Today", overdue: false };
-    if (diff === 1) return { label: "Yesterday", overdue: false };
-    const label = d.toLocaleDateString("en-US", {
+
+    // Get today in Nigeria timezone as YYYY-MM-DD
+    const todayStr = new Date().toLocaleDateString("en-CA", {
+      timeZone: "Africa/Lagos",
+    });
+
+    // Backend sends "YYYY-MM-DD" — if it's an ISO timestamp, convert using Lagos tz
+    const saleDateStr = dateStr.includes("T")
+      ? new Date(dateStr).toLocaleDateString("en-CA", {
+          timeZone: "Africa/Lagos",
+        })
+      : dateStr;
+
+    // Parse both as local midnight to get clean day diff
+    const [ty, tm, td] = todayStr.split("-").map(Number);
+    const [sy, sm, sd] = saleDateStr.split("-").map(Number);
+
+    const todayMidnight = new Date(ty, tm - 1, td);
+    const saleMidnight = new Date(sy, sm - 1, sd);
+    const diffDays = Math.round((todayMidnight - saleMidnight) / 86400000);
+
+    if (diffDays === 0) return { label: "Today", overdue: false };
+    if (diffDays === 1) return { label: "Yesterday", overdue: true };
+
+    const label = saleMidnight.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
-    return { label, overdue: diff > 3 };
+    return { label, overdue: diffDays > 1 };
   };
 
   const getAttendantName = (sale) => {
@@ -88,7 +105,7 @@ const DailyAttendantSales = () => {
       const bRec = b.reconciled || !!localReconciledMap[b._id];
       if (!aRec && bRec) return -1;
       if (aRec && !bRec) return 1;
-      return new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt);
+      return new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date);
     });
   }, [dailySales, localReconciledMap]);
 
@@ -99,13 +116,13 @@ const DailyAttendantSales = () => {
   );
 
   const overdueCount = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     return visibleSales.filter((s) => {
       if (s.reconciled || localReconciledMap[s._id]) return false;
-      const d = new Date(s.date || s.createdAt);
-      d.setHours(0, 0, 0, 0);
-      return d < today;
+      const d = new Date(s.createdAt || s.date);
+      const saleMidnight = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      return saleMidnight < todayMidnight;
     }).length;
   }, [visibleSales, localReconciledMap]);
 
@@ -211,9 +228,8 @@ const DailyAttendantSales = () => {
       const isReconciled = sale.reconciled || !!localReconciledMap[sale._id];
       const isReconciling = reconcilingIds.has(sale._id);
       const attendantName = getAttendantName(sale);
-      const { label: dateLabel, overdue: isOverdue } = getDateLabel(
-        sale.date || sale.createdAt,
-      );
+      const rawDate = sale.createdAt || sale.date;
+      const { label: dateLabel, overdue: isOverdue } = getDateLabel(rawDate);
 
       const dateCell =
         isOverdue && !isReconciled ? (

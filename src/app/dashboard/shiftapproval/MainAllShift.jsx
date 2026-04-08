@@ -1,86 +1,3 @@
-// "use client";
-// import React, { useState } from "react";
-// import ShiftApprovalHeader from "./ShiftApprovalHeader";
-// import ShiftCard from "./ShiftCard";
-// import ApprovedShiftsPage from "./ApprovedShiftsPage";
-
-// const allShifts = [
-//   {
-//     id: 1,
-//     name: "Sam Melo",
-//     date: "12/12/2025",
-//     shift: "One-Day(Morning)- 6am - 2pm",
-//     pumpNo: 1,
-//     fuelType: "Diesel",
-//     pricePerLitre: "N120",
-//     litresSold: "120 Litres",
-//     transactions: 222,
-//     amount: "N14,400",
-//     reconciledCash: "N14,000",
-//     status: "Flagged",
-//   },
-//   {
-//     id: 2,
-//     name: "Sam Melo",
-//     date: "12/12/2025",
-//     shift: "Day-Off (6am - 10pm)",
-//     pumpNo: 1,
-//     fuelType: "Diesel",
-//     pricePerLitre: "N120",
-//     litresSold: "120 Litres",
-//     transactions: 222,
-//     amount: "N14,400",
-//     reconciledCash: "N14,000",
-//     status: "Flagged",
-//   },
-//   {
-//     id: 3,
-//     name: "Sam Melo",
-//     date: "12/12/2025",
-//     shift: "One-Day(Morning)- 6am - 2pm",
-//     pumpNo: 1,
-//     fuelType: "Diesel",
-//     pricePerLitre: "N120",
-//     litresSold: "120 Litres",
-//     transactions: 222,
-//     amount: "N14,400",
-//     reconciledCash: "N14,000",
-//     status: "Matched",
-//   },
-// ];
-
-// export default function ShiftApprovalPage() {
-//   const [activeTab, setActiveTab] = useState("pending");
-
-//   let shiftsToDisplay = [];
-//   if (activeTab === "pending") {
-//     // Show ALL shifts when "Pending" is active
-//     shiftsToDisplay = allShifts;
-//   } else if (activeTab === "approved") {
-//     // Show nothing when "Approved" is active
-//     shiftsToDisplay = [];
-//   }
-
-//   return (
-//     <div>
-//         <ShiftApprovalHeader activeTab={activeTab} onTabChange={setActiveTab} />
-//       <div className="mx-auto p-4 bg-white rounded-xl">
-//         {shiftsToDisplay.length === 0 ? (
-//           <div className="text-gray-500">
-//             <ApprovedShiftsPage/>
-//           </div>
-//         ) : (
-//           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//             {shiftsToDisplay.map((shift) => (
-//               <ShiftCard key={shift.id} data={shift} />
-//             ))}
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// } 
-
 "use client";
 import React, { useState, useEffect } from "react";
 import ShiftApprovalHeader from "./ShiftApprovalHeader";
@@ -179,6 +96,7 @@ export default function ShiftApprovalPage() {
         canClearStale={canClearStale}
         clearingStale={clearingStale}
         onClearStaleClick={() => setShowConfirm(true)}
+        pendingCount={transformedShifts.length}
       />
 
       {/* Confirmation Dialog */}
@@ -206,7 +124,7 @@ export default function ShiftApprovalPage() {
           </div>
         </div>
       )}
-      
+
       <div className="mx-auto p-4 bg-white rounded-xl">
         {activeTab === "pending" ? (
           <>
@@ -226,7 +144,7 @@ export default function ShiftApprovalPage() {
                 </div>
                 <p className="text-gray-700 font-semibold">Error loading shifts</p>
                 <p className="text-sm text-gray-500 mt-2">{error}</p>
-                <button 
+                <button
                   onClick={() => fetchPendingShifts({ page: 1, limit: 20 })}
                   className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
@@ -277,7 +195,7 @@ export default function ShiftApprovalPage() {
                       Showing {pendingShifts.length} of {pagination.total} shifts
                       (Page {pagination.page} of {pagination.pages})
                     </p>
-                    
+
                     {pagination.page < pagination.pages && (
                       <button
                         onClick={handleLoadMore}

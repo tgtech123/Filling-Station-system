@@ -30,7 +30,7 @@ const planStyles = {
   Basic: "text-blue-700 bg-blue-100",
 };
 
-export default function DataTable({ headers, rows, onActionClick }) {
+export default function DataTable({ headers, rows, onActionClick, onViewStation }) {
   const [openRowIndex, setOpenRowIndex] = useState(null);
   const menuRefs = useRef({})
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -50,6 +50,12 @@ export default function DataTable({ headers, rows, onActionClick }) {
   }, [openRowIndex])
 
 const handleViewStation = (row) =>{
+  // If parent provided a navigation handler use it; otherwise open ActionModal
+  if (onViewStation && (row._raw?._id || row._raw?.id || row.id)) {
+    onViewStation(row._raw?._id || row._raw?.id || row.id);
+    setOpenRowIndex(null);
+    return;
+  }
   setSelectedRow(row)
   setIsModalOpen(true)
   setOpenRowIndex(null)

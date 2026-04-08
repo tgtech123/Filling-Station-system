@@ -5,7 +5,7 @@ import MainAllShift from './MainAllShift'
 export default function page() {
   return (
     <DashboardLayout>
-        <MainAllShift/>
+           <MainAllShift />
     </DashboardLayout>
     
   )

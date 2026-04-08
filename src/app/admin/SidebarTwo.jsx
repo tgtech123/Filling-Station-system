@@ -7,22 +7,26 @@ import {
   DollarSign,
   Activity,
   Settings,
-  LogOut,
 } from "lucide-react";
 import Image from "next/image";
 import { useImageStore } from "@/store/useImageStore";
+import useAdminProfileStore from "@/store/useAdminProfileStore";
 
 const SidebarTwo = ({ activeItem, setActiveItem }) => {
-  //   const [activeItem, setActiveItem] = useState('Dashboard');
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
   const USER_ID = "admin-user-1";
-  
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-  const getUserImage = useImageStore((s) => s.getUserImage);
-  const profileImage = mounted ? getUserImage(USER_ID) || "/sammi.jpeg" : "/sammi.jpeg"
 
+  const { adminName, adminImage, adminRole, initProfile } = useAdminProfileStore();
+  const getUserImage = useImageStore((s) => s.getUserImage);
+
+  const profileImage = mounted
+    ? adminImage || getUserImage(USER_ID) || "/sammi.jpeg"
+    : "/sammi.jpeg";
+
+  useEffect(() => {
+    setMounted(true);
+    initProfile();
+  }, []);
 
   const menuItems = [
     { name: "Dashboard", icon: Home, badge: null },
@@ -79,9 +83,9 @@ const SidebarTwo = ({ activeItem, setActiveItem }) => {
             className="rounded-md"
           />
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-bold text-gray-900">Oboh Thankgod</div>
-            <div className="text-xs text-neutral-300 truncate">
-              General Admin
+            <div className="text-sm font-bold text-gray-900">{adminName || "Admin"}</div>
+            <div className="text-xs text-neutral-300 truncate capitalize">
+              {adminRole || "Admin"}
             </div>
           </div>
           <button className="text-gray-400 hover:text-gray-600">

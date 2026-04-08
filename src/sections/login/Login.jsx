@@ -51,7 +51,9 @@ const Login = () => {
         setMessage(data.message);
       }
       // 🔑 navigate properly
-      if (data.user?.role === "manager") {
+      if (data.user?.role === "admin") {
+        router.push("/admin");
+      } else if (data.user?.role === "manager") {
         router.push("/dashboard/manager");
       } else if (data.user?.role === "accountant") {
         router.push("/dashboard/accountant");
