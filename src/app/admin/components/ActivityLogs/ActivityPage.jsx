@@ -1,11 +1,12 @@
 "use client";
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import StatGrid from '../StatGrid'
-import ActivityCardData from './ActivityCardData'
-import { Search, Download } from "lucide-react";
+import { Search, Download, TrendingUp, CircleCheck, TriangleAlert } from "lucide-react";
+import { TbAlertHexagon } from "react-icons/tb";
 import DataTable from '../DataTable';
-import auditLogData, { auditLogHeaders } from './AuditLogData';
+import { auditLogHeaders } from './AuditLogData';
 import Pagination from '../PaymentAndBilling/Pagination';
+import useAdminStore from '@/store/useAdminStore';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -15,9 +16,40 @@ const ActivityPage = () => {
   const [durationFilter, setDurationFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  const { activityLogs, loading, fetchActivityLogs } = useAdminStore();
+
+  useEffect(() => {
+    fetchActivityLogs();
+  }, []);
+
+  // Map raw API log to table row shape
+  const mappedLogs = useMemo(() => {
+    const logs = Array.isArray(activityLogs)
+      ? activityLogs
+      : activityLogs?.logs || activityLogs?.data || [];
+    if (!logs || logs.length === 0) return [];
+    return logs.map((log, i) => {
+      const rawDate = log.createdAt || log.timestamp || log.dateTime || null;
+      return {
+        id: log._id || log.id || i,
+        eventType: log.eventType || log.type || log.action || "—",
+        description: log.description || log.message || log.details || "—",
+        stationUser: log.stationName || log.station || log.user || log.performedBy || "—",
+        status: log.status || log.severity || "Info",
+        dateTime: rawDate
+          ? new Date(rawDate).toLocaleString("en-GB", {
+              year: "numeric", month: "2-digit", day: "2-digit",
+              hour: "2-digit", minute: "2-digit",
+            }).replace(",", "")
+          : "—",
+        _rawDate: rawDate,
+      };
+    });
+  }, [activityLogs]);
+
   const filterByDuration = (row) => {
     if (!durationFilter) return true;
-    const rowDate = new Date(row.dateTime);
+    const rowDate = new Date(row._rawDate || row.dateTime);
     const now = new Date();
 
     if (durationFilter === "Weekly") {
@@ -40,7 +72,7 @@ const ActivityPage = () => {
 
   const filteredData = useMemo(() => {
     setCurrentPage(1);
-    return auditLogData.filter((row) => {
+    return mappedLogs.filter((row) => {
       const matchesSearch =
         !searchQuery ||
         row.stationUser.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -51,12 +83,25 @@ const ActivityPage = () => {
 
       return matchesSearch && matchesStatus && matchesDuration;
     });
-  }, [searchQuery, statusFilter, durationFilter]);
+  }, [searchQuery, statusFilter, durationFilter, mappedLogs]);
 
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredData.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredData, currentPage]);
+
+  const activityCardData = useMemo(() => {
+    const total = mappedLogs.length;
+    const successful = mappedLogs.filter(l => l.status === "Success").length;
+    const warnings = mappedLogs.filter(l => l.status === "Warning").length;
+    const critical = mappedLogs.filter(l => l.status === "Critical").length;
+    return [
+      { id: 1, label: "Total Activities", value: total, icon: TrendingUp },
+      { id: 2, label: "Successful", value: successful, icon: CircleCheck },
+      { id: 3, label: "Warnings", value: warnings, iconBg: "bg-[#FFF5C5]", iconColor: "text-[#E27D00]", icon: TriangleAlert },
+      { id: 4, label: "Critical", value: critical, iconBg: "bg-red-50", iconColor: "text-red-600", icon: TbAlertHexagon },
+    ];
+  }, [mappedLogs]);
 
   const handleExport = () => {
     const csvHeaders = auditLogHeaders.map((h) => h.label).join(",");
@@ -88,7 +133,7 @@ const ActivityPage = () => {
 
       {/* cards section */}
       <div className='mt-[1.375rem]'>
-        <StatGrid data={ActivityCardData} />
+        <StatGrid data={activityCardData} />
       </div>
 
       <div className='bg-white p-5 mt-[1.375rem] rounded-2xl'>
@@ -147,7 +192,9 @@ const ActivityPage = () => {
 
         {/* activity table section */}
         <div className='mt-[1.375rem]'>
-          {paginatedData.length > 0 ? (
+          {loading ? (
+            <p className="text-center text-gray-400 py-10 font-medium">Loading activity logs...</p>
+          ) : paginatedData.length > 0 ? (
             <DataTable headers={auditLogHeaders} rows={paginatedData} />
           ) : (
             <p className="text-center text-gray-400 py-10 font-medium">No results found.</p>

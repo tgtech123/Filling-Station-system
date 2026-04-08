@@ -22,7 +22,7 @@ export default function Hero() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#cee1ff] to-[#ffe9c9]">
+    <div className="relative min-h-screen bg-gradient-to-b from-[#cee1ff] to-[#ffe9c9] dark:from-gray-900 dark:to-gray-800">
       <Image
         src={bgImg}
         alt="background svg"
@@ -34,7 +34,7 @@ export default function Hero() {
 
       <div className="relative z-10 px-4 sm:px-6 lg:px-40 w-full h-auto min-h-screen grid grid-cols-1 lg:grid-cols-2 justify-items-center items-center py-8 lg:py-12">
 
-        <div className="flex-1 text-center lg:text-left max-w-none lg:max-w-2xl">
+        <div className="flex-1 text-center lg:text-left max-w-none lg:max-w-2xl dark:bg-gray-900/60 rounded-lg p-4 lg:p-6">
 
           {/* BADGE — fade in + slide down from top */}
           <motion.div
@@ -42,7 +42,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
-            <button className="bg-[#ffe9c9] rounded-[30px] px-3 sm:px-4 py-1 inline-flex items-center gap-2 text-xs sm:text-sm text-[#faa300] font-semibold border-2 border-[#faa300] mb-4">
+            <button className="bg-[#ffe9c9] dark:bg-[#faa300]/20 rounded-[30px] px-3 sm:px-4 py-1 inline-flex items-center gap-2 text-xs sm:text-sm text-[#faa300] dark:text-[#faa300] font-semibold border-2 border-[#faa300] mb-4">
               <BriefcaseBusiness color="#faa300" size={16} />
               <span className="whitespace-nowrap">From pump attendants to manager</span>
             </button>
@@ -50,7 +50,7 @@ export default function Hero() {
 
           {/* HEADLINE — fade in + slide up with delay */}
           <motion.h1
-            className="text-black text-2xl sm:text-3xl md:text-4xl xl:text-[50px] font-semibold leading-tight lg:leading-[3.5rem] mb-4"
+            className="text-black dark:text-white text-2xl sm:text-3xl md:text-4xl xl:text-[50px] font-semibold leading-tight lg:leading-[3.5rem] mb-4"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2, ease: "easeOut" }}
@@ -62,7 +62,7 @@ export default function Hero() {
 
           {/* DESCRIPTION — fade in with delay */}
           <motion.p
-            className="mt-4 text-sm sm:text-base md:text-lg font-medium text-gray-700 leading-relaxed max-w-full lg:max-w-none"
+            className="mt-4 text-sm sm:text-base md:text-lg font-medium text-gray-700 dark:text-gray-200 leading-relaxed max-w-full lg:max-w-none"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
@@ -99,12 +99,12 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.8 }}
           >
             <div className="text-center lg:text-left">
-              <h4 className="font-semibold text-xl sm:text-2xl text-black">100%</h4>
-              <p className="text-sm text-gray-600">Uptime</p>
+              <h4 className="font-semibold text-xl sm:text-2xl text-black dark:text-white">100%</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Uptime</p>
             </div>
             <div className="text-center lg:text-left">
-              <h4 className="font-semibold text-xl sm:text-2xl text-black">24/7</h4>
-              <p className="text-sm text-gray-600">Support</p>
+              <h4 className="font-semibold text-xl sm:text-2xl text-black dark:text-white">24/7</h4>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Support</p>
             </div>
           </motion.div>
         </div>
