@@ -136,7 +136,7 @@ const ActivityPage = () => {
         <StatGrid data={activityCardData} />
       </div>
 
-      <div className='bg-white p-5 mt-[1.375rem] rounded-2xl'>
+      <div className='bg-white dark:bg-gray-800 p-5 mt-[1.375rem] rounded-2xl'>
         <div className="flex lg:flex-row flex-col gap-4 items-center justify-end mt-[1rem]">
 
           {/* Search */}

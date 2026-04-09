@@ -139,7 +139,7 @@ export default function CashierDashboard() {
                 
                 <h1 className="text-[1.25rem] font-semibold">Welcome, {fullName}</h1>
                 
-                <div className="bg-white p-5 rounded-2xl mt-[0.75rem] w-full">
+                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl mt-[0.75rem] w-full">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-[1.25rem] font-semibold">Dashboard</h1>
@@ -196,7 +196,7 @@ export default function CashierDashboard() {
                                     return (
                                         <div
                                             key={index}
-                                            className="bg-white rounded-2xl p-4 flex flex-col justify-between border border-gray-100"
+                                            className="bg-white dark:bg-gray-800 dark:border-gray-700 rounded-2xl p-4 flex flex-col justify-between border border-gray-100"
                                         >
                                             <h2 className="text-sm text-center font-semibold text-gray-600">
                                                 {item.title}

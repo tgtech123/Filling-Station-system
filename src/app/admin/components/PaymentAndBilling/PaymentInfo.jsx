@@ -72,7 +72,7 @@ const PaymentInfo = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl p-5">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-5">
       <div className="flex gap-4 items-center justify-end mt-[1rem]">
         {/* Search */}
         <div className="flex relative items-center">

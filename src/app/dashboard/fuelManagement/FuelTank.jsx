@@ -67,7 +67,7 @@ export default function FuelTank() {
             return (
               <div
                 key={tank._id}
-                className="bg-white p-4 rounded-[12px] border-2 border-gray-300 relative"
+                className="bg-white dark:bg-gray-800 p-4 rounded-[12px] border-2 border-gray-300 dark:border-gray-600 relative"
               >
                 <header className="flex justify-between items-center">
                   <div className="flex gap-3 items-center">

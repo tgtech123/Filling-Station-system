@@ -78,9 +78,9 @@ const handleCloseActivateModal = () => {
 }
 
   return (
-    <div className="overflow-x-auto bg-white rounded-lg">
+    <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg">
       <table className="min-w-full border-collapse">
-        <thead className="bg-gray-100">
+        <thead className="bg-gray-100 dark:bg-gray-700">
           <tr>
             {headers.map((header) => (
               <th
@@ -119,7 +119,7 @@ const handleCloseActivateModal = () => {
                         {openRowIndex === rowIndex && (
                           <div
                           ref={menuRefs}
-                            className="absolute right-0 mt-2 p-5 w-[17.5rem] h-auto bg-white border
+                            className="absolute right-0 mt-2 p-5 w-[17.5rem] h-auto bg-white dark:bg-gray-800 border dark:border-gray-600
                                   rounded-lg shadow-lg z-50 text-left"
                           >
                             <h1 className="text-[1rem] font-semibold leading-[1.235rem] text-[#212121]">

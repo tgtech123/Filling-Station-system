@@ -80,7 +80,7 @@ const Login = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 h-screen overflow-hidden">
       {/* Left - Form Section */}
-      <div className="w-full h-full flex items-center justify-center bg-white px-4">
+      <div className="w-full h-full flex items-center justify-center bg-white dark:bg-gray-900 px-4">
         <div className="w-full max-w-md flex flex-col justify-center items-center">
           <Image src="/station-logo.png" alt="Logo" width={200} height={140} />
 

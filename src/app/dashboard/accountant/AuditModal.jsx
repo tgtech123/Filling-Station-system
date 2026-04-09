@@ -47,7 +47,7 @@ const AuditModal = ({ isOpen, onClose, record, onAudit, isAudited }) => {
       onClick={onClose}
     >
       <div
-        className="bg-white p-6 rounded-2xl shadow-lg w-[90%] max-w-md"
+        className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg w-[90%] max-w-md"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-end mb-4">
@@ -207,7 +207,7 @@ export default AuditModal;
 //       onClick={onClose}
 //     >
 //       <div
-//         className="bg-white p-6 rounded-2xl shadow-lg w-[90%] max-w-md"
+//         className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg w-[90%] max-w-md"
 //         onClick={(e) => e.stopPropagation()}
 //       >
 //         <div className="flex justify-end mb-4">

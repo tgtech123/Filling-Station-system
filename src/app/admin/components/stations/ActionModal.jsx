@@ -74,7 +74,7 @@ const ActionModal = ({ isOpen, onClose, data }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative bg-white rounded-md lg:w-[36.8125rem] lg:max-h-[90vh] max-h-[85vh] overflow-y-auto p-8 w-fit scrollbar-hide"
+        className="relative bg-white dark:bg-gray-800 rounded-md lg:w-[36.8125rem] lg:max-h-[90vh] max-h-[85vh] overflow-y-auto p-8 w-fit scrollbar-hide"
       >
         <button
           onClick={onClose}

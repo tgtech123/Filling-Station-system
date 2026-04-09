@@ -129,7 +129,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex flex-col p-8 bg-white w-[56.3125rem] max-h-[90vh] overflow-y-auto scrollbar-hide rounded-xl"
+        className="flex flex-col p-8 bg-white dark:bg-gray-800 w-[56.3125rem] max-h-[90vh] overflow-y-auto scrollbar-hide rounded-xl"
       >
         <span
           onClick={onClose}

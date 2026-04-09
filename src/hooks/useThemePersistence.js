@@ -1,11 +1,16 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API || "http://localhost:5000";
 
 export default function useThemePersistence() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // On mount: read darkMode from localStorage user object and apply
   useEffect(() => {
@@ -49,5 +54,6 @@ export default function useThemePersistence() {
     } catch {}
   }, [theme]);
 
-  return { theme, setTheme };
+  // Return stable "light" before mount so server and client agree on initial render
+  return { theme: mounted ? theme : "light", setTheme, mounted };
 }

@@ -8,7 +8,7 @@ const PlanCards = ({ plan, onDelete }) => {
   const [isActive, setIsActive] = useState(plan.isActive)
 
   return (
-    <div className='bg-white rounded-2xl p-6 border border-neutral-200 flex flex-col gap-3 shadow-sm'>
+    <div className='bg-white dark:bg-gray-800 rounded-2xl p-6 border border-neutral-200 dark:border-gray-700 flex flex-col gap-3 shadow-sm'>
       {/* Header */}
       <div className='flex justify-between items-start'>
         <div>

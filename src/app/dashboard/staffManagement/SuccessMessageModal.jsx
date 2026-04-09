@@ -5,7 +5,7 @@ const SuccessMessageModal = ({isOpen, onClose, staffName}) => {
     if(!isOpen) return null;
   return (
     <div className='w-full inset-0 fixed z-50 bg-black/50 flex items-center justify-center h-auto'>
-        <div className='bg-white p-4 rounded-2xl shadow-lg w-[32.0625rem] h-fit'>
+        <div className='bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-lg w-[32.0625rem] h-fit'>
             <div className='flex justify-between'>
                 <span></span>
                 <span onClick={onClose} className=' bg-green-100 rounded-md text-green-600 cursor-pointer flex items-center justify-center px-4 py-1 '>

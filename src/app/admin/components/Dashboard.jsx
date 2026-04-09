@@ -5,52 +5,58 @@ import RecentActivitiesTable from './RecentActivitiesTable';
 import useAdminStore from '@/store/useAdminStore';
 import {
   BuildingOfficeIcon,
-  CheckCircleIcon,
-  UserGroupIcon,
-  PlusCircleIcon,
+  CreditCardIcon,
+  XCircleIcon,
+  CurrencyDollarIcon,
 } from "@heroicons/react/24/outline";
 
 const Dashboard = () => {
-  const { overview, loading, fetchOverview } = useAdminStore();
+  const { overview, loading, fetchOverview, fetchNetworkGrowth, fetchActivityLogs } = useAdminStore();
 
   useEffect(() => {
     fetchOverview();
+    fetchNetworkGrowth();
+    fetchActivityLogs();
   }, []);
+
+  const fmt = (n) => (n != null ? `${n > 0 ? '+' : ''}${n}% From last month` : '+0% From last month');
 
   const stats = [
     {
       id: 1,
-      label: "Total Stations",
-      value: loading ? "—" : (overview?.totalStations ?? "—"),
-      change: overview?.totalStationsChange || "+0%",
+      label: "Total Registered Stations",
+      value: overview?.totalRegisteredStations?.toLocaleString() ?? "—",
+      change: fmt(overview?.totalRegisteredStationsGrowth),
       icon: BuildingOfficeIcon,
       iconBg: "bg-blue-50",
       iconColor: "text-blue-600",
     },
     {
       id: 2,
-      label: "Active Stations",
-      value: loading ? "—" : (overview?.activeStations ?? "—"),
-      change: overview?.activeStationsChange || "+0%",
-      icon: CheckCircleIcon,
-      iconBg: "bg-green-50",
-      iconColor: "text-green-600",
-    },
-    {
-      id: 3,
-      label: "Total Staff",
-      value: loading ? "—" : (overview?.totalStaff ?? "—"),
-      change: overview?.totalStaffChange || "+0%",
-      icon: UserGroupIcon,
+      label: "Active Subscriptions",
+      value: overview?.activeSubscriptions?.toLocaleString() ?? "—",
+      change: fmt(overview?.activeSubscriptionsGrowth),
+      icon: CreditCardIcon,
       iconBg: "bg-blue-50",
       iconColor: "text-blue-600",
     },
     {
+      id: 3,
+      label: "Expired Subscriptions",
+      value: overview?.expiredSubscriptions ?? "—",
+      change: fmt(overview?.expiredSubscriptionsGrowth),
+      icon: XCircleIcon,
+      iconBg: "bg-red-50",
+      iconColor: "text-red-500",
+    },
+    {
       id: 4,
-      label: "New This Month",
-      value: loading ? "—" : (overview?.newStationsThisMonth ?? "—"),
-      change: overview?.newStationsChange || "+0%",
-      icon: PlusCircleIcon,
+      label: "Monthly Revenue",
+      value: overview?.monthlyRevenue != null
+        ? `₦${overview.monthlyRevenue.toLocaleString()}`
+        : "—",
+      change: fmt(overview?.monthlyRevenueGrowth),
+      icon: CurrencyDollarIcon,
       iconBg: "bg-blue-50",
       iconColor: "text-blue-600",
     },
@@ -65,7 +71,7 @@ const Dashboard = () => {
         Welcome back, here's your system overview and key metrics
       </p>
 
-      <DashboardCard stats={stats} />
+      <DashboardCard stats={stats} loading={loading} />
 
       <div className='mt-[1.5rem]'>
         <NetworkGrowthChart />

@@ -80,7 +80,7 @@ export default function Contact() {
   ];
 
   return (
-    <div className="bg-[#f8f8f8] px-4 sm:px-6 lg:px-40">
+    <div className="bg-[#f8f8f8] dark:bg-gray-950 px-4 sm:px-6 lg:px-40">
       {/* header */}
       <header className="flex flex-col py-10 items-center justify-center">
         <h1 className="font-semibold mb-2 text-center text-[#454545] text-[34px] lg:text-[54px]">
@@ -102,7 +102,7 @@ export default function Contact() {
       {/* form */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-6 mb-20 rounded-[24px] flex flex-col lg:flex-row items-center w-full gap-4"
+        className="bg-white dark:bg-gray-800 p-6 mb-20 rounded-[24px] flex flex-col lg:flex-row items-center w-full gap-4"
       >
         <div className="bg-[#0080ff] h-auto min-h-[500px] w-full lg:min-h-[600px] relative text-white rounded-[24px] p-6">
           <div>
@@ -227,7 +227,7 @@ export default function Contact() {
               key={item.id}
               className="flex flex-col items-center justify-center"
             >
-              <div className="bg-[#d9d9d9] h-[150px] w-[150px] rounded-full"></div>
+              <div className="bg-gray-300 dark:bg-neutral-500 h-[150px] w-[150px] rounded-full"></div>
               <h3 className="my-4 font-semibold text-xl text-[#737373]">
                 {item.name}
               </h3>

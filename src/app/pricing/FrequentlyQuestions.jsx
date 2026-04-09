@@ -13,7 +13,7 @@ const FrequentlyQuestions = () => {
             <h1 className='mb-[2rem] leading-[110%] text-neutral-800 font-semibold text-center text-[2rem] sm:text-[1.5rem] md:text-[2rem] lg:text-[3rem]'>Frequently Asked Questions</h1>
 
             <div className='flex flex-col mb-[6.625rem] gap-4'>
-                <div className='bg-white p-3 rounded-md h-auto '>
+                <div className='bg-white dark:bg-gray-800 p-3 rounded-md h-auto '>
                     <p  className='flex justify-between '>
                         <span className='lg:text-[1.2rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</span>
                         <button onClick={() => setIsShown(!isShown)}>
@@ -36,7 +36,7 @@ const FrequentlyQuestions = () => {
                     
                 </div>
                 
-                <div className='bg-white p-3 rounded-md h-auto '>
+                <div className='bg-white dark:bg-gray-800 p-3 rounded-md h-auto '>
                     <p  className='flex justify-between '>
                         <span className='lg:text-[1.2rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</span>
                         <button onClick={() => setIsShownTwo(!isShownTwo)}>
@@ -59,7 +59,7 @@ const FrequentlyQuestions = () => {
                     
                 </div>
                 
-                <div className='bg-white p-3 rounded-md h-auto '>
+                <div className='bg-white dark:bg-gray-800 p-3 rounded-md h-auto '>
                     <p  className='flex justify-between '>
                         <span className='lg:text-[1.2rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</span>
                         <button onClick={() => setIsShownThree(!isShownThree)}>
@@ -82,7 +82,7 @@ const FrequentlyQuestions = () => {
                     
                 </div>
                 
-                <div className='bg-white p-3 rounded-md h-auto '>
+                <div className='bg-white dark:bg-gray-800 p-3 rounded-md h-auto '>
                     <p  className='flex justify-between '>
                         <span className='lg:text-[1.2rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</span>
                         <button onClick={() => setIsShownFour(!isShownFour)}>
@@ -105,7 +105,7 @@ const FrequentlyQuestions = () => {
                     
                 </div>
                 
-                <div className='bg-white p-3 rounded-md h-auto '>
+                <div className='bg-white dark:bg-gray-800 p-3 rounded-md h-auto '>
                     <p  className='flex justify-between '>
                         <span className='lg:text-[1.2rem] text-[1rem] font-medium'>What makes Flourish one of the best station management  in the markets?</span>
                         <button onClick={() => setIsShownFive(!isShownFive)}>

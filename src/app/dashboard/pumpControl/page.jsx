@@ -28,8 +28,8 @@ export default function PumpControl() {
   }, [fetchPumpControl, fetchStatus]);
 
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <header className="px-4 lg:px-[40px] mb-0 bg-white shadow-sm h-[170px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
+    <div className="bg-gray-100 dark:bg-gray-950 min-h-screen">
+      <header className="px-4 lg:px-[40px] mb-0 bg-white dark:bg-gray-900 shadow-sm h-[170px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
         <div className="mt-2 lg:mt-0 flex flex-col lg:flex-row gap-0 lg:gap-4 items-center">
           <Link
             href="/dashboard"

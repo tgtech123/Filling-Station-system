@@ -326,7 +326,7 @@ const DailyAttendantSales = () => {
   }, [filteredSales, localReconciledMap, cashInputs, reconcilingIds]);
 
   return (
-    <div className="bg-white w-full rounded-2xl p-5 mt-[1.5rem]">
+    <div className="bg-white dark:bg-gray-800 w-full rounded-2xl p-5 mt-[1.5rem]">
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-[1rem]">
         <div>

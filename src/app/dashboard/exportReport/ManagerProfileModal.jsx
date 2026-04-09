@@ -94,7 +94,7 @@ const ManagerProfileModal = ({ onclose }) => {
   return (
     <div className="fixed px-4 lg:px-0 inset-0 z-50 flex items-center justify-center bg-black/50">
       {/* modal box */}
-      <div className="bg-white border-2 rounded-lg w-full max-w-[400px] lg:max-w-[700px] p-3 max-h-[80vh] scrollbar-hide overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 border-2 rounded-lg w-full max-w-[400px] lg:max-w-[700px] p-3 max-h-[80vh] scrollbar-hide overflow-y-auto">
         <header className="flex justify-between">
           <div>
             <h3 className="text-[24px] font-semibold">Manager Profile</h3>

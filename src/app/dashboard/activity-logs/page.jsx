@@ -7,7 +7,7 @@ import ActivityPage from './ActivityPage';
 const page = () => {
   return (
     <div className='bg-neutral-100 min-h-screen'>
-        <header className="px-4 lg:px-[40px] mb-10 bg-white shadow-sm h-[170px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
+        <header className="px-4 lg:px-[40px] mb-10 bg-white dark:bg-gray-900 shadow-sm h-[170px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
         <div className=" mt-2 lg:mt-0 flex flex-col lg:flex-row gap-0 lg:gap-4 items-center">
           <Link href="/dashboard" className="cursor-pointer border-2 flex  gap-2  lg:border-[#0080ff]  py-2 px-4 rounded-[12px] text-[#0080ff] font-semibold">
             <ArrowLeft />

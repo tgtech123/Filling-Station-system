@@ -16,7 +16,7 @@ const StatCardTwo = ({
   const isNegative = changeColor === "red";
 
   return ( 
-    <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+    <div className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm">
       <div className="flex items-center justify-between">
         <div
           className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg}`}

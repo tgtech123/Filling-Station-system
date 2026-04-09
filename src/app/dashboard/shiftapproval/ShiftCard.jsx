@@ -90,7 +90,7 @@ export default function ShiftCard({ data }) {
   };
 
   return (
-    <div className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition">
+    <div className="border rounded-lg p-4 bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm hover:shadow-md transition">
       {/* Profile Section */}
       <div className="flex items-center gap-3 mb-4">
         {/* Profile Image from Cloudinary */}
@@ -147,7 +147,7 @@ export default function ShiftCard({ data }) {
         </div>
         
         {/* Status Badge */}
-        <div className="flex justify-between items-center pt-2 border-t">
+        <div className="flex justify-between items-center pt-2 border-t dark:border-gray-700">
           <span className="text-gray-600">Status:</span>
           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
             data.status === "Matched" 

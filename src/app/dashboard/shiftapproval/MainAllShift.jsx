@@ -102,7 +102,7 @@ export default function ShiftApprovalPage() {
       {/* Confirmation Dialog */}
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
             <h2 className="text-lg font-bold text-neutral-800 mb-2">Clear Stale Shifts</h2>
             <p className="text-sm text-neutral-600 mb-6">
               This will remove all pending shifts older than 7 days. Continue?
@@ -125,7 +125,7 @@ export default function ShiftApprovalPage() {
         </div>
       )}
 
-      <div className="mx-auto p-4 bg-white rounded-xl">
+      <div className="mx-auto p-4 bg-white dark:bg-gray-800 rounded-xl">
         {activeTab === "pending" ? (
           <>
             {/* Loading State */}

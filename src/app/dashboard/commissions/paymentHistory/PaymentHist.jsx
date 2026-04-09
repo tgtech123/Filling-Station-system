@@ -82,7 +82,7 @@ const PaymentHist = () => {
             )}
 
             {isToggleChev && (
-              <div className="flex flex-col w-56 sm:w-64 bg-white absolute top-12 left-0 shadow-lg rounded-xl border border-neutral-200 z-20">
+              <div className="flex flex-col w-56 sm:w-64 bg-white dark:bg-gray-800 absolute top-12 left-0 shadow-lg rounded-xl border border-neutral-200 dark:border-gray-700 z-20">
                 {/* From & To */}
                 <div className="flex flex-col sm:flex-row justify-between p-2 gap-3">
                   <button className="flex-1 flex justify-between items-center px-4 py-2 border-[1.5px] rounded-lg font-medium">
@@ -260,7 +260,7 @@ export default PaymentHist;
 //             )}
 
 //             {isToggleChev && (
-//               <div className="flex flex-col w-56 sm:w-64 bg-white absolute top-12 left-0 shadow-lg rounded-xl border border-neutral-200 z-20">
+//               <div className="flex flex-col w-56 sm:w-64 bg-white dark:bg-gray-800 absolute top-12 left-0 shadow-lg rounded-xl border border-neutral-200 dark:border-gray-700 z-20">
 //                 {/* From & To */}
 //                 <div className="flex flex-col sm:flex-row justify-between p-2 gap-3">
 //                   <button className="flex-1 flex justify-between items-center px-4 py-2 border-[1.5px] rounded-lg font-medium">

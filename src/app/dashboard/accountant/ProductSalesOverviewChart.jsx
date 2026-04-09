@@ -14,7 +14,7 @@ const ProductSalesOverviewChart = ({ data, loading }) => {
   // Show loading state
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-6 w-full max-w-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 w-full max-w-2xl">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-800">Product Sales Overview</h2>
         </div>
@@ -31,7 +31,7 @@ const ProductSalesOverviewChart = ({ data, loading }) => {
   // Show empty state
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm p-6 w-full max-w-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-6 w-full max-w-2xl">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-800">Product Sales Overview</h2>
         </div>
