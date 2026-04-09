@@ -112,7 +112,7 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
 
   return (
     <div className='flex fixed inset-0 px-4 lg:px-0 z-50 items-center justify-center bg-black/50'>
-      <div className='bg-white lg:w-[43rem] lg:max-h-[90vh] max-h-[85vh] h-auto w-fit p-8 rounded-2xl overflow-y-scroll scrollbar-hide'>
+      <div className='bg-white dark:bg-gray-800 lg:w-[43rem] lg:max-h-[90vh] max-h-[85vh] h-auto w-fit p-8 rounded-2xl overflow-y-scroll scrollbar-hide'>
 
         {/* Close button */}
         <div className='flex justify-end mt-[2rem]'>

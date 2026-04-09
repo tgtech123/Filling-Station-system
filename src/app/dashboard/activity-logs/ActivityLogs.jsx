@@ -19,7 +19,7 @@ const ActivityLogs = () => {
   const summary = activityLogs?.summary ?? {};
 
   return (
-    <div className="bg-white mx-8 rounded-2xl p-5">
+    <div className="bg-white dark:bg-gray-800 mx-8 rounded-2xl p-5">
       <div className="mb-[1.5rem]">
         <h1 className="text-xl text-neutral-800 font-semibold mb-[0.75rem]">
           Activity Logs
@@ -119,7 +119,7 @@ export default ActivityLogs;
 
 //   if (loading && !activityLogs) {
 //     return (
-//       <div className="bg-white mx-8 rounded-2xl p-5">
+//       <div className="bg-white dark:bg-gray-800 mx-8 rounded-2xl p-5">
 //         <div className="animate-pulse">
 //           <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
 //           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -134,14 +134,14 @@ export default ActivityLogs;
 
 //   if (error) {
 //     return (
-//       <div className="bg-white mx-8 rounded-2xl p-5">
+//       <div className="bg-white dark:bg-gray-800 mx-8 rounded-2xl p-5">
 //         <div className="text-red-600">Error loading activity logs: {error}</div>
 //       </div>
 //     );
 //   }
 
 //   return (
-//     <div className="bg-white mx-8 rounded-2xl p-5">
+//     <div className="bg-white dark:bg-gray-800 mx-8 rounded-2xl p-5">
 //       <div className="mb-[1.5rem]">
 //         <h1 className="text-xl text-neutral-800 font-semibold mb-[0.75rem]">
 //           Activity Logs

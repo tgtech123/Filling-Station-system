@@ -27,7 +27,7 @@ const TerminateStaffModal = ({ isOpen, onClose, staffId, deleteStaff, token, sta
 
       {/* the modal box now */}
 
-      <div className="relative bg-white text-neutral-800 shadow-xl rounded-2xl p-6 w-[420px] sm:w-[420px] h-auto max-w-lg">
+      <div className="relative bg-white dark:bg-gray-800 text-neutral-800 shadow-xl rounded-2xl p-6 w-[420px] sm:w-[420px] h-auto max-w-lg">
         <span className="flex justify-between">
           <h1 className="text-xl font-bold">Terminate Staff Member</h1>
           <LiaTimesSolid

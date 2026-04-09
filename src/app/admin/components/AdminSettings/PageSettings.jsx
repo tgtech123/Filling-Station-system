@@ -88,7 +88,7 @@ const PageSettings = () => {
       </div>
 
       {/* Platform Information */}
-      <div className="mt-[1.375rem] bg-white w-full rounded-xl p-4 lg:p-5">
+      <div className="mt-[1.375rem] bg-white dark:bg-gray-800 w-full rounded-xl p-4 lg:p-5">
         <SectionHeader title="Platform Information" subtitle="Manage your platform identity and contact details" />
 
         <div className="flex flex-col gap-2 mt-[1.375rem]">
@@ -122,7 +122,7 @@ const PageSettings = () => {
       </div>
 
       {/* Billing Settings */}
-      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white rounded-xl w-full">
+      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
         <SectionHeader title="Billing Settings" subtitle="Configure billing and payment preferences" />
         <div className="flex flex-col gap-2 mt-[1.375rem]">
           <label className="text-[1rem] font-bold">Default Currency</label>
@@ -135,7 +135,7 @@ const PageSettings = () => {
       </div>
 
       {/* Legal */}
-      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white rounded-xl w-full">
+      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
         <SectionHeader title="Legal" subtitle="Manage legal documents and policies" />
         <div className="flex flex-col gap-2 mt-[1.375rem]">
           <label className="text-[1rem] font-bold">Terms & Conditions</label>
@@ -155,20 +155,20 @@ const PageSettings = () => {
       </div>
 
       {/* Access Control */}
-      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white rounded-xl w-full">
+      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
         <SectionHeader title="Access Control" subtitle="Control who can register on your platform" />
         <ToggleRow label="Plan Status" hint="This plan is active and visible to customers" valueKey="planStatus" />
       </div>
 
       {/* Notification Channels */}
-      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white rounded-xl w-full">
+      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
         <SectionHeader title="Notification Channels" subtitle="Choose how you receive notifications" />
         <ToggleRow label="Email Notifications" hint="Receive important updates via email" valueKey="emailNotifications" />
         <ToggleRow label="In-App Notifications" hint="See alerts while logged into the dashboard" valueKey="inAppNotifications" />
       </div>
 
       {/* Notification Types */}
-      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white rounded-xl w-full">
+      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
         <SectionHeader title="Notification Types" subtitle="Choose which events you want to be notified about" />
         <ToggleRow label="New Station Registration" hint="When a filling station registers on the platform" valueKey="newStationRegistration" />
         <ToggleRow label="Subscription Payment Received" hint="When a subscription payment is successfully received" valueKey="subscriptionPaymentReceived" />
@@ -249,7 +249,7 @@ export default PageSettings;
 //       </div>
 
 //       {/* Platform Information */}
-//       <div className="mt-[1.375rem] bg-white w-full rounded-xl p-4 lg:p-5">
+//       <div className="mt-[1.375rem] bg-white dark:bg-gray-800 w-full rounded-xl p-4 lg:p-5">
 //         <h1 className="font-semibold text-[1rem]">Platform Information</h1>
 //         <p className="text-[1rem] text-neutral-500">
 //           Manage your platform identity and contact details
@@ -293,7 +293,7 @@ export default PageSettings;
 //       </div>
 
 //       {/* Billing Settings */}
-//       <div className="mt-[1.375rem] p-4 lg:p-5 bg-white rounded-xl w-full">
+//       <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
 //         <div className="flex flex-col gap-3">
 //           <span className="text-lg lg:text-[1.125rem] font-semibold leading-[100%]">
 //             Billing Settings
@@ -317,7 +317,7 @@ export default PageSettings;
 //       </div>
 
 //       {/* The Legal settings */}
-//       <div className="mt-[1.375rem] p-4 lg:p-5 bg-white rounded-xl w-full">
+//       <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
 //         <div className="flex flex-col gap-3">
 //           <span className="text-lg lg:text-[1.125rem] font-semibold leading-[100%]">
 //             Legal
@@ -341,7 +341,7 @@ export default PageSettings;
 //       </div>
 
 //       {/* Notification Channels */}
-//         <div className="mt-[1.375rem] p-4 lg:p-5 bg-white rounded-xl w-full">
+//         <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
 //             <div className="flex flex-col gap-3">
 //             <span className="text-lg lg:text-[1.125rem] font-semibold leading-[100%]">
 //                 Notification Channels
@@ -386,7 +386,7 @@ export default PageSettings;
 //         </div>
 
 //         {/* The Notification Types */}
-//         <div className="mt-[1.375rem] p-4 lg:p-5 bg-white rounded-xl w-full">
+//         <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
 //             <div className="flex flex-col gap-3">
 //             <span className="text-lg lg:text-[1.125rem] font-semibold leading-[100%]">
 //                 Notification Types

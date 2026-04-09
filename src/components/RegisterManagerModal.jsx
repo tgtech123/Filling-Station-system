@@ -263,7 +263,7 @@ export default function RegisterManagerModal({ onclose }) {
   return (
     <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50">
       {step === 1 && (
-        <div className="bg-white p-6 rounded-lg shadow-xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-hide">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-hide">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-semibold text-gray-800">
@@ -279,7 +279,7 @@ export default function RegisterManagerModal({ onclose }) {
             </button>
           </div>
 
-          <div className="p-2 mt-6 bg-gray-100 flex font-semibold text-gray-600 justify-between items-center">
+          <div className="p-2 mt-6 bg-gray-100 dark:bg-gray-700 flex font-semibold text-gray-600 dark:text-gray-300 justify-between items-center">
             <h5>STEP 1 OF 4</h5>
             <h5>PERSONAL INFORMATION</h5>
           </div>
@@ -369,7 +369,7 @@ export default function RegisterManagerModal({ onclose }) {
                 value={formData.city}
                 onChange={handleInputChange}
                 placeholder="your city..."
-                className="border-2 border-[#c0bebe] p-2 bg-[#e4e3e3] rounded-[8px] w-full"
+                className="border-2 border-[#c0bebe] p-2 bg-[#e4e3e3] dark:bg-gray-700 dark:border-gray-600 rounded-[8px] w-full"
                 required
               />
             </div>
@@ -381,7 +381,7 @@ export default function RegisterManagerModal({ onclose }) {
                 value={formData.state}
                 onChange={handleInputChange}
                 placeholder="your state..."
-                className="border-2 border-[#c0bebe] p-2 bg-[#e4e3e3] rounded-[8px] w-full"
+                className="border-2 border-[#c0bebe] p-2 bg-[#e4e3e3] dark:bg-gray-700 dark:border-gray-600 rounded-[8px] w-full"
                 required
               />
             </div>
@@ -430,7 +430,7 @@ export default function RegisterManagerModal({ onclose }) {
       )}
 
       {step === 2 && (
-        <div className="bg-white p-6 rounded-lg shadow-xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-hide">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-hide">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-semibold text-gray-800">
@@ -446,7 +446,7 @@ export default function RegisterManagerModal({ onclose }) {
             </button>
           </div>
 
-          <div className="p-2 mt-6 bg-gray-100 flex font-semibold text-gray-600 justify-between items-center">
+          <div className="p-2 mt-6 bg-gray-100 dark:bg-gray-700 flex font-semibold text-gray-600 dark:text-gray-300 justify-between items-center">
             <h5>STEP 2 OF 4</h5>
             <h5>STATION INFORMATION</h5>
           </div>
@@ -531,7 +531,7 @@ export default function RegisterManagerModal({ onclose }) {
                 value={formData.stationCity}
                 onChange={handleInputChange}
                 placeholder="your station city..."
-                className="border-2 border-[#c0bebe] p-2 bg-[#e4e3e3] rounded-[8px] w-full"
+                className="border-2 border-[#c0bebe] p-2 bg-[#e4e3e3] dark:bg-gray-700 dark:border-gray-600 rounded-[8px] w-full"
                 required
               />
             </div>
@@ -543,7 +543,7 @@ export default function RegisterManagerModal({ onclose }) {
                 value={formData.stationCountry}
                 onChange={handleInputChange}
                 placeholder="your station country..."
-                className="border-2 border-[#c0bebe] p-2 bg-[#e4e3e3] rounded-[8px] w-full"
+                className="border-2 border-[#c0bebe] p-2 bg-[#e4e3e3] dark:bg-gray-700 dark:border-gray-600 rounded-[8px] w-full"
                 required
               />
             </div>
@@ -616,7 +616,7 @@ export default function RegisterManagerModal({ onclose }) {
       )}
 
       {step === 3 && (
-        <div className="bg-white p-6 rounded-lg shadow-xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-hide">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-hide">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-semibold text-gray-800">
@@ -632,7 +632,7 @@ export default function RegisterManagerModal({ onclose }) {
             </button>
           </div>
 
-          <div className="p-2 mt-6 bg-gray-100 flex font-semibold text-gray-600 justify-between items-center">
+          <div className="p-2 mt-6 bg-gray-100 dark:bg-gray-700 flex font-semibold text-gray-600 dark:text-gray-300 justify-between items-center">
             <h5>STEP 3 OF 4</h5>
             <h5>BUSINESS INFORMATION</h5>
           </div>
@@ -792,7 +792,7 @@ export default function RegisterManagerModal({ onclose }) {
       )}
 
       {step === 4 && (
-        <div className="bg-white p-6 rounded-lg shadow-xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-hide">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-hide">
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-semibold text-gray-800">
@@ -808,7 +808,7 @@ export default function RegisterManagerModal({ onclose }) {
             </button>
           </div>
 
-          <div className="p-2 mt-6 bg-gray-100 flex font-semibold text-gray-600 justify-between items-center">
+          <div className="p-2 mt-6 bg-gray-100 dark:bg-gray-700 flex font-semibold text-gray-600 dark:text-gray-300 justify-between items-center">
             <h5>STEP 4 OF 4</h5>
             <h5>SECURITY AND NOTIFICATIONS</h5>
           </div>
@@ -969,7 +969,7 @@ export default function RegisterManagerModal({ onclose }) {
       )}
 
       {step === 5 && (
-        <div className="bg-white p-6 rounded-lg shadow-xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-hide">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-3xl w-full mx-auto max-h-[80vh] overflow-y-auto scrollbar-hide">
           <div className="mt-4 mx-auto mb-6 h-20 w-20 rounded-full flex justify-center bg-[#04910c] items-center">
             <Check className="text-white font-semibold" size={30}/>
           </div>

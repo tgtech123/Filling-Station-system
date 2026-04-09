@@ -85,7 +85,7 @@ function NotifModal({ item, type, onClose }) {
   const sv = type === "alert" ? severityStyle(item.severity) : null;
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-start justify-between p-5 border-b border-neutral-100">
           <div className="flex items-center gap-2 flex-wrap">
@@ -296,7 +296,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
 
   if (!userData) {
     return (
-      <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white flex items-center justify-end gap-4">
+      <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white dark:bg-gray-900 flex items-center justify-end gap-4">
         <div className="animate-pulse flex items-center gap-4">
           <div className="h-10 w-10 bg-gray-200 rounded-xl" />
           <div className="h-10 w-10 bg-gray-200 rounded-xl" />
@@ -307,7 +307,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
   }
 
   return (
-    <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white flex items-center justify-end gap-3">
+    <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white dark:bg-gray-900 flex items-center justify-end gap-3">
 
       {/* ── Notification icons (desktop only) ── */}
       <div className="hidden lg:flex items-center gap-2">
@@ -316,7 +316,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
         <div ref={msgRef} className="relative">
           <button
             onClick={() => { setMsgOpen((v) => !v); setAlertOpen(false); }}
-            className="cursor-pointer relative bg-[#f6f6f6] hover:bg-gray-100 transition-colors w-11 h-11 rounded-xl flex items-center justify-center"
+            className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-11 h-11 rounded-xl flex items-center justify-center"
             aria-label="Messages"
           >
             <Bell size={20} className={messageUnreadCount > 0 ? "text-[#1a71f6]" : "text-gray-600"} />
@@ -324,7 +324,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
           </button>
 
           {msgOpen && (
-            <div className="absolute right-0 top-[calc(100%+8px)] w-80 bg-white rounded-2xl shadow-xl border border-neutral-200 overflow-hidden z-50">
+            <div className="absolute right-0 top-[calc(100%+8px)] w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
               <MessagesDropdown
                 messages={messages}
                 onMarkAll={() => { markAllMessagesRead(); }}
@@ -338,7 +338,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
         <div ref={alertRef} className="relative">
           <button
             onClick={() => { setAlertOpen((v) => !v); setMsgOpen(false); }}
-            className="cursor-pointer relative bg-[#f6f6f6] hover:bg-gray-100 transition-colors w-11 h-11 rounded-xl flex items-center justify-center"
+            className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-11 h-11 rounded-xl flex items-center justify-center"
             aria-label="Alerts"
           >
             <Mail size={20} className={alertUnreadCount > 0 ? "text-amber-500" : "text-gray-600"} />
@@ -346,7 +346,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
           </button>
 
           {alertOpen && (
-            <div className="absolute right-0 top-[calc(100%+8px)] w-80 bg-white rounded-2xl shadow-xl border border-neutral-200 overflow-hidden z-50">
+            <div className="absolute right-0 top-[calc(100%+8px)] w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
               <AlertsDropdown
                 alerts={alerts}
                 onMarkAll={() => { markAllAlertsRead(); }}

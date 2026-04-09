@@ -99,7 +99,7 @@ const OverviewCard = ({ duration = 'thismonth' }) => {
   if (loading.overview && !overview) {
     return (
       <div>
-        <div className='bg-white w-full rounded-2xl p-6'>
+        <div className='bg-white dark:bg-gray-800 w-full rounded-2xl p-6'>
           <div>
             <h1 className='text-neutral-800 font-semibold text-xl'>Overview</h1>
             <p className='text-neutral-800 text-md'>Overview of staff performance and commissions</p>
@@ -116,7 +116,7 @@ const OverviewCard = ({ duration = 'thismonth' }) => {
           </div>
         </div>
         
-        <div className='bg-white rounded-2xl mt-4 p-6'>
+        <div className='bg-white dark:bg-gray-800 rounded-2xl mt-4 p-6'>
           <OverviewChart/>
         </div>
       </div>
@@ -127,7 +127,7 @@ const OverviewCard = ({ duration = 'thismonth' }) => {
   if (errors.overview) {
     return (
       <div>
-        <div className='bg-white w-full rounded-2xl p-6'>
+        <div className='bg-white dark:bg-gray-800 w-full rounded-2xl p-6'>
           <div>
             <h1 className='text-neutral-800 font-semibold text-xl'>Overview</h1>
             <p className='text-neutral-800 text-md'>Overview of staff performance and commissions</p>
@@ -144,7 +144,7 @@ const OverviewCard = ({ duration = 'thismonth' }) => {
           </div>
         </div>
         
-        <div className='bg-white rounded-2xl mt-4 p-6'>
+        <div className='bg-white dark:bg-gray-800 rounded-2xl mt-4 p-6'>
           <OverviewChart/>
         </div>
       </div>
@@ -233,7 +233,7 @@ export default OverviewCard;
 //   return (
 
 //     <div>
-//         <div className='bg-white w-full rounded-2xl p-6'>
+//         <div className='bg-white dark:bg-gray-800 w-full rounded-2xl p-6'>
 //               <div >
 //                 <h1 className='text-neutral-800 font-semibold text-xl'>Overview</h1>
 //                 <p className='text-neutral-800 text-md'>Overview of staff performance and commissions</p>
@@ -258,7 +258,7 @@ export default OverviewCard;
 //               </div>
 //         </div>
                   
-//         <div className='bg-white rounded-2xl mt-4 p-6'>
+//         <div className='bg-white dark:bg-gray-800 rounded-2xl mt-4 p-6'>
 //           <OverviewChart/>
 //         </div>
 //     </div>

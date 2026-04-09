@@ -72,7 +72,7 @@ export default function Filter({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/50">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-2xl shadow-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-xl font-semibold text-gray-900">{title}</h2>

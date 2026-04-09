@@ -134,7 +134,7 @@ const Stations = ({ onViewStation }) => {
 
       <StatGrid data={statCards} />
 
-      <div className="bg-white p-6 rounded-2xl mt-[1.5rem]">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl mt-[1.5rem]">
         <SearchBarButtons
           searchValue={search}
           onSearchChange={handleSearchChange}

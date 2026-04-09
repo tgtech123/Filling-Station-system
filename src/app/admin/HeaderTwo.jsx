@@ -6,6 +6,7 @@ import { useImageStore } from "@/store/useImageStore";
 import useAdminProfileStore from "@/store/useAdminProfileStore";
 import useThemePersistence from "@/hooks/useThemePersistence";
 import { Sun, Moon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const HeaderTwo = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,6 +16,13 @@ const HeaderTwo = () => {
   const { adminName, adminImage, initProfile } = useAdminProfileStore();
   const getUserImage = useImageStore((s) => s.getUserImage);
   const { theme, setTheme } = useThemePersistence();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/");
+  };
 
   const profileImage = mounted
     ? adminImage || getUserImage(USER_ID) || "/sammi.jpeg"
@@ -35,13 +43,15 @@ const HeaderTwo = () => {
           className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           aria-label="Toggle dark mode"
         >
-          {theme === "dark" ? (
+          {!mounted ? (
+            <span className="w-[18px] h-[18px] block" />
+          ) : theme === "dark" ? (
             <Sun size={18} className="text-yellow-400" />
           ) : (
             <Moon size={18} className="text-gray-600" />
           )}
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {theme === "dark" ? "Light" : "Dark"}
+            {mounted ? (theme === "dark" ? "Light" : "Dark") : "Dark"}
           </span>
         </button>
 
@@ -96,7 +106,7 @@ const HeaderTwo = () => {
         <div className="h-8 w-px bg-gray-200 dark:bg-gray-700" />
 
         {/* Logout */}
-        <div className="flex items-center justify-center cursor-pointer">
+        <div onClick={handleLogout} className="flex items-center justify-center cursor-pointer">
           <div className="border-2 border-red-600 rounded-2xl p-3 flex items-center gap-5">
             <h1 className="text-red-600 text-[12px] font-bold leading-[140%]">
               Logout

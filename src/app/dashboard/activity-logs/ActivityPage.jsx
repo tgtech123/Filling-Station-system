@@ -109,7 +109,7 @@ const ActivityPage = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 mt-[1.5rem] max-w-full mx-8 mb-[1rem]">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 mt-[1.5rem] max-w-full mx-8 mb-[1rem]">
       <div className="flex flex-wrap justify-between">
         <div className="flex-wrap gap-3">
           <h1 className="text-[1.375rem] font-semibold">Recent Transactions</h1>

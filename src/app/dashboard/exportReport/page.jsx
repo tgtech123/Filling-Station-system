@@ -17,8 +17,8 @@ export default function ExportReport() {
   const clearError    = useManagerReportsStore((state) => state.clearError);
 
   return (
-    <div className="bg-gray-100 min-h-screen">
-      <header className="px-4 lg:px-[40px] mb-10 bg-white shadow-sm h-[150px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
+    <div className="bg-gray-100 dark:bg-gray-950 min-h-screen">
+      <header className="px-4 lg:px-[40px] mb-10 bg-white dark:bg-gray-900 shadow-sm h-[150px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
         <div className="mt-2 lg:mt-0 flex flex-col lg:flex-row gap-1 lg:gap-4 items-center">
           <Link
             href="/dashboard"
@@ -54,7 +54,7 @@ export default function ExportReport() {
       {/* ── Global export loading overlay  */}
       {exportLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-8 flex flex-col items-center gap-4 shadow-xl">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 flex flex-col items-center gap-4 shadow-xl">
             <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-lg font-semibold text-gray-800">Generating Report…</p>
             <p className="text-sm text-gray-500">Please wait while we process your data</p>

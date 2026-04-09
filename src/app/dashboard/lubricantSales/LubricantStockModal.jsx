@@ -401,7 +401,7 @@ export default function LubricantStockModal({ onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-[#f6f6f6] p-6 rounded-lg shadow-xl max-w-7xl w-full mx-auto max-h-[90vh] overflow-y-auto scrollbar-hide">
+      <div className="bg-[#f6f6f6] dark:bg-gray-900 p-6 rounded-lg shadow-xl max-w-7xl w-full mx-auto max-h-[90vh] overflow-y-auto scrollbar-hide">
         {/* Header */}
         <section className="flex flex-col lg:flex-row gap-8 relative items-center">
           <div className="w-3/8">
@@ -433,7 +433,7 @@ export default function LubricantStockModal({ onClose }) {
 
             {/* Search dropdown */}
             {showSearchDropdown && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto z-50 shadow-lg">
+              <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md mt-1 max-h-60 overflow-y-auto z-50 shadow-lg">
                 {searchResults.map((lubricant) => (
                   <div
                     key={lubricant._id}
@@ -456,7 +456,7 @@ export default function LubricantStockModal({ onClose }) {
         </section>
 
         {/* Main */}
-        <section className="mt-10 bg-white p-3 rounded-lg">
+        <section className="mt-10 bg-white dark:bg-gray-800 p-3 rounded-lg">
           <div className="flex mb-8 items-center gap-1">
             <Calendar className="text-purple-600" />
             <p className="text-purple-600 text-sm font-semibold">
@@ -504,7 +504,7 @@ export default function LubricantStockModal({ onClose }) {
           </div>
         </section>
 
-        <section className="bg-white mt-10 p-4 rounded-md">
+        <section className="bg-white dark:bg-gray-800 mt-10 p-4 rounded-md">
           {message && (
             <div
               className={`p-3 rounded-lg text-sm font-semibold mb-4 ${
@@ -533,7 +533,7 @@ export default function LubricantStockModal({ onClose }) {
                 </tr>
               </thead>
 
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {rows.map((row, index) => (
                   <React.Fragment key={index}>
                     <tr  className="text-sm">

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Dot } from 'recharts';
-import { TrendingUp } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import Image from 'next/image';
+import useAdminStore from '@/store/useAdminStore';
 
-// Sample data for the chart
-const monthlyData = [
+// Fallback static data used when store has no data yet
+const fallbackMonthly = [
   { month: 'Jan', stations: 1050, subscriptions: 750 },
   { month: 'Feb', stations: 1400, subscriptions: 650 },
   { month: 'Mar', stations: 1050, subscriptions: 680 },
@@ -19,7 +19,12 @@ const monthlyData = [
 
 const NetworkGrowthChart = () => {
   const [activeView, setActiveView] = useState('monthly');
+  const { networkGrowth } = useAdminStore();
   
+  const chartData = activeView === 'yearly'
+    ? (networkGrowth.yearly.length > 0 ? networkGrowth.yearly : fallbackMonthly)
+    : (networkGrowth.monthly.length > 0 ? networkGrowth.monthly : fallbackMonthly);
+
   // Custom dot component for highlighted points
   const CustomDot = (props) => {
     const { cx, cy, stroke, dataKey } = props;
@@ -60,7 +65,7 @@ const NetworkGrowthChart = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 border-gray-200">
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border-gray-200 dark:border-gray-700">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-start gap-3">
@@ -74,13 +79,13 @@ const NetworkGrowthChart = () => {
         </div>
         
         {/* Toggle buttons */}
-        <div className="flex gap-2 bg-[#EDF6FF] p-1 rounded-2xl">
+        <div className="flex gap-2 bg-[#EDF6FF] dark:bg-gray-700 p-1 rounded-2xl">
           <button
             onClick={() => setActiveView('monthly')}
             className={`px-4 py-2 rounded-3xl text-sm font-medium transition-colors ${
               activeView === 'monthly'
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
             }`}
           >
             Monthly
@@ -90,7 +95,7 @@ const NetworkGrowthChart = () => {
             className={`px-4 py-2 rounded-3xl text-sm font-medium transition-colors ${
               activeView === 'yearly'
                 ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
             }`}
           >
             Yearly
@@ -101,8 +106,8 @@ const NetworkGrowthChart = () => {
       {/* Chart */}
       <div className="relative">
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart 
-            data={monthlyData}
+          <LineChart
+            data={chartData}
             margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
           >
             <CartesianGrid strokeDasharray="0" stroke="#f0f0f0" vertical={false} />

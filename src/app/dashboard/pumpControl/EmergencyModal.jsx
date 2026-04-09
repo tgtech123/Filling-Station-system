@@ -20,7 +20,7 @@ export default function EmergencyModal({ onclose }) {
 
   return (
     <div className="fixed px-4 lg:px-0 inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white border-2 rounded-lg w-full max-w-[350px] lg:max-w-[450px] p-3 lg:p-4 max-h-[80vh] scrollbar-hide overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 dark:border-gray-700 border-2 rounded-lg w-full max-w-[350px] lg:max-w-[450px] p-3 lg:p-4 max-h-[80vh] scrollbar-hide overflow-y-auto">
         <div className="mt-2 mb-4 flex justify-end" onClick={onclose}>
           <X className="cursor-pointer" />
         </div>

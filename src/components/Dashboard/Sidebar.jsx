@@ -51,9 +51,14 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
   const [userData, setUserData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [mounted, setMounted] = useState(false);
 
   const { getUserImage } = useImageStore();
   const { theme, setTheme } = useThemePersistence();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Get user data from localStorage
   useEffect(() => {
@@ -435,7 +440,7 @@ const visibleLinks = getVisibleLinks(userRole);
 
   if (isLoading) {
     return (
-      <div className=" z-30 md:w-[280px] h-[100vh] top-0 left-0 bg-white shadow-md flex items-center justify-center">
+      <div className=" z-30 md:w-[280px] h-[100vh] top-0 left-0 bg-white dark:bg-gray-900 shadow-md flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -499,7 +504,7 @@ const visibleLinks = getVisibleLinks(userRole);
                         className={`flex cursor-pointer items-center justify-between gap-3 ${
                           isActive(pathname, link)
                             ? "bg-[#ff9d29] text-white"
-                            : "bg-transparent text-[#888] hover:bg-gray-50 hover:text-[#666]"
+                            : "bg-transparent text-[#888] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-[#666] dark:hover:text-gray-300"
                         } rounded-[12px] py-3 px-4 transition-all duration-200`}
                       >
                         <div className="flex items-center gap-3">
@@ -521,7 +526,7 @@ const visibleLinks = getVisibleLinks(userRole);
                               className={`flex items-center gap-3 ${
                                 pathname === subLink.link
                                   ? "bg-[#ff9d29] text-white"
-                                  : "bg-transparent text-[#888] hover:bg-gray-50 hover:text-[#666]"
+                                  : "bg-transparent text-[#888] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-[#666] dark:hover:text-gray-300"
                               } rounded-[12px] py-2 px-4 transition-all duration-200 text-sm`}
                             >
                               <span>{subLink.icon}</span>
@@ -537,7 +542,7 @@ const visibleLinks = getVisibleLinks(userRole);
                       className={`flex items-center gap-3 ${
                         pathname === link.link
                           ? "bg-[#ff9d29] text-white"
-                          : "bg-transparent text-[#888] hover:bg-gray-50 hover:text-[#666]"
+                          : "bg-transparent text-[#888] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-[#666] dark:hover:text-gray-300"
                       } rounded-[12px] py-3 px-4 transition-all duration-200`}
                     >
                       <span>{link.icon}</span>
@@ -552,7 +557,7 @@ const visibleLinks = getVisibleLinks(userRole);
           {/* Tools */}
           <p className="mb-4 text-xs font-semibold">TOOLS</p>
           <div className="links text-sm space-y-1">
-            <div className="flex items-center cursor-pointer gap-3 rounded-[12px] px-4 py-3 hover:bg-gray-50 transition-all duration-200">
+            <div className="flex items-center cursor-pointer gap-3 rounded-[12px] px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200">
               <CircleQuestionMark size={18} />
               <span>Help & Support</span>
             </div>
@@ -561,7 +566,9 @@ const visibleLinks = getVisibleLinks(userRole);
                 <Moon size={18} />
                 <span>Dark Mode</span>
               </div>
-              {theme === "dark" ? (
+              {!mounted ? (
+                <span className="w-[30px] h-[30px] block" />
+              ) : theme === "dark" ? (
                 <PiToggleRightFill
                   size={30}
                   className="text-blue-500 cursor-pointer"

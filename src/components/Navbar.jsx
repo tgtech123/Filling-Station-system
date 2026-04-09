@@ -4,14 +4,17 @@ import Image from "next/image";
 import img from "../assets/station-logo.png";
 import Link from "next/link";
 import { ArrowRight, AlignJustify, X, Sun, Moon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import RegisterManagerModal from "./RegisterManagerModal";
 import useThemePersistence from "@/hooks/useThemePersistence";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useThemePersistence();
+
+  useEffect(() => { setMounted(true); }, []);
 
   function openModal() {
     setIsModalOpen(true);
@@ -45,13 +48,13 @@ export default function Navbar() {
           className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 dark:border-gray-700 transition-colors"
           aria-label="Toggle dark mode"
         >
-          {theme === "dark" ? (
+          {mounted && (theme === "dark" ? (
             <Sun size={18} className="text-yellow-500" />
           ) : (
             <Moon size={18} className="text-gray-600" />
-          )}
+          ))}
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {theme === "dark" ? "Light" : "Dark"}
+            {mounted ? (theme === "dark" ? "Light" : "Dark") : "Dark"}
           </span>
         </button>
 

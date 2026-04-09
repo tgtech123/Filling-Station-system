@@ -54,7 +54,7 @@ const AuditReconciledSales = () => {
   // Show loading state
   if (loading.reconciledSales && reconciledSales.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-4 w-full mx-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 w-full mx-auto">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">Audit Reconciled Sales</h2>
@@ -76,7 +76,7 @@ const AuditReconciledSales = () => {
   // Show error state
   if (errors.reconciledSales) {
     return (
-      <div className="bg-white rounded-2xl p-4 w-full mx-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 w-full mx-auto">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">Audit Reconciled Sales</h2>
@@ -101,7 +101,7 @@ const AuditReconciledSales = () => {
   // Show empty state
   if (reconciledSales.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-4 w-full mx-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 w-full mx-auto">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">Audit Reconciled Sales</h2>

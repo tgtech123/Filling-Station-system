@@ -104,7 +104,7 @@ const StationDetail = ({ stationId, onBack }) => {
       </button>
 
       {/* TOP SECTION */}
-      <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm border border-gray-100">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-start gap-4">
             <span className="bg-blue-500 text-white text-[1.5rem] flex items-center justify-center font-semibold rounded-full h-16 w-16 shrink-0">
@@ -176,7 +176,7 @@ const StationDetail = ({ stationId, onBack }) => {
             className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
               activeTab === tab
                 ? "bg-[#FF9D29] text-white"
-                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
             }`}
           >
             {tab}
@@ -188,7 +188,7 @@ const StationDetail = ({ stationId, onBack }) => {
       {activeTab === "Overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Tank levels */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
             <h2 className="text-[1rem] font-semibold mb-4">Tank Levels</h2>
             {stationTanks.length === 0 ? (
               <p className="text-gray-400 text-sm">No tank data available.</p>
@@ -215,7 +215,7 @@ const StationDetail = ({ stationId, onBack }) => {
           </div>
 
           {/* Recent activity */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
             <h2 className="text-[1rem] font-semibold mb-4">Recent Activity</h2>
             {stationActivity.length === 0 ? (
               <p className="text-gray-400 text-sm">No recent activity.</p>
@@ -240,7 +240,7 @@ const StationDetail = ({ stationId, onBack }) => {
 
       {/* ── STAFF TAB ──────────────────────────────────────── */}
       {activeTab === "Staff" && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-[1rem] font-semibold">Staff Members</h2>
             <input
@@ -256,16 +256,16 @@ const StationDetail = ({ stationId, onBack }) => {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     {["Name", "Role", "Email", "Phone", "Status", "Joined"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-sm font-semibold text-gray-600">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {filteredStaff.map((s, i) => (
-                    <tr key={s._id || i} className="hover:bg-gray-50 border-t border-gray-100">
+                    <tr key={s._id || i} className="hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700">
                       <td className="px-4 py-3 text-sm font-medium text-gray-800">
                         {s.firstName} {s.lastName}
                       </td>
@@ -295,7 +295,7 @@ const StationDetail = ({ stationId, onBack }) => {
 
       {/* ── SHIFTS TAB ─────────────────────────────────────── */}
       {activeTab === "Shifts" && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-[1rem] font-semibold">Shifts</h2>
             <select
@@ -314,10 +314,10 @@ const StationDetail = ({ stationId, onBack }) => {
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
                     {["Date", "Attendant", "Pump", "Product", "Litres", "Amount", "Status"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-sm font-semibold text-gray-600">{h}</th>
+                      <th key={h} className="px-4 py-3 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -327,7 +327,7 @@ const StationDetail = ({ stationId, onBack }) => {
                     return (
                       <tr
                         key={s._id || i}
-                        className={`hover:bg-gray-50 border-t border-gray-100 ${hasDisc ? "bg-amber-50" : ""}`}
+                        className={`hover:bg-gray-50 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700 ${hasDisc ? "bg-amber-50 dark:bg-amber-900/20" : ""}`}
                       >
                         <td className="px-4 py-3 text-sm text-gray-700">
                           {s.date ? new Date(s.date).toLocaleDateString() : "—"}
@@ -364,7 +364,7 @@ const StationDetail = ({ stationId, onBack }) => {
 
       {/* ── TANKS TAB ──────────────────────────────────────── */}
       {activeTab === "Tanks" && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
           <h2 className="text-[1rem] font-semibold mb-4">Fuel Tanks</h2>
           {stationTanks.length === 0 ? (
             <p className="text-gray-400 text-sm text-center py-8">No tank data available.</p>
@@ -376,7 +376,7 @@ const StationDetail = ({ stationId, onBack }) => {
                   : 0;
                 const barColor = pct > 50 ? "bg-green-500" : pct > 20 ? "bg-yellow-500" : "bg-red-500";
                 return (
-                  <div key={tank._id || i} className="border border-gray-100 rounded-xl p-4">
+                  <div key={tank._id || i} className="border border-gray-100 dark:border-gray-700 rounded-xl p-4 dark:bg-gray-750">
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="font-semibold text-gray-800">{tank.fuelType || tank.title || `Tank ${i + 1}`}</h3>
                       <span className="text-sm font-semibold text-gray-500">{pct}%</span>
@@ -397,7 +397,7 @@ const StationDetail = ({ stationId, onBack }) => {
 
       {/* ── ACTIVITY TAB ───────────────────────────────────── */}
       {activeTab === "Activity" && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
           <h2 className="text-[1rem] font-semibold mb-4">Activity Feed</h2>
           {stationActivity.length === 0 ? (
             <p className="text-gray-400 text-sm text-center py-8">No activity recorded.</p>
@@ -433,7 +433,7 @@ const StationDetail = ({ stationId, onBack }) => {
 
       {/* ── ERRORS TAB ─────────────────────────────────────── */}
       {activeTab === "Errors" && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
           <h2 className="text-[1rem] font-semibold mb-4">Critical Errors</h2>
           {stationErrors.length === 0 ? (
             <div className="text-center py-12">

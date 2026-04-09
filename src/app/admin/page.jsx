@@ -64,7 +64,7 @@ const Page = () => {
   };
 
   return (
-    <div className='h-screen bg-neutral-100 flex'>
+    <div className='h-screen bg-neutral-100 dark:bg-gray-950 flex'>
       <SidebarTwo activeItem={activePage} setActiveItem={setActivePage} />
       <div className='flex-1 flex flex-col'>
         <HeaderTwo />

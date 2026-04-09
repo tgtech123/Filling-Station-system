@@ -24,7 +24,7 @@ export default function ScheduledAttendants() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-2xl shadow-sm">
+    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm">
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>

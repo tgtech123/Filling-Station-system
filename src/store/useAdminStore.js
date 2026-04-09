@@ -4,6 +4,7 @@ import axios from "axios";
 const useAdminStore = create((set, get) => ({
   // State
   overview: null,
+  networkGrowth: { monthly: [], yearly: [] },
   stations: [],
   selectedStation: null,
   stationDetail: null,
@@ -34,6 +35,28 @@ const useAdminStore = create((set, get) => ({
         error.response?.data?.message || error.message || "Failed to fetch overview";
       set({ loading: false, error: errorMsg });
       console.error("❌ fetchOverview:", errorMsg);
+      return null;
+    }
+  },
+
+  // ── Network Growth ─────────────────────────────────────────
+  fetchNetworkGrowth: async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API}/api/admin/network-growth`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = response.data.data || {};
+      set({
+        networkGrowth: {
+          monthly: data.monthly || [],
+          yearly: data.yearly || [],
+        },
+      });
+      return data;
+    } catch (error) {
+      console.error("❌ fetchNetworkGrowth:", error.message);
       return null;
     }
   },
@@ -207,7 +230,7 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Update Station Status ──────────────────────────────────
+  // ── Update Station Status 
   updateStationStatus: async (id, isActive) => {
     try {
       const token = localStorage.getItem("token");
@@ -241,7 +264,7 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Delete Station ─────────────────────────────────────────
+  // ── Delete Station 
   deleteStation: async (id) => {
     try {
       const token = localStorage.getItem("token");

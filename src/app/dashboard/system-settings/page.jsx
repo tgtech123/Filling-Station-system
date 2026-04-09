@@ -72,7 +72,7 @@ function isLoginActivity(item) {
 
 function SectionCard({ children }) {
   return (
-    <div className="bg-white rounded-2xl border border-neutral-200 w-full p-10 shadow-sm overflow-hidden mb-5">
+    <div className="bg-white dark:bg-gray-800 dark:border-gray-700 rounded-2xl border border-neutral-200 w-full p-10 shadow-sm overflow-hidden mb-5">
       {children}
     </div>
   );
@@ -140,7 +140,7 @@ function TwoFAEnableModal({ onConfirm, onClose }) {
   const [code, setCode] = useState("");
   return (
     <ModalBackdrop onClose={onClose}>
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <div className="flex justify-between items-center mb-5">
           <div className="flex items-center gap-2">
             <Shield size={18} className="text-[#1a71f6]" />
@@ -182,7 +182,7 @@ function TwoFAEnableModal({ onConfirm, onClose }) {
 function TwoFADisableModal({ onConfirm, onClose }) {
   return (
     <ModalBackdrop onClose={onClose}>
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-base font-semibold">Disable 2FA?</h3>
           <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
@@ -207,8 +207,8 @@ const MAX_FEATURES = ["Unlimited staff accounts", "Everything in Pro", "AI-power
 function UpgradeModal({ onClose }) {
   return (
     <ModalBackdrop onClose={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-neutral-200">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
+        <div className="flex justify-between items-center px-6 py-4 border-b border-neutral-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
             <Zap size={18} className="text-[#1a71f6]" />
             <h3 className="text-base font-semibold">Compare Plans</h3>
@@ -262,7 +262,7 @@ function UpgradeModal({ onClose }) {
 function CancelPlanModal({ onConfirm, onClose }) {
   return (
     <ModalBackdrop onClose={onClose}>
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-base font-semibold">Cancel Subscription?</h3>
           <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
@@ -462,7 +462,7 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-2">
               {sessions.map((session) => (
-                <div key={session.id} className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3">
+                <div key={session.id} className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3">
                   <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
                     {session.device.toLowerCase().includes("iphone") || session.device.toLowerCase().includes("android")
                       ? <Smartphone size={15} className="text-[#1a71f6]" />
@@ -488,7 +488,7 @@ export default function SettingsPage() {
             <p className="text-sm font-semibold text-gray-800 mb-1">Login History</p>
             <p className="text-xs text-neutral-400 mb-3">Last 5 login attempts</p>
             {loginHistory.length === 0 ? (
-              <div className="bg-gray-50 rounded-xl px-4 py-5 text-center">
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-5 text-center">
                 <p className="text-sm text-neutral-400">No login activity found.</p>
               </div>
             ) : (
@@ -496,7 +496,7 @@ export default function SettingsPage() {
                 {loginHistory.map((item) => {
                   const failed = item.type === "alert" || item.title?.toLowerCase().includes("fail");
                   return (
-                    <div key={item.id} className="flex items-center justify-between gap-3 bg-gray-50 rounded-xl px-4 py-3">
+                    <div key={item.id} className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3">
                       <div className="flex items-center gap-3 min-w-0">
                         {failed
                           ? <XCircle size={16} className="text-red-500 shrink-0" />
@@ -587,7 +587,7 @@ export default function SettingsPage() {
             <p className="text-sm font-semibold text-gray-800 mb-3">Billing History</p>
             <div className="rounded-xl border border-neutral-200 overflow-hidden">
               {/* Table header */}
-              <div className="grid grid-cols-4 bg-gray-50 px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+              <div className="grid grid-cols-4 bg-gray-50 dark:bg-gray-700 px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
                 <span>Date</span>
                 <span>Amount</span>
                 <span>Status</span>
