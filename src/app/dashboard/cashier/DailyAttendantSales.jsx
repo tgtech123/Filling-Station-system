@@ -286,7 +286,7 @@ const DailyAttendantSales = () => {
             value={cashInputs[sale._id] || ""}
             onChange={(e) => handleCashInputChange(sale._id, e.target.value)}
             placeholder={fmtMoney(sale.amount)}
-            className="border border-neutral-500 rounded-md w-[9rem] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="border border-neutral-500 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md w-[9rem] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             disabled={isReconciling}
           />
           <button
@@ -331,8 +331,8 @@ const DailyAttendantSales = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-[1rem]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-[1.125rem] font-medium">
-              Daily Attendant Slaes Summary 
+            <h1 className="text-[1.125rem] font-medium text-gray-900 dark:text-white">
+              Daily Attendant Slaes Summary
             </h1>
             <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded-full">
               {pendingCount} pending
@@ -344,7 +344,7 @@ const DailyAttendantSales = () => {
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Enter cash received and click Reconcile to confirm
           </p>
         </div>
@@ -352,7 +352,7 @@ const DailyAttendantSales = () => {
           <select
             value={filters.status}
             onChange={(e) => handleFilterChange(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Status</option>
             <option value="Pending">Pending</option>
@@ -365,7 +365,7 @@ const DailyAttendantSales = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search..."
-              className="px-4 py-2 pr-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+              className="px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
             />
             <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
           </div>
@@ -387,8 +387,8 @@ const DailyAttendantSales = () => {
       {/* Loading — only on first load when there is no data yet */}
       {isLoading && dailySales.length === 0 && (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-          <span className="ml-3 text-gray-600">Loading sales data...</span>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100" />
+          <span className="ml-3 text-gray-600 dark:text-gray-400">Loading sales data...</span>
         </div>
       )}
 
@@ -449,13 +449,13 @@ const DailyAttendantSales = () => {
       {!isLoading && !error && filteredData.length > 0 && (
         <div className="overflow-x-auto -mx-5 px-5">
           <div className="min-w-max">
-            <table className="min-w-full text-sm text-left border border-neutral-50 text-gray-700">
-              <thead className="text-sm font-semibold text-gray-600">
+            <table className="min-w-full text-sm text-left border border-neutral-50 dark:border-gray-700 text-gray-700 dark:text-gray-200">
+              <thead className="text-sm font-semibold text-gray-600 dark:text-gray-300">
                 <tr>
                   {columns.map((col) => (
                     <th
                       key={col}
-                      className="px-4 py-3 bg-neutral-100 whitespace-nowrap"
+                      className="px-4 py-3 bg-neutral-100 dark:bg-gray-700 whitespace-nowrap"
                     >
                       {col}
                     </th>
@@ -468,7 +468,7 @@ const DailyAttendantSales = () => {
                   return (
                     <tr
                       key={sale?._id || rowIndex}
-                      className="hover:bg-gray-50"
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
                     >
                       {row.map((cell, cellIndex) => (
                         <td
@@ -489,19 +489,19 @@ const DailyAttendantSales = () => {
 
       {/* Summary Footer */}
       {!isLoading && !error && visibleSales.length > 0 && (
-        <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex flex-wrap gap-6 text-sm">
-            <span className="text-gray-600">
+            <span className="text-gray-600 dark:text-gray-400">
               Total:{" "}
               <span className="font-semibold">{visibleSales.length}</span>
             </span>
-            <span className="text-gray-600">
+            <span className="text-gray-600 dark:text-gray-400">
               Pending:{" "}
               <span className="font-semibold text-yellow-600">
                 {pendingCount}
               </span>
             </span>
-            <span className="text-gray-600">
+            <span className="text-gray-600 dark:text-gray-400">
               Reconciled:{" "}
               <span className="font-semibold text-green-600">
                 {visibleSales.length - pendingCount}

@@ -14,8 +14,8 @@ export default function ShiftApprovalHeader({
   return (
     <div className="flex items-center justify-between gap-4 mb-3 bg-white dark:bg-gray-800 rounded-xl p-4">
       <div className="flex flex-col gap-3">
-        <h1 className="text-2xl font-bold text-neutral-800">Shift Approval</h1>
-        <p className="text-neutral-800 text-xl">Approve submitted shifts and export report</p>
+        <h1 className="text-2xl font-bold text-neutral-800 dark:text-white">Shift Approval</h1>
+        <p className="text-neutral-800 dark:text-gray-300 text-xl">Approve submitted shifts and export report</p>
 
         <div className="border dark:border-gray-700 w-fit p-2 flex gap-2 rounded-xl">
           <button

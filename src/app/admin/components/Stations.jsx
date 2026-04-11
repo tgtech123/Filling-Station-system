@@ -7,12 +7,7 @@ import DataTable from "./DataTable";
 import { stationsTableData } from "./stationsTableData";
 import * as XLSX from "xlsx";
 import useAdminStore from "@/store/useAdminStore";
-import {
-  BuildingStorefrontIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  PauseCircleIcon,
-} from "@heroicons/react/24/outline";
+import { Gauge, CreditCard, XCircle, PauseCircle } from "lucide-react";
 
 const TABLE_HEADERS = stationsTableData.headers;
 
@@ -20,10 +15,11 @@ const Stations = ({ onViewStation }) => {
   const [search, setSearch] = useState("");
   const debounceRef = useRef(null);
 
-  const { stations, loading, fetchStations, overview } = useAdminStore();
+  const { stations, loading, fetchStations, stationsStats, fetchStationsStats } = useAdminStore();
 
   useEffect(() => {
     fetchStations();
+    fetchStationsStats();
   }, []);
 
   // Debounced search — 500ms
@@ -57,52 +53,73 @@ const Stations = ({ onViewStation }) => {
     }));
   }, [stations]);
 
-  // Stats cards from overview (fall back to hardcoded)
+  // Build growth display: "+5.2%", "0%", "-3.1%"
+  const fmtGrowth = (g) => {
+    if (g == null || g === 0) return { text: "0%", color: "gray" };
+    return g > 0
+      ? { text: `+${g}%`, color: "green" }
+      : { text: `${g}%`, color: "red" };
+  };
+
+  // Stats cards from stationsStats (fall back to hardcoded)
   const statCards = useMemo(() => {
-    if (!overview) return stationData;
+    if (!stationsStats) return stationData;
+    const s = stationsStats;
+    const g1 = fmtGrowth(s.totalRegisteredStationsGrowth);
+    const g2 = fmtGrowth(s.activeSubscriptionsGrowth);
+    const g3 = fmtGrowth(s.expiredSubscriptionsGrowth);
+    const g4 = fmtGrowth(s.suspendedStationsGrowth);
     return [
       {
         id: 1,
         label: "Total Registered Stations",
-        value: overview.totalStations ?? "—",
-        change: overview.totalStationsChange || "+0%",
-        icon: BuildingStorefrontIcon,
+        value: s.totalRegisteredStations?.toLocaleString() ?? "—",
+        change: g1.text,
+        changeLabel: "From last month",
+        showChange: true,
+        icon: Gauge,
         iconBg: "bg-blue-50",
         iconColor: "text-blue-600",
-        changeColor: "green",
+        changeColor: g1.color,
       },
       {
         id: 2,
-        label: "Active Stations",
-        value: overview.activeStations ?? "—",
-        change: overview.activeStationsChange || "+0%",
-        icon: CheckCircleIcon,
+        label: "Active Subscriptions",
+        value: s.activeSubscriptions?.toLocaleString() ?? "—",
+        change: g2.text,
+        changeLabel: "From last month",
+        showChange: true,
+        icon: CreditCard,
         iconBg: "bg-blue-50",
         iconColor: "text-blue-600",
-        changeColor: "green",
+        changeColor: g2.color,
       },
       {
         id: 3,
-        label: "Suspended Stations",
-        value: overview.suspendedStations ?? "—",
-        change: overview.suspendedStationsChange || "+0%",
-        icon: PauseCircleIcon,
-        iconBg: "bg-yellow-50",
-        iconColor: "text-yellow-600",
-        changeColor: "green",
+        label: "Expired Subscriptions",
+        value: s.expiredSubscriptions?.toLocaleString() ?? "—",
+        change: g3.text,
+        changeLabel: "From last month",
+        showChange: true,
+        icon: XCircle,
+        iconBg: "bg-red-50",
+        iconColor: "text-red-500",
+        changeColor: g3.color,
       },
       {
         id: 4,
-        label: "Total Staff",
-        value: overview.totalStaff ?? "—",
-        change: overview.totalStaffChange || "+0%",
-        icon: XCircleIcon,
-        iconBg: "bg-red-50",
-        iconColor: "text-red-600",
-        changeColor: "green",
+        label: "Suspended Stations",
+        value: s.suspendedStations?.toLocaleString() ?? "—",
+        change: g4.text,
+        changeLabel: "From last month",
+        showChange: true,
+        icon: PauseCircle,
+        iconBg: "bg-amber-50",
+        iconColor: "text-amber-600",
+        changeColor: g4.color,
       },
     ];
-  }, [overview]);
+  }, [stationsStats]);
 
   const handleExport = () => {
     const exportRows = rows.length > 0 ? rows : [];

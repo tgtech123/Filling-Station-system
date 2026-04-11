@@ -1,9 +1,11 @@
 import { create } from "zustand";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 const useAdminStore = create((set, get) => ({
   // State
   overview: null,
+  stationsStats: null,
   networkGrowth: { monthly: [], yearly: [] },
   stations: [],
   selectedStation: null,
@@ -18,6 +20,18 @@ const useAdminStore = create((set, get) => ({
   loading: false,
   error: null,
   searchTerm: "",
+
+  // ── Payments
+  paymentStats: null,
+  payments: [],
+  paymentsPagination: {
+    currentPage: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+    totalPages: 0,
+  },
+  paymentsLoading: false,
+  paymentsError: null,
 
   // ── Overview ──────────────────────────────────────────────
   fetchOverview: async () => {
@@ -36,6 +50,50 @@ const useAdminStore = create((set, get) => ({
       set({ loading: false, error: errorMsg });
       console.error("❌ fetchOverview:", errorMsg);
       return null;
+    }
+  },
+
+  // ── Stations Stats ─────────────────────────────────────────
+  fetchStationsStats: async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API}/api/admin/overview`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const d = response.data.data || {};
+      set({
+        stationsStats: {
+          totalRegisteredStations: d.totalRegisteredStations ?? null,
+          totalRegisteredStationsGrowth: d.totalRegisteredStationsGrowth ?? 0,
+          activeSubscriptions: d.activeSubscriptions ?? null,
+          activeSubscriptionsGrowth: d.activeSubscriptionsGrowth ?? 0,
+          expiredSubscriptions: d.expiredSubscriptions ?? null,
+          expiredSubscriptionsGrowth: d.expiredSubscriptionsGrowth ?? 0,
+          suspendedStations: d.suspendedStations ?? null,
+          suspendedStationsGrowth: d.suspendedStationsGrowth ?? 0,
+        },
+      });
+    } catch (error) {
+      console.error("❌ fetchStationsStats:", error.message);
+    }
+  },
+
+  // ── Reset Owner Password ───────────────────────────────────
+  resetStaffPassword: async (stationId, ownerId) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${stationId}/reset-owner-password`,
+        { ownerId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return { success: true };
+    } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || error.message || "Failed to reset password";
+      console.error("❌ resetStaffPassword:", errorMsg);
+      return { success: false, error: errorMsg };
     }
   },
 
@@ -264,7 +322,36 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Delete Station 
+  // ── Restore Station ────────────────────────────────────────
+  restoreStation: async (stationId) => {
+    try {
+      set({ loading: true });
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${stationId}/restore`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      set((state) => ({
+        stations: state.stations.map((s) =>
+          s.id === stationId || s._id === stationId
+            ? { ...s, isDeleted: false, isActive: true, accessMode: "full" }
+            : s
+        ),
+        loading: false,
+      }));
+      toast.success("Station restored successfully");
+      return { success: true };
+    } catch (err) {
+      set({ loading: false });
+      const errorMsg =
+        err.response?.data?.message || err.message || "Failed to restore station";
+      console.error("❌ restoreStation:", errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  },
+
+  // ── Delete Station
   deleteStation: async (id) => {
     try {
       const token = localStorage.getItem("token");
@@ -281,6 +368,47 @@ const useAdminStore = create((set, get) => ({
         error.response?.data?.message || error.message || "Failed to delete station";
       console.error("❌ deleteStation:", errorMsg);
       return { success: false, error: errorMsg };
+    }
+  },
+
+  // ── Payment Stats ──────────────────────────────────────────
+  fetchPaymentStats: async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API}/api/admin/payments/stats`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      set({ paymentStats: response.data.data });
+    } catch (err) {
+      console.error("fetchPaymentStats:", err);
+    }
+  },
+
+  // ── Payments List ──────────────────────────────────────────
+  fetchPayments: async (params = {}) => {
+    try {
+      set({ paymentsLoading: true });
+      const token = localStorage.getItem("token");
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.append("page", params.page);
+      if (params.limit) queryParams.append("limit", params.limit);
+      if (params.status && params.status !== "all")
+        queryParams.append("status", params.status);
+      if (params.search) queryParams.append("search", params.search);
+      if (params.duration && params.duration !== "Duration")
+        queryParams.append("duration", params.duration);
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API}/api/admin/payments?${queryParams.toString()}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      set({
+        payments: response.data.data.rows || [],
+        paymentsPagination: response.data.data.pagination,
+        paymentsLoading: false,
+      });
+    } catch (err) {
+      set({ paymentsLoading: false, paymentsError: err.message });
     }
   },
 

@@ -28,7 +28,7 @@ const Pagination = ({ currentPage, totalItems, itemsPerPage = 10, onPageChange }
   return (
     <div className="flex items-center gap-3 mt-4">
       {/* Showing text */}
-      <span className="text-sm text-gray-600 font-medium whitespace-nowrap">
+      <span className="text-sm text-gray-600 dark:text-gray-400 font-medium whitespace-nowrap">
         Showing {startItem} – {endItem} of {totalItems.toLocaleString()}
       </span>
 
@@ -36,7 +36,7 @@ const Pagination = ({ currentPage, totalItems, itemsPerPage = 10, onPageChange }
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="flex items-center justify-center w-9 h-9 rounded-xl bg-gray-200 text-gray-500 hover:bg-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        className="flex items-center justify-center w-9 h-9 rounded-xl bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition"
       >
         <ChevronLeft size={18} />
       </button>
@@ -44,7 +44,7 @@ const Pagination = ({ currentPage, totalItems, itemsPerPage = 10, onPageChange }
       {/* Page Numbers */}
       {getPageNumbers().map((page, index) =>
         page === "..." ? (
-          <span key={`ellipsis-${index}`} className="text-gray-400 text-sm px-1">
+          <span key={`ellipsis-${index}`} className="text-gray-400 dark:text-gray-500 text-sm px-1">
             ...
           </span>
         ) : (
@@ -55,7 +55,7 @@ const Pagination = ({ currentPage, totalItems, itemsPerPage = 10, onPageChange }
               ${
                 currentPage === page
                   ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-100"
+                  : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
           >
             {page}
@@ -67,7 +67,7 @@ const Pagination = ({ currentPage, totalItems, itemsPerPage = 10, onPageChange }
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="flex items-center justify-center w-9 h-9 rounded-xl bg-white border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition"
+        className="flex items-center justify-center w-9 h-9 rounded-xl bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition"
       >
         <ChevronRight size={18} />
       </button>
