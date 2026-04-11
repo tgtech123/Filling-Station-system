@@ -1,7 +1,26 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, MapPin, Phone, Mail, Users, Activity, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Phone,
+  Mail,
+  Users,
+  Activity,
+  AlertCircle,
+  User,
+  Calendar,
+  RefreshCw,
+  LayoutGrid,
+  Pause,
+  Play,
+  Trash2,
+  RotateCcw,
+} from "lucide-react";
+import { BsToggleOn, BsToggleOff } from "react-icons/bs";
+import { TbTargetArrow } from "react-icons/tb";
 import useAdminStore from "@/store/useAdminStore";
+import toast from "react-hot-toast";
 
 const TABS = ["Overview", "Staff", "Shifts", "Tanks", "Activity", "Errors"];
 
@@ -13,16 +32,41 @@ const roleBadgeColor = {
   accountant: "bg-yellow-100 text-yellow-700",
 };
 
-const statusStyles = {
-  Active: "text-green-700 bg-green-100",
-  Suspended: "text-red-700 bg-red-100",
-  Maintenance: "text-orange-700 bg-orange-100",
+// ── helpers ────────────────────────────────────────────────────
+const planBadge = (plan = "") => {
+  const map = {
+    free: "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300",
+    pro: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    prime: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+    max: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    enterprise: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  };
+  return map[plan.toLowerCase()] ?? "bg-gray-100 text-gray-600";
 };
 
+const fmtDate = (raw) => {
+  if (!raw) return "—";
+  try {
+    return new Date(raw).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  } catch {
+    return raw;
+  }
+};
+
+// ──────────────────────────────────────────────────────────────
 const StationDetail = ({ stationId, onBack }) => {
   const [activeTab, setActiveTab] = useState("Overview");
   const [staffSearch, setStaffSearch] = useState("");
   const [shiftStatusFilter, setShiftStatusFilter] = useState("");
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [isSuspending, setIsSuspending] = useState(false);
+  const [isRestoringDeleted, setIsRestoringDeleted] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     stationDetail,
@@ -40,6 +84,9 @@ const StationDetail = ({ stationId, onBack }) => {
     fetchStationActivity,
     fetchStationErrors,
     updateStationStatus,
+    resetStaffPassword,
+    restoreStation,
+    deleteStation,
   } = useAdminStore();
 
   useEffect(() => {
@@ -60,15 +107,67 @@ const StationDetail = ({ stationId, onBack }) => {
     }
   }, [activeTab]);
 
+  // ── read from nested backend shape ──────────────────────────
+  const station = stationDetail?.station || {};
+  const owner = stationDetail?.owner || {};
+  const subscription = stationDetail?.subscription || {};
+
+  const isActive = station.isActive !== false;
+  const isDeleted = station.isDeleted === true;
+  const accessMode = station.accessMode || "full";
+  const gracePeriodDaysLeft = station.gracePeriodDaysLeft ?? null;
+  const stationName = station.name || "Station";
+  const initials = station.initials || stationName.slice(0, 2).toUpperCase();
+  const resolvedId = station.id || stationId;
+
+  // ── action handlers ──────────────────────────────────────────
   const handleToggleStatus = async () => {
-    if (!stationDetail) return;
-    const isCurrentlyActive = stationDetail.status === "Active" || stationDetail.isActive;
-    await updateStationStatus(stationId, !isCurrentlyActive);
-    fetchStationDetail(stationId);
+    setIsSuspending(true);
+    try {
+      const res = await updateStationStatus(resolvedId, !isActive);
+      if (res.success) {
+        toast.success(isActive ? "Station suspended" : "Station restored");
+        fetchStationDetail(stationId);
+      } else {
+        toast.error(res.error || "Failed to update station");
+      }
+    } catch {
+      toast.error("An error occurred");
+    } finally {
+      setIsSuspending(false);
+    }
   };
 
-  const isActive = stationDetail?.status === "Active" || stationDetail?.isActive;
-  const stationName = stationDetail?.name || stationDetail?.stationName || "Station";
+  const handleResetPassword = async () => {
+    setIsResetting(true);
+    try {
+      const res = await resetStaffPassword(resolvedId, owner.id);
+      if (res.success) toast.success("Password reset email sent to owner");
+      else toast.error(res.error || "Failed to reset password");
+    } catch {
+      toast.error("An error occurred");
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete "${stationName}"? This cannot be undone.`)) return;
+    setIsDeleting(true);
+    try {
+      const res = await deleteStation(resolvedId);
+      if (res.success) {
+        toast.success(`"${stationName}" deleted successfully`);
+        onBack();
+      } else {
+        toast.error(res.error || "Failed to delete station");
+      }
+    } catch {
+      toast.error("An error occurred while deleting");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const filteredStaff = stationStaff.filter((s) => {
     if (!staffSearch) return true;
@@ -103,67 +202,244 @@ const StationDetail = ({ stationId, onBack }) => {
         Back to Stations
       </button>
 
-      {/* TOP SECTION */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 shadow-sm border border-gray-100 dark:border-gray-700">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <span className="bg-blue-500 text-white text-[1.5rem] flex items-center justify-center font-semibold rounded-full h-16 w-16 shrink-0">
-              {stationName.slice(0, 2).toUpperCase()}
-            </span>
+      {/* ══ SECTION 1 — STATION INFO CARD ══════════════════════ */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+
+        {/* Header row */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center gap-3">
+            {/* Initials avatar */}
+            <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+              {initials}
+            </div>
             <div>
-              <h1 className="text-[1.75rem] font-semibold leading-tight">{stationName}</h1>
-              <div className="flex flex-wrap gap-4 mt-2 text-sm text-gray-500">
-                {stationDetail?.location && (
-                  <span className="flex items-center gap-1">
-                    <MapPin size={14} /> {stationDetail.location}
-                  </span>
-                )}
-                {stationDetail?.phone && (
-                  <span className="flex items-center gap-1">
-                    <Phone size={14} /> {stationDetail.phone}
-                  </span>
-                )}
-                {stationDetail?.email && (
-                  <span className="flex items-center gap-1">
-                    <Mail size={14} /> {stationDetail.email}
-                  </span>
-                )}
+              <h2 className="font-bold text-lg text-gray-900 dark:text-white">
+                {stationName}
+              </h2>
+              <div className="flex items-center gap-1 text-gray-500 text-sm">
+                <MapPin size={12} />
+                {[station.city, station.country].filter(Boolean).join(", ") || "—"}
               </div>
-              <span
-                className={`inline-flex mt-2 px-3 py-1 rounded-full text-xs font-bold ${
-                  statusStyles[stationDetail?.status] || "bg-gray-100 text-gray-600"
-                }`}
-              >
-                {stationDetail?.status || "—"}
-              </span>
             </div>
           </div>
 
-          <button
-            onClick={handleToggleStatus}
-            className={`px-5 py-2 rounded-lg font-semibold text-sm transition-colors ${
-              isActive
-                ? "border border-[#F57C00] text-[#F57C00] hover:bg-[#FEF2E5]"
-                : "border border-[#1A71F6] text-[#1A71F6] hover:bg-blue-50"
-            }`}
-          >
-            {isActive ? "Suspend Station" : "Activate Station"}
-          </button>
+          {/* Maintenance mode toggle */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500">Maintenance mode</span>
+            <button
+              onClick={() => setMaintenanceMode(!maintenanceMode)}
+              className="cursor-pointer"
+            >
+              {maintenanceMode ? (
+                <BsToggleOn className="text-blue-700" size={28} />
+              ) : (
+                <BsToggleOff size={28} className="text-neutral-400" />
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-100">
-          {[
-            { label: "Staff Count", value: stationStats?.staffCount ?? stationStaff.length },
-            { label: "Total Shifts", value: stationStats?.totalShifts ?? "—" },
-            { label: "Total Revenue", value: stationStats?.totalRevenue ? `₦${Number(stationStats.totalRevenue).toLocaleString()}` : "—" },
-            { label: "Last Activity", value: stationStats?.lastActivity ? new Date(stationStats.lastActivity).toLocaleDateString() : "—" },
-          ].map(({ label, value }) => (
-            <div key={label}>
-              <p className="text-xs text-gray-400 font-medium">{label}</p>
-              <p className="text-lg font-semibold text-gray-800 mt-0.5">{value}</p>
+        {/* Grace period warning */}
+        {isDeleted && accessMode === "read-only" && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 mb-4 flex items-center gap-2">
+            <AlertCircle size={16} className="text-amber-500 shrink-0" />
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              Station deleted —{gracePeriodDaysLeft !== null ? ` ${gracePeriodDaysLeft} days` : ""} remaining before permanent block. Restore to reactivate.
+            </p>
+          </div>
+        )}
+
+        {/* Status badge */}
+        <span
+          className={`px-3 py-1 rounded-full text-xs font-semibold mb-3 inline-block ${
+            isActive
+              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+          }`}
+        >
+          {isActive ? "Active" : "Suspended"}
+        </span>
+
+        {/* Email and Phone */}
+        <div className="flex items-center gap-6 mb-2 text-sm text-gray-600 dark:text-gray-400">
+          <span className="flex items-center gap-1">
+            <Mail size={14} />
+            {station.email || "—"}
+          </span>
+          <span className="flex items-center gap-1">
+            <Phone size={14} />
+            {station.phone || "—"}
+          </span>
+        </div>
+
+        {/* Registered date */}
+        <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 mb-6">
+          <Calendar size={14} />
+          Registered {fmtDate(station.registeredAt)}
+        </div>
+
+        <hr className="border-gray-200 dark:border-gray-700 mb-6" />
+
+        {/* Owner Information */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-[40px] h-[40px] rounded-sm bg-[#fbf2e7] dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+              <User size={20} className="text-[#FF8C05]" />
             </div>
-          ))}
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">
+              Owner Information
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">First Name</p>
+              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                {owner.firstName || "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Last Name</p>
+              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                {owner.lastName || "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Email Address</p>
+              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                {owner.email || "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Phone</p>
+              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                {owner.phone || "—"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-gray-200 dark:border-gray-700 mb-6" />
+
+        {/* Subscription Information */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-[40px] h-[40px] rounded-sm bg-[#fbf2e7] dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0">
+              <TbTargetArrow size={20} className="text-[#FF8C05]" />
+            </div>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">
+              Subscription Information
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Current Plan</p>
+              <span
+                className={`px-2 py-1 rounded-md text-xs font-semibold ${planBadge(
+                  subscription.currentPlan || ""
+                )}`}
+              >
+                {subscription.currentPlan || "—"}
+              </span>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
+              <span
+                className={`px-2 py-1 rounded-md text-xs font-semibold ${
+                  subscription.status?.toLowerCase() === "active"
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                    : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                }`}
+              >
+                {subscription.status || "—"}
+              </span>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Start Date</p>
+              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                {fmtDate(subscription.startDate)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Expiry Date</p>
+              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
+                {fmtDate(subscription.expiryDate)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <hr className="border-gray-200 dark:border-gray-700 mb-6" />
+
+        {/* Action Section */}
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-[40px] h-[40px] rounded-sm bg-[#FFF1F3] dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+              <LayoutGrid size={18} className="text-red-500" />
+            </div>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">Action</h3>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            Manage this station's account and subscription
+          </p>
+          <div className="flex flex-col gap-3">
+            {/* Restore Station (grace period) / Suspend / Restore Access */}
+            {isDeleted ? (
+              <button
+                onClick={async () => {
+                  setIsRestoringDeleted(true);
+                  try {
+                    const res = await restoreStation(resolvedId);
+                    if (res.success) fetchStationDetail(stationId);
+                    else toast.error(res.error || "Failed to restore station");
+                  } catch {
+                    toast.error("Failed to restore station");
+                  } finally {
+                    setIsRestoringDeleted(false);
+                  }
+                }}
+                disabled={isRestoringDeleted}
+                className="w-full py-3 rounded-lg border border-green-500 text-green-600 text-sm font-medium flex items-center justify-center gap-2 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors disabled:opacity-50"
+              >
+                <RotateCcw size={16} />
+                {isRestoringDeleted ? "Restoring..." : "Restore Station"}
+              </button>
+            ) : (
+              <button
+                onClick={handleToggleStatus}
+                disabled={isSuspending}
+                className={`w-full py-3 rounded-lg border text-sm font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50 ${
+                  isActive
+                    ? "border-amber-400 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+                    : "border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                }`}
+              >
+                {isActive ? <Pause size={16} /> : <Play size={16} />}
+                {isSuspending
+                  ? isActive ? "Suspending..." : "Restoring..."
+                  : isActive ? "Temporary Suspend Access" : "Restore Access"}
+              </button>
+            )}
+
+            {/* Reset password */}
+            <button
+              onClick={handleResetPassword}
+              disabled={isResetting}
+              className="w-full py-3 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors disabled:opacity-50"
+            >
+              <RefreshCw size={16} />
+              {isResetting ? "Sending..." : "Reset Owner Password"}
+            </button>
+
+            {/* Delete */}
+            <button
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="w-full py-3 rounded-lg border border-red-400 text-red-500 text-sm font-medium flex items-center justify-center gap-2 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+            >
+              <Trash2 size={16} />
+              {isDeleting ? "Deleting..." : "Delete Station"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -184,7 +460,7 @@ const StationDetail = ({ stationId, onBack }) => {
         ))}
       </div>
 
-      {/* ── OVERVIEW TAB ──────────────────────────────────── */}
+      {/* ══ SECTION 2 & 3 — OVERVIEW TAB (tanks + activity) ══ */}
       {activeTab === "Overview" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Tank levels */}
@@ -376,7 +652,7 @@ const StationDetail = ({ stationId, onBack }) => {
                   : 0;
                 const barColor = pct > 50 ? "bg-green-500" : pct > 20 ? "bg-yellow-500" : "bg-red-500";
                 return (
-                  <div key={tank._id || i} className="border border-gray-100 dark:border-gray-700 rounded-xl p-4 dark:bg-gray-750">
+                  <div key={tank._id || i} className="border border-gray-100 dark:border-gray-700 rounded-xl p-4">
                     <div className="flex justify-between items-center mb-3">
                       <h3 className="font-semibold text-gray-800">{tank.fuelType || tank.title || `Tank ${i + 1}`}</h3>
                       <span className="text-sm font-semibold text-gray-500">{pct}%</span>

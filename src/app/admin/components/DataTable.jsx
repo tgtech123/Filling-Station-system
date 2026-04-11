@@ -223,7 +223,7 @@ const handleCloseActivateModal = () => {
       </table>
 
       <ActionModal isOpen={isModalOpen} onClose={handleCloseModal} data={selectedRow} />
-      <ActivateActionModal isOpen={isActivateModalOpen} onClose={handleCloseActivateModal} />
+      <ActivateActionModal isOpen={isActivateModalOpen} onClose={handleCloseActivateModal} data={selectedRowForActivate} />
       <ResetModal isOpen={isResetOpen} onClose={() => setIsResetOpen(false)} />
     </div>
   );

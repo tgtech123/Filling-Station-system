@@ -1,48 +1,38 @@
 "use client"
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { X, Eye, EyeOff, ChevronDown } from 'lucide-react'
 import { BsToggleOn, BsToggleOff } from "react-icons/bs"
 import Multiselect from 'multiselect-react-dropdown'
-import { removeItem } from 'framer-motion'
+import toast from 'react-hot-toast'
 import PlanSuccessModal from './PlanSuccessModal'
+import usePlansStore from '@/store/usePlansStore'
 
-const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
+const PlansCreationModal = ({ isOpen, onClose, onSuccess, isEdit = false, initialData = null }) => {
   const [options] = useState([
-            {id: 1, name:"Basic Reporting"},
-            {id: 2, name:"Full Reporting"},
-            {id: 3, name:"Community Support"},
-            {id: 4, name:"Limited Reporting"},
-            {id: 5, name:"24/7 Reporting"},
-            {id: 6, name:"Advance Reporting"},
-            {id: 7, name:"Priority Support"},
-            {id: 8, name:"Email Support"},
-            {id: 9, name:"5 Admin Users"},
-            {id: 10, name:"1 Admin User"},
-            {id: 11, name:"2 Admin Users"},
-            {id: 12, name:"Unlimited Admin Users"},
+    { id: 1,  name: "Basic Reporting" },
+    { id: 2,  name: "Full Reporting" },
+    { id: 3,  name: "Community Support" },
+    { id: 4,  name: "Limited Reporting" },
+    { id: 5,  name: "24/7 Reporting" },
+    { id: 6,  name: "Advance Reporting" },
+    { id: 7,  name: "Priority Support" },
+    { id: 8,  name: "Email Support" },
+    { id: 9,  name: "5 Admin Users" },
+    { id: 10, name: "1 Admin User" },
+    { id: 11, name: "2 Admin Users" },
+    { id: 12, name: "Unlimited Admin Users" },
   ])
-  const[selectedValue, setSelectedValue] =useState([])
+  const [selectedValue, setSelectedValue] = useState([])
   const [isSuccessOpen, setIsSuccesOpen] = useState(false)
-  
-  
-  const onSelect = (selectedList, selectedItem) =>{
-    setSelectedValue(selectedList)
-    console.log("Added:", selectedItem)
-  }
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const onRemove =(selectedItem, removeItem) =>{
-    setSelectedValue(selectedItem)
-    console.log("Removed:", removeItem)
-  }
+  const { createPlan, updatePlan, fetchAdminPlans } = usePlansStore()
+
   // Form fields
   const [planName, setPlanName] = useState("")
   const [userLimit, setUserLimit] = useState("")
   const [price, setPrice] = useState("")
   const [billingCycle, setBillingCycle] = useState("")
-
-  // Features tag input
-  const [myArray, setMyArray] = useState([])
-  const [planInput, setPlanInput] = useState("")
 
   // Password fields
   const [tempPassword, setTempPassword] = useState("")
@@ -54,17 +44,44 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
   const [isToggleOn, setIsToggleOn] = useState(false)
   const [isMovedOn, setIsMovedOn] = useState(false)
 
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (isEdit && initialData) {
+      setPlanName(initialData.name || initialData.planName || "")
+      setPrice(
+        initialData.monthlyPrice != null
+          ? String(initialData.monthlyPrice)
+          : initialData.price != null
+          ? String(initialData.price)
+          : ""
+      )
+      setBillingCycle(
+        Array.isArray(initialData.billingCycles) && initialData.billingCycles[0]
+          ? initialData.billingCycles[0].charAt(0).toUpperCase() + initialData.billingCycles[0].slice(1)
+          : initialData.billingCycle || ""
+      )
+      setUserLimit(initialData.userLimit || "")
+      setIsToggleOn(initialData.isActive !== false)
+      setIsMovedOn(initialData.freeTrial || false)
+      // Match string features back to options objects
+      const matched = (initialData.features || []).map(
+        (f) => options.find((o) => o.name === f) || { id: f, name: f }
+      )
+      setSelectedValue(matched)
+    }
+  }, [isEdit, initialData])
+
+  const onSelect = (selectedList) => setSelectedValue(selectedList)
+  const onRemove = (selectedList) => setSelectedValue(selectedList)
+
   if (!isOpen) return null
 
-  
   // ── Reset form ──
   const resetForm = () => {
     setPlanName("")
     setUserLimit("")
     setPrice("")
     setBillingCycle("")
-    setMyArray([])
-    setPlanInput("")
     setTempPassword("")
     setConfirmPassword("")
     setIsEyeOpen(false)
@@ -75,34 +92,58 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
   }
 
   // ── Submit handler ──
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!planName || !price) {
       alert("Please fill in at least Plan Name and Price.")
       return
     }
-    setIsSuccesOpen(true)
-  }
-
-    const handleSuccessClose = () => {
-      setIsSuccesOpen(false)
-
-      onSubmit({
-        id: Date.now(),
-        planName,
+    setIsSubmitting(true)
+    try {
+      const planData = {
+        name: planName,
+        price: Number(price),
+        monthlyPrice: billingCycle === "Yearly" ? 0 : Number(price),
+        yearlyPrice: billingCycle === "Yearly" ? Number(price) : 0,
+        billingCycles: [(billingCycle || "Monthly").toLowerCase()],
         userLimit,
-        features: selectedValue.map(items => items.name),
-        price,
-        billingCycle: billingCycle || "Monthly",
+        features: selectedValue.map((item) => item.name),
         isActive: isToggleOn,
         freeTrial: isMovedOn,
-      })
+      }
 
-      resetForm()
-      onClose()
+      if (isEdit) {
+        const planId = initialData?._id || initialData?.id
+        const result = await updatePlan(planId, planData)
+        if (result.success) {
+          await fetchAdminPlans()
+          toast.success("Plan updated!")
+          resetForm()
+          if (onSuccess) onSuccess()
+          else onClose()
+        } else {
+          alert(result.error || "Failed to update plan. Please try again.")
+        }
+      } else {
+        const result = await createPlan(planData)
+        if (result.success) {
+          setIsSuccesOpen(true)
+        } else {
+          alert(result.error || "Failed to create plan. Please try again.")
+        }
+      }
+    } catch {
+      alert(`An error occurred while ${isEdit ? "updating" : "creating"} the plan.`)
+    } finally {
+      setIsSubmitting(false)
     }
+  }
 
-
-  
+  const handleSuccessClose = () => {
+    setIsSuccesOpen(false)
+    resetForm()
+    if (onSuccess) onSuccess()
+    else onClose()
+  }
 
   // ── Cancel handler ──
   const handleCancel = () => {
@@ -118,19 +159,21 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
         <div className='flex justify-end mt-[2rem]'>
           <span
             onClick={handleCancel}
-            className='p-2 border-[1px] cursor-pointer hover:bg-neutral-100 border-neutral-500 rounded-full'
+            className='p-2 border-[1px] cursor-pointer hover:bg-neutral-100 dark:hover:bg-gray-700 border-neutral-500 dark:border-gray-500 rounded-full'
           >
-            <X size={24} />
+            <X size={24} className='dark:text-gray-200' />
           </span>
         </div>
 
         {/* Title */}
         <div className='mb-[2rem]'>
-          <h1 className='text-[1.5rem] font-semibold leading-[100%] text-neutral-900 mb-[0.8rem]'>
-            Create New Subscription Plan
+          <h1 className='text-[1.5rem] font-semibold leading-[100%] text-neutral-900 dark:text-white mb-[0.8rem]'>
+            {isEdit ? "Edit Subscription Plan" : "Create New Subscription Plan"}
           </h1>
-          <p className='text-[1.025rem] leading-[100%] text-neutral-800'>
-            Define a new subscription tier for filling station customers
+          <p className='text-[1.025rem] leading-[100%] text-neutral-800 dark:text-gray-300'>
+            {isEdit
+              ? "Update the subscription tier details below"
+              : "Define a new subscription tier for filling station customers"}
           </p>
         </div>
 
@@ -138,11 +181,11 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
           {/* Row 1: Plan Name + User Limit */}
           <div className='grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-2 mb-[1rem]'>
             <div className='flex flex-col gap-1'>
-              <label className='text-[0.9rem] font-bold leading-[150%]'>Plan Name</label>
+              <label className='text-[0.9rem] font-bold leading-[150%] dark:text-gray-200'>Plan Name</label>
               <select
                 value={planName}
                 onChange={(e) => setPlanName(e.target.value)}
-                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-2 outline-none hover:border-blue-600'
+                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 dark:border-gray-600 bg-white dark:bg-gray-700 text-neutral-900 dark:text-gray-100 rounded-lg pl-2 outline-none hover:border-blue-600'
               >
                 <option value="">Choose Plan</option>
                 <option value="Professionals">Professionals</option>
@@ -156,11 +199,11 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
             </div>
 
             <div className='flex flex-col gap-1'>
-              <label className='text-[0.9rem] font-bold leading-[150%]'>User Limit</label>
+              <label className='text-[0.9rem] font-bold leading-[150%] dark:text-gray-200'>User Limit</label>
               <select
                 value={userLimit}
                 onChange={(e) => setUserLimit(e.target.value)}
-                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-2 outline-none hover:border-blue-600'
+                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 dark:border-gray-600 bg-white dark:bg-gray-700 text-neutral-900 dark:text-gray-100 rounded-lg pl-2 outline-none hover:border-blue-600'
               >
                 <option value="">Choose Limit</option>
                 <option value="2 Users">2 Users</option>
@@ -175,57 +218,50 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
           </div>
 
           {/* Plan Features */}
-          <label className='text-[0.9rem] font-bold leading-[150%]'>Plan Features</label>
-          <div className='w-full h-auto mt-[0.5rem] flex flex-col gap-2 rounded-lg border-[2px] border-neutral-500 outline-none p-3'>
-
-              <Multiselect
-                  options={options}
-                  selectedValues={selectedValue}
-                  onSelect={onSelect}
-                  onRemove={onRemove}
-                  displayValue='name'
-                  placeholder='Select Features'
-                  customArrow={<ChevronDown size={26}/>}
-
-                  style={{
-                    searchBox: {
-                      border: "1px solid #d1d5db",
-                      borderRadius: "12px",
-                      padding: "8px 12px",
-                      fontSize: "0.875rem",
-                    },
-
-                    chips: {
-                        backgroundColor: "black",
-                        color: "#ffffff",
-                        borderRadius: "9999px",
-                        FontSize: '0.875rem',
-                        fontWeight: '600',
-                    }
-
-                    
-                  }}
-              
-              />
-            
+          <label className='text-[0.9rem] font-bold leading-[150%] dark:text-gray-200'>Plan Features</label>
+          <div className='w-full h-auto mt-[0.5rem] flex flex-col gap-2 rounded-lg border-[2px] border-neutral-500 dark:border-gray-600 outline-none p-3'>
+            <Multiselect
+              options={options}
+              selectedValues={selectedValue}
+              onSelect={onSelect}
+              onRemove={onRemove}
+              displayValue='name'
+              placeholder='Select Features'
+              customArrow={<ChevronDown size={26} />}
+              style={{
+                searchBox: {
+                  border: "1px solid #d1d5db",
+                  borderRadius: "12px",
+                  padding: "8px 12px",
+                  fontSize: "0.875rem",
+                },
+                chips: {
+                  backgroundColor: "black",
+                  color: "#ffffff",
+                  borderRadius: "9999px",
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                },
+              }}
+            />
           </div>
 
           {/* Row 2: Passwords + Price + Billing */}
           <div className='grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-2 mt-[2rem]'>
             {/* Temp Password */}
             <div className='flex flex-col relative gap-1'>
-              <label className='text-[0.9rem] font-bold leading-[150%]'>Temporary Password</label>
+              <label className='text-[0.9rem] font-bold leading-[150%] dark:text-gray-200'>Temporary Password</label>
               <input
                 value={tempPassword}
                 onChange={(e) => setTempPassword(e.target.value)}
                 type={isEyeOpen ? "text" : "password"}
                 placeholder='*************'
-                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-3 pr-10 outline-none hover:border-blue-600'
+                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 dark:border-gray-600 bg-white dark:bg-gray-700 text-neutral-900 dark:text-gray-100 rounded-lg pl-3 pr-10 outline-none hover:border-blue-600'
               />
               <button
                 type='button'
                 onClick={() => setIsEyeOpen(prev => !prev)}
-                className="absolute top-9 right-3 text-neutral-600"
+                className="absolute top-9 right-3 text-neutral-600 dark:text-gray-400"
               >
                 {isEyeOpen ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -233,18 +269,18 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
 
             {/* Confirm Password */}
             <div className='flex flex-col relative gap-1'>
-              <label className='text-[0.9rem] font-bold leading-[150%]'>Confirm temporary password</label>
+              <label className='text-[0.9rem] font-bold leading-[150%] dark:text-gray-200'>Confirm temporary password</label>
               <input
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 type={isEyeOpenTwo ? "text" : "password"}
                 placeholder='*************'
-                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-3 pr-10 outline-none hover:border-blue-600'
+                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 dark:border-gray-600 bg-white dark:bg-gray-700 text-neutral-900 dark:text-gray-100 rounded-lg pl-3 pr-10 outline-none hover:border-blue-600'
               />
               <button
                 type='button'
                 onClick={() => setIsEyeOpenTwo(prev => !prev)}
-                className='absolute top-9 right-3 text-neutral-500'
+                className='absolute top-9 right-3 text-neutral-500 dark:text-gray-400'
               >
                 {isEyeOpenTwo ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -252,23 +288,23 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
 
             {/* Price */}
             <div className='flex flex-col gap-1'>
-              <label className='text-[0.9rem] font-bold leading-[150%]'>Price</label>
+              <label className='text-[0.9rem] font-bold leading-[150%] dark:text-gray-200'>Price</label>
               <input
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 type="number"
                 placeholder='$'
-                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-3 outline-none hover:border-blue-600'
+                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 dark:border-gray-600 bg-white dark:bg-gray-700 text-neutral-900 dark:text-gray-100 rounded-lg pl-3 outline-none hover:border-blue-600'
               />
             </div>
 
             {/* Billing Cycle */}
             <div className='flex flex-col gap-1'>
-              <label className='text-[0.9rem] font-bold leading-[150%]'>Billing Cycle</label>
+              <label className='text-[0.9rem] font-bold leading-[150%] dark:text-gray-200'>Billing Cycle</label>
               <select
                 value={billingCycle}
                 onChange={(e) => setBillingCycle(e.target.value)}
-                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-2 outline-none hover:border-blue-600'
+                className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 dark:border-gray-600 bg-white dark:bg-gray-700 text-neutral-900 dark:text-gray-100 rounded-lg pl-2 outline-none hover:border-blue-600'
               >
                 <option value="">Select Bills</option>
                 <option value="Monthly">Monthly</option>
@@ -278,15 +314,15 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
           </div>
 
           {/* OTHERS Section */}
-          <hr className='mt-[2rem] border-1' />
+          <hr className='mt-[2rem] border-1 dark:border-gray-600' />
           <div className='mt-[1.575rem]'>
-            <h1 className='text-neutral-800 text-[1.125rem] font-semibold leading-[100%]'>OTHERS</h1>
-            <hr className='mt-[1.575rem] border-1' />
+            <h1 className='text-neutral-800 dark:text-gray-100 text-[1.125rem] font-semibold leading-[100%]'>OTHERS</h1>
+            <hr className='mt-[1.575rem] border-1 dark:border-gray-600' />
 
             {/* Plan Status */}
-            <div className='flex justify-between mt-[1.375rem] p-4 border border-neutral-300 rounded-xl'>
-              <p className='flex flex-col text-[#6B6B6B] gap-2'>
-                <span className='text-[1.125rem] text-neutral-900 font-semibold leading-[100%]'>
+            <div className='flex justify-between mt-[1.375rem] p-4 border border-neutral-300 dark:border-gray-600 rounded-xl'>
+              <p className='flex flex-col text-[#6B6B6B] dark:text-gray-400 gap-2'>
+                <span className='text-[1.125rem] text-neutral-900 dark:text-white font-semibold leading-[100%]'>
                   Plan Status
                 </span>
                 This plan is active and visible to customers
@@ -304,9 +340,9 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
             </div>
 
             {/* Allow Free Trial */}
-            <div className='flex justify-between mt-[1.375rem] p-4 border border-neutral-300 rounded-xl'>
-              <p className='flex flex-col text-[#6B6B6B] gap-2'>
-                <span className='text-[1.125rem] text-neutral-900 font-semibold leading-[100%]'>
+            <div className='flex justify-between mt-[1.375rem] p-4 border border-neutral-300 dark:border-gray-600 rounded-xl'>
+              <p className='flex flex-col text-[#6B6B6B] dark:text-gray-400 gap-2'>
+                <span className='text-[1.125rem] text-neutral-900 dark:text-white font-semibold leading-[100%]'>
                   Allow Free Trial
                 </span>
                 Offer a trial period for new customers
@@ -329,19 +365,22 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
             <button
               type='button'
               onClick={handleCancel}
-              className='flex-1 w-full text-blue-600 hover:bg-red-50 font-semibold p-2 lg:p-3 items-center justify-center border-2 border-blue-600 rounded-lg transition-colors'
+              className='flex-1 w-full text-blue-600 hover:bg-red-50 dark:hover:bg-red-900/20 font-semibold p-2 lg:p-3 items-center justify-center border-2 border-blue-600 rounded-lg transition-colors'
             >
               Cancel
             </button>
             <button
               type='button'
               onClick={handleSubmit}
-              className='flex-1 w-full font-semibold hover:bg-blue-800 p-2 lg:p-3 items-center justify-center bg-blue-600 rounded-lg text-white transition-colors'
+              disabled={isSubmitting}
+              className='flex-1 w-full font-semibold hover:bg-blue-800 p-2 lg:p-3 items-center justify-center bg-blue-600 rounded-lg text-white transition-colors disabled:opacity-60'
             >
-              Create Plan
+              {isSubmitting
+                ? (isEdit ? "Updating..." : "Creating...")
+                : (isEdit ? "Update Plan" : "Create Plan")}
             </button>
           </div>
-          <PlanSuccessModal isOpen={isSuccessOpen} onClose={handleSuccessClose} planName={planName}/>
+          <PlanSuccessModal isOpen={isSuccessOpen} onClose={handleSuccessClose} planName={planName} />
         </div>
       </div>
     </div>
@@ -349,216 +388,3 @@ const PlansCreationModal = ({ isOpen, onClose, onSubmit }) => {
 }
 
 export default PlansCreationModal
-
-//     "use client"
-// import React, { useState } from 'react'
-// import { X, Eye, EyeOff } from 'lucide-react'
-// import { BsToggleOn, BsToggleOff  } from "react-icons/bs";
-
-
-// const PlansCreationModal = ({isOpen, onClose, onCreate}) => {
-//     const [isToggleOn, setIsToggleOn] = useState(false)
-//     const [isMovedOn, setIsMovedOn] = useState(false)
-//     const [myArray, setMyArray] = useState([])
-//     const [planInput, setPlanInput] = useState("")
-
-//     const [isEyeOpen, setIsEyeOpen] = useState(false)
-//     const [isToggleEye, setIsToggleEye] = useState("")
-
-//     const [isEyeOpenTwo, setIsEyeOpenTwo] = useState(false)
-//     const [isToggleEyeTwo, setIsToggleEyeTwo] = useState('')
-    
-    
-//     if(!isOpen) return null
-
-//     const handleAddPlan = () => {
-//         if(planInput.trim() === "") return
-//         setMyArray(prev => [... prev, planInput])
-//         setPlanInput("")
-//     }
-
-//     const handleDelete = (index) =>{
-//         setMyArray(prev => prev.filter((_, i) => i !== index))
-//     }
-
-
-//   return (
-//     <div className='flex fixed inset-0 px-4 lg:px-0 z-50 items-center justify-center bg-black/50'>
-//         <div  className='bg-white lg:w-[43rem] lg:max-h-[90vh] max-h-[85vh] h-auto w-fit  p-8 rounded-2xl overflow-y-scroll scrollbar-hide'>
-//                 <div className='flex justify-end mt-[2rem]'>
-//                     <span onClick={onClose} className='p-2 border-[1px] cursor-pointer hover:bg-neutral-100  border-neutral-500 rounded-full'>
-//                         <X size={24} />
-//                     </span>
-//                 </div>
-
-//             <div className='mb-[2rem]'>
-//                 <h1 className='text-[1.5rem] font-semibold leading-[100%] text-neutral-900 mb-[0.8rem]'>
-//                     Create New Subscription Plan
-//                 </h1>
-//                 <p className='text-[1.025rem] leading-[100%] text-neutral-800 '>
-//                     Define a new subscription tier for filling station customers                
-//                 </p>                
-//             </div>
-
-//             <div>
-               
-//                     <div className='grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-2 mb-[1rem]'>
-//                         <div className='flex flex-col'>
-//                                 <label className='text-[0.9rem] font-bold leading-[150%]' >
-//                                     Plan Name
-//                                 </label>
-//                                 <select type="text" placeholder='Enter plan name ' className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-2 outline-none hover:border-blue-600' >
-//                                     <option value="">Choose Plan</option>
-//                                     <option value="">Professionals</option>
-//                                     <option value="">Prime</option>
-//                                     <option value="">Basic</option>
-//                                     <option value="">Enterprise</option>
-//                                 </select>
-
-//                         </div>
-//                         <div className='flex flex-col'>
-//                                 <label className='text-[0.9rem] font-bold leading-[150%]' >
-//                                     User Limit
-//                                 </label>
-//                                 <select name="" id="" className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-2 outline-none hover:border-blue-600'>
-//                                     <option value="">Choose Limit</option>
-//                                     <option value="">2</option>
-//                                     <option value="">5</option>
-//                                     <option value="">7</option>
-//                                     <option value="">10</option>
-//                                     <option value="">15</option>
-//                                     <option value="">Unlimited</option>
-//                                 </select>
-//                         </div>
-//                     </div>
-
-//                     <label className='text-[0.9rem] font-bold leading-[150%] '>Plan Features</label>
-//                     <div className='w-full h-auto mt-[0.5rem] flex flex-col gap-2 rounded-lg border-[2px] border-neutral-500  outline-none p-3'>
-//                       <span className='flex gap-3 '>
-//                         <input value={planInput} onChange={(e) => setPlanInput(e.target.value)} type="text" placeholder='Enter Plans' className='pl-3 px-5 py-3 rounded-lg border-2 focus:border-2 focus:border-blue-600 outline-none' />
-//                         <button onClick={handleAddPlan} className='flex items-center justify-center bg-blue-600 text-white p-2 rounded-lg font-semibold cursor-pointer hover:bg-blue-400 '>+ Add</button>
-//                       </span> 
-                        
-//                         {/* List Display */}
-//                         <ul className='grid lg:grid-cols-4 grid-cols-2 gap-3 '>
-//                             {myArray.filter(item => item !== "").map((item, index) =>(
-//                                 <li key={index} className='text-sm flex justify-between items-center font-semibold bg-blue-50 px-3 py-1 rounded-md text-blue-700'>
-                                   
-//                                    <p className=''>
-//                                         {item}
-//                                    </p>
-//                                    <button onClick={() => handleDelete(index)} className='bg-gray-300 text-md  px-2 py-0.5 rounded-full text-red-600'>X</button>
-//                                 </li>
-//                             )) }
-//                         </ul>
-
-                        
-//                     </div>
-
-//                     <div className='grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 gap-2 mt-[2rem]'>
-//                         <div className='flex flex-col relative'>
-//                                 <label className='text-[0.9rem] font-bold leading-[150%]' >
-//                                     Temporary Password
-//                                 </label>
-//                                 <input value={isToggleEye} onChange={(e) => setIsToggleEye(e.target.value)} type={isEyeOpen ? "text" : "password"} placeholder='*************' className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-3 outline-none hover:border-blue-600' />
-//                                 <button type='button' onClick={() => setIsEyeOpen(prev => !prev)} className="absolute top-9 right-3 text-neutral-600">
-//                                     {isEyeOpen ? <EyeOff /> : <Eye />}
-//                                 </button>
-//                         </div>
-//                         <div className='flex flex-col relative'>
-//                                 <label className='text-[0.9rem] font-bold leading-[150%]' >
-//                                     Confirm temporary password
-//                                 </label>
-//                                 <input value={isToggleEyeTwo} type={isEyeOpenTwo ? "text" : "password"} onChange={(e) => setIsToggleEyeTwo(e.target.value)} placeholder='*************' className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-3 outline-none hover:border-blue-600' />
-//                                 <button onClick={() => setIsEyeOpenTwo(prev => !prev)} type='button' className='absolute top-9 right-3 text-neutral-500'>
-//                                     {isEyeOpenTwo ? <EyeOff /> : <Eye />}
-//                                 </button>
-//                         </div>
-//                         <div className='flex flex-col'>
-//                                 <label className='text-[0.9rem] font-bold leading-[150%]' >
-//                                     Price
-//                                 </label>
-//                                 <input name="" id="" placeholder='$' className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-2 outline-none hover:border-blue-600'/>
-                                    
-                               
-//                         </div>
-//                         <div className='flex flex-col'>
-//                                 <label className='text-[0.9rem] font-bold leading-[150%]' >
-//                                    Billing Cycle
-//                                 </label>
-//                                 <select name="" id="" className='lg:w-[19.125rem] w-full h-[3.25rem] border-[2px] border-neutral-500 rounded-lg pl-2 outline-none hover:border-blue-600'>
-//                                     <option value="">Select Bills</option>
-//                                     <option value="">Monthly</option>
-//                                     <option value="">Yearly</option>
-                                    
-//                                 </select>
-//                         </div>
-
-//                     </div>
-//                         <hr  className='mt-[2rem] border-1'/>
-                        
-//                         <div className='mt-[1.575rem]'>
-//                             <h1 className='text-neutral-800 text-[1.125rem] leading-[100%] mt-[0.875rem]'>
-//                                 OTHERS
-//                             </h1>
-//                             <hr className='mt-[1.575rem] border-1' />
-
-//                             <div className='flex justify-between mt-[1.375rem] p-4 border-1 border-neutral-300 rounded-xl'>
-//                                 <p className='flex flex-col text-[#6B6B6B] gap-2'>
-//                                     <span className='text-[1.125rem] text-neutral-900 font-semibold leading-[100%]'>
-//                                         Plan Status
-//                                     </span>
-//                                     This plan is active and visible to customers
-//                                 </p>
-
-//                                 <button type='button' onClick={() => setIsToggleOn(prev => !prev)} className={`flex items-center justify-center `} >
-//                                     {isToggleOn ? (
-//                                         <BsToggleOn size={32} className='text-[#1A71F6]'/>
-//                                     ): (
-
-//                                         <BsToggleOff size={32} className='text-gray-400' />
-//                                     )
-//                                     }
-//                                 </button>
-
-//                             </div>
-//                             <div className='flex justify-between mt-[1.375rem] p-4 border-1 border-neutral-300 rounded-xl'>
-//                                 <p className='flex flex-col text-[#6B6B6B] gap-2'>
-//                                     <span className='text-[1.125rem] text-neutral-900 font-semibold leading-[100%]'>
-//                                         Allow Free Trial
-//                                     </span>
-//                                     Offer a trial period for new customers
-//                                 </p>
-
-//                                 <button type='button' onClick={() => setIsMovedOn(prev => !prev)} className={`flex items-center justify-center `} >
-//                                     {isMovedOn ? (
-//                                         <BsToggleOn size={32} className='text-[#1A71F6]'/>
-//                                     ): (
-
-//                                         <BsToggleOff size={32} className='text-gray-400' />
-//                                     )
-//                                     }
-//                                 </button>
-
-//                             </div>
-//                         </div>
-
-                
-//                         <div className='grid lg:grid-cols-2   mt-[1.675rem] gap-4'>
-//                             <button className='flex-1 w-full text-blue-600 hover:bg-red-200 font-semibold p-2 lg:p-3 items-center justify-center border-2 border-blue-600 rounded-lg '>
-//                                 Cancel
-//                             </button>
-//                             <button className='flex-1 w-full font-semibold hover:bg-blue-800 p-2 lg:p-3 items-center justify-center  bg-blue-600 rounded-lg text-white '>
-//                                 Create Plan
-//                             </button>
-//                         </div>
-//             </div>
-
-            
-
-//         </div>
-//     </div>
-//   )
-// }
-
-// export default PlansCreationModal

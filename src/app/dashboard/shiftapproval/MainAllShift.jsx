@@ -103,14 +103,14 @@ export default function ShiftApprovalPage() {
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
-            <h2 className="text-lg font-bold text-neutral-800 mb-2">Clear Stale Shifts</h2>
-            <p className="text-sm text-neutral-600 mb-6">
+            <h2 className="text-lg font-bold text-neutral-800 dark:text-gray-100 mb-2">Clear Stale Shifts</h2>
+            <p className="text-sm text-neutral-600 dark:text-gray-400 mb-6">
               This will remove all pending shifts older than 7 days. Continue?
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+                className="px-4 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
               >
                 Cancel
               </button>
@@ -142,8 +142,8 @@ export default function ShiftApprovalPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <p className="text-gray-700 font-semibold">Error loading shifts</p>
-                <p className="text-sm text-gray-500 mt-2">{error}</p>
+                <p className="text-gray-700 dark:text-gray-200 font-semibold">Error loading shifts</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">{error}</p>
                 <button
                   onClick={() => fetchPendingShifts({ page: 1, limit: 20 })}
                   className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -159,8 +159,8 @@ export default function ShiftApprovalPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <p className="text-gray-700 font-semibold">No pending shifts</p>
-                <p className="text-sm text-gray-500 mt-2">All shifts have been approved or there are no completed shifts yet.</p>
+                <p className="text-gray-700 dark:text-gray-200 font-semibold">No pending shifts</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">All shifts have been approved or there are no completed shifts yet.</p>
               </div>
             ) : (
               /* Shifts Grid */
@@ -173,7 +173,7 @@ export default function ShiftApprovalPage() {
                       fetchPendingShifts({ page: 1, limit: 20 });
                     }}
                     disabled={loading}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
                   >
                     <svg className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -191,7 +191,7 @@ export default function ShiftApprovalPage() {
                 {/* Pagination Info & Load More */}
                 {pagination.pages > 1 && (
                   <div className="mt-6 text-center">
-                    <p className="text-sm text-gray-600 mb-3">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
                       Showing {pendingShifts.length} of {pagination.total} shifts
                       (Page {pagination.page} of {pagination.pages})
                     </p>
