@@ -140,12 +140,12 @@ const Stations = ({ onViewStation }) => {
   const displayRows = rows.length > 0 ? rows : stationsTableData.rows;
 
   return (
-    <div className="p-[2rem]">
-      <h1 className="text-[28px] font-semibold mb-[0.8rem]">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <h1 className="text-xl sm:text-2xl lg:text-[28px] font-semibold mb-[0.8rem]">
         Filling Stations
       </h1>
 
-      <p className="text-neutral-500 text-[1.125rem] mb-[1.5rem]">
+      <p className="text-neutral-500 text-sm sm:text-base lg:text-[1.125rem] mb-[1.5rem]">
         Manage all registered filling stations and their subscriptions
       </p>
 

@@ -5,21 +5,12 @@ import bgImg from "../../assets/main-bg.png"
 import liveDb from "../../assets/LiveDashboard.png";
 import { ArrowRight, BriefcaseBusiness } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import RegisterManagerModal from "@/components/RegisterManagerModal";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 
 export default function Hero() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  function openModal() {
-    setIsModalOpen(true);
-  }
-
-  function closeModal() {
-    setIsModalOpen(false);
-  }
+  const router = useRouter();
 
   return (
     <div className="relative min-h-screen bg-gradient-to-b from-[#cee1ff] to-[#ffe9c9] dark:from-gray-900 dark:to-gray-800">
@@ -76,7 +67,7 @@ export default function Hero() {
           {/* GET STARTED BUTTON — scale + fade in */}
           <motion.div
             className="flex cursor-pointer justify-center lg:justify-start mt-6"
-            onClick={openModal}
+            onClick={() => router.push("/pricing")}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.6 }}
@@ -126,7 +117,6 @@ export default function Hero() {
           />
         </motion.div>
       </div>
-      {isModalOpen && <RegisterManagerModal onclose={closeModal} />}
     </div>
   );
 }

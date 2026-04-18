@@ -2,7 +2,7 @@
 
 import {
   Bell, BellRing, Mail, Menu, X, Check, CheckCheck,
-  TriangleAlert, Info, ChevronRight,
+  TriangleAlert, Info, ChevronRight, Building2, ChevronDown, Plus, Crown,
 } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 import Image from "next/image";
@@ -12,6 +12,9 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useImageStore } from "@/store/useImageStore";
 import useNotificationStore from "@/store/useNotificationStore";
+import useBranchStore from "@/store/useBranchStore";
+import usePaymentStore from "@/store/usePaymentStore";
+import AddBranchModal from "../AddBranchModal";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -219,9 +222,16 @@ export default function Header({ toggleSidebar, showSidebar }) {
     startPolling, stopPolling,
   } = useNotificationStore();
 
+  const { branches, switching, switchStation, fetchBranches } = useBranchStore();
+  const { currentPlan } = usePaymentStore();
+  const isEnterprise = currentPlan?.plan === "enterprise";
+  const canUpgrade = currentPlan?.plan !== "enterprise-max";
+
   // dropdown open state
   const [msgOpen, setMsgOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
+  const [showSwitcher, setShowSwitcher] = useState(false);
+  const [showAddBranch, setShowAddBranch] = useState(false);
 
   // selected item for modal
   const [selectedMsg, setSelectedMsg] = useState(null);
@@ -230,6 +240,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
   // refs for click-outside
   const msgRef = useRef(null);
   const alertRef = useRef(null);
+  const switcherRef = useRef(null);
 
   // ── User data
   useEffect(() => {
@@ -255,11 +266,19 @@ export default function Header({ toggleSidebar, showSidebar }) {
     return () => stopPolling();
   }, [fetchMessages, fetchAlerts, startPolling, stopPolling]);
 
+  // ── Fetch branches for enterprise plan
+  useEffect(() => {
+    if (isEnterprise) {
+      fetchBranches();
+    }
+  }, [isEnterprise]);
+
   // ── Click outside to close dropdowns
   useEffect(() => {
     function handleClick(e) {
       if (msgRef.current && !msgRef.current.contains(e.target)) setMsgOpen(false);
       if (alertRef.current && !alertRef.current.contains(e.target)) setAlertOpen(false);
+      if (switcherRef.current && !switcherRef.current.contains(e.target)) setShowSwitcher(false);
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
@@ -308,6 +327,112 @@ export default function Header({ toggleSidebar, showSidebar }) {
 
   return (
     <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white dark:bg-gray-900 flex items-center justify-end gap-3">
+
+      {/* ── Station Switcher (Enterprise only, desktop) ── */}
+      {isEnterprise && branches.length > 1 && (
+        <div className="relative hidden lg:block" ref={switcherRef}>
+          <button
+            onClick={() => setShowSwitcher(!showSwitcher)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+          >
+            <Building2 size={16} className="text-blue-600" />
+            <span className="font-medium text-gray-700 dark:text-gray-200 max-w-[8rem] truncate">
+              {branches.find((b) => b.isCurrent)?.name || "Current Station"}
+            </span>
+            <ChevronDown size={14} className="text-gray-400" />
+          </button>
+
+          {showSwitcher && (
+            <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl z-50 overflow-hidden">
+              <div className="p-3 border-b border-gray-100 dark:border-gray-700">
+                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  Switch Station
+                </p>
+              </div>
+
+              <div className="max-h-64 overflow-y-auto">
+                {branches.map((station) => (
+                  <button
+                    key={station.id}
+                    onClick={async () => {
+                      if (!station.isCurrent) {
+                        setShowSwitcher(false);
+                        await switchStation(station.id);
+                      }
+                    }}
+                    disabled={switching || station.isCurrent}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
+                      station.isCurrent ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                      station.isCurrent
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300"
+                    }`}>
+                      {station.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium truncate ${
+                        station.isCurrent
+                          ? "text-blue-600 dark:text-blue-400"
+                          : "text-gray-800 dark:text-gray-200"
+                      }`}>
+                        {station.name}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {station.city} · {station.isParent ? "Main" : "Branch"}
+                      </p>
+                    </div>
+                    {station.isCurrent && (
+                      <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex-shrink-0">
+                        Active
+                      </span>
+                    )}
+                    {switching && !station.isCurrent && (
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="p-3 border-t border-gray-100 dark:border-gray-700">
+                <button
+                  onClick={() => {
+                    setShowSwitcher(false);
+                    setShowAddBranch(true);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm font-medium transition-colors"
+                >
+                  <Plus size={16} />
+                  Add New Branch
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Upgrade Plan button ── */}
+      {canUpgrade && (
+        <>
+          {/* Desktop */}
+          <button
+            onClick={() => router.push("/pricing")}
+            className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+          >
+            <Crown size={14} />
+            {currentPlan?.plan === "free" ? "Upgrade Plan" : "Upgrade"}
+          </button>
+          {/* Mobile */}
+          <button
+            onClick={() => router.push("/pricing")}
+            className="sm:hidden p-2 rounded-lg bg-blue-600 text-white"
+          >
+            <Crown size={16} />
+          </button>
+        </>
+      )}
 
       {/* ── Notification icons (desktop only) ── */}
       <div className="hidden lg:flex items-center gap-2">
@@ -393,6 +518,9 @@ export default function Header({ toggleSidebar, showSidebar }) {
       )}
       {selectedAlert && (
         <NotifModal item={selectedAlert} type="alert" onClose={() => setSelectedAlert(null)} />
+      )}
+      {showAddBranch && (
+        <AddBranchModal onClose={() => setShowAddBranch(false)} />
       )}
     </div>
   );

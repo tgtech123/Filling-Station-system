@@ -334,13 +334,39 @@ export default function SettingsPage() {
     twoFAEnabled ? setShowDisableModal(true) : setShowEnableModal(true);
   }
 
-  function handleNotifToggle(key) {
-    setNotifPrefs((prev) => {
-      const next = { ...prev, [key]: !prev[key] };
-      localStorage.setItem("notifPrefs", JSON.stringify(next));
-      toast.success("Preferences saved");
-      return next;
-    });
+  async function handleNotifToggle(key) {
+    const next = { ...notifPrefs, [key]: !notifPrefs[key] };
+    setNotifPrefs(next);
+    localStorage.setItem("notifPrefs", JSON.stringify(next));
+
+    try {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const userId = user.id || user._id;
+
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API}/api/auth/update-staff/${userId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            notificationPreferences: {
+              email: next.emailNotifications,
+              lowStock: next.lowStockAlerts,
+              sales: next.shiftCompletionAlerts,
+              push: next.unauthorizedAccessAlerts,
+            },
+          }),
+        }
+      );
+    } catch {
+      // localStorage already updated — backend sync failed silently
+    }
+
+    toast.success("Preferences saved");
   }
 
   function handleLogoutOthers() {

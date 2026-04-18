@@ -21,6 +21,16 @@ const useAdminStore = create((set, get) => ({
   error: null,
   searchTerm: "",
 
+  // ── Activity Logs State
+  activityStats: null,
+  activityPagination: {
+    currentPage: 1,
+    totalItems: 0,
+    itemsPerPage: 50,
+    totalPages: 0,
+  },
+  activityLoading: false,
+
   // ── Payments
   paymentStats: null,
   payments: [],
@@ -266,7 +276,7 @@ const useAdminStore = create((set, get) => ({
 
   // ── Activity Logs ──────────────────────────────────────────
   fetchActivityLogs: async (params = {}) => {
-    set({ loading: true, error: null });
+    set({ activityLoading: true, error: null });
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
@@ -277,12 +287,22 @@ const useAdminStore = create((set, get) => ({
         response.data.logs ||
         response.data.data ||
         (Array.isArray(response.data) ? response.data : []);
-      set({ activityLogs: logs, loading: false });
+      set({
+        activityLogs: logs,
+        activityStats: response.data.stats || null,
+        activityPagination: response.data.pagination || {
+          currentPage: 1,
+          totalItems: logs.length,
+          itemsPerPage: params.limit || 50,
+          totalPages: 1,
+        },
+        activityLoading: false,
+      });
       return logs;
     } catch (error) {
       const errorMsg =
         error.response?.data?.message || error.message || "Failed to fetch activity logs";
-      set({ loading: false, error: errorMsg, activityLogs: [] });
+      set({ activityLoading: false, error: errorMsg, activityLogs: [] });
       console.error("❌ fetchActivityLogs:", errorMsg);
       return null;
     }
@@ -414,6 +434,7 @@ const useAdminStore = create((set, get) => ({
 
   // ── Helpers ────────────────────────────────────────────────
   setSearchTerm: (term) => set({ searchTerm: term }),
+
 
   clearStationData: () =>
     set({

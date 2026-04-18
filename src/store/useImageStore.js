@@ -1,105 +1,108 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getCdnUrl } from "@/utils/imageUtils";
 
-export const useImageStore = create(
-  persist( 
+const useImageStore = create(
+  persist(
     (set, get) => ({
-      userImages: {}, // store images by user ID
-      uploading: {}, // track upload status per user
-      errors: {}, // track errors per user
+      userImages: {},
+      loading: false,
+      error: null,
 
-      // Set user image directly
-      setUserImage: (userId, imageUrl) =>
-        set((state) => ({
-          userImages: {
-            ...state.userImages,
-            [userId]: imageUrl,
-          },
-        })),
-
-      // Get user image
-      getUserImage: (userId) => get().userImages[userId],
-
-      // Clear user image
-      clearUserImage: (userId) =>
-        set((state) => {
-          const updated = { ...state.userImages };
-          delete updated[userId];
-          return { userImages: updated };
-        }),
-
-      // Upload image to Cloudinary and store it
-      uploadUserImage: async (userId, file) => {
-        // Validate file
-        if (!file) {
-          set((state) => ({
-            errors: { ...state.errors, [userId]: "No file selected" },
-          }));
-          return { success: false, error: "No file selected" };
-        }
-
-        // Set uploading state
-        set((state) => ({
-          uploading: { ...state.uploading, [userId]: true },
-          errors: { ...state.errors, [userId]: null },
-        }));
-
+      uploadImage: async (file, userId) => {
         try {
-          // Create FormData
+          set({ loading: true, error: null });
+
           const formData = new FormData();
           formData.append("file", file);
-          formData.append("userId", userId); // Pass userId to backend
+          formData.append("userId", userId);
 
-          console.log("📤 Uploading image for user:", userId);
-          console.log("📦 File size:", file.size, "bytes");
-          console.log("📦 File type:", file.type);
-
-          // Upload to your Next.js API route
           const response = await fetch("/api/upload", {
             method: "POST",
             body: formData,
           });
 
-          console.log("📡 Response status:", response.status);
-
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || errorData.details || `Upload failed with status ${response.status}`);
-          }
+          if (!response.ok) throw new Error("Upload failed");
 
           const data = await response.json();
-          console.log("✅ Upload response:", data);
 
-          if (!data.secure_url) {
-            throw new Error("No secure_url in response");
-          }
-
-          const imageUrl = data.secure_url;
-
-          // Store the image URL in Zustand
-          set((state) => ({
-            userImages: { ...state.userImages, [userId]: imageUrl },
-            uploading: { ...state.uploading, [userId]: false },
-          }));
-
-          console.log("✅ Image stored in Zustand for user:", userId);
-          return { success: true, imageUrl };
-        } catch (error) {
-          const errorMsg = error.message || "Upload failed";
+          const transformedUrl = getCdnUrl(data.secure_url, {
+            width: 400,
+            height: 400,
+          });
 
           set((state) => ({
-            uploading: { ...state.uploading, [userId]: false },
-            errors: { ...state.errors, [userId]: errorMsg },
+            userImages: { ...state.userImages, [userId]: transformedUrl },
+            loading: false,
           }));
 
-          console.error(`❌ Upload failed for user ${userId}:`, errorMsg);
-          return { success: false, error: errorMsg };
+          return { url: transformedUrl, publicId: data.public_id };
+        } catch (err) {
+          set({ loading: false, error: err.message });
+          throw err;
+        }
+      },
+
+      getImage: (userId) => {
+        const url = get().userImages[userId];
+        return url ? getCdnUrl(url) : null;
+      },
+
+      setImage: (userId, url) => {
+        set((state) => ({
+          userImages: { ...state.userImages, [userId]: getCdnUrl(url) },
+        }));
+      },
+
+      clearImage: (userId) => {
+        set((state) => {
+          const copy = { ...state.userImages };
+          delete copy[userId];
+          return { userImages: copy };
+        });
+      },
+
+      deleteImage: async (publicId) => {
+        try {
+          await fetch("/api/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ public_id: publicId }),
+          });
+        } catch (err) {
+          console.error("Delete failed:", err);
+        }
+      },
+
+      // Legacy compat — used by old components still in codebase
+      getUserImage: (userId) => get().userImages[userId] || null,
+      setUserImage: (userId, url) => {
+        set((state) => ({
+          userImages: { ...state.userImages, [userId]: url },
+        }));
+      },
+      clearUserImage: (userId) => {
+        set((state) => {
+          const copy = { ...state.userImages };
+          delete copy[userId];
+          return { userImages: copy };
+        });
+      },
+      uploadUserImage: async (userId, file) => {
+        try {
+          const result = await get().uploadImage(file, userId);
+          return { success: true, imageUrl: result.url };
+        } catch (err) {
+          return { success: false, error: err.message };
         }
       },
     }),
     {
-      name: "user-images-storage", // LocalStorage key
-      partialize: (state) => ({ userImages: state.userImages }), // Only persist images
+      name: "user-images-storage",
+      partialize: (state) => ({ userImages: state.userImages }),
     }
   )
 );
+
+export { useImageStore };
+export default useImageStore;

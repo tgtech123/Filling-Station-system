@@ -29,7 +29,7 @@ const apiClient = axios.create({
 // Add request interceptor to log and add auth
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     
     console.log('📤 API Request:', {
       method: config.method?.toUpperCase(),

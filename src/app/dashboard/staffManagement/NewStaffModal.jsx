@@ -4,6 +4,7 @@ import { Plus, X, ChevronUp, ChevronDown, EyeOff, Eye } from "lucide-react";
 import { BsToggleOn, BsToggleOff } from "react-icons/bs";
 import SuccessMessageModal from "./SuccessMessageModal";
 import useStaffStore from "@/store/useStaffStore"; // Import the Zustand store
+import UpgradePrompt from "@/components/UpgradePrompt";
 
 const NewStaffModal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
@@ -24,6 +25,8 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
   
   // Local error state for validation
   const [validationError, setValidationError] = useState("");
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [limitInfo, setLimitInfo] = useState({ role: "", limit: 0 });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -191,6 +194,15 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
       });
       setToggleOn(false);
     } catch (err) {
+      if (err?.response?.data?.upgradeRequired) {
+        setLimitInfo({
+          role: err.response.data.role || "staff",
+          limit: err.response.data.limit || 0,
+        });
+        setShowUpgrade(true);
+        setIsLoading(false);
+        return;
+      }
       const errMsg = err.message || "An unexpected error occurred";
       setValidationError(errMsg);
       alert(`❌ ${errMsg}`);
@@ -202,6 +214,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
   const displayError = storeError || validationError;
 
   return (
+    <>
     <div
       onClick={onClose}
       className="bg-black/50 w-full flex justify-center items-center fixed inset-0 z-50 h-auto"
@@ -506,6 +519,16 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
         </div>
       </div>
     </div>
+    {showUpgrade && (
+      <UpgradePrompt
+        role={limitInfo.role}
+        limit={limitInfo.limit}
+        onClose={() => setShowUpgrade(false)}
+      />
+    )}
+
+    </>
+
   );
 };
 

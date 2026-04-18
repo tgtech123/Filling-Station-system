@@ -2,14 +2,14 @@
 import React, { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
-import PlansCreationModal from './subscription/PlansCreationModal'
+// import PlansCreationModal from './subscription/PlansCreationModal'
 import PlanCards from './subscription/PlanCards'
+import CreateSubscriptionPlanModal from '@/components/CreateSubscriptionPlanModal'
 import usePlansStore from '@/store/usePlansStore'
 
 const Subscriptions = () => {
   const [isShow, setIsShow] = useState(false)
-  const [editingPlan, setEditingPlan] = useState(null)
-  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingPlanId, setDeletingPlanId] = useState(null)
 
@@ -37,9 +37,9 @@ const Subscriptions = () => {
   }))
 
   return (
-    <div className='p-9'>
+    <div className='p-4 sm:p-6 lg:p-9'>
       {/* Page Header */}
-      <div className='flex justify-between items-start mb-8'>
+      <div className='flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 sm:mb-8'>
         <div>
           <h1 className='text-[1.5rem] font-semibold text-neutral-900 dark:text-white'>
             Subscription Plans
@@ -50,7 +50,7 @@ const Subscriptions = () => {
         </div>
 
         <button
-          onClick={() => setIsShow(true)}
+          onClick={() => { setSelectedPlan(null); setIsShow(true) }}
           className='flex hover:bg-blue-700 gap-3 bg-blue-600 items-center justify-center px-5 py-3 text-base font-semibold text-white rounded-2xl cursor-pointer transition-colors'
         >
           <Plus size={20} />
@@ -67,18 +67,17 @@ const Subscriptions = () => {
       {!loading && normalizedPlans.length > 0 && (
         <>
           <h2 className='text-lg font-semibold text-neutral-800 dark:text-gray-100 mb-4'>All Plans</h2>
-          <div className='grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-5'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5'>
             {normalizedPlans.map((plan) => (
               <PlanCards
                 key={plan.id}
                 plan={plan}
                 onEdit={(normalizedPlan) => {
-                  // Pass raw admin plan so modal gets monthlyPrice, yearlyPrice, staffLimits, etc.
                   const raw = adminPlans.find(
                     (p) => (p._id || p.id) === normalizedPlan.id
                   ) || normalizedPlan
-                  setEditingPlan(raw)
-                  setShowEditModal(true)
+                  setSelectedPlan(raw)
+                  setIsShow(true)
                 }}
                 onDelete={(planId) => {
                   setDeletingPlanId(planId)
@@ -144,31 +143,19 @@ const Subscriptions = () => {
         </div>
       )}
 
-      {/* Create Modal */}
-      <PlansCreationModal
-        isOpen={isShow}
-        onClose={() => setIsShow(false)}
-        onSuccess={() => {
-          setIsShow(false)
-          fetchAdminPlans()
-        }}
-      />
-
-      {/* Edit Modal */}
-      {showEditModal && editingPlan && (
-        <PlansCreationModal
-          isOpen={showEditModal}
+      {/* Create / Edit Modal */}
+      {isShow && (
+        <CreateSubscriptionPlanModal
+          initialData={selectedPlan}
           onClose={() => {
-            setShowEditModal(false)
-            setEditingPlan(null)
+            setIsShow(false)
+            setSelectedPlan(null)
           }}
           onSuccess={() => {
-            setShowEditModal(false)
-            setEditingPlan(null)
+            setIsShow(false)
+            setSelectedPlan(null)
             fetchAdminPlans()
           }}
-          isEdit={true}
-          initialData={editingPlan}
         />
       )}
     </div>

@@ -11,7 +11,7 @@ export default function GetStarted() {
   const isInView = useInView(ref, { once: true });
 
   return (
-    <div className="px-6 lg:px-40 py-10 h-[400px] relative">
+    <div className="px-4 sm:px-8 lg:px-40 py-10 sm:py-16 lg:py-10 h-auto min-h-[300px] sm:h-[400px] relative">
       <Image
         src={bgImg}
         alt="background frame"
@@ -23,7 +23,7 @@ export default function GetStarted() {
         {/* HEADING — fade in + scale up */}
         <motion.h2
           ref={ref}
-          className="text-xl lg:text-3xl font-semibold text-white text-center"
+          className="text-lg sm:text-xl lg:text-3xl font-semibold text-white text-center"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
           transition={{ duration: 0.7 }}

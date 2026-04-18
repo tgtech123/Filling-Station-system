@@ -1,35 +1,32 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { X, Save, SquarePen, Mail, Phone, Eye, EyeOff } from "lucide-react";
-import Image from "next/image";
-import CloudinaryUploader from "@/components/CloudinaryUploader";
-import { useImageStore } from "@/store/useImageStore";
+import Avatar from "@/components/Avatar";
+import ImageUploadButton from "@/components/ImageUploadButton";
+import useImageStore from "@/store/useImageStore";
 import useAdminProfileStore from "@/store/useAdminProfileStore";
 import axios from "axios";
 
 const MyProfileModal = ({ isOpen, onClose }) => {
-  const [mounted, setMounted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isMessage, setIsMessage] = useState({ type: "", text: "" });
 
-  const USER_ID = "admin-user-1";
-  const { getUserImage, setUserImage } = useImageStore();
-  const { updateName, updateImage } = useAdminProfileStore();
-
-  useEffect(() => {
-    setMounted(true);
+  const [adminId] = useState(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      return u.id || u._id || "admin-default";
+    } catch {
+      return "admin-default";
+    }
   });
-
-  const storedImage = mounted
-    ? getUserImage(USER_ID) || "/john-melo-2.png"
-    : "/john-melo-2.png";
+  const { setImage } = useImageStore();
+  const { updateName, updateImage } = useAdminProfileStore();
 
   const [formData, setFormData] = useState({
     firstName: "Oboh",
     lastName: "Thankgod",
     emailAddress: "tgtech101@gmail.com",
     phoneNumber: "+234 7068690289",
-    profileImage: storedImage,
   });
 
   const [tempData, setTempData] = useState(formData);
@@ -68,9 +65,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
   };
 
   const handleImageUpload = (uploadedUrl) => {
-    setUserImage(USER_ID, uploadedUrl);
-    setTempData((prev) => ({ ...prev, profileImage: uploadedUrl }));
-    // Sync image to store + localStorage so Header/Sidebar update instantly
+    setImage(adminId, uploadedUrl);
     updateImage(uploadedUrl);
   };
 
@@ -150,18 +145,13 @@ const MyProfileModal = ({ isOpen, onClose }) => {
           <div className="flex justify-between mt-[2rem]">
             <div className="flex gap-7">
               {isEditing ? (
-                <CloudinaryUploader
-                  user={formData}
+                <ImageUploadButton
+                  userId={adminId}
                   onUploadComplete={handleImageUpload}
+                  label="Change Picture"
                 />
               ) : (
-                <Image
-                  src={formData.profileImage}
-                  height={70}
-                  width={70}
-                  alt="profile image"
-                  className="rounded-full object-cover w-[4.25rem] h-[4.25rem]"
-                />
+                <Avatar userId={adminId} size="lg" />
               )}
 
               <div className="flex flex-col gap-2">
