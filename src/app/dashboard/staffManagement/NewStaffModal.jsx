@@ -214,6 +214,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
   const displayError = storeError || validationError;
 
   return (
+    <>
     <div
       onClick={onClose}
       className="bg-black/50 w-full flex justify-center items-center fixed inset-0 z-50 h-auto"
@@ -518,7 +519,6 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
         </div>
       </div>
     </div>
-
     {showUpgrade && (
       <UpgradePrompt
         role={limitInfo.role}
@@ -526,6 +526,9 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
         onClose={() => setShowUpgrade(false)}
       />
     )}
+
+    </>
+
   );
 };
 
