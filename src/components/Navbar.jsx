@@ -5,24 +5,16 @@ import img from "../assets/station-logo.png";
 import Link from "next/link";
 import { ArrowRight, AlignJustify, X, Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
-import RegisterManagerModal from "./RegisterManagerModal";
+import { useRouter } from "next/navigation";
 import useThemePersistence from "@/hooks/useThemePersistence";
 
 export default function Navbar() {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useThemePersistence();
 
   useEffect(() => { setMounted(true); }, []);
-
-  function openModal() {
-    setIsModalOpen(true);
-  }
-
-  function closeModal() {
-    setIsModalOpen(false);
-  }
 
   function handleOpen() {
     setIsOpen(true);
@@ -70,7 +62,7 @@ export default function Navbar() {
 
         <div
           className="flex bg-[#0080ff] font-semibold gap-2 py-3 px-6 rounded-[8px] text-white items-center cursor-pointer"
-          onClick={openModal}
+          onClick={() => router.push("/pricing")}
         >
           Get Started Now!
           <button className="bg-[#0080FF]" size="lg">
@@ -123,7 +115,7 @@ export default function Navbar() {
 
           <div
             className="cursor-pointer flex bg-[#0080ff] py-3 px-6 rounded-[8px] text-white items-center"
-            onClick={openModal}
+            onClick={() => router.push("/pricing")}
           >
             Get Started Now
             <button className="bg-[#0080FF]" size="lg">
@@ -133,7 +125,6 @@ export default function Navbar() {
         </div>
       )}
 
-      {isModalOpen && <RegisterManagerModal onclose={closeModal} />}
     </div>
   );
 }

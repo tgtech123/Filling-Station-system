@@ -1,4 +1,5 @@
-"use client"
+// FILE RETIRED — replaced by src/components/CreateSubscriptionPlanModal.jsx
+// "use client"
 import React, { useState, useEffect } from 'react'
 import { X, Eye, EyeOff, ChevronDown } from 'lucide-react'
 import { BsToggleOn, BsToggleOff } from "react-icons/bs"

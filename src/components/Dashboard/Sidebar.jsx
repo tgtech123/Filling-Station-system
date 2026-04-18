@@ -18,6 +18,9 @@ import {
   Pyramid,
   History,
   LogOut,
+  Network,
+  Plus,
+  BarChart2,
 } from "lucide-react";
 import { RiOilLine } from "react-icons/ri";
 import { PiToggleLeftFill, PiToggleRightFill } from "react-icons/pi";
@@ -43,6 +46,8 @@ import { GiExpense, GiTakeMyMoney } from "react-icons/gi";
 import { useState, useEffect } from "react";
 import { useImageStore } from "@/store/useImageStore";
 import useThemePersistence from "@/hooks/useThemePersistence";
+import usePaymentStore from "@/store/usePaymentStore";
+import AddBranchModal from "../AddBranchModal";
 
 export default function Sidebar({ isVisible, toggleSidebar }) {
   const pathname = usePathname();
@@ -55,6 +60,9 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
 
   const { getUserImage } = useImageStore();
   const { theme, setTheme } = useThemePersistence();
+  const { currentPlan, fetchCurrentPlan } = usePaymentStore();
+  const isEnterprise = currentPlan?.plan === "enterprise";
+  const [showAddBranch, setShowAddBranch] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -93,6 +101,12 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
 
     getUserData();
   }, [router]);
+
+  useEffect(() => {
+    if (userRole === "manager") {
+      fetchCurrentPlan();
+    }
+  }, [userRole]);
 
   const toggleDropdown = (id) => {
     setOpenDropdown(openDropdown === id ? null : id);
@@ -371,6 +385,13 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       link: "/dashboard/staffManagement",
       roles: ["manager"],
     },
+    {
+      id: "analytics",
+      name: "Analytics",
+      icon: <BarChart2 size={18} />,
+      link: "/dashboard/analytics",
+      roles: ["manager"],
+    },
     //Admin links
     {
       id: "Stations",
@@ -554,6 +575,29 @@ const visibleLinks = getVisibleLinks(userRole);
             </div>
           )}
 
+          {/* Enterprise Section */}
+          {isEnterprise && (
+            <div className="mt-4 mb-2">
+              <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-2">
+                Enterprise
+              </p>
+              <button
+                onClick={() => router.push("/dashboard/branches")}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
+              >
+                <Network size={18} className="text-purple-600" />
+                Branch Overview
+              </button>
+              <button
+                onClick={() => setShowAddBranch(true)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
+              >
+                <Plus size={18} className="text-purple-600" />
+                Add Branch
+              </button>
+            </div>
+          )}
+
           {/* Tools */}
           <p className="mb-4 text-xs font-semibold">TOOLS</p>
           <div className="links text-sm space-y-1">
@@ -602,6 +646,10 @@ const visibleLinks = getVisibleLinks(userRole);
           </button>
         </div>
       </div>
+
+      {showAddBranch && (
+        <AddBranchModal onClose={() => setShowAddBranch(false)} />
+      )}
     </div>
   );
 }

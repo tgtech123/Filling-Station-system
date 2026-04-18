@@ -9,8 +9,10 @@ import LiveIndicator from "@/components/LiveIndicator";
 import { GoHistory } from "react-icons/go";
 import { CheckCheck, Plus, TriangleAlert, Wrench, History, AlertCircle, XCircle, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import useDashboardStore from "@/store/useDashboardStore";
 import useActivityFeedStore from "@/store/useActivityFeedStore";
+import usePaymentStore from "@/store/usePaymentStore";
 import { reportType } from "./managerData";
 
 function SubscriptionBanner() {
@@ -91,8 +93,10 @@ function relativeTime(timestamp) {
 
 export default function ManagerDashboard() {
   const [userData, setUserData] = useState(null);
+  const router = useRouter();
 
   const { tankStatus, metrics, loading, fetchDashboardData, errors } = useDashboardStore();
+  const { currentPlan, fetchCurrentPlan } = usePaymentStore();
   const {
     activities,
     loading: activityLoading,
@@ -114,6 +118,7 @@ export default function ManagerDashboard() {
 
     const token = localStorage.getItem("token");
     if (token) {
+      fetchCurrentPlan();
       fetchDashboardData(token);
       const dashboardInterval = setInterval(() => {
         fetchDashboardData(token);
@@ -125,7 +130,6 @@ export default function ManagerDashboard() {
       };
     }
 
-    fetchActivity().then(() => startPolling());
     return () => stopPolling();
   }, [fetchDashboardData, fetchActivity, startPolling, stopPolling]);
 
@@ -162,13 +166,45 @@ export default function ManagerDashboard() {
         <SubscriptionBanner />
         {/* Header Section */}
         <DisplayCard>
-          <h2 className="text-2xl font-semibold">Welcome back, {fullName}</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <h2 className="text-2xl font-semibold">Welcome back, {fullName}</h2>
+            <div className="flex items-center gap-2">
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  currentPlan?.plan === "free"
+                    ? "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                    : currentPlan?.plan === "pro"
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                    : currentPlan?.plan === "pro-max"
+                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                    : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                }`}
+              >
+                {currentPlan?.planName || "Free Plan"}
+              </span>
+              {(!currentPlan || currentPlan?.plan === "free") && (
+                <button
+                  onClick={() => router.push("/pricing")}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                >
+                  Upgrade ↑
+                </button>
+              )}
+              {currentPlan?.daysRemaining !== null &&
+                currentPlan?.daysRemaining !== undefined &&
+                currentPlan?.daysRemaining <= 7 && (
+                  <span className="text-xs text-red-500 font-medium">
+                    Expires in {currentPlan.daysRemaining} days
+                  </span>
+                )}
+            </div>
+          </div>
           <p>
             Monitor your filling station operations, manage inventory, and track
             performance all in one place.
           </p>
 
-          <div className="mt-10 grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div className="mt-6 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <FlashCard
               name="Revenue Generated"
               variable="₦"
@@ -194,7 +230,7 @@ export default function ManagerDashboard() {
         </DisplayCard>
 
         {/* Quick Actions */}
-        <div className="mt-10">
+        <div className="mt-6 sm:mt-10">
           <DisplayCard>
             <h2 className="text-2xl font-semibold">Quick Actions</h2>
             <p>Perform overall operations in one click</p>
@@ -208,7 +244,7 @@ export default function ManagerDashboard() {
         </div>
 
         {/* Recent Activity and Current Product Levels */}
-        <div className="mt-10">
+        <div className="mt-6 sm:mt-10">
           <DisplayCard>
             <div className="w-full gap-4 flex flex-col lg:flex-row items-start">
               {/* Recent activity */}

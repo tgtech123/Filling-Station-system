@@ -14,6 +14,7 @@ import StationDetail from './components/StationDetail';
 const Page = () => {
   const [activePage, setActivePage] = useState('Dashboard');
   const [selectedStationId, setSelectedStationId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -64,10 +65,15 @@ const Page = () => {
   };
 
   return (
-    <div className='h-screen bg-neutral-100 dark:bg-gray-950 flex'>
-      <SidebarTwo activeItem={activePage} setActiveItem={setActivePage} />
-      <div className='flex-1 flex flex-col'>
-        <HeaderTwo />
+    <div className='h-screen bg-neutral-100 dark:bg-gray-950 flex overflow-hidden'>
+      <SidebarTwo
+        activeItem={activePage}
+        setActiveItem={(item) => { setActivePage(item); setSidebarOpen(false); }}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
+      <div className='flex-1 flex flex-col min-w-0'>
+        <HeaderTwo onMenuClick={() => setSidebarOpen(true)} />
         <main className='flex-1 overflow-y-auto'>
           {renderPage()}
         </main>

@@ -227,7 +227,7 @@ export default function ApprovedShiftsPage() {
       <div className="flex absolute top-0 right-30 flex-wrap">
         <button
           onClick={() => setIsFilterOpen(true)}
-          className="flex gap-3 items-center border-[1.5px] border-neutral-300 justify-center px-4 py-2 font-semibold bg-white text-neutral-800 rounded-xl hover:bg-neutral-100"
+          className="flex gap-3 items-center border-[1.5px] border-neutral-300 dark:border-gray-600 justify-center px-4 py-2 font-semibold bg-white dark:bg-gray-700 text-neutral-800 dark:text-gray-200 rounded-xl hover:bg-neutral-100 dark:hover:bg-gray-600"
         >
           Filter <IoFilterOutline />
         </button>

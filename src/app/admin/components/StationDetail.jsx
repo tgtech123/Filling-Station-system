@@ -192,7 +192,7 @@ const StationDetail = ({ stationId, onBack }) => {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Back button */}
       <button
         onClick={onBack}
@@ -444,12 +444,12 @@ const StationDetail = ({ stationId, onBack }) => {
       </div>
 
       {/* TAB NAVIGATION */}
-      <div className="flex gap-1 border-b border-gray-200 mb-6">
+      <div className="flex flex-wrap gap-1 border-b border-gray-200 mb-6">
         {TABS.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
+            className={`px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium rounded-t-lg transition-colors ${
               activeTab === tab
                 ? "bg-[#FF9D29] text-white"
                 : "text-gray-500 dark:text-gray-400 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
