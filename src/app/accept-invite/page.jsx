@@ -1,17 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import axios from "axios";
 
-export default function AcceptInvitePage() {
+function AcceptInviteContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
 
   const [step, setStep] = useState("loading");
-  // loading | setup | success | invalid
-
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -45,10 +43,7 @@ export default function AcceptInvitePage() {
 
     try {
       setLoading(true);
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/api/branches/accept-invite`,
-        { token, password }
-      );
+      const response = await axios.post("/api/branches/accept-invite", { token, password });
 
       const { token: authToken, user, station } = response.data;
 
@@ -72,12 +67,10 @@ export default function AcceptInvitePage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md w-full">
 
-        {/* Logo */}
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-blue-600">Flourish Station</h1>
         </div>
 
-        {/* Loading */}
         {step === "loading" && (
           <div className="text-center py-8">
             <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -85,7 +78,6 @@ export default function AcceptInvitePage() {
           </div>
         )}
 
-        {/* Invalid */}
         {step === "invalid" && (
           <div className="text-center py-8">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -106,7 +98,6 @@ export default function AcceptInvitePage() {
           </div>
         )}
 
-        {/* Setup password */}
         {step === "setup" && (
           <div>
             <div className="text-center mb-6">
@@ -181,7 +172,6 @@ export default function AcceptInvitePage() {
           </div>
         )}
 
-        {/* Success */}
         {step === "success" && (
           <div className="text-center py-8">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -202,5 +192,17 @@ export default function AcceptInvitePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AcceptInvitePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <AcceptInviteContent />
+    </Suspense>
   );
 }

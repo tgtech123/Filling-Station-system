@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { CheckCircle, Building2, X, CreditCard } from "lucide-react";
 import FrequentlyQuestions from "./FrequentlyQuestions";
 import usePlansStore from "@/store/usePlansStore";
@@ -799,4 +799,16 @@ function ModalPayment({
   );
 }
 
-export default PricingPage;
+function PricingPageWrapper() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <PricingPage />
+    </Suspense>
+  );
+}
+
+export default PricingPageWrapper;
