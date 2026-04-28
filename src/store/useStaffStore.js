@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
 
-const API = process.env.NEXT_PUBLIC_API;
-
 const useStaffStore = create((set, get) => ({
   staff: [],
   loading: {
@@ -13,31 +11,24 @@ const useStaffStore = create((set, get) => ({
   },
   error: null,
 
-  // ✅ Create new staff
   createStaff: async (staffData, token) => {
     set((state) => ({
       loading: { ...state.loading, creating: true },
       error: null,
     }));
-
     try {
-      const res = await axios.post(`${API}/api/auth`, staffData, {
+      const res = await axios.post("/api/auth", staffData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
-
       const data = res.data;
-      console.log("data==", data)
-
-      // ✅ Add new staff to state immediately
       set((state) => ({
-        staff: [...state.staff, data.staff], // ensure backend returns `staff` object
+        staff: [...state.staff, data.staff],
         loading: { ...state.loading, creating: false },
       }));
-
-      return data.staff; // 👈 optional return for use in frontend (e.g., Success Modal)
+      return data.staff;
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message;
       set((state) => ({
@@ -45,26 +36,21 @@ const useStaffStore = create((set, get) => ({
         error: errorMsg,
       }));
       console.error("Create Staff Error:", errorMsg);
-      throw err; // 👈 rethrow so frontend can also catch it
+      throw err;
     }
   },
 
-  // ✅ Fetch all staff
   getAllStaff: async (token) => {
     set((state) => ({
       loading: { ...state.loading, fetching: true },
       error: null,
     }));
-
     try {
-      const res = await axios.get(`${API}/api/auth`, {
+      const res = await axios.get("/api/auth", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      const data = res.data;
-
       set((state) => ({
-        staff: data.staff || [],
+        staff: res.data.staff || [],
         loading: { ...state.loading, fetching: false },
       }));
     } catch (err) {
@@ -77,25 +63,20 @@ const useStaffStore = create((set, get) => ({
     }
   },
 
-  // ✅ Update staff
   updateStaff: async (id, updatedData, token) => {
     set((state) => ({
       loading: { ...state.loading, updatingId: id },
       error: null,
     }));
-
     try {
-      const res = await axios.post(`${API}/api/auth/update-staff/${id}`, updatedData, {
+      const res = await axios.post(`/api/auth/update-staff/${id}`, updatedData, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
-
-      const data = res.data;
-
       set((state) => ({
-        staff: state.staff.map((s) => (s._id === id ? data.staff : s)),
+        staff: state.staff.map((s) => (s._id === id ? res.data.staff : s)),
         loading: { ...state.loading, updatingId: null },
       }));
     } catch (err) {
@@ -108,21 +89,17 @@ const useStaffStore = create((set, get) => ({
     }
   },
 
-  // ✅ Delete staff
   deleteStaff: async (id, token) => {
     set((state) => ({
       loading: { ...state.loading, deletingId: id },
       error: null,
     }));
-
     try {
-      await axios.post(`${API}/api/auth/delete-staff/${id}`,
+      await axios.post(
+        `/api/auth/delete-staff/${id}`,
         {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
       set((state) => ({
         staff: state.staff.filter((s) => s._id !== id),
         loading: { ...state.loading, deletingId: null },

@@ -8,10 +8,9 @@ const useEmergencyStore = create((set) => ({
   fetchStatus: async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/emergency/status`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await axios.get("/api/emergency/status", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       set({ emergencyMode: res.data.data?.active ?? res.data.active ?? false });
     } catch (err) {
       console.error("Failed to fetch emergency status:", err);
@@ -23,7 +22,7 @@ const useEmergencyStore = create((set) => ({
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/api/emergency/activate`,
+        "/api/emergency/activate",
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -43,7 +42,7 @@ const useEmergencyStore = create((set) => ({
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/api/emergency/deactivate`,
+        "/api/emergency/deactivate",
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

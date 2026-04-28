@@ -19,22 +19,30 @@ const Subscriptions = () => {
     fetchAdminPlans()
   }, [])
 
-  // Normalize real API shape → PlanCards prop shape
-  const normalizedPlans = adminPlans.map((p) => ({
-    id: p._id || p.id,
-    planName: p.name,
-    price: p.monthlyPrice ?? p.price ?? 0,
-    billingCycle: Array.isArray(p.billingCycles)
-      ? p.billingCycles[0]?.charAt(0).toUpperCase() + p.billingCycles[0]?.slice(1)
-      : p.billingCycle || 'Monthly',
-    userLimit: p.staffLimits
-      ? Object.entries(p.staffLimits)
-          .map(([k, v]) => `${v === 999 ? 'Unlimited' : v} ${k}`)
-          .join(', ')
-      : p.userLimit || 'Unlimited',
-    features: p.features || [],
-    isActive: p.isActive !== false,
-  }))
+  // Normalize real API shape → PlanCards prop shape, deduplicating by name
+  const seenNames = new Set()
+  const normalizedPlans = adminPlans.reduce((acc, p) => {
+    if (p.isActive === false) return acc
+    const key = (p.name || "").trim().toLowerCase()
+    if (seenNames.has(key)) return acc
+    seenNames.add(key)
+    acc.push({
+      id: p._id || p.id,
+      planName: p.name,
+      price: p.monthlyPrice ?? p.price ?? 0,
+      billingCycle: Array.isArray(p.billingCycles)
+        ? p.billingCycles[0]?.charAt(0).toUpperCase() + p.billingCycles[0]?.slice(1)
+        : p.billingCycle || 'Monthly',
+      userLimit: p.staffLimits
+        ? Object.entries(p.staffLimits)
+            .map(([k, v]) => `${v === 999 ? 'Unlimited' : v} ${k}`)
+            .join(', ')
+        : p.userLimit || 'Unlimited',
+      features: p.features || [],
+      isActive: p.isActive !== false,
+    })
+    return acc
+  }, [])
 
   return (
     <div className='p-4 sm:p-6 lg:p-9'>
@@ -128,7 +136,6 @@ const Subscriptions = () => {
                     await deletePlan(deletingPlanId)
                     setShowDeleteConfirm(false)
                     setDeletingPlanId(null)
-                    await fetchAdminPlans()
                     toast.success('Plan deleted successfully')
                   } catch {
                     toast.error('Failed to delete plan')

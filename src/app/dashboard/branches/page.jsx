@@ -46,7 +46,7 @@ export default function BranchesPage() {
         try {
           const token = localStorage.getItem("token");
           const res = await axios.get(
-            `${process.env.NEXT_PUBLIC_API}/api/branches/${s.id}/invites`,
+            `/api/branches/${s.id}/invites`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
           setPendingInvites((prev) => ({
@@ -63,7 +63,7 @@ export default function BranchesPage() {
       setReportLoading(true);
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/branches/consolidated-report?period=${period}`,
+        `/api/branches/consolidated-report?period=${period}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setReport(res.data.data);

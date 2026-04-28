@@ -1,22 +1,18 @@
 import { create } from "zustand";
 import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API || "http://localhost:5000";
-
 const usePlansStore = create((set, get) => ({
-  // ── State 
+  // ── State
   plans: [],
   adminPlans: [],
   loading: false,
   error: null,
 
-  // ── Public Plans (no auth) 
+  // ── Public Plans (no auth)
   fetchPublicPlans: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.get(
-        `${BASE_URL}/api/public/plans`
-      );
+      const response = await axios.get('/api/public/plans');
       set({
         plans: response.data.plans || response.data.data || [],
         loading: false,
@@ -29,13 +25,13 @@ const usePlansStore = create((set, get) => ({
     }
   },
 
-  // ── Admin Plans 
+  // ── Admin Plans
   fetchAdminPlans: async () => {
     set({ loading: true, error: null });
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${BASE_URL}/api/admin/plans`,
+        '/api/admin/plans',
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set({
@@ -50,12 +46,12 @@ const usePlansStore = create((set, get) => ({
     }
   },
 
-  // ── Create Plan 
+  // ── Create Plan
   createPlan: async (planData) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${BASE_URL}/api/admin/plans`,
+        '/api/admin/plans',
         planData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -63,7 +59,6 @@ const usePlansStore = create((set, get) => ({
       if (newPlan) {
         set((state) => ({ adminPlans: [...state.adminPlans, newPlan] }));
       }
-      // Sync public plans so pricing page auto-updates
       await get().fetchPublicPlans();
       return { success: true, plan: newPlan };
     } catch (error) {
@@ -74,12 +69,12 @@ const usePlansStore = create((set, get) => ({
     }
   },
 
-  // ── Update Plan 
+  // ── Update Plan
   updatePlan: async (planId, updates) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.patch(
-        `${BASE_URL}/api/admin/plans/${planId}`,
+        `/api/admin/plans/${planId}`,
         updates,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -98,12 +93,12 @@ const usePlansStore = create((set, get) => ({
     }
   },
 
-  // ── Delete Plan 
+  // ── Delete Plan
   deletePlan: async (planId) => {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `${BASE_URL}/api/admin/plans/${planId}`,
+        `/api/admin/plans/${planId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set((state) => ({

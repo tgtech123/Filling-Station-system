@@ -1,17 +1,13 @@
 "use client";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
-import { ArrowLeft, UserRoundPen } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { reportType } from "./exportReportData";
 import ExportReportCard from "./ExportReportCard";
 import CustomReportBuilder from "./CustomReportBuilder";
-import { useState } from "react";
-import ManagerProfileModal from "./ManagerProfileModal";
 import useManagerReportsStore from "@/store/useManagerReportsStore";
 
 export default function ExportReport() {
-  const [showProfileModal, setShowProfileModal] = useState(false);
-
   const exportLoading = useManagerReportsStore((state) => state.loading.export);
   const exportError   = useManagerReportsStore((state) => state.errors.export);
   const clearError    = useManagerReportsStore((state) => state.clearError);
@@ -28,13 +24,6 @@ export default function ExportReport() {
             Back to Dashboard
           </Link>
           <h4 className="text-2xl font-semibold">Export Reports</h4>
-          <div
-            onClick={() => setShowProfileModal(true)}
-            className="cursor-pointer text-[#0080ff] flex gap-3 lg:ml-10 rounded-2xl hover:bg-blue-500 hover:text-white hover:border-none text-[1.25rem] hover:scale-105 transition border-2 border-neutral-400 p-2 font-semibold"
-          >
-            <h4 className="lg:block hidden">View Profile</h4>
-            <UserRoundPen size={26} />
-          </div>
         </div>
       </header>
 
@@ -85,9 +74,6 @@ export default function ExportReport() {
         <CustomReportBuilder />
       </div>
 
-      {showProfileModal && (
-        <ManagerProfileModal onclose={() => setShowProfileModal(false)} />
-      )}
     </div>
   );
 }

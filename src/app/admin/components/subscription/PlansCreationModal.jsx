@@ -42,7 +42,7 @@ const PlansCreationModal = ({ isOpen, onClose, onSuccess, isEdit = false, initia
   const [isEyeOpenTwo, setIsEyeOpenTwo] = useState(false)
 
   // Toggles
-  const [isToggleOn, setIsToggleOn] = useState(false)
+  const [isToggleOn, setIsToggleOn] = useState(true)
   const [isMovedOn, setIsMovedOn] = useState(false)
 
   // Pre-fill form when editing
@@ -103,8 +103,7 @@ const PlansCreationModal = ({ isOpen, onClose, onSuccess, isEdit = false, initia
       const planData = {
         name: planName,
         price: Number(price),
-        monthlyPrice: billingCycle === "Yearly" ? 0 : Number(price),
-        yearlyPrice: billingCycle === "Yearly" ? Number(price) : 0,
+        monthlyPrice: Number(price),
         billingCycles: [(billingCycle || "Monthly").toLowerCase()],
         userLimit,
         features: selectedValue.map((item) => item.name),

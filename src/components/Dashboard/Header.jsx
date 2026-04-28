@@ -15,6 +15,7 @@ import useNotificationStore from "@/store/useNotificationStore";
 import useBranchStore from "@/store/useBranchStore";
 import usePaymentStore from "@/store/usePaymentStore";
 import AddBranchModal from "../AddBranchModal";
+import ManagerProfileModal from "../ManagerProfileModal";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -224,14 +225,16 @@ export default function Header({ toggleSidebar, showSidebar }) {
 
   const { branches, switching, switchStation, fetchBranches } = useBranchStore();
   const { currentPlan } = usePaymentStore();
-  const isEnterprise = currentPlan?.plan === "enterprise";
-  const canUpgrade = currentPlan?.plan !== "enterprise-max";
+  const isEnterprise = currentPlan?.plan?.startsWith("enterprise");
+  const canUpgrade = currentPlan?.plan !== "enterprise-max" && userData?.role === "manager";
+  const isSuperManager = userData?.isSuperManager === true;
 
   // dropdown open state
   const [msgOpen, setMsgOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [showAddBranch, setShowAddBranch] = useState(false);
+  const [showManagerProfile, setShowManagerProfile] = useState(false);
 
   // selected item for modal
   const [selectedMsg, setSelectedMsg] = useState(null);
@@ -266,12 +269,12 @@ export default function Header({ toggleSidebar, showSidebar }) {
     return () => stopPolling();
   }, [fetchMessages, fetchAlerts, startPolling, stopPolling]);
 
-  // ── Fetch branches for enterprise plan
+  // ── Fetch branches for enterprise super manager only
   useEffect(() => {
-    if (isEnterprise) {
+    if (isEnterprise && isSuperManager) {
       fetchBranches();
     }
-  }, [isEnterprise]);
+  }, [isEnterprise, isSuperManager]);
 
   // ── Click outside to close dropdowns
   useEffect(() => {
@@ -328,8 +331,8 @@ export default function Header({ toggleSidebar, showSidebar }) {
   return (
     <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white dark:bg-gray-900 flex items-center justify-end gap-3">
 
-      {/* ── Station Switcher (Enterprise only, desktop) ── */}
-      {isEnterprise && branches.length > 1 && (
+      {/* ── Station Switcher (Enterprise super manager only, desktop) ── */}
+      {isEnterprise && isSuperManager && branches.length >= 1 && (
         <div className="relative hidden lg:block" ref={switcherRef}>
           <button
             onClick={() => setShowSwitcher(!showSwitcher)}
@@ -396,18 +399,20 @@ export default function Header({ toggleSidebar, showSidebar }) {
                 ))}
               </div>
 
-              <div className="p-3 border-t border-gray-100 dark:border-gray-700">
-                <button
-                  onClick={() => {
-                    setShowSwitcher(false);
-                    setShowAddBranch(true);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm font-medium transition-colors"
-                >
-                  <Plus size={16} />
-                  Add New Branch
-                </button>
-              </div>
+              {isSuperManager && (
+                <div className="p-3 border-t border-gray-100 dark:border-gray-700">
+                  <button
+                    onClick={() => {
+                      setShowSwitcher(false);
+                      setShowAddBranch(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-blue-400 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-sm font-medium transition-colors"
+                  >
+                    <Plus size={16} />
+                    Add New Branch
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -491,6 +496,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
         username={fullName}
         userRole="View Profile"
         currentImage={uploadedImage}
+        onProfileClick={userData?.role === "manager" ? () => setShowManagerProfile(true) : undefined}
       />
 
       <div className="hidden lg:flex">
@@ -521,6 +527,9 @@ export default function Header({ toggleSidebar, showSidebar }) {
       )}
       {showAddBranch && (
         <AddBranchModal onClose={() => setShowAddBranch(false)} />
+      )}
+      {showManagerProfile && (
+        <ManagerProfileModal onclose={() => setShowManagerProfile(false)} />
       )}
     </div>
   );

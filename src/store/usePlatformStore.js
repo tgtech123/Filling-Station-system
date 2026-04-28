@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API || "http://localhost:5000";
-
 const usePlatformStore = create((set) => ({
   settings: null,
   loading: false,
@@ -12,7 +10,7 @@ const usePlatformStore = create((set) => ({
   fetchPublicSettings: async () => {
     try {
       set({ loading: true });
-      const response = await axios.get(`${BASE_URL}/api/public/settings`);
+      const response = await axios.get(`/api/public/settings`);
       set({ settings: response.data.data, loading: false });
     } catch (err) {
       set({ loading: false });
@@ -23,7 +21,7 @@ const usePlatformStore = create((set) => ({
     try {
       set({ loading: true });
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/api/admin/settings`, {
+      const response = await axios.get(`/api/admin/settings`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       set({ settings: response.data.data, loading: false });
@@ -37,7 +35,7 @@ const usePlatformStore = create((set) => ({
       set({ saving: true });
       const token = localStorage.getItem("token");
       const response = await axios.patch(
-        `${BASE_URL}/api/admin/settings`,
+        `/api/admin/settings`,
         updates,
         { headers: { Authorization: `Bearer ${token}` } }
       );

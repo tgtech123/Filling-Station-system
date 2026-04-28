@@ -91,7 +91,7 @@ export default function AddBranchModal({ onClose, onUpgradeRequired }) {
       setInviting(true);
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/api/branches/${createdBranch?.id}/invite`,
+        `/api/branches/${createdBranch?.id}/invite`,
         inviteData,
         { headers: { Authorization: `Bearer ${token}` } }
       );

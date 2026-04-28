@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API || "http://localhost:5000";
-
 const useBranchStore = create((set, get) => ({
   // ── State
   branches: [],
@@ -17,7 +15,7 @@ const useBranchStore = create((set, get) => ({
     try {
       set({ loading: true });
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/api/branches`, {
+      const response = await axios.get(`/api/branches`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       set({
@@ -36,7 +34,7 @@ const useBranchStore = create((set, get) => ({
       set({ switching: true });
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${BASE_URL}/api/branches/switch`,
+        `/api/branches/switch`,
         { targetStationId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -45,9 +43,10 @@ const useBranchStore = create((set, get) => ({
       const newToken = response.data.token;
       localStorage.setItem("token", newToken);
 
-      // Update user station in localStorage
+      // Update user station in localStorage (super manager by definition can switch)
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       user.station = targetStationId;
+      user.isSuperManager = true;
       localStorage.setItem("user", JSON.stringify(user));
 
       set({ switching: false });
@@ -67,7 +66,7 @@ const useBranchStore = create((set, get) => ({
     try {
       set({ loading: true });
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${BASE_URL}/api/branches/overview`, {
+      const response = await axios.get(`/api/branches/overview`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       set({
@@ -85,7 +84,7 @@ const useBranchStore = create((set, get) => ({
       set({ loading: true });
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${BASE_URL}/api/branches/create`,
+        `/api/branches/create`,
         branchData,
         { headers: { Authorization: `Bearer ${token}` } }
       );

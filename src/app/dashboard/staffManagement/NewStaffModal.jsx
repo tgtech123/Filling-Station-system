@@ -9,6 +9,14 @@ import UpgradePrompt from "@/components/UpgradePrompt";
 const NewStaffModal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
+  const isSuperManager = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}").isSuperManager === true;
+    } catch {
+      return false;
+    }
+  })();
+
   const [isLoading, setIsLoading] = useState(false);
   const [newStaffName, setNewStaffName] =useState("");
 
@@ -19,9 +27,6 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
   const [toggleOn, setToggleOn] = useState(false);
   const [isToggleTwo, setIsToggleTwo] = useState(false);
   const [showVisible, setShowVisible] = useState(false);
-  const [isToggleChevron, setIsToggleChevron] = useState(false);
-  const [isToggleChevTwo, setIsToggleChevTwo] = useState(false);
-  const [togglePayType, setTogglePayType] = useState(false);
   
   // Local error state for validation
   const [validationError, setValidationError] = useState("");
@@ -364,49 +369,36 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
 
           <div>
             <p className="grid grid-cols-1 lg:grid-cols-2 mb-[0.75rem]">
-              <span className="flex flex-col gap-2 relative">
+              <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Role</label>
-                <input
-                  type="text"
+                <select
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  placeholder="Cashier"
-                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
-                />
-
-                <span
-                  onClick={() => setIsToggleChevron(!isToggleChevron)}
-                  className="absolute text-neutral-500 top-10 right-7 cursor-pointer"
+                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl bg-white"
                 >
-                  {isToggleChevron ? (
-                    <ChevronUp size={26} />
-                  ) : (
-                    <ChevronDown size={26} />
-                  )}
-                </span>
+                  <option value="">Select role</option>
+                  <option value="attendant">Attendant</option>
+                  <option value="cashier">Cashier</option>
+                  <option value="accountant">Accountant</option>
+                  <option value="supervisor">Supervisor</option>
+                  {isSuperManager && <option value="manager">Branch Manager</option>}
+                </select>
               </span>
-              <span className="flex flex-col gap-2 relative">
+              <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Shift type</label>
-                <input
-                  type="text"
+                <select
                   name="shiftType"
                   value={formData.shiftType}
                   onChange={handleInputChange}
-                  placeholder="Morning"
-                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
-                />
-
-                <span
-                  onClick={() => setIsToggleChevTwo(!isToggleChevTwo)}
-                  className="absolute text-neutral-500 top-10 right-6 cursor-pointer"
+                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl bg-white"
                 >
-                  {isToggleChevTwo ? (
-                    <ChevronUp size={26} />
-                  ) : (
-                    <ChevronDown size={26} />
-                  )}
-                </span>
+                  <option value="">Select shift</option>
+                  <option value="morning">Morning</option>
+                  <option value="afternoon">Afternoon</option>
+                  <option value="night">Night</option>
+                  <option value="full-day">Full Day</option>
+                </select>
               </span>
             </p>
 
@@ -451,27 +443,20 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
             <hr className="border-[1px] border-neutral-100 mb-[0.75rem]" />
 
             <p className="grid grid-cols-1 lg:grid-cols-2 mb-[0.75rem]">
-              <span className="flex flex-col gap-2 relative">
+              <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Pay type</label>
-                <input
-                  type="text"
+                <select
                   name="payType"
                   value={formData.payType}
                   onChange={handleInputChange}
-                  placeholder="Monthly Salary"
-                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
-                />
-
-                <span
-                  onClick={() => setTogglePayType(!togglePayType)}
-                  className="absolute top-10 right-7 text-neutral-500 cursor-pointer"
+                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl bg-white"
                 >
-                  {togglePayType ? (
-                    <ChevronUp size={26} />
-                  ) : (
-                    <ChevronDown size={26} />
-                  )}
-                </span>
+                  <option value="">Select pay type</option>
+                  <option value="hourly">Hourly</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
               </span>
               <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Amount</label>

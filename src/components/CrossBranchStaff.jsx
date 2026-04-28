@@ -20,7 +20,7 @@ export default function CrossBranchStaff() {
       setLoading(true);
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/branches/staff`,
+        `/api/branches/staff`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setData(res.data.data || []);
@@ -38,7 +38,7 @@ export default function CrossBranchStaff() {
       setTransferring(true);
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/api/branches/staff/transfer`,
+        `/api/branches/staff/transfer`,
         {
           staffId: selectedStaff.id,
           fromStationId: selectedStaff.stationId,

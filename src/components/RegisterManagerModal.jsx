@@ -25,7 +25,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const API = process.env.NEXT_PUBLIC_API;
+  const [planAlreadyPaid, setPlanAlreadyPaid] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -152,7 +152,14 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
       if (formData.password !== formData.confirmPassword) throw new Error("Passwords do not match");
       if (!formData.termsAccepted) throw new Error("Please accept the Terms of Service and Privacy Policy");
 
-      const response = await fetch(`${API}/api/register`, {
+      // Recover payment reference if user already paid as guest
+      let paymentReference = null;
+      try {
+        const pv = JSON.parse(sessionStorage.getItem("paymentVerified") || "{}");
+        paymentReference = pv.reference || null;
+      } catch {}
+
+      const response = await fetch(`/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -188,6 +195,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
           twoFactorAuthEnabled: formData.twoFactorAuthEnabled,
           notificationPreferences: formData.notificationPreferences,
           selectedPlan: selectedPlan?.slug || "free",
+          paymentReference,
         }),
       });
 
@@ -199,8 +207,16 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
 
+      // Clear payment session data — plan is now active
+      if (paymentReference) {
+        sessionStorage.removeItem("paymentVerified");
+        sessionStorage.removeItem("payerInfo");
+        setPlanAlreadyPaid(true);
+      }
+
       setStep(5);
 
+      // Only show "Proceed to Payment" if the plan still needs payment (no reference provided)
       if (data.requiresPayment && selectedPlan && selectedPlan.billingCycle !== "free") {
         sessionStorage.setItem(
           "pendingPayment",
@@ -282,6 +298,15 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
   };
 
   const handleAccessDashboard = async () => {
+    // Plan was already paid during guest checkout — go straight to dashboard
+    if (planAlreadyPaid) {
+      sessionStorage.removeItem("selectedPlan");
+      sessionStorage.removeItem("pendingPayment");
+      router.push("/dashboard/manager");
+      onclose();
+      return;
+    }
+
     const pendingPayment = sessionStorage.getItem("pendingPayment");
     if (pendingPayment) {
       sessionStorage.removeItem("pendingPayment");
@@ -290,13 +315,11 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
       try {
         await initializePayment(payment.slug, payment.billingCycle);
       } catch {
-        sessionStorage.removeItem("payerInfo");
         router.push("/dashboard/manager");
         onclose();
       }
     } else {
       sessionStorage.removeItem("selectedPlan");
-      sessionStorage.removeItem("payerInfo");
       sessionStorage.removeItem("paymentVerified");
       router.push("/dashboard/manager");
       onclose();
@@ -855,10 +878,20 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
 
           {selectedPlan && (
             <div className="flex justify-center mt-3 mb-2">
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-4 py-2 inline-block">
-                <p className="text-blue-600 dark:text-blue-400 text-sm font-semibold">
+              <div className={`border rounded-lg px-4 py-2 inline-block ${
+                planAlreadyPaid || selectedPlan.billingCycle === "free"
+                  ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
+                  : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700"
+              }`}>
+                <p className={`text-sm font-semibold ${
+                  planAlreadyPaid || selectedPlan.billingCycle === "free"
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-blue-600 dark:text-blue-400"
+                }`}>
                   {selectedPlan.billingCycle === "free"
                     ? "✅ Free Plan Activated"
+                    : planAlreadyPaid
+                    ? `✅ ${selectedPlan.name} Plan Activated — Payment confirmed`
                     : `🎯 ${selectedPlan.name} Selected — Complete payment to activate`}
                 </p>
               </div>
@@ -885,7 +918,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
               onClick={handleAccessDashboard}
               className="bg-[#0080ff] hover:bg-blue-700 rounded-lg px-6 py-2.5 text-sm font-semibold text-white transition-colors"
             >
-              {sessionStorage.getItem("pendingPayment") ? "Proceed to Payment" : "Access Dashboard"}
+              {!planAlreadyPaid && sessionStorage.getItem("pendingPayment") ? "Proceed to Payment" : "Access Dashboard"}
             </button>
           </div>
         </div>

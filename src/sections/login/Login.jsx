@@ -6,7 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import LoginTwo from "../LoginTwo";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import usePlatformStore from "@/store/usePlatformStore";
 
 const Login = () => {
@@ -17,6 +17,10 @@ const Login = () => {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const upgraded = searchParams.get("upgraded") === "true";
+  const upgradedPlan = searchParams.get("plan") || "";
 
   const { settings, fetchPublicSettings } = usePlatformStore();
 
@@ -31,14 +35,11 @@ const Login = () => {
     setError(null);
 
     try {
-      const API = process.env.NEXT_PUBLIC_API;
-
-      const res = await fetch(`${API}/api/auth/login`, {
+      const res = await fetch(`/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -113,6 +114,17 @@ const Login = () => {
           <p className="text-md text-gray-500 text-center">
             Login to access your customized dashboard
           </p>
+
+          {upgraded && (
+            <div className="w-full mt-4 mb-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-center">
+              <p className="text-green-700 font-semibold text-sm">
+                🎉 {upgradedPlan ? `Your ${upgradedPlan} plan is now active!` : "Your plan has been upgraded!"}
+              </p>
+              <p className="text-green-600 text-xs mt-0.5">
+                Log in below to access your upgraded dashboard.
+              </p>
+            </div>
+          )}
 
           <form
             onSubmit={handleLogin}

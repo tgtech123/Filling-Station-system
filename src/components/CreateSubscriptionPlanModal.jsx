@@ -247,11 +247,14 @@ const DEFAULT_FORM = {
   maxBranches: 1
 }
 
+import usePlansStore from "@/store/usePlansStore"
+
 export default function CreateSubscriptionPlanModal({
   onClose,
   onSuccess,
   initialData = null
 }) {
+  const { adminPlans } = usePlansStore()
   const [selectedTemplate, setSelectedTemplate] = useState(initialData?.slug || "")
   const [formData, setFormData] = useState(initialData || DEFAULT_FORM)
   const [loading, setLoading] = useState(false)
@@ -280,6 +283,14 @@ export default function CreateSubscriptionPlanModal({
     if (!formData.slug.trim()) newErrors.slug = "Slug required"
     if (!formData.description.trim()) newErrors.description = "Description required"
     if (!formData.duration) newErrors.duration = "Duration required"
+
+    // Duplicate name check (skip when editing the same plan)
+    const duplicate = adminPlans.find((p) => {
+      const isSelf = initialData?._id && (p._id === initialData._id || p.id === initialData._id)
+      return !isSelf && p.name.trim().toLowerCase() === formData.name.trim().toLowerCase()
+    })
+    if (duplicate) newErrors.name = `A plan named "${duplicate.name}" already exists`
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -325,10 +336,11 @@ export default function CreateSubscriptionPlanModal({
     try {
       setLoading(true)
       const token = localStorage.getItem("token")
-      const payload = { ...formData, slug: formData.slug.toLowerCase().trim() }
+      const { yearlyPrice: _y, ...rest } = formData
+      const payload = { ...rest, slug: formData.slug.toLowerCase().trim() }
       const url = initialData?._id
-        ? `${process.env.NEXT_PUBLIC_API}/api/admin/plans/${initialData._id}`
-        : `${process.env.NEXT_PUBLIC_API}/api/admin/plans`
+        ? `/api/admin/plans/${initialData._id}`
+        : `/api/admin/plans`
       const method = initialData?._id ? "PATCH" : "POST"
 
       await axios({ method, url, data: payload, headers: { Authorization: `Bearer ${token}` } })
@@ -439,14 +451,14 @@ export default function CreateSubscriptionPlanModal({
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Yearly Price (₦)</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                  Yearly Price (₦) <span className="text-xs font-normal text-gray-400 dark:text-gray-500">auto-computed</span>
+                </label>
                 <input
-                  type="number"
-                  name="yearlyPrice"
-                  value={formData.yearlyPrice}
-                  onChange={handleInputChange}
-                  min="0"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  type="text"
+                  readOnly
+                  value={`₦${Math.round(formData.monthlyPrice * 12 * 0.9).toLocaleString()}`}
+                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                 />
               </div>
               <div>

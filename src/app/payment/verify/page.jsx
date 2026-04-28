@@ -11,7 +11,10 @@ export default function PaymentVerifyPage() {
 
   const [status, setStatus] = useState("verifying"); // verifying | success | failed
   const [planName, setPlanName] = useState("");
-  const [isExistingUser, setIsExistingUser] = useState(false);
+  // "dashboard" → authenticated upgrade goes to /dashboard/manager
+  // "login"     → existing-email guest goes to /login with upgrade banner
+  // "setup"     → brand new user goes to /pricing?register=true to create station
+  const [redirectTarget, setRedirectTarget] = useState("dashboard");
 
   useEffect(() => {
     if (!reference) {
@@ -22,59 +25,98 @@ export default function PaymentVerifyPage() {
     const verify = async () => {
       try {
         const result = await verifyPayment(reference);
-        setPlanName(result.data?.planName || "");
+        const data = result.data || {};
+        setPlanName(data.planName || data.plan || "");
 
-        // Check if user is already logged in as manager (upgrading plan)
-        let existing = false;
-        try {
-          const token = localStorage.getItem("token");
-          const user = JSON.parse(localStorage.getItem("user") || "{}");
-          existing = !!(token && user.role === "manager");
-        } catch {}
-        setIsExistingUser(existing);
+        // Backend tells us definitively:
+        // - isGuest: true + isExistingUser: false  → new user, email has no station yet
+        // - isGuest: true + isExistingUser: true   → existing manager paid as guest, plan upgraded
+        // - isGuest: false / undefined             → authenticated user upgrading from dashboard
+        // Safety net: guest references always start with "FS_GUEST_" — use this as a fallback
+        // in case the backend's early-exit path omits the isGuest field.
+        const isGuestRef = reference?.startsWith("FS_GUEST_");
+        const isGuestPayment = data.isGuest === true || isGuestRef === true;
+        const existingAccount = data.isExistingUser === true;
+        const authenticatedUpgrade = !isGuestPayment;
 
-        // Clear stale auth data for new users to prevent middleware conflicts
-        if (!existing) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-        }
-
-        sessionStorage.removeItem("selectedPlan");
         setStatus("success");
 
-        if (existing) {
-          // Existing manager upgrading — go to dashboard
-          setTimeout(() => {
-            router.push("/dashboard/manager");
-          }, 3000);
+        if (authenticatedUpgrade) {
+          // Logged-in manager upgraded — hard reload so all stores re-fetch with new plan data
+          setRedirectTarget("dashboard");
+          setTimeout(() => { window.location.href = "/dashboard/manager"; }, 3000);
+        } else if (existingAccount) {
+          // Guest email matched an existing account — plan already upgraded.
+          // If they were already logged in (upgrading from dashboard), go straight to dashboard.
+          // If they weren't logged in (typed an existing email on pricing page), send to login.
+          const alreadyLoggedIn = !!localStorage.getItem("token");
+          if (alreadyLoggedIn) {
+            setRedirectTarget("dashboard");
+            setTimeout(() => { window.location.href = "/dashboard/manager"; }, 3000);
+          } else {
+            setRedirectTarget("login");
+            setTimeout(() => {
+              router.push(
+                `/login?upgraded=true&plan=${encodeURIComponent(data.planName || "")}`
+              );
+            }, 3000);
+          }
         } else {
-          // New user — store verification and redirect to registration
+          // Brand new user — store verification data and open the create-station modal
+          setRedirectTarget("setup");
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
           const payerInfoRaw = sessionStorage.getItem("payerInfo");
-          const paymentData = {
-            verified: true,
-            plan: result.data?.planName,
-            reference: reference,
-            payer: payerInfoRaw ? JSON.parse(payerInfoRaw) : null,
-          };
+          // Preserve the selectedPlan that was written when the user clicked the plan card
+          // (it has the correct price). Only fall back to payment response data if it's missing.
+          if (!sessionStorage.getItem("selectedPlan")) {
+            sessionStorage.setItem(
+              "selectedPlan",
+              JSON.stringify({
+                slug: data.planSlug,
+                name: data.planName,
+                billingCycle: data.billingCycle,
+              })
+            );
+          }
+          // Keep "paymentVerified" so RegisterManagerModal reads the reference in createManager()
           sessionStorage.setItem(
             "paymentVerified",
-            JSON.stringify(paymentData)
+            JSON.stringify({
+              verified: true,
+              plan: data.planName,
+              planSlug: data.planSlug,
+              billingCycle: data.billingCycle,
+              reference,
+              payer: payerInfoRaw ? JSON.parse(payerInfoRaw) : null,
+            })
           );
-          setTimeout(() => {
-            router.push("/pricing?register=true");
-          }, 2000);
+          setTimeout(() => router.push("/pricing?register=true"), 2000);
         }
       } catch (err) {
         console.error("Verify failed:", err);
         setStatus("failed");
-        setTimeout(() => {
-          router.push("/dashboard/manager");
-        }, 3000);
+        setTimeout(() => router.push("/pricing"), 3000);
       }
     };
 
     verify();
   }, [reference]);
+
+  const successBody = {
+    dashboard: {
+      text: `Your ${planName} plan is now active on your account.`,
+      redirect: "Redirecting to your dashboard...",
+    },
+    login: {
+      text: `Your ${planName} plan is now active on your account.`,
+      redirect: "Redirecting to login to access your upgraded dashboard...",
+    },
+    setup: {
+      text: "Payment confirmed! Now let's set up your station account.",
+      redirect: "Redirecting to account setup...",
+    },
+  }[redirectTarget] || {};
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
@@ -113,14 +155,10 @@ export default function PaymentVerifyPage() {
               Payment Successful! 🎉
             </h2>
             <p className="text-gray-500 dark:text-gray-400 mb-4">
-              {isExistingUser
-                ? `Welcome to ${planName}! Your plan is now active.`
-                : "Payment confirmed! Now let's set up your station account."}
+              {successBody.text}
             </p>
             <p className="text-sm text-gray-400 dark:text-gray-500">
-              {isExistingUser
-                ? "Redirecting to dashboard..."
-                : "Redirecting to registration..."}
+              {successBody.redirect}
             </p>
           </>
         )}
@@ -149,7 +187,7 @@ export default function PaymentVerifyPage() {
               Something went wrong. You can try again from your dashboard.
             </p>
             <p className="text-sm text-gray-400 dark:text-gray-500">
-              Redirecting to dashboard...
+              Redirecting to pricing page...
             </p>
           </>
         )}

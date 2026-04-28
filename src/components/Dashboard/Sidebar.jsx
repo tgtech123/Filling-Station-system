@@ -61,7 +61,8 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
   const { getUserImage } = useImageStore();
   const { theme, setTheme } = useThemePersistence();
   const { currentPlan, fetchCurrentPlan } = usePaymentStore();
-  const isEnterprise = currentPlan?.plan === "enterprise";
+  const isEnterprise = currentPlan?.plan?.startsWith("enterprise");
+  const isSuperManager = userData?.isSuperManager === true;
   const [showAddBranch, setShowAddBranch] = useState(false);
 
   useEffect(() => {
@@ -575,8 +576,8 @@ const visibleLinks = getVisibleLinks(userRole);
             </div>
           )}
 
-          {/* Enterprise Section */}
-          {isEnterprise && (
+          {/* Enterprise Section — super manager only */}
+          {isEnterprise && isSuperManager && (
             <div className="mt-4 mb-2">
               <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide px-3 mb-2">
                 Enterprise

@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Check, CheckCircle, Building2, X, CreditCard } from "lucide-react";
+import { CheckCircle, Building2, X, CreditCard } from "lucide-react";
 import FrequentlyQuestions from "./FrequentlyQuestions";
 import usePlansStore from "@/store/usePlansStore";
 import RegisterManagerModal from "@/components/RegisterManagerModal";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import axios from "axios";
 
 // Skeleton card while loading
@@ -25,7 +26,6 @@ const SkeletonCard = () => (
 );
 
 const PricingPage = () => {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [buttonOne, setButtonOne] = useState("buttonOne");
   const [showBlue, setShowBlue] = useState(null);
@@ -35,9 +35,11 @@ const PricingPage = () => {
   const [payerEmail, setPayerEmail] = useState("");
   const [payerName, setPayerName] = useState("");
   const [payerInfo, setPayerInfo] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [emailError, setEmailError] = useState("");
+  const [emailExists, setEmailExists] = useState(false);
   const [initiatingPayment, setInitiatingPayment] = useState(false);
-  const [processingPlan, setProcessingPlan] = useState(null);
+  const [currentPlan, setCurrentPlan] = useState(null);
 
   const { plans, loading, fetchPublicPlans } = usePlansStore();
 
@@ -57,6 +59,27 @@ const PricingPage = () => {
     );
   }, [plans]);
 
+  // Pre-fill name/email and fetch current plan for logged-in managers
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem("token");
+      const userRaw = localStorage.getItem("user");
+      if (token && userRaw) {
+        const user = JSON.parse(userRaw);
+        const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+        if (fullName) setPayerName(fullName);
+        if (user.email) setPayerEmail(user.email);
+        setIsLoggedIn(true);
+        axios
+          .get("/api/payments/current-plan", {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          .then((res) => setCurrentPlan(res.data.data))
+          .catch(() => {});
+      }
+    } catch {}
+  }, []);
+
   // Auto-open registration modal after successful payment redirect
   useEffect(() => {
     const shouldRegister = searchParams.get("register");
@@ -67,7 +90,8 @@ const PricingPage = () => {
         if (paymentData.verified) {
           setPayerInfo(paymentData.payer || null);
           setShowRegisterModal(true);
-          sessionStorage.removeItem("paymentVerified");
+          // Do NOT remove "paymentVerified" here — RegisterManagerModal reads
+          // the reference from it in createManager() to activate the paid plan
         }
       } catch {}
     }
@@ -103,13 +127,41 @@ const PricingPage = () => {
     return "Billed every month";
   };
 
-  const getCtaText = (plan) => {
+  // "same" → renew | "upgrade" → upgrade | "downgrade" → downgrade | "new" → fresh signup
+  const getPlanRelation = (plan) => {
+    if (!isLoggedIn || !currentPlan) return "new";
+    if (plan.slug === currentPlan.plan) return "same";
+    const currentPlanData = plans.find((p) => p.slug === currentPlan.plan);
+    const thisPrice = billing === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
+    const currentPrice = currentPlanData
+      ? billing === "monthly"
+        ? currentPlanData.monthlyPrice
+        : currentPlanData.yearlyPrice
+      : 0;
+    return thisPrice > currentPrice ? "upgrade" : "downgrade";
+  };
+
+  const getCtaText = (plan, relation) => {
     if (plan.monthlyPrice === 0 || (plan.slug || plan.name || "").toLowerCase() === "free") {
       return "Get Started Free";
     }
-    if (processingPlan === plan.slug) return "Processing...";
     const name = (plan.name || "").replace("Plan", "").trim();
+    if (relation === "same") return `Renew ${name}`;
+    if (relation === "upgrade") return `Upgrade to ${name}`;
+    if (relation === "downgrade") return `Downgrade to ${name}`;
     return `Get ${name}`;
+  };
+
+  const getCtaBtnClass = (isSelected, isEnterprise, relation) => {
+    if (isSelected) {
+      if (relation === "same") return "bg-orange-100 text-orange-600";
+      if (relation === "downgrade") return "bg-gray-100 text-gray-500";
+      return "text-[#0080FF] bg-white";
+    }
+    if (relation === "same") return "text-orange-500 border-[2px] border-orange-500";
+    if (relation === "downgrade") return "text-gray-400 border-[2px] border-gray-300";
+    if (isEnterprise) return "text-purple-600 border-[2px] border-purple-600";
+    return "text-[#0080FF] border-[2px] border-[#0080FF]";
   };
 
   const comingSoonFeatures = [
@@ -153,8 +205,37 @@ const PricingPage = () => {
     setShowEmailModal(true);
   };
 
+  // Authenticated upgrade flow — creates a non-guest reference (FS_{stationId}_...)
+  // so the verify page always routes back to /dashboard/manager on success.
+  const handleAuthenticatedPayment = async (plan) => {
+    try {
+      setInitiatingPayment(true);
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        "/api/payments/initialize",
+        { planSlug: plan.slug, billingCycle: billing },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      window.location.href = response.data.data.authorizationUrl;
+    } catch (err) {
+      setInitiatingPayment(false);
+      alert(
+        err.response?.data?.error ||
+          "Failed to initialize payment. Please try again."
+      );
+    }
+  };
+
+  const closeEmailModal = () => {
+    setShowEmailModal(false);
+    setEmailError("");
+    setEmailExists(false);
+  };
+
+  // Guest flow — only reached by users who are NOT logged in.
   const handleInitiateGuestPayment = async () => {
     setEmailError("");
+    setEmailExists(false);
 
     if (!payerName.trim()) {
       setEmailError("Please enter your name");
@@ -168,14 +249,12 @@ const PricingPage = () => {
 
     try {
       setInitiatingPayment(true);
-
       sessionStorage.setItem(
         "payerInfo",
         JSON.stringify({ name: payerName, email: payerEmail })
       );
-
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/api/payments/initialize-guest`,
+        "/api/payments/initialize-guest",
         {
           email: payerEmail,
           name: payerName,
@@ -183,13 +262,16 @@ const PricingPage = () => {
           billingCycle: billing,
         }
       );
-
       window.location.href = response.data.data.authorizationUrl;
     } catch (err) {
-      setEmailError(
-        err.response?.data?.error ||
-          "Failed to initialize payment. Please try again."
-      );
+      if (err.response?.data?.error === "account_exists") {
+        setEmailExists(true);
+      } else {
+        setEmailError(
+          err.response?.data?.message ||
+            "Failed to initialize payment. Please try again."
+        );
+      }
       setInitiatingPayment(false);
     }
   };
@@ -199,8 +281,9 @@ const PricingPage = () => {
     const isSelected = showBlue === key;
     const price = getPrice(plan);
     const subtext = getSubtext(plan);
-    const ctaText = getCtaText(plan);
     const isEnterprise = isEnterprisePlan(plan);
+    const relation = getPlanRelation(plan);
+    const ctaText = getCtaText(plan, relation);
 
     return (
       <div
@@ -272,7 +355,7 @@ const PricingPage = () => {
                   isSelected ? "text-white" : "text-[#000] dark:text-white"
                 }`}
               >
-                ₦{plan.yearlyPrice.toLocaleString()}
+                ₦{(plan.yearlyPrice ?? Math.round(plan.monthlyPrice * 12 * 0.9)).toLocaleString()}
               </span>
               <span
                 className={`text-sm ${
@@ -325,13 +408,7 @@ const PricingPage = () => {
             e.stopPropagation();
             handleSelectPlan(plan);
           }}
-          className={`rounded-full w-full ${
-            isSelected
-              ? "text-[#0080FF] bg-white"
-              : isEnterprise
-              ? "text-purple-600 border-[2px] border-purple-600"
-              : "text-[#0080FF] border-[2px] border-[#0080FF]"
-          } font-semibold text-[1.25rem] py-3 mt-[2.25rem]`}
+          className={`rounded-full w-full ${getCtaBtnClass(isSelected, isEnterprise, relation)} font-semibold text-[1.25rem] py-3 mt-[2.25rem]`}
         >
           {ctaText}
         </button>
@@ -545,149 +622,181 @@ const PricingPage = () => {
 
       {/* Email Collection Modal for paid plans */}
       {showEmailModal && selectedPlanForPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm w-full">
-            <button
-              onClick={() => setShowEmailModal(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                <CreditCard size={20} className="text-blue-600" />
-              </div>
-              <h3 className="font-bold text-lg text-gray-900 dark:text-white">
-                Complete Payment
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                {selectedPlanForPayment.name} — ₦
-                {(billing === "monthly"
-                  ? selectedPlanForPayment.monthlyPrice
-                  : selectedPlanForPayment.yearlyPrice
-                ).toLocaleString()}
-                /{billing === "monthly" ? "mo" : "yr"}
-              </p>
-            </div>
-
-            {emailError && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 rounded-lg p-3 mb-4">
-                <p className="text-red-600 text-sm">{emailError}</p>
-              </div>
-            )}
-
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={payerName}
-                  onChange={(e) => setPayerName(e.target.value)}
-                  placeholder="John Doe"
-                  className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={payerEmail}
-                  onChange={(e) => setPayerEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 mb-4 text-center">
-              You will set up your station account after payment
-            </p>
-
-            {payerEmail && payerName && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-4">
-                <p className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                  Payment Breakdown
-                </p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      {selectedPlanForPayment.name}
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      ₦{(billing === "monthly"
-                        ? selectedPlanForPayment.monthlyPrice
-                        : selectedPlanForPayment.yearlyPrice
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Tax (7.5% Nigeria)
-                    </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      ₦{Math.round(
-                        (billing === "monthly"
-                          ? selectedPlanForPayment.monthlyPrice
-                          : selectedPlanForPayment.yearlyPrice
-                        ) * 0.075
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="border-t border-blue-200 dark:border-blue-700 pt-2 flex justify-between">
-                    <span className="font-bold text-gray-900 dark:text-white">
-                      Total Amount
-                    </span>
-                    <span className="font-bold text-blue-600 text-lg">
-                      ₦{Math.round(
-                        (billing === "monthly"
-                          ? selectedPlanForPayment.monthlyPrice
-                          : selectedPlanForPayment.yearlyPrice
-                        ) * 1.075
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <button
-              onClick={handleInitiateGuestPayment}
-              disabled={initiatingPayment}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
-            >
-              {initiatingPayment ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Redirecting to payment...
-                </>
-              ) : (
-                <>
-                  <CreditCard size={16} />
-                  Pay Now — ₦
-                  {(billing === "monthly"
-                    ? selectedPlanForPayment.monthlyPrice
-                    : selectedPlanForPayment.yearlyPrice
-                  ).toLocaleString()}
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => setShowEmailModal(false)}
-              className="w-full mt-2 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+        <ModalPayment
+          plan={selectedPlanForPayment}
+          relation={getPlanRelation(selectedPlanForPayment)}
+          billing={billing}
+          isLoggedIn={isLoggedIn}
+          payerName={payerName}
+          payerEmail={payerEmail}
+          setPayerName={setPayerName}
+          setPayerEmail={setPayerEmail}
+          emailError={emailError}
+          setEmailError={setEmailError}
+          emailExists={emailExists}
+          setEmailExists={setEmailExists}
+          initiatingPayment={initiatingPayment}
+          onClose={closeEmailModal}
+          onPay={isLoggedIn
+            ? () => handleAuthenticatedPayment(selectedPlanForPayment)
+            : handleInitiateGuestPayment}
+        />
       )}
     </div>
   );
 };
+
+function ModalPayment({
+  plan, relation, billing, isLoggedIn,
+  payerName, payerEmail, setPayerName, setPayerEmail,
+  emailError, setEmailError, emailExists, setEmailExists,
+  initiatingPayment, onClose, onPay,
+}) {
+  const isRenew = relation === "same";
+  const modalTitle = isRenew
+    ? "Renew Your Plan"
+    : relation === "upgrade"
+    ? "Upgrade Your Plan"
+    : "Complete Payment";
+  const planNote = isLoggedIn
+    ? isRenew
+      ? "Your plan will be renewed for another billing cycle."
+      : "Your plan will be upgraded immediately after payment."
+    : "You will set up your station account after payment.";
+  const planPrice = billing === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+        >
+          <X size={20} />
+        </button>
+
+        <div className="text-center mb-6">
+          <div className={`w-12 h-12 ${isRenew ? "bg-orange-100 dark:bg-orange-900/30" : "bg-blue-100 dark:bg-blue-900/30"} rounded-full flex items-center justify-center mx-auto mb-3`}>
+            <CreditCard size={20} className={isRenew ? "text-orange-500" : "text-blue-600"} />
+          </div>
+          <h3 className="font-bold text-lg text-gray-900 dark:text-white">{modalTitle}</h3>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+            {plan.name} — ₦{planPrice.toLocaleString()}/{billing === "monthly" ? "mo" : "yr"}
+          </p>
+        </div>
+
+        {emailExists && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-600 rounded-lg p-3 mb-4">
+            <p className="text-amber-800 dark:text-amber-300 text-sm font-semibold mb-1">
+              Account already exists
+            </p>
+            <p className="text-amber-700 dark:text-amber-400 text-xs">
+              This email is already registered.{" "}
+              <Link href="/login" className="underline font-semibold hover:text-amber-900">
+                Log in to upgrade your plan
+              </Link>{" "}
+              from your dashboard instead.
+            </p>
+          </div>
+        )}
+
+        {emailError && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 rounded-lg p-3 mb-4">
+            <p className="text-red-600 text-sm">{emailError}</p>
+          </div>
+        )}
+
+        {isLoggedIn && (
+          <div className={`flex items-center gap-2 ${isRenew ? "bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700" : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700"} border rounded-lg px-3 py-2 mb-3`}>
+            <span className={`w-2 h-2 rounded-full ${isRenew ? "bg-orange-500" : "bg-blue-500"} shrink-0`} />
+            <p className={`text-xs ${isRenew ? "text-orange-700 dark:text-orange-300" : "text-blue-700 dark:text-blue-300"} font-medium`}>
+              {isRenew ? "Renewing your current plan" : "Upgrading your existing station account"}
+            </p>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Full Name</label>
+            <input
+              type="text"
+              value={payerName}
+              onChange={(e) => !isLoggedIn && setPayerName(e.target.value)}
+              readOnly={isLoggedIn}
+              placeholder="John Doe"
+              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                isLoggedIn
+                  ? "bg-gray-100 dark:bg-gray-600 border-gray-200 dark:border-gray-500 text-gray-700 dark:text-gray-200 cursor-not-allowed"
+                  : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
+              }`}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Email Address</label>
+            <input
+              type="email"
+              value={payerEmail}
+              onChange={(e) => { if (!isLoggedIn) { setPayerEmail(e.target.value); setEmailExists(false); setEmailError(""); } }}
+              readOnly={isLoggedIn}
+              placeholder="you@example.com"
+              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                isLoggedIn
+                  ? "bg-gray-100 dark:bg-gray-600 border-gray-200 dark:border-gray-500 text-gray-700 dark:text-gray-200 cursor-not-allowed"
+                  : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
+              }`}
+            />
+          </div>
+        </div>
+
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 mb-4 text-center">{planNote}</p>
+
+        {payerEmail && payerName && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Payment Breakdown</p>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">{plan.name}</span>
+                <span className="font-medium text-gray-900 dark:text-white">₦{planPrice.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Tax (7.5% Nigeria)</span>
+                <span className="font-medium text-gray-900 dark:text-white">₦{Math.round(planPrice * 0.075).toLocaleString()}</span>
+              </div>
+              <div className="border-t border-blue-200 dark:border-blue-700 pt-2 flex justify-between">
+                <span className="font-bold text-gray-900 dark:text-white">Total Amount</span>
+                <span className="font-bold text-blue-600 text-lg">₦{Math.round(planPrice * 1.075).toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={onPay}
+          disabled={initiatingPayment}
+          className={`w-full py-3 ${isRenew ? "bg-orange-500 hover:bg-orange-600" : "bg-blue-600 hover:bg-blue-700"} text-white rounded-xl font-semibold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2`}
+        >
+          {initiatingPayment ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Redirecting to payment...
+            </>
+          ) : (
+            <>
+              <CreditCard size={16} />
+              {isRenew ? "Renew Now" : "Pay Now"} — ₦{planPrice.toLocaleString()}
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={onClose}
+          className="w-full mt-2 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default PricingPage;

@@ -22,14 +22,9 @@ const useDashboardStore = create((set, get) => ({
     }));
 
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/dashboard/metric`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.get("/api/dashboard/metric", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       set((state) => ({
         metrics: response.data,
@@ -59,14 +54,9 @@ const useDashboardStore = create((set, get) => ({
     }));
 
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/dashboard/tank-status`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.get("/api/dashboard/tank-status", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       set((state) => ({
         tankStatus: response.data,

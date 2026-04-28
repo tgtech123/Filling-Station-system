@@ -7,10 +7,8 @@ export default function FuelTank() {
   const { tanks, loading, error, fetchTanks } = useTankStore(); // ✅ from store
   const [deleting, setDeleting] = useState(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API;
-
   useEffect(() => {
-    fetchTanks(); // ✅ Zustand handles fetching & loading states
+    fetchTanks();
   }, [fetchTanks]);
 
   const handleDeleteTank = async (tankId) => {
@@ -20,8 +18,8 @@ export default function FuelTank() {
       setDeleting(tankId);
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`${API_URL}/api/tank/delete-tank/${tankId}`, {
-        method: "POST", // or DELETE
+      const res = await fetch(`/api/tank/delete-tank/${tankId}`, {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -54,7 +52,13 @@ export default function FuelTank() {
       ) : error ? (
         <p className="text-red-600">{error}</p>
       ) : tanks.length === 0 ? (
-        <p>No tanks available</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+            <img src="/tank.png" alt="tank" className="w-8 h-8 opacity-40" />
+          </div>
+          <p className="text-gray-500 dark:text-gray-400 font-semibold text-base">No tank recorded yet</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Click "Add Fuel Tank" to add your first tank.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
           {tanks.map((tank) => {

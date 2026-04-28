@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API || "http://localhost:5000";
-
 const usePaymentStore = create((set, get) => ({
   // ── State
   currentPlan: null,
@@ -15,10 +13,9 @@ const usePaymentStore = create((set, get) => ({
     try {
       set({ loading: true });
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${BASE_URL}/api/payments/current-plan`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await axios.get("/api/payments/current-plan", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       set({ currentPlan: response.data.data, loading: false });
     } catch (err) {
       set({ loading: false });
@@ -31,12 +28,11 @@ const usePaymentStore = create((set, get) => ({
       set({ paymentLoading: true });
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${BASE_URL}/api/payments/initialize`,
+        "/api/payments/initialize",
         { planSlug, billingCycle },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set({ paymentLoading: false });
-      // Redirect to Paystack checkout
       window.location.href = response.data.data.authorizationUrl;
       return response.data.data;
     } catch (err) {
@@ -49,20 +45,16 @@ const usePaymentStore = create((set, get) => ({
   verifyPayment: async (reference) => {
     try {
       set({ paymentLoading: true });
-
-      // Don't require token for verify
       const token = localStorage.getItem("token");
-      const headers = token
-        ? { Authorization: `Bearer ${token}` }
-        : {};
-
-      const response = await axios.get(
-        `${BASE_URL}/api/payments/verify/${reference}`,
-        { headers }
-      );
-
+      const response = await axios.get(`/api/payments/verify/${reference}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       set({ paymentLoading: false });
-      await get().fetchCurrentPlan();
+      // Only refresh plan for authenticated users — guests have no account yet
+      const isGuest = response.data?.data?.isGuest === true;
+      if (!isGuest) {
+        await get().fetchCurrentPlan();
+      }
       return response.data;
     } catch (err) {
       set({ paymentLoading: false });

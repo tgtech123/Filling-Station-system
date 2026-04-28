@@ -1,8 +1,6 @@
 import { create } from "zustand";
 import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API || "http://localhost:5000";
-
 const useAnalyticsStore = create((set, get) => ({
   revenueTrend: null,
   staffPerformance: null,
@@ -15,7 +13,7 @@ const useAnalyticsStore = create((set, get) => ({
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${BASE_URL}/api/dashboard/analytics/revenue?period=${period}`,
+        `/api/dashboard/analytics/revenue?period=${period}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set({ revenueTrend: res.data });
@@ -28,7 +26,7 @@ const useAnalyticsStore = create((set, get) => ({
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${BASE_URL}/api/dashboard/analytics/staff-performance`,
+        `/api/dashboard/analytics/staff-performance`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set({ staffPerformance: res.data });
@@ -41,7 +39,7 @@ const useAnalyticsStore = create((set, get) => ({
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${BASE_URL}/api/dashboard/analytics/fuel-breakdown?period=${period}`,
+        `/api/dashboard/analytics/fuel-breakdown?period=${period}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set({ fuelBreakdown: res.data });
@@ -54,7 +52,7 @@ const useAnalyticsStore = create((set, get) => ({
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(
-        `${BASE_URL}/api/dashboard/analytics/comparison`,
+        `/api/dashboard/analytics/comparison`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set({ comparison: res.data });

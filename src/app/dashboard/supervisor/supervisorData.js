@@ -11,45 +11,38 @@ import Image from "next/image";
  */
 export const supervisorData = (dashboard) => {
   if (!dashboard) {
-    // Return default structure if no data
     return [
       {
         title: "Shifts Open",
         date: "Today",
-        amount: "0/0",
-        changeText: "0 Not yet submitted",
+        amount: "No data yet",
+        changeText: "—",
         icon: (
-          <Image
-            src="/work-flow.png"
-            alt="work-flow image"
-            width={24}
-            height={24}
-            className="max-w-[1.5rem] max-h-[1.5rem]"
-          />
+          <Image src="/work-flow.png" alt="work-flow image" width={24} height={24} className="max-w-[1.5rem] max-h-[1.5rem]" />
         ),
       },
       {
         title: "Pending Approvals",
         date: "This month",
-        amount: "0",
+        amount: "No data yet",
         change: "",
-        changeText: "0 Staffs inactive",
+        changeText: "—",
         icon: <LuAlarmClock size={25} className="text-neutral-800 text-lg" />,
       },
       {
         title: "Active Pumps",
         date: "Today",
-        amount: "0/0",
+        amount: "No data yet",
         change: "",
-        changeText: "0 Under maintenance",
+        changeText: "—",
         icon: <FaGasPump size={25} className="text-neutral-800 text-lg" />,
       },
       {
         title: "Available Stocks",
-        date: "Fuel 0Litrs  |  Lubricant 0",
-        amount: "₦0",
+        date: "—",
+        amount: "No data yet",
         change: "",
-        changeText: "Stock value",
+        changeText: "—",
         icon: <TrendingUp size={25} className="text-neutral-800 text-lg" />,
       },
     ];

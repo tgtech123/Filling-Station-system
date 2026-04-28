@@ -2,6 +2,8 @@ import { create } from "zustand";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true';
+
 const useAdminStore = create((set, get) => ({
   // State
   overview: null,
@@ -164,12 +166,13 @@ const useAdminStore = create((set, get) => ({
         `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      const payload = response.data.data || response.data;
       set({
-        stationDetail: response.data.station || response.data.data || response.data,
-        stationStats: response.data.stats || null,
+        stationDetail: payload,
+        stationStats: payload.stats || null,
         loading: false,
       });
-      return response.data.station || response.data.data || response.data;
+      return payload;
     } catch (error) {
       const errorMsg =
         error.response?.data?.message || error.message || "Failed to fetch station detail";
