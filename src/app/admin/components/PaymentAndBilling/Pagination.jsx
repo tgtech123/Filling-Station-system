@@ -26,9 +26,9 @@ const Pagination = ({ currentPage, totalItems, itemsPerPage = 10, onPageChange }
   };
 
   return (
-    <div className="flex items-center gap-3 mt-4">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-4">
       {/* Showing text */}
-      <span className="text-sm text-gray-600 dark:text-gray-400 font-medium whitespace-nowrap">
+      <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium whitespace-nowrap">
         Showing {startItem} – {endItem} of {totalItems.toLocaleString()}
       </span>
 

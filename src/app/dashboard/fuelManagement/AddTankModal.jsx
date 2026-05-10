@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useTankStore } from "@/store/tankStore";
@@ -25,7 +25,7 @@ export default function AddTankModal({ onclose }) {
       setSuccess("");
 
       const token = localStorage.getItem("token");
-      const API_URL = process.env.NEXT_PUBLIC_API
+      const API_URL = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"
       if (!token) {
         setError("No authentication token found");
         setLoading(false);

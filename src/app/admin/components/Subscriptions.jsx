@@ -2,44 +2,52 @@
 import React, { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
-import PlansCreationModal from './subscription/PlansCreationModal'
+// import PlansCreationModal from './subscription/PlansCreationModal'
 import PlanCards from './subscription/PlanCards'
+import CreateSubscriptionPlanModal from '@/components/CreateSubscriptionPlanModal'
 import usePlansStore from '@/store/usePlansStore'
 
 const Subscriptions = () => {
   const [isShow, setIsShow] = useState(false)
-  const [editingPlan, setEditingPlan] = useState(null)
-  const [showEditModal, setShowEditModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingPlanId, setDeletingPlanId] = useState(null)
 
-  const { adminPlans, loading, fetchAdminPlans, deletePlan } = usePlansStore()
+  const { adminPlans, loading, fetchAdminPlans, fetchPublicPlans, deletePlan } = usePlansStore()
 
   useEffect(() => {
     fetchAdminPlans()
   }, [])
 
-  // Normalize real API shape → PlanCards prop shape
-  const normalizedPlans = adminPlans.map((p) => ({
-    id: p._id || p.id,
-    planName: p.name,
-    price: p.monthlyPrice ?? p.price ?? 0,
-    billingCycle: Array.isArray(p.billingCycles)
-      ? p.billingCycles[0]?.charAt(0).toUpperCase() + p.billingCycles[0]?.slice(1)
-      : p.billingCycle || 'Monthly',
-    userLimit: p.staffLimits
-      ? Object.entries(p.staffLimits)
-          .map(([k, v]) => `${v === 999 ? 'Unlimited' : v} ${k}`)
-          .join(', ')
-      : p.userLimit || 'Unlimited',
-    features: p.features || [],
-    isActive: p.isActive !== false,
-  }))
+  // Normalize real API shape → PlanCards prop shape, deduplicating by name
+  const seenNames = new Set()
+  const normalizedPlans = adminPlans.reduce((acc, p) => {
+    if (p.isActive === false) return acc
+    const key = (p.name || "").trim().toLowerCase()
+    if (seenNames.has(key)) return acc
+    seenNames.add(key)
+    acc.push({
+      id: p._id || p.id,
+      planName: p.name,
+      price: p.monthlyPrice ?? p.price ?? 0,
+      billingCycle: Array.isArray(p.billingCycles)
+        ? p.billingCycles[0]?.charAt(0).toUpperCase() + p.billingCycles[0]?.slice(1)
+        : p.billingCycle || 'Monthly',
+      userLimit: p.staffLimits
+        ? Object.entries(p.staffLimits)
+            .map(([k, v]) => `${v === 999 ? 'Unlimited' : v} ${k}`)
+            .join(', ')
+        : p.userLimit || 'Unlimited',
+      features: p.features || [],
+      isActive: p.isActive !== false,
+    })
+    return acc
+  }, [])
 
   return (
-    <div className='p-9'>
+    <div className='p-4 sm:p-6 lg:p-9'>
       {/* Page Header */}
-      <div className='flex justify-between items-start mb-8'>
+      <div className='flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6 sm:mb-8'>
         <div>
           <h1 className='text-[1.5rem] font-semibold text-neutral-900 dark:text-white'>
             Subscription Plans
@@ -50,7 +58,7 @@ const Subscriptions = () => {
         </div>
 
         <button
-          onClick={() => setIsShow(true)}
+          onClick={() => { setSelectedPlan(null); setIsShow(true) }}
           className='flex hover:bg-blue-700 gap-3 bg-blue-600 items-center justify-center px-5 py-3 text-base font-semibold text-white rounded-2xl cursor-pointer transition-colors'
         >
           <Plus size={20} />
@@ -67,18 +75,17 @@ const Subscriptions = () => {
       {!loading && normalizedPlans.length > 0 && (
         <>
           <h2 className='text-lg font-semibold text-neutral-800 dark:text-gray-100 mb-4'>All Plans</h2>
-          <div className='grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-5'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5'>
             {normalizedPlans.map((plan) => (
               <PlanCards
                 key={plan.id}
                 plan={plan}
                 onEdit={(normalizedPlan) => {
-                  // Pass raw admin plan so modal gets monthlyPrice, yearlyPrice, staffLimits, etc.
                   const raw = adminPlans.find(
                     (p) => (p._id || p.id) === normalizedPlan.id
                   ) || normalizedPlan
-                  setEditingPlan(raw)
-                  setShowEditModal(true)
+                  setSelectedPlan(raw)
+                  setIsShow(true)
                 }}
                 onDelete={(planId) => {
                   setDeletingPlanId(planId)
@@ -129,7 +136,6 @@ const Subscriptions = () => {
                     await deletePlan(deletingPlanId)
                     setShowDeleteConfirm(false)
                     setDeletingPlanId(null)
-                    await fetchAdminPlans()
                     toast.success('Plan deleted successfully')
                   } catch {
                     toast.error('Failed to delete plan')
@@ -144,31 +150,20 @@ const Subscriptions = () => {
         </div>
       )}
 
-      {/* Create Modal */}
-      <PlansCreationModal
-        isOpen={isShow}
-        onClose={() => setIsShow(false)}
-        onSuccess={() => {
-          setIsShow(false)
-          fetchAdminPlans()
-        }}
-      />
-
-      {/* Edit Modal */}
-      {showEditModal && editingPlan && (
-        <PlansCreationModal
-          isOpen={showEditModal}
+      {/* Create / Edit Modal */}
+      {isShow && (
+        <CreateSubscriptionPlanModal
+          initialData={selectedPlan}
           onClose={() => {
-            setShowEditModal(false)
-            setEditingPlan(null)
+            setIsShow(false)
+            setSelectedPlan(null)
           }}
           onSuccess={() => {
-            setShowEditModal(false)
-            setEditingPlan(null)
+            setIsShow(false)
+            setSelectedPlan(null)
             fetchAdminPlans()
+            fetchPublicPlans()
           }}
-          isEdit={true}
-          initialData={editingPlan}
         />
       )}
     </div>

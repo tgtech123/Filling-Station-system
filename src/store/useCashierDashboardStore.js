@@ -1,10 +1,10 @@
-// FILE: @/store/useCashierDashboardStore.js
+﻿// FILE: @/store/useCashierDashboardStore.js
 
 import { create } from 'zustand';
 import axios from 'axios';
 
 // API Base URL - adjust according to your setup
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
 
 // Helper function to get auth token
 const getAuthToken = () => {
@@ -590,7 +590,7 @@ export const useReconciliationReport = () => {
 // import axios from 'axios';
 
 // // API Base URL - adjust according to your setup
-// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
 
 // // Helper function to get auth token
 // const getAuthToken = () => {

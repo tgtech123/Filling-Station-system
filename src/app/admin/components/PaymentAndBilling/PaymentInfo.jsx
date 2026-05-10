@@ -77,15 +77,15 @@ const PaymentInfo = () => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl p-5">
-      <div className="flex gap-4 items-center justify-end mt-[1rem]">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 items-stretch sm:items-center justify-end mt-[1rem]">
         {/* Search */}
-        <div className="flex relative items-center">
+        <div className="flex relative items-center w-full sm:w-auto">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by station name or owner"
-            className="lg:w-[21.875rem] w-fit h-[2.75rem] pl-8 rounded-lg border-[2px] border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-[2px] focus:border-blue-600 outline-none font-semibold"
+            className="w-full sm:w-[21.875rem] h-[2.75rem] pl-8 rounded-lg border-[2px] border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus:border-[2px] focus:border-blue-600 outline-none font-semibold"
           />
           <Search size={24} className="text-neutral-500 absolute ml-1" />
         </div>
@@ -121,7 +121,7 @@ const PaymentInfo = () => {
         {/* Export */}
         <button
           onClick={handleExport}
-          className="flex gap-2 cursor-pointer hover:bg-blue-700 bg-blue-600 text-white rounded-lg px-5 py-2.5 font-semibold"
+          className="flex gap-2 cursor-pointer hover:bg-blue-700 bg-blue-600 text-white rounded-lg px-5 py-2.5 font-semibold w-full sm:w-auto justify-center sm:justify-start"
         >
           <Download size={24} />
           Export

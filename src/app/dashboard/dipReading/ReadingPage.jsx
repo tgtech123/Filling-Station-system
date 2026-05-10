@@ -44,7 +44,7 @@ export default function ReadingPage() {
   if (!dipReadings?.tanks || dipReadings.tanks.length === 0) {
     return (
       <div className="mt-3 bg-white p-3 lg:p-6 rounded-[24px] flex items-center justify-center min-h-[400px]">
-        <p className="text-gray-600">No tanks found.</p>
+        <p className="text-gray-600 text-center">No tanks created at this time, create to continue...</p>
       </div>
     );
   }

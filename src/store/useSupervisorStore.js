@@ -1,12 +1,8 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-// Get base URL from environment variable or use default
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/supervisor';
-
-// Create axios instance with default config
 const api = axios.create({
-  baseURL: BASE_URL,
+  baseURL: '/api/supervisor',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -116,7 +112,7 @@ const useSupervisorStore = create((set, get) => ({
 
     console.log("Approving shift:", {
       shiftId,
-      url: `${BASE_URL}/shift-approval/${shiftId}/approve`,
+      url: `/shift-approval/${shiftId}/approve`,
       data,
     });
 

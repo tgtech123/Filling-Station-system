@@ -125,11 +125,9 @@ const LiveSalesAndSchedulePage = () => {
 
         <div className='mt-[0.75rem]'>
           {loading ? (
-            <div className="text-center py-8 text-gray-500">Loading live sales...</div>
-          ) : error ? (
-            <div className="text-center py-8 text-red-500">Error: {error}</div>
+            <div className="text-center py-8 text-gray-400">Loading live sales...</div>
           ) : liveSalesFeedData.bodyRows.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">No sales data available</div>
+            <div className="text-center py-8 text-gray-400">No data yet</div>
           ) : (
             <TableWithoutBorder 
               columns={liveSalesFeedData.headers} 

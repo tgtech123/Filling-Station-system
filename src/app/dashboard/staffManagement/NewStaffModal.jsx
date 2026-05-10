@@ -1,12 +1,21 @@
-"use client";
+﻿"use client";
 import React, { useState } from "react";
 import { Plus, X, ChevronUp, ChevronDown, EyeOff, Eye } from "lucide-react";
 import { BsToggleOn, BsToggleOff } from "react-icons/bs";
 import SuccessMessageModal from "./SuccessMessageModal";
 import useStaffStore from "@/store/useStaffStore"; // Import the Zustand store
+import UpgradePrompt from "@/components/UpgradePrompt";
 
 const NewStaffModal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
+
+  const isSuperManager = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "{}").isSuperManager === true;
+    } catch {
+      return false;
+    }
+  })();
 
   const [isLoading, setIsLoading] = useState(false);
   const [newStaffName, setNewStaffName] =useState("");
@@ -18,12 +27,11 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
   const [toggleOn, setToggleOn] = useState(false);
   const [isToggleTwo, setIsToggleTwo] = useState(false);
   const [showVisible, setShowVisible] = useState(false);
-  const [isToggleChevron, setIsToggleChevron] = useState(false);
-  const [isToggleChevTwo, setIsToggleChevTwo] = useState(false);
-  const [togglePayType, setTogglePayType] = useState(false);
   
   // Local error state for validation
   const [validationError, setValidationError] = useState("");
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [limitInfo, setLimitInfo] = useState({ role: "", limit: 0 });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -36,7 +44,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
     password: "",
     confirmPassword: "",
     shiftType: "",
-    responsibility: [],
+    responsibility: "",
     addSaleTarget: false,
     payType: "",
     amount: 0,
@@ -63,16 +71,6 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
     setValidationError(""); // Clear error on input change
   };
 
-  // Handle responsibility input (convert to array)
-  const handleResponsibilityChange = (e) => {
-    const value = e.target.value;
-    const responsibilityArray = value.split(/\s+/).map((item) => item.trim());
-    setFormData((prev) => ({
-      ...prev,
-      responsibility: responsibilityArray,
-    }));
-  };
-  
   // Handle toggle for sales target
   const handleSalesTargetToggle = () => {
     setToggleOn(!toggleOn);
@@ -87,14 +85,14 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
     if (!formData.firstName.trim()) return "First name is required";
     if (!formData.lastName.trim()) return "Last name is required";
     if (!formData.email.trim()) return "Email is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) return "Please enter a valid email address";
     if (!formData.phone.trim()) return "Phone is required";
     if (!formData.role.trim()) return "Role is required";
     if (!formData.password) return "Password is required";
     if (!formData.confirmPassword) return "Please confirm password";
     if (formData.password !== formData.confirmPassword) return "Passwords do not match";
     if (!formData.shiftType.trim()) return "Shift type is required";
-    if (formData.responsibility.length === 0 || !formData.responsibility[0]) 
-      return "Responsibilities are required";
+    if (!formData.responsibility.trim()) return "Responsibilities are required";
     if (!formData.payType.trim()) return "Pay type is required";
     if (!formData.amount) return "Amount is required";
     return null;
@@ -134,7 +132,10 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
         role: formData.role,
         password: formData.password.trim(),
         shiftType: formData.shiftType,
-        responsibility: formData.responsibility,
+        responsibility: formData.responsibility
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
         addSaleTarget: formData.addSaleTarget,
         payType: formData.payType,
         amount: parseFloat(formData.amount),
@@ -174,7 +175,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
         password: "",
         confirmPassword: "",
         shiftType: "",
-        responsibility: [],
+        responsibility: "",
         addSaleTarget: false,
         payType: "",
         amount: "",
@@ -191,6 +192,15 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
       });
       setToggleOn(false);
     } catch (err) {
+      if (err?.response?.data?.upgradeRequired) {
+        setLimitInfo({
+          role: err.response.data.role || "staff",
+          limit: err.response.data.limit || 0,
+        });
+        setShowUpgrade(true);
+        setIsLoading(false);
+        return;
+      }
       const errMsg = err.message || "An unexpected error occurred";
       setValidationError(errMsg);
       alert(`❌ ${errMsg}`);
@@ -202,6 +212,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
   const displayError = storeError || validationError;
 
   return (
+    <>
     <div
       onClick={onClose}
       className="bg-black/50 w-full flex justify-center items-center fixed inset-0 z-50 h-auto"
@@ -351,49 +362,36 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
 
           <div>
             <p className="grid grid-cols-1 lg:grid-cols-2 mb-[0.75rem]">
-              <span className="flex flex-col gap-2 relative">
+              <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Role</label>
-                <input
-                  type="text"
+                <select
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  placeholder="Cashier"
-                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
-                />
-
-                <span
-                  onClick={() => setIsToggleChevron(!isToggleChevron)}
-                  className="absolute text-neutral-500 top-10 right-7 cursor-pointer"
+                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl bg-white"
                 >
-                  {isToggleChevron ? (
-                    <ChevronUp size={26} />
-                  ) : (
-                    <ChevronDown size={26} />
-                  )}
-                </span>
+                  <option value="">Select role</option>
+                  <option value="attendant">Attendant</option>
+                  <option value="cashier">Cashier</option>
+                  <option value="accountant">Accountant</option>
+                  <option value="supervisor">Supervisor</option>
+                  {isSuperManager && <option value="manager">Branch Manager</option>}
+                </select>
               </span>
-              <span className="flex flex-col gap-2 relative">
+              <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Shift type</label>
-                <input
-                  type="text"
+                <select
                   name="shiftType"
                   value={formData.shiftType}
                   onChange={handleInputChange}
-                  placeholder="Morning"
-                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
-                />
-
-                <span
-                  onClick={() => setIsToggleChevTwo(!isToggleChevTwo)}
-                  className="absolute text-neutral-500 top-10 right-6 cursor-pointer"
+                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl bg-white"
                 >
-                  {isToggleChevTwo ? (
-                    <ChevronUp size={26} />
-                  ) : (
-                    <ChevronDown size={26} />
-                  )}
-                </span>
+                  <option value="">Select shift</option>
+                  <option value="morning">Morning</option>
+                  <option value="afternoon">Afternoon</option>
+                  <option value="night">Night</option>
+                  <option value="full-day">Full Day</option>
+                </select>
               </span>
             </p>
 
@@ -404,8 +402,8 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
               <input
                 type="text"
                 name="responsibility"
-                value={formData.responsibility.join(" ")}
-                onChange={handleResponsibilityChange}
+                value={formData.responsibility}
+                onChange={handleInputChange}
                 placeholder="Overseas operations of other staffs, approves reconciled shifts and give report to manager"
                 className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
               />
@@ -438,27 +436,20 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
             <hr className="border-[1px] border-neutral-100 mb-[0.75rem]" />
 
             <p className="grid grid-cols-1 lg:grid-cols-2 mb-[0.75rem]">
-              <span className="flex flex-col gap-2 relative">
+              <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Pay type</label>
-                <input
-                  type="text"
+                <select
                   name="payType"
                   value={formData.payType}
                   onChange={handleInputChange}
-                  placeholder="Monthly Salary"
-                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
-                />
-
-                <span
-                  onClick={() => setTogglePayType(!togglePayType)}
-                  className="absolute top-10 right-7 text-neutral-500 cursor-pointer"
+                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl bg-white"
                 >
-                  {togglePayType ? (
-                    <ChevronUp size={26} />
-                  ) : (
-                    <ChevronDown size={26} />
-                  )}
-                </span>
+                  <option value="">Select pay type</option>
+                  <option value="hourly">Hourly</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
               </span>
               <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Amount</label>
@@ -506,6 +497,16 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
         </div>
       </div>
     </div>
+    {showUpgrade && (
+      <UpgradePrompt
+        role={limitInfo.role}
+        limit={limitInfo.limit}
+        onClose={() => setShowUpgrade(false)}
+      />
+    )}
+
+    </>
+
   );
 };
 
@@ -535,7 +536,7 @@ export default NewStaffModal;
 //   // Loading and error states
 //   const [isLoading, setIsLoading] = useState(false);
 //   const [error, setError] = useState("");
-//   const API = process.env.NEXT_PUBLIC_API;
+//   const API = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
 
 //   // Form state
 //   const [formData, setFormData] = useState({

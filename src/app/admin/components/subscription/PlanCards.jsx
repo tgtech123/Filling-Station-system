@@ -3,9 +3,21 @@
 import React, { useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import { BsToggleOn, BsToggleOff } from "react-icons/bs"
+import usePlansStore from '@/store/usePlansStore'
 
 const PlanCards = ({ plan, onDelete, onEdit }) => {
   const [isActive, setIsActive] = useState(plan.isActive)
+  const [toggling, setToggling] = useState(false)
+  const { updatePlan } = usePlansStore()
+
+  const handleToggle = async () => {
+    if (!plan.id) return
+    setToggling(true)
+    const next = !isActive
+    const result = await updatePlan(plan.id, { isActive: next })
+    if (result.success) setIsActive(next)
+    setToggling(false)
+  }
 
   return (
     <div className='bg-white dark:bg-gray-800 rounded-2xl p-6 border border-neutral-200 dark:border-gray-700 flex flex-col gap-3 shadow-sm'>
@@ -17,7 +29,7 @@ const PlanCards = ({ plan, onDelete, onEdit }) => {
         </div>
         <div className='flex flex-col items-center gap-2'>
           <span className={`px-3 py-1 rounded-2xl text-md font-semibold ${isActive ? "text-green-700 font-semibold bg-green-100 dark:bg-green-900/30 dark:text-green-400" : "text-neutral-500 bg-neutral-200 dark:bg-gray-700 dark:text-gray-400"}`}>{isActive ? "Active" : "Inactive"}</span>
-          <button onClick={() => setIsActive(p => !p)}>
+          <button onClick={handleToggle} disabled={toggling} className='disabled:opacity-50'>
             {isActive
               ? <BsToggleOn size={34} className='text-blue-600' />
               : <BsToggleOff size={34} className='text-gray-400' />

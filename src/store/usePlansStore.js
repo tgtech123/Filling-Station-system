@@ -1,26 +1,32 @@
 import { create } from "zustand";
 import axios from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API || "http://localhost:5000";
-
 const usePlansStore = create((set, get) => ({
-  // ── State 
+  // ── State
   plans: [],
   adminPlans: [],
   loading: false,
   error: null,
 
-  // ── Public Plans (no auth) 
+  // ── Public Plans (no auth)
   fetchPublicPlans: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.get(
-        `${BASE_URL}/api/public/plans`
-      );
-      set({
-        plans: response.data.plans || response.data.data || [],
-        loading: false,
+      const response = await axios.get('/api/public/plans');
+      const raw = response.data.plans || response.data.data || [];
+
+      // Deduplicate by name — keep the record with the latest updatedAt
+      // (backend seeding can create a duplicate when a plan is edited)
+      const nameMap = new Map();
+      raw.forEach((p) => {
+        const key = (p.name || "").trim().toLowerCase();
+        const existing = nameMap.get(key);
+        if (!existing || new Date(p.updatedAt) > new Date(existing.updatedAt)) {
+          nameMap.set(key, p);
+        }
       });
+
+      set({ plans: Array.from(nameMap.values()), loading: false });
     } catch (error) {
       const errorMsg =
         error.response?.data?.message || error.message || "Failed to fetch plans";
@@ -29,13 +35,13 @@ const usePlansStore = create((set, get) => ({
     }
   },
 
-  // ── Admin Plans 
+  // ── Admin Plans
   fetchAdminPlans: async () => {
     set({ loading: true, error: null });
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${BASE_URL}/api/admin/plans`,
+        '/api/admin/plans',
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set({
@@ -50,12 +56,12 @@ const usePlansStore = create((set, get) => ({
     }
   },
 
-  // ── Create Plan 
+  // ── Create Plan
   createPlan: async (planData) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${BASE_URL}/api/admin/plans`,
+        '/api/admin/plans',
         planData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -63,7 +69,6 @@ const usePlansStore = create((set, get) => ({
       if (newPlan) {
         set((state) => ({ adminPlans: [...state.adminPlans, newPlan] }));
       }
-      // Sync public plans so pricing page auto-updates
       await get().fetchPublicPlans();
       return { success: true, plan: newPlan };
     } catch (error) {
@@ -74,12 +79,12 @@ const usePlansStore = create((set, get) => ({
     }
   },
 
-  // ── Update Plan 
+  // ── Update Plan
   updatePlan: async (planId, updates) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.patch(
-        `${BASE_URL}/api/admin/plans/${planId}`,
+        `/api/admin/plans/${planId}`,
         updates,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -89,6 +94,8 @@ const usePlansStore = create((set, get) => ({
           p._id === planId || p.id === planId ? { ...p, ...updated } : p
         ),
       }));
+      // Keep public pricing page in sync
+      await get().fetchPublicPlans();
       return { success: true, plan: updated };
     } catch (error) {
       const errorMsg =
@@ -98,12 +105,12 @@ const usePlansStore = create((set, get) => ({
     }
   },
 
-  // ── Delete Plan 
+  // ── Delete Plan
   deletePlan: async (planId) => {
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `${BASE_URL}/api/admin/plans/${planId}`,
+        `/api/admin/plans/${planId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set((state) => ({
@@ -111,6 +118,8 @@ const usePlansStore = create((set, get) => ({
           (p) => p._id !== planId && p.id !== planId
         ),
       }));
+      // Keep public pricing page in sync
+      await get().fetchPublicPlans();
       return { success: true };
     } catch (error) {
       const errorMsg =

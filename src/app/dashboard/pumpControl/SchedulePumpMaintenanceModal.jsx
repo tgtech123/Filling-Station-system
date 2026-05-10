@@ -33,8 +33,9 @@ export default function SchedulePumpMaintenanceModal({ onclose }) {
     setSubmitting(true);
     try {
       const token = localStorage.getItem("token");
+      const BACKEND = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
       await axios.post(
-        `http://localhost:5000/api/pump/schedule-maintenance`,
+        `${BACKEND}/api/pump/schedule-maintenance`,
         {
           pumpId: form.pumpId,
           reason: form.reason,

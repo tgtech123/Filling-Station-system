@@ -79,13 +79,13 @@ const handleCloseActivateModal = () => {
 
   return (
     <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg">
-      <table className="min-w-full border-collapse">
+      <table className="min-w-[50rem] w-full border-collapse">
         <thead className="bg-gray-100 dark:bg-gray-700">
           <tr>
             {headers.map((header) => (
               <th
                 key={header.key}
-                className="px-6 py-3 text-left text-sm font-semibold text-gray-600"
+                className="px-3 py-3 sm:px-6 text-left text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide"
               >
                 {header.label}
               </th>
@@ -95,13 +95,13 @@ const handleCloseActivateModal = () => {
 
         <tbody className="divide">
           {rows.map((row, rowIndex) => (
-            <tr key={rowIndex} className="hover:bg-gray-50">
+            <tr key={rowIndex} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
               {headers.map((header) => {
                 const value = row[header.key];
 
                 if (header.key === "action") {
                   return (
-                    <td key={header.key} className="px-6 py-4 text-center">
+                    <td key={header.key} className="px-3 py-3 sm:px-6 sm:py-4 text-center">
                       <div   className="relative inline-block">
                         <button
                           onClick={() =>
@@ -171,7 +171,7 @@ const handleCloseActivateModal = () => {
                 } /* 🔵 PLAN COLUMN */
                 if (header.key === "plan") {
                   return (
-                    <td key={header.key} className="px-6 py-4">
+                    <td key={header.key} className="px-3 py-3 sm:px-6 sm:py-4">
                       <span
                         className={`inline-flex px-3 py-1 rounded-full text-sm font-bold
                           ${planStyles[value] || "text-gray-700 bg-gray-100"}`}
@@ -184,7 +184,7 @@ const handleCloseActivateModal = () => {
                 
                 if (header.key === "status") {
                   return (
-                    <td key={header.key} className="px-6 py-4">
+                    <td key={header.key} className="px-3 py-3 sm:px-6 sm:py-4">
                       <span
                         className={`inline-flex px-3 py-1 rounded-full font-bold text-sm ${statusStyles[value] || "text-gray-600 bg-gray-100"}`}
                       >
@@ -196,11 +196,11 @@ const handleCloseActivateModal = () => {
                 
                 // Event Type logic
                 if(header.key === "eventType") {
-                  const Icon = row.icon;
+                  const icon = row.icon;
                   return(
-                    <td key={header.key} className="px-6 py-4 text-sm text-gray-700">
+                    <td key={header.key} className="px-3 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                         <div className="flex items-center gap-2">
-                          {Icon && <Icon className="h-5 w-5 text-gray-500 shrink-0" />}
+                          {icon}
                           {value}
                         </div>
                     </td>
@@ -211,7 +211,7 @@ const handleCloseActivateModal = () => {
                 return (
                   <td
                     key={header.key}
-                    className="px-6 py-4 text-sm text-gray-700"
+                    className="px-3 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm text-gray-700 dark:text-gray-300"
                   >
                     {value}
                   </td>
@@ -303,7 +303,7 @@ const handleCloseActivateModal = () => {
 
 //                 if (header.key === "action") {
 //                   return (
-//                     <td key={header.key} className="px-6 py-4 text-center">
+//                     <td key={header.key} className="px-3 py-3 sm:px-6 sm:py-4 text-center">
 //                       <div   className="relative inline-block">
 //                         <button
 //                           onClick={() =>

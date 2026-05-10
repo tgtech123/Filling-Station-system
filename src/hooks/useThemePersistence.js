@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API || "http://localhost:5000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
 
 export default function useThemePersistence() {
   const { theme, setTheme } = useTheme();

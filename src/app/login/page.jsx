@@ -1,12 +1,14 @@
+import { Suspense } from "react";
 import Login from "@/sections/login/Login";
-
 
 export default function LoginPage() {
     return (
         <div className="">
-           <Login/>
+            <Suspense fallback={null}>
+                <Login />
+            </Suspense>
         </div>
-    )
+    );
 }
 
 // const API = process.env.NEXT_PUBLIC_API

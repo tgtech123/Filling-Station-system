@@ -12,57 +12,38 @@ const PaymentPageOne = () => {
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedState, setSelectedState] = useState("");
   const [loadingCountries, setLoadingCountries] = useState(false);
+  const [loadingStates, setLoadingStates] = useState(false);
   const [isOpened, setIsOpened] = useState(false);
   const [isTransferOpened, setIsTransferOpened] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Fetch all countries + states in one call
+  // Fetch countries via proxy (avoids CORS)
   useEffect(() => {
-    const fetchCountries = async () => {
-      setLoadingCountries(true);
-      try {
-        const res = await fetch(
-          "https://countriesnow.space/api/v0.1/countries/states",
-        );
-        const json = await res.json();
-
-        // Deduplicate by name, then sort
-        const seen = new Set();
-        const sorted = json.data
-          .filter((c) => {
-            if (seen.has(c.name)) return false;
-            seen.add(c.name);
-            return true;
-          })
-          .map((c) => ({ name: c.name, states: c.states }))
-          .sort((a, b) => a.name.localeCompare(b.name));
-
-        setCountries(sorted);
-      } catch (err) {
-        console.error("Failed to fetch countries:", err);
-      } finally {
-        setLoadingCountries(false);
-      }
-    };
-    fetchCountries();
+    setLoadingCountries(true);
+    fetch("/api/public/locations/countries")
+      .then((r) => r.json())
+      .then((json) => setCountries(json.data || []))
+      .catch((err) => console.error("Failed to fetch countries:", err))
+      .finally(() => setLoadingCountries(false));
   }, []);
 
-  // Derive states from selected country
+  // Fetch states when country changes
   useEffect(() => {
     if (!selectedCountry) {
       setStates([]);
       setSelectedState("");
       return;
     }
-    const country = countries.find((c) => c.name === selectedCountry);
-    if (country) {
-      const sorted = [...country.states].sort((a, b) =>
-        a.name.localeCompare(b.name),
-      );
-      setStates(sorted);
-    }
-  }, [selectedCountry, countries]);
+    setLoadingStates(true);
+    setStates([]);
+    setSelectedState("");
+    fetch(`/api/public/locations/states?country=${encodeURIComponent(selectedCountry)}`)
+      .then((r) => r.json())
+      .then((json) => setStates(json.data || []))
+      .catch((err) => console.error("Failed to fetch states:", err))
+      .finally(() => setLoadingStates(false));
+  }, [selectedCountry]);
 
   const handlePayment = async () => {
     setIsLoading(true);
@@ -349,13 +330,9 @@ const PaymentPageOne = () => {
                     <option value="">
                       {loadingCountries ? "Loading..." : "Select country"}
                     </option>
-                    {countries.map((country, index) => (
-                      <option
-                        className="w-fit"
-                        key={`${country.name}-${index}`}
-                        value={country.name}
-                      >
-                        {country.name}
+                    {countries.map((c) => (
+                      <option className="w-fit" key={c} value={c}>
+                        {c}
                       </option>
                     ))}
                   </select>
@@ -368,9 +345,9 @@ const PaymentPageOne = () => {
                       className="border-2 border-neutral-300 px-3 py-1.5 rounded-lg lg:w-[18rem] w-fit"
                     >
                       <option value="">Select state</option>
-                      {states.map((state) => (
-                        <option key={state.name} value={state.name}>
-                          {state.name}
+                      {states.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
                         </option>
                       ))}
                     </select>

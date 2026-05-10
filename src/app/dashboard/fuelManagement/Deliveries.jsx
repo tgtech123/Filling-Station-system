@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState } from "react";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import CustomTable from "./CustomTable";
@@ -6,7 +6,7 @@ import CustomTable from "./CustomTable";
 export default function Deliveries() {
   const [deliveries, setDeliveries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const API_URL = process.env.NEXT_PUBLIC_API;
+  const API_URL = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
   const columns = [
     "Tank Title",
     "Fuel Type",

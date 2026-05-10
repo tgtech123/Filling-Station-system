@@ -57,19 +57,30 @@ const Dashboard = () => {
     );
   }
 
-  // Error state
+  // Error / no-data state
   if (error && !dashboard) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center bg-red-50 p-6 rounded-lg">
-          <p className="text-red-600 font-semibold">Error loading dashboard</p>
-          <p className="text-red-500 mt-2">{error}</p>
-          <button
-            onClick={() => fetchDashboard()}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Retry
-          </button>
+      <div>
+        <h1 className="font-bold text-lg">Welcome, {fullName}</h1>
+        <div className="bg-white rounded-2xl p-5 mt-[1.5rem]">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="font-semibold text-[1.5rem] text-neutral-800 leading-[100%]">Dashboard</h1>
+              <p className="text-[1.125rem] mt-[0.75rem]">Real-time monitoring and quick statistics</p>
+            </div>
+            <button
+              onClick={() => fetchDashboard()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            >
+              ↻ Retry
+            </button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {statCardsData.map((item, index) => (
+              <MyStatCard key={index} title={item.title} date={item.date} amount={item.amount} change={item.change} changeText={item.changeText} icon={item.icon} />
+            ))}
+          </div>
+          <p className="text-center text-gray-400 text-sm mt-6">No data yet — data will appear once activity is recorded.</p>
         </div>
       </div>
     );

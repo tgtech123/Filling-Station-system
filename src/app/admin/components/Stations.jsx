@@ -1,7 +1,6 @@
 "use client";
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import StatGrid from "./StatGrid";
-import { stationData } from "./stationData";
 import SearchBarButtons from "./SearchBarButtons";
 import DataTable from "./DataTable";
 import { stationsTableData } from "./stationsTableData";
@@ -10,6 +9,24 @@ import useAdminStore from "@/store/useAdminStore";
 import { Gauge, CreditCard, XCircle, PauseCircle } from "lucide-react";
 
 const TABLE_HEADERS = stationsTableData.headers;
+
+const PLAN_LABELS = {
+  free: "Free",
+  pro: "Pro",
+  "pro-max": "Pro Max",
+  enterprise: "Enterprise",
+  "enterprise-pro": "Enterprise Pro",
+  "enterprise-max": "Enterprise Max",
+};
+
+const formatPlan = (slug) => PLAN_LABELS[slug] || (slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : "—");
+
+const formatExpiry = (dateStr) => {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
 
 const Stations = ({ onViewStation }) => {
   const [search, setSearch] = useState("");
@@ -37,18 +54,14 @@ const Stations = ({ onViewStation }) => {
     return stations.map((s, i) => ({
       id: s._id || s.id || `ST-${String(i + 1).padStart(3, "0")}`,
       stationName: s.name || s.stationName || "—",
-      owner: s.owner?.name || s.ownerName || s.location || "—",
-      plan: s.subscription?.plan || s.plan || "—",
-      expiryDate: s.subscription?.expiryDate
-        ? new Date(s.subscription.expiryDate).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })
-        : s.expiryDate || "—",
+      // backend returns ownerName (flat) and manager.name (nested) — prefer flat field
+      owner: s.ownerName || s.manager?.name || "—",
+      // backend returns plan as slug (e.g. "pro-max") or defaults to "free"
+      plan: formatPlan(s.plan || "free"),
+      // backend always sets planExpiryDate (free=30d, trial=7d, paid=payment date +1m/+1y)
+      expiryDate: formatExpiry(s.planExpiryDate),
       status: s.isActive === false ? "Suspended" : s.status || "Active",
       action: "more",
-      // keep the full raw object so modals can read it
       _raw: s,
     }));
   }, [stations]);
@@ -61,9 +74,14 @@ const Stations = ({ onViewStation }) => {
       : { text: `${g}%`, color: "red" };
   };
 
-  // Stats cards from stationsStats (fall back to hardcoded)
+  // Stats cards from stationsStats
   const statCards = useMemo(() => {
-    if (!stationsStats) return stationData;
+    if (!stationsStats) return [
+      { id: 1, label: "Total Registered Stations", value: "—", change: "0%", changeLabel: "From last month", showChange: true, icon: Gauge, iconBg: "bg-blue-50", iconColor: "text-blue-600", changeColor: "gray" },
+      { id: 2, label: "Active Subscriptions", value: "—", change: "0%", changeLabel: "From last month", showChange: true, icon: CreditCard, iconBg: "bg-blue-50", iconColor: "text-blue-600", changeColor: "gray" },
+      { id: 3, label: "Expired Subscriptions", value: "—", change: "0%", changeLabel: "From last month", showChange: true, icon: XCircle, iconBg: "bg-red-50", iconColor: "text-red-500", changeColor: "gray" },
+      { id: 4, label: "Suspended Stations", value: "—", change: "0%", changeLabel: "From last month", showChange: true, icon: PauseCircle, iconBg: "bg-amber-50", iconColor: "text-amber-600", changeColor: "gray" },
+    ];
     const s = stationsStats;
     const g1 = fmtGrowth(s.totalRegisteredStationsGrowth);
     const g2 = fmtGrowth(s.activeSubscriptionsGrowth);
@@ -122,9 +140,7 @@ const Stations = ({ onViewStation }) => {
   }, [stationsStats]);
 
   const handleExport = () => {
-    const exportRows = rows.length > 0 ? rows : [];
-    const headers = TABLE_HEADERS.filter((h) => h.key !== "action").map((h) => h.label);
-    const data = exportRows.map((row) => {
+    const data = rows.map((row) => {
       const obj = {};
       TABLE_HEADERS.forEach((h) => {
         if (h.key !== "action" && h.key !== "_raw") obj[h.label] = row[h.key];
@@ -137,15 +153,13 @@ const Stations = ({ onViewStation }) => {
     XLSX.writeFile(workbook, "stations.xlsx");
   };
 
-  const displayRows = rows.length > 0 ? rows : stationsTableData.rows;
-
   return (
-    <div className="p-[2rem]">
-      <h1 className="text-[28px] font-semibold mb-[0.8rem]">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <h1 className="text-xl sm:text-2xl lg:text-[28px] font-semibold mb-[0.8rem]">
         Filling Stations
       </h1>
 
-      <p className="text-neutral-500 text-[1.125rem] mb-[1.5rem]">
+      <p className="text-neutral-500 text-sm sm:text-base lg:text-[1.125rem] mb-[1.5rem]">
         Manage all registered filling stations and their subscriptions
       </p>
 
@@ -164,11 +178,17 @@ const Stations = ({ onViewStation }) => {
           </p>
         )}
 
-        {!loading && (
+        {!loading && rows.length === 0 && (
+          <p className="text-center text-gray-400 py-10 font-medium">
+            No stations found.
+          </p>
+        )}
+
+        {!loading && rows.length > 0 && (
           <div className="mt-[1.5rem]">
             <DataTable
               headers={TABLE_HEADERS}
-              rows={displayRows}
+              rows={rows}
               onActionClick={() => {}}
               onViewStation={onViewStation}
             />

@@ -2,7 +2,6 @@ import { create } from "zustand";
 import axios from "axios";
 
 const usePumpControlStore = create((set) => ({
-  // State
   pumpData: null,
   loading: {
     pumpControl: false,
@@ -11,7 +10,6 @@ const usePumpControlStore = create((set) => ({
     pumpControl: null,
   },
 
-  // Fetch Pump Control Data
   fetchPumpControl: async (token) => {
     set((state) => ({
       loading: { ...state.loading, pumpControl: true },
@@ -19,16 +17,9 @@ const usePumpControlStore = create((set) => ({
     }));
 
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/dashboard/pump-control`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log("Pump control response:", response.data);
+      const response = await axios.get("/api/dashboard/pump-control", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       set((state) => ({
         pumpData: response.data.data,

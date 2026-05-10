@@ -5,10 +5,10 @@ import MyProfileModal from "./MyProfileModal";
 import { useImageStore } from "@/store/useImageStore";
 import useAdminProfileStore from "@/store/useAdminProfileStore";
 import useThemePersistence from "@/hooks/useThemePersistence";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Menu } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const HeaderTwo = () => {
+const HeaderTwo = ({ onMenuClick }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const USER_ID = "admin-user-1";
@@ -34,8 +34,16 @@ const HeaderTwo = () => {
   }, []);
 
   return (
-    <div className="flex justify-end p-6 items-center h-[90px] w-full shadow-md bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-      <div className="flex gap-6 items-center">
+    <div className="flex justify-between lg:justify-end p-4 lg:p-6 items-center h-[70px] lg:h-[90px] w-full shadow-md bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex gap-3 lg:gap-6 items-center">
+        {/* Hamburger — mobile only */}
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          aria-label="Open menu"
+        >
+          <Menu size={22} className="text-gray-600 dark:text-gray-300" />
+        </button>
 
         {/* Dark / Light toggle */}
         <button

@@ -5,10 +5,17 @@ import fuelPumpImg from "../../../public/twemoji_fuel-pump.png";
 import { FaInstagram, FaLinkedin } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import toast from "react-hot-toast";
-import { useState } from "react";
-import { FaSpinner } from "react-icons/fa"; // ✅ Spinner icon from react-icons
+import { useState, useEffect } from "react";
+import { FaSpinner } from "react-icons/fa";
+import usePlatformStore from "@/store/usePlatformStore";
 
 export default function Contact() {
+  const { settings, loading: settingsLoading, fetchPublicSettings } = usePlatformStore();
+
+  useEffect(() => {
+    fetchPublicSettings();
+  }, []);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -28,7 +35,8 @@ export default function Contact() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:5000/api/contactus", {
+      const BACKEND = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
+      const response = await fetch(`${BACKEND}/api/contactus`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -113,15 +121,27 @@ export default function Contact() {
           <div className="mt-20 text-gray-100 flex flex-col gap-4">
             <div className="flex gap-4 items-center">
               <Phone />
-              <p>+234 7068690589</p>
+              {settingsLoading && !settings ? (
+                <div className="h-4 w-32 bg-blue-400/40 rounded animate-pulse" />
+              ) : (
+                <p>{settings?.contactPhone || "+234 7068690589"}</p>
+              )}
             </div>
             <div className="flex gap-4 items-center">
               <Mail />
-              <p>oboh.thankgod1@gmail.com</p>
+              {settingsLoading && !settings ? (
+                <div className="h-4 w-44 bg-blue-400/40 rounded animate-pulse" />
+              ) : (
+                <p>{settings?.contactEmail || "support@flourishstation.com"}</p>
+              )}
             </div>
             <div className="flex gap-4 items-center">
               <MapPin />
-              <p>Km 2 Airport Road, Rukpokwu, Port Harcourt, Rivers State</p>
+              {settingsLoading && !settings ? (
+                <div className="h-4 w-56 bg-blue-400/40 rounded animate-pulse" />
+              ) : (
+                <p>{settings?.contactAddress || "Km 2 Airport Road, Rukpokwu, Port Harcourt, Rivers State"}</p>
+              )}
             </div>
           </div>
 
@@ -221,7 +241,7 @@ export default function Contact() {
           </p>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10">
           {teamData.map((item) => (
             <div
               key={item.id}

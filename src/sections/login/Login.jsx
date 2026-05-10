@@ -1,11 +1,13 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiEyeOff } from "react-icons/fi";
 import { FiEye } from "react-icons/fi";
+import { ArrowLeft } from 'lucide-react';
 import LoginTwo from "../LoginTwo";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import usePlatformStore from "@/store/usePlatformStore";
 
 const Login = () => {
   const [password, setPassword] = useState("");
@@ -15,6 +17,16 @@ const Login = () => {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const upgraded = searchParams.get("upgraded") === "true";
+  const upgradedPlan = searchParams.get("plan") || "";
+
+  const { settings, fetchPublicSettings } = usePlatformStore();
+
+  useEffect(() => {
+    fetchPublicSettings();
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -23,14 +35,11 @@ const Login = () => {
     setError(null);
 
     try {
-      const API = process.env.NEXT_PUBLIC_API;
-
-      const res = await fetch(`${API}/api/auth/login`, {
+      const res = await fetch(`/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
@@ -79,17 +88,43 @@ const Login = () => {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 h-screen overflow-hidden">
+      
+
+      
       {/* Left - Form Section */}
-      <div className="w-full h-full flex items-center justify-center bg-white dark:bg-gray-900 px-4">
+      <div className="w-full h-full flex gap-10 items-center justify-center bg-white dark:bg-gray-900 px-4">
+     
         <div className="w-full max-w-md flex flex-col justify-center items-center">
+          
+          <div className="flex gap-5 mb-20">
+            <Link 
+              href="/" 
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            >
+              <ArrowLeft size={28} />
+              <h1 className="hidden lg:block">Back home</h1>
+            </Link>
+          </div>
+
           <Image src="/station-logo.png" alt="Logo" width={200} height={140} />
 
           <h1 className="text-4xl font-bold text-[#323130] text-center">
-            Login to Flourish Station
+            Login to {settings?.platformName || "Flourish Station"}
           </h1>
           <p className="text-md text-gray-500 text-center">
             Login to access your customized dashboard
           </p>
+
+          {upgraded && (
+            <div className="w-full mt-4 mb-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-center">
+              <p className="text-green-700 font-semibold text-sm">
+                🎉 {upgradedPlan ? `Your ${upgradedPlan} plan is now active!` : "Your plan has been upgraded!"}
+              </p>
+              <p className="text-green-600 text-xs mt-0.5">
+                Log in below to access your upgraded dashboard.
+              </p>
+            </div>
+          )}
 
           <form
             onSubmit={handleLogin}

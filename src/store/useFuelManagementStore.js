@@ -2,7 +2,6 @@ import { create } from "zustand";
 import axios from "axios";
 
 const useFuelManagementStore = create((set) => ({
-  // State
   fuelData: null,
   loading: {
     fuelManagement: false,
@@ -11,7 +10,6 @@ const useFuelManagementStore = create((set) => ({
     fuelManagement: null,
   },
 
-  // Fetch Fuel Management Data
   fetchFuelManagement: async (token) => {
     set((state) => ({
       loading: { ...state.loading, fuelManagement: true },
@@ -19,16 +17,9 @@ const useFuelManagementStore = create((set) => ({
     }));
 
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/dashboard/fuel-management`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log("Fuel management response:", response.data);
+      const response = await axios.get("/api/dashboard/fuel-management", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       set((state) => ({
         fuelData: response.data.data,

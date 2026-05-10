@@ -10,7 +10,7 @@ export default function DashboardCard({ stats, loading }) {
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm animate-pulse"
+            className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-sm animate-pulse"
           >
             <div className="flex items-center justify-between">
               <div className="h-12 w-12 rounded-xl bg-gray-200 dark:bg-gray-700" />
@@ -34,7 +34,7 @@ export default function DashboardCard({ stats, loading }) {
           return (
             <div
               key={id}
-              className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm"
+              className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 sm:p-6 shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <div
@@ -52,8 +52,8 @@ export default function DashboardCard({ stats, loading }) {
               </div>
 
               <div className="mt-6">
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{value}</p>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{label}</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-white">{value}</p>
+                <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400">{label}</p>
               </div>
             </div>
           );

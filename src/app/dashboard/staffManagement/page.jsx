@@ -1,13 +1,15 @@
 "use client"
 import React, { useState } from 'react'
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Upload } from "lucide-react";
 import Link from 'next/link';
 import StaffManagement from './StaffManagement'
 import NewStaffModal from './NewStaffModal';
+import BulkImportModal from '@/components/BulkImportModal';
 
 const Page = () => {
   const [isOpen, setIsOpen] = useState(false)
-  
+  const [showBulkImport, setShowBulkImport] = useState(false)
+
   return (
     <>
       <div>
@@ -22,8 +24,15 @@ const Page = () => {
             </Link>
             <h4 className="text-[1.5rem] text-[#2A2A2A] font-semibold">Staff Management</h4>
           </div>
-          
+
           <div className="flex gap-2 items-center">
+            <button
+              onClick={() => setShowBulkImport(true)}
+              className="cursor-pointer text-sm lg:text-[0.875rem] flex gap-2 justify-center items-center border-[2px] border-gray-300 text-gray-700 py-2 px-4 h-[3rem] rounded-xl font-bold"
+            >
+              <Upload size={18} />
+              Bulk Import
+            </button>
             <button
               onClick={() => setIsOpen(true)}
               className="cursor-pointer text-sm lg:text-[0.875rem] flex gap-2 justify-center items-center border-[2px] border-[#1A71F6] text-[#1A71F6] py-2 w-[11.0625rem] h-[3rem] rounded-xl font-bold"
@@ -37,11 +46,17 @@ const Page = () => {
         <StaffManagement/>
       </div>
 
-      {/* Modal rendered outside main container */}
       {isOpen && (
-        <NewStaffModal 
-          isOpen={isOpen} 
-          onClose={() => setIsOpen(false)} 
+        <NewStaffModal
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
+
+      {showBulkImport && (
+        <BulkImportModal
+          onClose={() => setShowBulkImport(false)}
+          onSuccess={() => setShowBulkImport(false)}
         />
       )}
     </>

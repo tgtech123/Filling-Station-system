@@ -80,7 +80,7 @@
 import { create } from "zustand";
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/pump"; // backend base URL
+const API_URL = `${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/pump`;
 
 const usePumpStore = create((set) => ({
   pumps: [], // 🪣 all pumps

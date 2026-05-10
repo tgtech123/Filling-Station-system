@@ -1,7 +1,5 @@
 import { create } from "zustand";
 
-const API_URL = process.env.NEXT_PUBLIC_API; 
-
 export const useTankStore = create((set) => ({
   tanks: [],
   loading: false,
@@ -13,13 +11,15 @@ export const useTankStore = create((set) => ({
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found");
 
-      const res = await fetch(`${API_URL}/api/tank`, {
+      const res = await fetch("/api/tank", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error("Failed to fetch tanks");
-
       const data = await res.json();
+
+      // Backend returns 404 with empty data when no tanks exist — treat as empty, not an error
+      if (!res.ok && res.status !== 404) throw new Error(data.message || "Failed to fetch tanks");
+
       set({ tanks: data.data || [] });
     } catch (err) {
       set({ error: err.message });

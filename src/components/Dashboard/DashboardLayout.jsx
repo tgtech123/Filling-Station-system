@@ -4,6 +4,7 @@ import Sidebar from "@/components/Dashboard/Sidebar";
 import Header from "@/components/Dashboard/Header";
 import { useState, useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 function DashboardLayout({ children }) {
   const [showSidebar, setShowSidebar] = useState(false);
@@ -37,7 +38,21 @@ function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="bg-gray-100 max-h-[100vh] overflow-y-hidden h-auto flex">
+    <div className="bg-gray-100 dark:bg-gray-900 max-h-[100vh] overflow-y-hidden h-auto flex overflow-hidden">
+      {/* Mobile overlay */}
+      <AnimatePresence>
+        {showSidebar && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={toggleSidebar}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <Sidebar isVisible={showSidebar} toggleSidebar={toggleSidebar} />
 

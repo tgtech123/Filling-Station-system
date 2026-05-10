@@ -305,3 +305,47 @@ html.dark .bg-\[\#F1F9F1\] {
   background-color: #052e16 !important;
   color: #4ade80 !important;
 }
+
+/* ── Responsive utilities ────────────────────────────────────────────────── */
+
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  html { font-size: 14px; }
+}
+
+/* Responsive containers */
+.dashboard-container {
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .dashboard-container { padding: 1.5rem; }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-container { padding: 2rem; }
+}
+
+/* Table responsive */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Card grid responsive */
+.card-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .card-grid { grid-template-columns: repeat(4, 1fr); }
+}

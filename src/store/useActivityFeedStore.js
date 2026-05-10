@@ -1,8 +1,6 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API || 'http://localhost:5000';
-
 const getAuthHeaders = () => {
   if (typeof window !== 'undefined') {
     const token = localStorage.getItem('token');
@@ -15,8 +13,7 @@ let _pollingInterval = null;
 
 const useActivityFeedStore = create((set, get) => ({
   // ─── State ────────────────────────────────────────────────────────────────────
-  // Arrays stored directly — no envelope wrapper
-  activities: [],      // Activity[]  from GET /api/activity
+  activities:    [],   // Activity[]     from GET /api/activity
   productLevels: [],   // ProductLevel[] from GET /api/product-levels
 
   loading: {
@@ -37,16 +34,12 @@ const useActivityFeedStore = create((set, get) => ({
     set((state) => ({ errors: { ...state.errors, [key]: error } })),
 
   // ─── 1. Recent Activity ───────────────────────────────────────────────────────
-  // GET /api/activity
-  // Response: { message, total, activities[] }   (no station field)
   fetchActivity: async () => {
     const { setLoading, setError } = get();
-
     setLoading('activities', true);
     setError('activities', null);
-
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/activity`, {
+      const response = await axios.get('/api/activity', {
         headers: getAuthHeaders(),
       });
       const activities = response.data.activities ?? [];
@@ -66,16 +59,12 @@ const useActivityFeedStore = create((set, get) => ({
   },
 
   // ─── 2. Product Levels ────────────────────────────────────────────────────────
-  // GET /api/product-levels
-  // Response: { message, station, total, productLevels[] }
   fetchProductLevels: async () => {
     const { setLoading, setError } = get();
-
     setLoading('productLevels', true);
     setError('productLevels', null);
-
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/product-levels`, {
+      const response = await axios.get('/api/product-levels', {
         headers: getAuthHeaders(),
       });
       const productLevels = response.data.productLevels ?? [];
@@ -106,7 +95,7 @@ const useActivityFeedStore = create((set, get) => ({
     };
   },
 
-  // ─── 4. Polling ──────────────────────────────────────────────────────────────
+  // ─── 4. Polling ───────────────────────────────────────────────────────────────
   startPolling: () => {
     if (_pollingInterval) return;
     _pollingInterval = setInterval(() => {

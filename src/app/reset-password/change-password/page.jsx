@@ -1,4 +1,4 @@
-
+﻿
 
   "use client"
 import LoginTwo from "@/sections/LoginTwo";
@@ -18,7 +18,7 @@ function ChangePasswordForm() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
-  const API = process.env.NEXT_PUBLIC_API;
+  const API = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
 
   useEffect(() => {
     if (!token) {
@@ -182,7 +182,7 @@ export default function ChangePassword() {
 //   const searchParams = useSearchParams();
 //   const token = searchParams.get("token"); // ✅ extract token from URL
 
-//   const API = process.env.NEXT_PUBLIC_API;
+//   const API = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();

@@ -43,7 +43,10 @@ export default function PumpControl() {
         <div className="flex gap-2 items-center">
           {/* Emergency Stop button — appearance changes based on emergencyMode */}
           <button
-            onClick={() => setShowEmergencyModal(true)}
+            onClick={() => {
+              console.log("Emergency button clicked")
+              setShowEmergencyModal(true)
+            }}
             className={`text-sm lg:text-md cursor-pointer border-3 flex gap-2 items-center py-2 px-3 lg:px-6 rounded-[12px] transition-colors ${
               emergencyMode
                 ? "border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
@@ -68,7 +71,10 @@ export default function PumpControl() {
             )}
           </button>
           <button
-            onClick={() => setShowMaintenanceModal(true)}
+            onClick={() => {
+              console.log("Maintenance button clicked")
+              setShowMaintenanceModal(true)
+            }}
             className="cursor-pointer text-sm lg:text-md flex gap-2 bg-[#0080ff] text-white py-3 px-3 lg:px-6 rounded-[12px] font-semibold"
           >
             Schedule Maintenance

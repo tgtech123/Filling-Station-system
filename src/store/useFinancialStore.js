@@ -1,8 +1,8 @@
-// store/financialStore.js
+﻿// store/financialStore.js
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com"}/api`;
 
 export const useFinancialStore = create((set, get) => ({
   // State

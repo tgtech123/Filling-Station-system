@@ -9,8 +9,6 @@ import { HiChevronDown, HiChevronUp } from "react-icons/hi2";
 import { GrSearch } from "react-icons/gr";
 import ExportButton from "@/components/ExportButton";
 
-const API_URL = process.env.NEXT_PUBLIC_API;
-
 const Modal = ({ isOpen, onClose }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [salesData, setSalesData] = useState([]);
@@ -26,7 +24,7 @@ const Modal = ({ isOpen, onClose }) => {
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`${API_URL}/api/lubricant/transactions`, {
+        const res = await fetch(`/api/lubricant/transactions`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

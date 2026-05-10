@@ -94,7 +94,7 @@ export default function ShiftCard({ data }) {
       {/* Profile Section */}
       <div className="flex items-center gap-3 mb-4">
         {/* Profile Image from Cloudinary */}
-        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-gray-300 bg-gray-100 flex items-center justify-center shrink-0">
+        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
           {profileImage ? (
             <Image
               src={profileImage}
@@ -110,45 +110,45 @@ export default function ShiftCard({ data }) {
         </div>
         
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-800 truncate">{data.name}</h3>
-          <p className="text-xs text-gray-500 truncate">{data.email || "No email"}</p>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-100 truncate">{data.name}</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{data.email || "No email"}</p>
         </div>
       </div>
 
       {/* Shift Details */}
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
-          <span className="text-gray-600">Date:</span>
-          <span className="font-medium">{data.date}</span>
+          <span className="text-gray-600 dark:text-gray-400">Date:</span>
+          <span className="font-medium dark:text-gray-200">{data.date}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Shift:</span>
-          <span className="font-medium text-xs">{data.shift}</span>
+          <span className="text-gray-600 dark:text-gray-400">Shift:</span>
+          <span className="font-medium text-xs dark:text-gray-200">{data.shift}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Pump:</span>
-          <span className="font-medium">{data.pumpNo}</span>
+          <span className="text-gray-600 dark:text-gray-400">Pump:</span>
+          <span className="font-medium dark:text-gray-200">{data.pumpNo}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Fuel Type:</span>
-          <span className="font-medium">{data.fuelType}</span>
+          <span className="text-gray-600 dark:text-gray-400">Fuel Type:</span>
+          <span className="font-medium dark:text-gray-200">{data.fuelType}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Litres Sold:</span>
-          <span className="font-medium">{data.litresSold}</span>
+          <span className="text-gray-600 dark:text-gray-400">Litres Sold:</span>
+          <span className="font-medium dark:text-gray-200">{data.litresSold}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Amount:</span>
+          <span className="text-gray-600 dark:text-gray-400">Amount:</span>
           <span className="font-medium text-green-600">{data.amount}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600">Reconciled Cash:</span>
-          <span className="font-medium">{data.reconciledCash}</span>
+          <span className="text-gray-600 dark:text-gray-400">Reconciled Cash:</span>
+          <span className="font-medium dark:text-gray-200">{data.reconciledCash}</span>
         </div>
         
         {/* Status Badge */}
         <div className="flex justify-between items-center pt-2 border-t dark:border-gray-700">
-          <span className="text-gray-600">Status:</span>
+          <span className="text-gray-600 dark:text-gray-400">Status:</span>
           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
             data.status === "Matched" 
               ? "bg-green-100 text-green-700" 
@@ -172,14 +172,14 @@ export default function ShiftCard({ data }) {
       {/* Comment Box (shows when flagged or button clicked) */}
       {showCommentBox && (
         <div className="mt-3">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Add Comment {data.discrepancy !== 0 && <span className="text-red-500">*</span>}
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Add notes about this approval..."
-            className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             rows="3"
           />
         </div>
@@ -201,7 +201,7 @@ export default function ShiftCard({ data }) {
                 setShowCommentBox(false);
                 setComment("");
               }}
-              className="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
+              className="flex-1 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition font-medium"
             >
               Cancel
             </button>

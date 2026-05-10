@@ -2,7 +2,6 @@ import { create } from "zustand";
 import axios from "axios";
 
 const useStaffManagementStore = create((set) => ({
-  // State
   staffData: null,
   loading: {
     staffManagement: false,
@@ -11,7 +10,6 @@ const useStaffManagementStore = create((set) => ({
     staffManagement: null,
   },
 
-  // Fetch Staff Management Data
   fetchStaffManagement: async (token) => {
     set((state) => ({
       loading: { ...state.loading, staffManagement: true },
@@ -19,16 +17,9 @@ const useStaffManagementStore = create((set) => ({
     }));
 
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/dashboard/staff-management`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log("Staff management response:", response.data);
+      const response = await axios.get("/api/dashboard/staff-management", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       set((state) => ({
         staffData: response.data.data,

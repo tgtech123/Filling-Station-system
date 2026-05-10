@@ -1,8 +1,8 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import axios from 'axios';
 
 // Configure axios base URL - Make sure it includes /api
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com"}/api`;
 
 // Remove any trailing slash and ensure /api is present
 const normalizeBaseURL = (url) => {
@@ -29,7 +29,7 @@ const apiClient = axios.create({
 // Add request interceptor to log and add auth
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     
     console.log('📤 API Request:', {
       method: config.method?.toUpperCase(),

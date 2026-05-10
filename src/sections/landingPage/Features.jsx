@@ -53,7 +53,7 @@ export default function Features() {
     ];
 
     return (
-        <div className="py-20 flex flex-col items-center px-6 lg:px-40">
+        <div className="py-12 sm:py-16 lg:py-20 flex flex-col items-center px-4 sm:px-8 lg:px-40">
             <button className="flex gap-2 border-2 border-[#faa300] items-center py-2 px-6 rounded-[30px] text-[#faa300] bg-gradient-to-r from-[#c5e2ff] to-[#fff5c5]">
                 <Grid3X3 className="text-[#faa300]" />
                 <p className="font-semibold">Powerful Features</p>
@@ -62,7 +62,7 @@ export default function Features() {
             {/* SECTION TITLE — fade in when scrolled to */}
             <motion.h3
                 ref={ref}
-                className="text-2xl lg:text-3xl font-semibold text-center mt-4 mb-6"
+                className="text-xl sm:text-2xl lg:text-3xl font-semibold text-center mt-4 mb-6"
                 initial={{ opacity: 0, y: 30 }}
                 animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
                 transition={{ duration: 0.6 }}
@@ -76,7 +76,7 @@ export default function Features() {
             </p>
 
             {/* FEATURE CARDS — staggered scroll reveal */}
-            <div className="mt-14 grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="mt-10 sm:mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
                 {data.map((item, index) => (
                     <motion.div
                         key={item.id}

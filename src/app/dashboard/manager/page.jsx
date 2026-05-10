@@ -7,11 +7,51 @@ import FlashCard from "@/components/Dashboard/FlashCard";
 import QuickActionsCard from "@/components/Dashboard/QuickActionsCard";
 import LiveIndicator from "@/components/LiveIndicator";
 import { GoHistory } from "react-icons/go";
-import { CheckCheck, Plus, TriangleAlert, Wrench, History, AlertCircle, XCircle, X } from "lucide-react";
+import { CheckCheck, Plus, TriangleAlert, Wrench, History, AlertCircle, XCircle, X, LogIn } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import useDashboardStore from "@/store/useDashboardStore";
 import useActivityFeedStore from "@/store/useActivityFeedStore";
+import usePaymentStore from "@/store/usePaymentStore";
 import { reportType } from "./managerData";
+
+function getActivityStyle(item) {
+  const type   = (item.type   || "").toLowerCase();
+  const action = (item.action || "").toLowerCase();
+  const status = (item.status || "").toLowerCase();
+  const title  = (item.title  || "").toLowerCase();
+
+  const isLogin =
+    type === "login" ||
+    action.includes("login") ||
+    title.includes("login");
+
+  if (isLogin) {
+    const isFailure =
+      status === "failed" ||
+      status === "failure" ||
+      status === "error" ||
+      title.includes("fail") ||
+      title.includes("invalid") ||
+      title.includes("incorrect") ||
+      action.includes("fail");
+
+    return isFailure
+      ? { icon: <LogIn className="text-[#ff1f1f]" size={20} />, color: "text-[#ff1f1f]" }
+      : { icon: <LogIn className="text-[#04910c]" size={20} />, color: "text-[#04910c]" };
+  }
+
+  if (type === "alert" || status === "failed" || status === "failure") {
+    return { icon: <TriangleAlert className="text-[#ff1f1f]" size={20} />, color: "text-[#ff1f1f]" };
+  }
+  if (type === "sale") {
+    return { icon: <CheckCheck className="text-[#7f27ff]" size={20} />, color: "text-[#7f27ff]" };
+  }
+  if (type === "maintenance") {
+    return { icon: <Wrench className="text-[#e27d00]" size={20} />, color: "text-[#e27d00]" };
+  }
+  return { icon: <Plus className="text-[#04910c]" size={20} />, color: "text-[#04910c]" };
+}
 
 function SubscriptionBanner() {
   const [dismissed, setDismissed] = useState(false);
@@ -91,8 +131,10 @@ function relativeTime(timestamp) {
 
 export default function ManagerDashboard() {
   const [userData, setUserData] = useState(null);
+  const router = useRouter();
 
   const { tankStatus, metrics, loading, fetchDashboardData, errors } = useDashboardStore();
+  const { currentPlan, fetchCurrentPlan } = usePaymentStore();
   const {
     activities,
     loading: activityLoading,
@@ -114,6 +156,7 @@ export default function ManagerDashboard() {
 
     const token = localStorage.getItem("token");
     if (token) {
+      fetchCurrentPlan();
       fetchDashboardData(token);
       const dashboardInterval = setInterval(() => {
         fetchDashboardData(token);
@@ -125,7 +168,6 @@ export default function ManagerDashboard() {
       };
     }
 
-    fetchActivity().then(() => startPolling());
     return () => stopPolling();
   }, [fetchDashboardData, fetchActivity, startPolling, stopPolling]);
 
@@ -162,13 +204,45 @@ export default function ManagerDashboard() {
         <SubscriptionBanner />
         {/* Header Section */}
         <DisplayCard>
-          <h2 className="text-2xl font-semibold">Welcome back, {fullName}</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <h2 className="text-2xl font-semibold">Welcome back, {fullName}</h2>
+            <div className="flex items-center gap-2">
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                  currentPlan?.plan === "free"
+                    ? "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                    : currentPlan?.plan === "pro"
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                    : currentPlan?.plan === "pro-max"
+                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                    : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                }`}
+              >
+                {currentPlan?.planName || "Free Plan"}
+              </span>
+              {(!currentPlan || currentPlan?.plan === "free") && (
+                <button
+                  onClick={() => router.push("/pricing")}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                >
+                  Upgrade ↑
+                </button>
+              )}
+              {currentPlan?.daysRemaining !== null &&
+                currentPlan?.daysRemaining !== undefined &&
+                currentPlan?.daysRemaining <= 7 && (
+                  <span className="text-xs text-red-500 font-medium">
+                    Expires in {currentPlan.daysRemaining} days
+                  </span>
+                )}
+            </div>
+          </div>
           <p>
             Monitor your filling station operations, manage inventory, and track
             performance all in one place.
           </p>
 
-          <div className="mt-10 grid grid-cols-1 lg:grid-cols-4 gap-4">
+          <div className="mt-6 sm:mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <FlashCard
               name="Revenue Generated"
               variable="₦"
@@ -194,7 +268,7 @@ export default function ManagerDashboard() {
         </DisplayCard>
 
         {/* Quick Actions */}
-        <div className="mt-10">
+        <div className="mt-6 sm:mt-10">
           <DisplayCard>
             <h2 className="text-2xl font-semibold">Quick Actions</h2>
             <p>Perform overall operations in one click</p>
@@ -208,7 +282,7 @@ export default function ManagerDashboard() {
         </div>
 
         {/* Recent Activity and Current Product Levels */}
-        <div className="mt-10">
+        <div className="mt-6 sm:mt-10">
           <DisplayCard>
             <div className="w-full gap-4 flex flex-col lg:flex-row items-start">
               {/* Recent activity */}
@@ -234,35 +308,17 @@ export default function ManagerDashboard() {
                   ) : activities.length === 0 ? (
                     <p className="text-gray-500 text-sm">No recent activity yet.</p>
                   ) : (
-                    activities.map((item) => (
+                    activities.map((item) => {
+                      const { icon, color } = getActivityStyle(item);
+                      return (
                       <div
                         key={item.id}
                         className="flex flex-col lg:flex-row mb-4 items-start lg:justify-between lg:items-center"
                       >
                         <div className="flex gap-2">
-                          <div className="mt-1">
-                            {item.type === "alert" ? (
-                              <TriangleAlert className="text-[#ff1f1f]" size={20} />
-                            ) : item.type === "sale" ? (
-                              <CheckCheck className="text-[#7f27ff]" size={20} />
-                            ) : item.type === "maintenance" ? (
-                              <Wrench className="text-[#e27d00]" size={20} />
-                            ) : (
-                              <Plus className="text-[#04910c]" size={20} />
-                            )}
-                          </div>
+                          <div className="mt-1">{icon}</div>
                           <div>
-                            <h5
-                              className={`text-md font-semibold ${
-                                item.type === "alert"
-                                  ? "text-[#ff1f1f]"
-                                  : item.type === "sale"
-                                  ? "text-[#7f27ff]"
-                                  : item.type === "maintenance"
-                                  ? "text-[#e27d00]"
-                                  : "text-[#04910c]"
-                              }`}
-                            >
+                            <h5 className={`text-md font-semibold ${color}`}>
                               {item.title}
                             </h5>
                             <p className="text-sm font-semibold text-gray-600">
@@ -274,7 +330,8 @@ export default function ManagerDashboard() {
                           {relativeTime(item.timestamp)}
                         </p>
                       </div>
-                    ))
+                      );
+                    })
                   )}
                 </section>
               </div>
@@ -330,7 +387,7 @@ export default function ManagerDashboard() {
                       );
                     })
                   ) : (
-                    <p className="text-gray-500">No tanks available</p>
+                    <p className="text-gray-500 text-sm">No tanks created at this time, create to continue...</p>
                   )}
                 </div>
               </div>

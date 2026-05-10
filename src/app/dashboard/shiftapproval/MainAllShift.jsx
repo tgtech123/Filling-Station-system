@@ -89,7 +89,7 @@ export default function ShiftApprovalPage() {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4">
       <ShiftApprovalHeader
         activeTab={activeTab}
         onTabChange={setActiveTab}
