@@ -11,6 +11,7 @@ const PlanCards = ({ plan, onDelete, onEdit }) => {
   const { updatePlan } = usePlansStore()
 
   const handleToggle = async () => {
+    if (!plan.id) return
     setToggling(true)
     const next = !isActive
     const result = await updatePlan(plan.id, { isActive: next })

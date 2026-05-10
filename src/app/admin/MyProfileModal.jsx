@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useRef, useState } from "react";
 import { X, Save, SquarePen, Mail, Phone, Eye, EyeOff } from "lucide-react";
 import Avatar from "@/components/Avatar";
@@ -98,7 +98,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
       setPasswordLoading(true);
       const token = localStorage.getItem("token");
       await axios.patch(
-        `${process.env.NEXT_PUBLIC_API}/api/auth/change-password`,
+        `${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/auth/change-password`,
         { currentPassword, newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 export async function GET(request) {
   const auth = request.headers.get("authorization") || "";
@@ -6,7 +6,7 @@ export async function GET(request) {
   const period = searchParams.get("period") || "month";
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API}/api/dashboard/analytics/fuel-breakdown?period=${period}`,
+      `${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/dashboard/analytics/fuel-breakdown?period=${period}`,
       {
         headers: {
           "ngrok-skip-browser-warning": "true",
@@ -19,7 +19,7 @@ export async function GET(request) {
     const data = text ? JSON.parse(text) : {};
     return NextResponse.json(data, { status: res.status });
   } catch (err) {
-    console.error("❌ /api/dashboard/analytics/fuel-breakdown proxy error:", err.message);
+    console.error("âŒ /api/dashboard/analytics/fuel-breakdown proxy error:", err.message);
     return NextResponse.json({ message: "Failed to fetch fuel breakdown" }, { status: 500 });
   }
 }

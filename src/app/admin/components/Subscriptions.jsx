@@ -13,7 +13,7 @@ const Subscriptions = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deletingPlanId, setDeletingPlanId] = useState(null)
 
-  const { adminPlans, loading, fetchAdminPlans, deletePlan } = usePlansStore()
+  const { adminPlans, loading, fetchAdminPlans, fetchPublicPlans, deletePlan } = usePlansStore()
 
   useEffect(() => {
     fetchAdminPlans()
@@ -162,6 +162,7 @@ const Subscriptions = () => {
             setIsShow(false)
             setSelectedPlan(null)
             fetchAdminPlans()
+            fetchPublicPlans()
           }}
         />
       )}

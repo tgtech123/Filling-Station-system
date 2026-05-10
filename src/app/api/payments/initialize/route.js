@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
     const auth = request.headers.get("authorization") || "";
     const body = await request.json();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/payments/initialize`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/payments/initialize`, {
       method: "POST",
       headers: {
         "ngrok-skip-browser-warning": "true",
@@ -17,7 +17,7 @@ export async function POST(request) {
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (err) {
-    console.error("❌ /api/payments/initialize proxy error:", err.message);
+    console.error("âŒ /api/payments/initialize proxy error:", err.message);
     return NextResponse.json({ error: "Failed to initialize payment" }, { status: 500 });
   }
 }

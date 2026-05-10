@@ -13,10 +13,20 @@ const usePlansStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const response = await axios.get('/api/public/plans');
-      set({
-        plans: response.data.plans || response.data.data || [],
-        loading: false,
+      const raw = response.data.plans || response.data.data || [];
+
+      // Deduplicate by name — keep the record with the latest updatedAt
+      // (backend seeding can create a duplicate when a plan is edited)
+      const nameMap = new Map();
+      raw.forEach((p) => {
+        const key = (p.name || "").trim().toLowerCase();
+        const existing = nameMap.get(key);
+        if (!existing || new Date(p.updatedAt) > new Date(existing.updatedAt)) {
+          nameMap.set(key, p);
+        }
       });
+
+      set({ plans: Array.from(nameMap.values()), loading: false });
     } catch (error) {
       const errorMsg =
         error.response?.data?.message || error.message || "Failed to fetch plans";
@@ -84,6 +94,8 @@ const usePlansStore = create((set, get) => ({
           p._id === planId || p.id === planId ? { ...p, ...updated } : p
         ),
       }));
+      // Keep public pricing page in sync
+      await get().fetchPublicPlans();
       return { success: true, plan: updated };
     } catch (error) {
       const errorMsg =
@@ -106,6 +118,8 @@ const usePlansStore = create((set, get) => ({
           (p) => p._id !== planId && p.id !== planId
         ),
       }));
+      // Keep public pricing page in sync
+      await get().fetchPublicPlans();
       return { success: true };
     } catch (error) {
       const errorMsg =

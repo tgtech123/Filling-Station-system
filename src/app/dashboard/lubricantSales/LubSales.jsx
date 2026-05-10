@@ -5,8 +5,6 @@ import DynamicSalesTable from "./DynamicSalesTable";
 import ReceiptModal from "./reusefilter/ReceiptModal";
 import { useLubricantStore } from "@/store/lubricantStore";
 
-const API_URL = process.env.NEXT_PUBLIC_API;
-
 const LubSales = () => {
   const [rows, setRows] = useState([
     {
@@ -118,7 +116,7 @@ const LubSales = () => {
   const fetchLubricant = async (code, index) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/lubricant/get-lubricant`, {
+      const res = await fetch(`/api/lubricant/get-lubricant`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -160,7 +158,7 @@ const LubSales = () => {
           ]);
         }
       } else {
-        setMessage(result.error || "Product not found");
+        setMessage(`❌ Lubricant with barcode "${code}" not found. Enter the correct barcode or register the barcode first.`);
       }
     } catch (error) {
       setMessage("Error fetching lubricant");
@@ -234,7 +232,7 @@ const LubSales = () => {
 
       // ✅ Send ALL items in ONE request
       const response = await fetch(
-        `${API_URL}/api/lubricant/sell-lubricant-transaction`,
+        `/api/lubricant/sell-lubricant-transaction`,
         {
           method: "POST",
           headers: {
@@ -270,6 +268,7 @@ const LubSales = () => {
         cashier: `${user.firstName} ${user.lastName}`,
         station: user.station?.name || "N/A",
         address: user.station?.address || "N/A",
+        logo: user.station?.logoUrl || user.station?.logo || null,
         date: new Date().toLocaleString(),
         paymentType: paymentMethod,
         txnId: result.data.txnId,

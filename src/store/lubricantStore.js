@@ -1,7 +1,5 @@
 import { create } from "zustand";
 
-const API_URL = process.env.NEXT_PUBLIC_API;
-
 export const useLubricantStore = create((set, get) => ({
   lubricants: [],
   purchases: [],
@@ -36,7 +34,7 @@ export const useLubricantStore = create((set, get) => ({
   fetchLubricants: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/api/lubricant`, {
+      const res = await fetch(`/api/lubricant`, {
         method: "GET",
         headers: get().getAuthHeaders(),
       });
@@ -55,7 +53,7 @@ export const useLubricantStore = create((set, get) => ({
   getLubricantByBarcode: async (barcode) => {
     set({ loading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/api/lubricant/get-lubricant`, {
+      const res = await fetch(`/api/lubricant/get-lubricant`, {
         method: "POST",
         headers: get().getAuthHeaders(),
         body: JSON.stringify({ barcode }),
@@ -74,7 +72,7 @@ export const useLubricantStore = create((set, get) => ({
   addLubricant: async (lubricantData) => {
     set({ loading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/api/lubricant/add-lubricant`, {
+      const res = await fetch(`/api/lubricant/add-lubricant`, {
         method: "POST",
         headers: get().getAuthHeaders(),
         body: JSON.stringify(lubricantData),
@@ -99,7 +97,7 @@ export const useLubricantStore = create((set, get) => ({
   sellLubricant: async (saleData) => {
     set({ loading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/api/lubricant/sell-lubricant`, {
+      const res = await fetch(`/api/lubricant/sell-lubricant`, {
         method: "POST",
         headers: get().getAuthHeaders(),
         body: JSON.stringify(saleData),
@@ -124,7 +122,7 @@ export const useLubricantStore = create((set, get) => ({
   fetchAllSales: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/api/lubricant/lubricant-sales`, {
+      const res = await fetch(`/api/lubricant/lubricant-sales`, {
         headers: get().getAuthHeaders(),
       });
       if (!res.ok) throw new Error("Failed to fetch lubricant sales");
@@ -152,7 +150,7 @@ export const useLubricantStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await fetch(
-        `${API_URL}/api/lubricant/lubricant-weekly-summary`,
+        `/api/lubricant/lubricant-weekly-summary`,
         { headers: get().getAuthHeaders() }
       );
       if (!res.ok) throw new Error("Failed to fetch weekly summary");
@@ -176,7 +174,7 @@ export const useLubricantStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await fetch(
-        `${API_URL}/api/lubricant/lubricant-daily-summary`,
+        `/api/lubricant/lubricant-daily-summary`,
         { headers: get().getAuthHeaders() }
       );
       if (!res.ok) throw new Error("Failed to fetch daily summary");
@@ -198,7 +196,7 @@ export const useLubricantStore = create((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await fetch(
-        `${API_URL}/api/lubricant/lubricant-monthly-summary`,
+        `/api/lubricant/lubricant-monthly-summary`,
         { headers: get().getAuthHeaders() }
       );
       if (!res.ok) throw new Error("Failed to fetch monthly summary");
@@ -246,7 +244,7 @@ export const useLubricantStore = create((set, get) => ({
   saveLubricantPurchase: async (purchaseData) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`${API_URL}/api/lubricant/purchases`, {
+      const response = await fetch(`/api/lubricant/purchases`, {
         method: "POST",
         headers: get().getAuthHeaders(),
         body: JSON.stringify(purchaseData),
@@ -274,7 +272,7 @@ export const useLubricantStore = create((set, get) => ({
   getAllPurchases: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`${API_URL}/api/lubricant/purchases`, {
+      const response = await fetch(`/api/lubricant/purchases`, {
         method: "GET",
         headers: get().getAuthHeaders(),
       });
@@ -298,7 +296,7 @@ export const useLubricantStore = create((set, get) => ({
   getPurchaseById: async (id) => {
     set({ loading: true, error: null });
     try {
-      const response = await fetch(`${API_URL}/api/lubricant/purchases/${id}`, {
+      const response = await fetch(`/api/lubricant/purchases/${id}`, {
         method: "GET",
         headers: get().getAuthHeaders(),
       });
@@ -321,7 +319,7 @@ export const useLubricantStore = create((set, get) => ({
   fetchAllTransactions: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/api/lubricant/transactions`, {
+      const res = await fetch(`/api/lubricant/transactions`, {
         method: "GET",
         headers: get().getAuthHeaders(),
       });

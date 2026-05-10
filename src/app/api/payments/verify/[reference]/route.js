@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 export async function GET(request, { params }) {
+  const { reference } = await params;
+  const auth = request.headers.get("authorization") || "";
   try {
-    const auth = request.headers.get("authorization") || "";
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API}/api/payments/verify/${params.reference}`,
+      `${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/payments/verify/${reference}`,
       {
         headers: {
           "ngrok-skip-browser-warning": "true",
@@ -13,7 +14,6 @@ export async function GET(request, { params }) {
         cache: "no-store",
       }
     );
-
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (err) {

@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 export async function PATCH(request, { params }) {
   try {
+    const { planId } = await params;
     const auth = request.headers.get("authorization") || "";
     const body = await request.json();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/admin/plans/${params.planId}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/admin/plans/${planId}`, {
       method: "PATCH",
       headers: {
         "ngrok-skip-browser-warning": "true",
@@ -14,7 +15,8 @@ export async function PATCH(request, { params }) {
       body: JSON.stringify(body),
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
     return NextResponse.json(data, { status: res.status });
   } catch (err) {
     console.error("❌ /api/admin/plans PATCH proxy error:", err.message);
@@ -24,8 +26,9 @@ export async function PATCH(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
+    const { planId } = await params;
     const auth = request.headers.get("authorization") || "";
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/admin/plans/${params.planId}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/admin/plans/${planId}`, {
       method: "DELETE",
       headers: {
         "ngrok-skip-browser-warning": "true",
@@ -33,7 +36,8 @@ export async function DELETE(request, { params }) {
       },
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
     return NextResponse.json(data, { status: res.status });
   } catch (err) {
     console.error("❌ /api/admin/plans DELETE proxy error:", err.message);

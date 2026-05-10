@@ -1,8 +1,7 @@
-import { create } from "zustand";
+﻿import { create } from "zustand";
 import axios from "axios";
 import toast from "react-hot-toast";
-
-axios.defaults.headers.common['ngrok-skip-browser-warning'] = 'true';
+import { API_URL } from "@/lib/config";
 
 const useAdminStore = create((set, get) => ({
   // State
@@ -45,13 +44,13 @@ const useAdminStore = create((set, get) => ({
   paymentsLoading: false,
   paymentsError: null,
 
-  // ── Overview ──────────────────────────────────────────────
+  // ── Overview 
   fetchOverview: async () => {
     set({ loading: true, error: null });
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/overview`,
+        `${API_URL}/api/admin/overview`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set({ overview: response.data.data, loading: false });
@@ -65,12 +64,12 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Stations Stats ─────────────────────────────────────────
+  // ── Stations Stats 
   fetchStationsStats: async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/overview`,
+        `${API_URL}/api/admin/overview`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const d = response.data.data || {};
@@ -91,12 +90,12 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Reset Owner Password ───────────────────────────────────
+  // ── Reset Owner Password 
   resetStaffPassword: async (stationId, ownerId) => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${stationId}/reset-owner-password`,
+        `${API_URL}/api/admin/stations/${stationId}/reset-owner-password`,
         { ownerId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -109,12 +108,12 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Network Growth ─────────────────────────────────────────
+  // ── Network Growth 
   fetchNetworkGrowth: async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/network-growth`,
+        `${API_URL}/api/admin/network-growth`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = response.data.data || {};
@@ -131,13 +130,13 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Stations ──────────────────────────────────────────────
+  // ── Stations 
   fetchStations: async (search = "") => {
     set({ loading: true, error: null });
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/stations`,
+        `${API_URL}/api/admin/stations`,
         {
           headers: { Authorization: `Bearer ${token}` },
           params: search ? { search } : {},
@@ -157,13 +156,13 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Station Detail ─────────────────────────────────────────
+  // ── Station Detail 
   fetchStationDetail: async (id) => {
     set({ loading: true, error: null });
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${id}`,
+        `${API_URL}/api/admin/stations/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const payload = response.data.data || response.data;
@@ -182,12 +181,12 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Station Staff ──────────────────────────────────────────
+  // ── Station Staff 
   fetchStationStaff: async (id) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${id}/staff`,
+        `${API_URL}/api/admin/stations/${id}/staff`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Backend returns: { message, total, staff: [...] }
@@ -201,12 +200,12 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Station Shifts ─────────────────────────────────────────
+  // ── Station Shifts 
   fetchStationShifts: async (id, params = {}) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${id}/shifts`,
+        `${API_URL}/api/admin/stations/${id}/shifts`,
         { headers: { Authorization: `Bearer ${token}` }, params }
       );
       // Backend returns: { message, total, shifts: [...] }
@@ -220,12 +219,12 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Station Tanks ──────────────────────────────────────────
+  // ── Station Tanks 
   fetchStationTanks: async (id) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${id}/tanks`,
+        `${API_URL}/api/admin/stations/${id}/tanks`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Backend returns: { message, tanks: [...] }
@@ -239,12 +238,12 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Station Activity ───────────────────────────────────────
+  // ── Station Activity 
   fetchStationActivity: async (id) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${id}/activity`,
+        `${API_URL}/api/admin/stations/${id}/activity`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Backend returns: { message, total, activities: [...] }
@@ -258,12 +257,12 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Station Errors ─────────────────────────────────────────
+  // ── Station Errors 
   fetchStationErrors: async (id) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${id}/errors`,
+        `${API_URL}/api/admin/stations/${id}/errors`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       // Backend returns: { message, total, errors: [...] }
@@ -277,13 +276,13 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Activity Logs ──────────────────────────────────────────
+  // ── Activity Logs 
   fetchActivityLogs: async (params = {}) => {
     set({ activityLoading: true, error: null });
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/activity-logs`,
+        `${API_URL}/api/admin/activity-logs`,
         { headers: { Authorization: `Bearer ${token}` }, params }
       );
       const logs =
@@ -316,7 +315,7 @@ const useAdminStore = create((set, get) => ({
     try {
       const token = localStorage.getItem("token");
       const response = await axios.patch(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${id}/status`,
+        `${API_URL}/api/admin/stations/${id}/status`,
         { isActive },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -345,13 +344,13 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Restore Station ────────────────────────────────────────
+  // ── Restore Station 
   restoreStation: async (stationId) => {
     try {
       set({ loading: true });
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${stationId}/restore`,
+        `${API_URL}/api/admin/stations/${stationId}/restore`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -379,7 +378,7 @@ const useAdminStore = create((set, get) => ({
     try {
       const token = localStorage.getItem("token");
       await axios.delete(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/stations/${id}`,
+        `${API_URL}/api/admin/stations/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set((state) => ({
@@ -394,12 +393,12 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Payment Stats ──────────────────────────────────────────
+  // ── Payment Stats 
   fetchPaymentStats: async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/payments/stats`,
+        `${API_URL}/api/admin/payments/stats`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set({ paymentStats: response.data.data });
@@ -408,7 +407,7 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Payments List ──────────────────────────────────────────
+  // ── Payments List 
   fetchPayments: async (params = {}) => {
     try {
       set({ paymentsLoading: true });
@@ -422,7 +421,7 @@ const useAdminStore = create((set, get) => ({
       if (params.duration && params.duration !== "Duration")
         queryParams.append("duration", params.duration);
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/payments?${queryParams.toString()}`,
+        `${API_URL}/api/admin/payments?${queryParams.toString()}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       set({
@@ -435,7 +434,7 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  // ── Helpers ────────────────────────────────────────────────
+  // ── Helpers 
   setSearchTerm: (term) => set({ searchTerm: term }),
 
 

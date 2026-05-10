@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, MapPin, Phone, Loader2, CheckCircle, Mail } from "lucide-react";
+import LocationSelector from "@/components/LocationSelector";
 import toast from "react-hot-toast";
 import axios from "axios";
 import useBranchStore from "@/store/useBranchStore";
@@ -12,9 +13,10 @@ export default function AddBranchModal({ onClose, onUpgradeRequired }) {
   // Step 1 — branch details
   const [step, setStep] = useState(1);
   const [branchName, setBranchName] = useState("");
+  const [country, setCountry] = useState("Nigeria");
+  const [branchState, setBranchState] = useState("");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
-  const [country, setCountry] = useState("");
   const [phone, setPhone] = useState("");
   const [pumps, setPumps] = useState("1");
   const [selectedFuels, setSelectedFuels] = useState([]);
@@ -48,9 +50,10 @@ export default function AddBranchModal({ onClose, onUpgradeRequired }) {
       setLoading(true);
       const result = await createBranch({
         name: branchName.trim(),
+        country: country.trim(),
+        state: branchState.trim(),
         city: city.trim(),
         address: address.trim(),
-        country: country.trim(),
         phone: phone.trim(),
         numberOfPumps: Number(pumps),
         fuelTypesOffered: selectedFuels,
@@ -148,32 +151,22 @@ export default function AddBranchModal({ onClose, onUpgradeRequired }) {
               />
             </div>
 
-            {/* City + Country */}
+            {/* Country → State → City (cascading) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                  City <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  placeholder="e.g. Lagos"
-                  className="w-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg p-2.5 text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                  Country
-                </label>
-                <input
-                  type="text"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  placeholder="e.g. Nigeria"
-                  className="w-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg p-2.5 text-sm focus:outline-none focus:border-blue-500"
-                />
-              </div>
+              <LocationSelector
+                country={country}
+                state={branchState}
+                city={city}
+                onCountryChange={(v) => { setCountry(v); setBranchState(""); setCity(""); }}
+                onStateChange={(v) => { setBranchState(v); setCity(""); }}
+                onCityChange={setCity}
+                defaultCountry="Nigeria"
+                required={{ city: true }}
+                labels={{ city: "City" }}
+                labelCls="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1"
+                selectCls="w-full border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg p-2.5 text-sm focus:outline-none focus:border-blue-500"
+                wrapperCls=""
+              />
             </div>
 
             {/* Address */}

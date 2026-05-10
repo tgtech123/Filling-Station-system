@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
@@ -16,7 +16,7 @@ export default function ScheduleDeliveryModal({ onclose }) {
   const [messageType, setMessageType] = useState(""); // "error" or "success"
 
   const { tanks, fetchTanks, loading: tankLoading } = useTankStore();
-  const API_URL = process.env.NEXT_PUBLIC_API;
+  const API_URL = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
 
   useEffect(() => {
     fetchTanks();

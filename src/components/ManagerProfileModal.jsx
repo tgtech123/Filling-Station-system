@@ -3,15 +3,20 @@
 import ToggleSwitch from "@/components/ToggleSwtich";
 import { Edit, Mail, MapPin, Phone, X, Save, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import LocationSelector from "@/components/LocationSelector";
 import axios from "axios";
+import { useImageStore } from "@/store/useImageStore";
 
 export default function ManagerProfileModal({ onclose }) {
   const [active, setActive] = useState("personalInfo");
   const [isEditMode, setIsEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [userId, setUserId] = useState(null);
+
+  const { uploadImage, getUserImage, setUserImage } = useImageStore();
   const [originalData, setOriginalData] = useState(null);
 
   const [managerData, setManagerData] = useState({
@@ -19,7 +24,7 @@ export default function ManagerProfileModal({ onclose }) {
     address: "", city: "", state: "", country: "Nigeria",
     zipCode: "", emergencyContact: "",
     stationName: "", stationID: "", stationEmailAddress: "",
-    stationPhone: "", stationAddress: "", stationCity: "",
+    stationPhone: "", stationAddress: "", stationState: "", stationCity: "",
     stationCountry: "Nigeria", licenseNo: "", establishedDate: "", taxID: "",
     employeeID: "", position: "Manager", department: "General Dept",
     employmentType: "Contract", startDate: "", workSchedule: "24/7",
@@ -49,7 +54,7 @@ export default function ManagerProfileModal({ onclose }) {
         country: user.country || "Nigeria",
         zipCode: user.zipCode || "",
         emergencyContact: user.emergencyContact || "",
-        src: user.image || null,
+        src: getUserImage(user._id || user.id) || user.image || null,
         // Employment
         employeeID: (user._id || user.id) ? String(user._id || user.id).slice(-6).toUpperCase() : "",
         position: user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "Manager",
@@ -60,6 +65,7 @@ export default function ManagerProfileModal({ onclose }) {
         stationEmailAddress: st.email || "",
         stationPhone: st.phone || "",
         stationAddress: st.address || "",
+        stationState: st.stationState || st.state || "",
         stationCity: st.city || "",
         stationCountry: st.country || "Nigeria",
         licenseNo: st.licenseNumber || "",
@@ -101,10 +107,11 @@ export default function ManagerProfileModal({ onclose }) {
           country: managerData.country,
           zipCode: managerData.zipCode,
           emergencyContact: managerData.emergencyContact,
+          ...(managerData.src && { image: managerData.src }),
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      // Sync localStorage so the header name updates immediately
+      // Sync localStorage so header/sidebar update immediately
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       localStorage.setItem("user", JSON.stringify({
         ...user,
@@ -117,7 +124,10 @@ export default function ManagerProfileModal({ onclose }) {
         country: managerData.country,
         zipCode: managerData.zipCode,
         emergencyContact: managerData.emergencyContact,
+        ...(managerData.src && { image: managerData.src }),
       }));
+      // Sync image store so Header and Sidebar re-render immediately
+      if (managerData.src) setUserImage(userId, managerData.src);
       setOriginalData({ ...managerData });
       setSaveSuccess(true);
       setIsEditMode(false);
@@ -135,12 +145,22 @@ export default function ManagerProfileModal({ onclose }) {
     setSaveError("");
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => handleInputChange("src", ev.target.result);
-    reader.readAsDataURL(file);
+    if (!file || !userId) return;
+    try {
+      setUploadingImage(true);
+      setSaveError("");
+      const result = await uploadImage(file, userId);
+      handleInputChange("src", result.url);
+      // Sync localStorage so the image persists across refreshes
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      localStorage.setItem("user", JSON.stringify({ ...user, image: result.url }));
+    } catch {
+      setSaveError("Image upload failed. Please try again.");
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const inputCls = (hasIcon = false) => {
@@ -149,6 +169,11 @@ export default function ManagerProfileModal({ onclose }) {
       ? `${base} bg-white dark:bg-gray-700 border-2 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none`
       : `${base} bg-[#e7e7e7] dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed`;
   };
+
+  // Matches inputCls() but for <select> elements inside LocationSelector
+  const locSelectCls = isEditMode
+    ? "w-full p-3 rounded-[8px] text-sm dark:text-gray-100 bg-white dark:bg-gray-700 border-2 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200"
+    : "w-full p-3 rounded-[8px] text-sm dark:text-gray-100 bg-[#e7e7e7] dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed transition-all duration-200";
 
   const tabs = [
     { key: "personalInfo", label: "Personal" },
@@ -200,8 +225,11 @@ export default function ManagerProfileModal({ onclose }) {
               )}
               {isEditMode && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer hover:bg-black/70 transition-opacity">
-                  <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />
-                  <Edit className="text-white" size={16} />
+                  {!uploadingImage && <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />}
+                  {uploadingImage
+                    ? <Loader2 className="text-white animate-spin" size={16} />
+                    : <Edit className="text-white" size={16} />
+                  }
                 </div>
               )}
             </div>
@@ -299,21 +327,25 @@ export default function ManagerProfileModal({ onclose }) {
                   onChange={e => handleInputChange("address", e.target.value)} className={inputCls(true)} />
                 <MapPin size={15} className="absolute top-9 left-3 text-gray-400" />
               </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">City</p>
-                <input type="text" disabled={!isEditMode} value={managerData.city}
-                  onChange={e => handleInputChange("city", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">State</p>
-                <input type="text" disabled={!isEditMode} value={managerData.state}
-                  onChange={e => handleInputChange("state", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Country</p>
-                <input type="text" disabled={!isEditMode} value={managerData.country}
-                  onChange={e => handleInputChange("country", e.target.value)} className={inputCls()} />
-              </div>
+              <LocationSelector
+                country={managerData.country}
+                state={managerData.state}
+                city={managerData.city}
+                onCountryChange={(v) => {
+                  handleInputChange("country", v);
+                  handleInputChange("state", "");
+                  handleInputChange("city", "");
+                }}
+                onStateChange={(v) => {
+                  handleInputChange("state", v);
+                  handleInputChange("city", "");
+                }}
+                onCityChange={(v) => handleInputChange("city", v)}
+                disabled={!isEditMode}
+                selectCls={locSelectCls}
+                labelCls="font-semibold text-sm mb-1 dark:text-gray-300"
+                wrapperCls=""
+              />
               <div>
                 <p className="font-semibold text-sm mb-1 dark:text-gray-300">Zip Code</p>
                 <input type="text" disabled={!isEditMode} value={managerData.zipCode}
@@ -364,16 +396,26 @@ export default function ManagerProfileModal({ onclose }) {
                   onChange={e => handleInputChange("stationAddress", e.target.value)} className={inputCls(true)} />
                 <MapPin size={15} className="absolute top-9 left-3 text-gray-400" />
               </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station city</p>
-                <input type="text" disabled={!isEditMode} value={managerData.stationCity}
-                  onChange={e => handleInputChange("stationCity", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Country</p>
-                <input type="text" disabled={!isEditMode} value={managerData.stationCountry}
-                  onChange={e => handleInputChange("stationCountry", e.target.value)} className={inputCls()} />
-              </div>
+              <LocationSelector
+                country={managerData.stationCountry}
+                state={managerData.stationState}
+                city={managerData.stationCity}
+                onCountryChange={(v) => {
+                  handleInputChange("stationCountry", v);
+                  handleInputChange("stationState", "");
+                  handleInputChange("stationCity", "");
+                }}
+                onStateChange={(v) => {
+                  handleInputChange("stationState", v);
+                  handleInputChange("stationCity", "");
+                }}
+                onCityChange={(v) => handleInputChange("stationCity", v)}
+                disabled={!isEditMode}
+                labels={{ country: "Station Country", state: "Station State", city: "Station City" }}
+                selectCls={locSelectCls}
+                labelCls="font-semibold text-sm mb-1 dark:text-gray-300"
+                wrapperCls=""
+              />
               <div>
                 <p className="font-semibold text-sm mb-1 dark:text-gray-300">License number</p>
                 <input type="text" disabled={!isEditMode} value={managerData.licenseNo}

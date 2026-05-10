@@ -15,9 +15,11 @@ export const useTankStore = create((set) => ({
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error("Failed to fetch tanks");
-
       const data = await res.json();
+
+      // Backend returns 404 with empty data when no tanks exist — treat as empty, not an error
+      if (!res.ok && res.status !== 404) throw new Error(data.message || "Failed to fetch tanks");
+
       set({ tanks: data.data || [] });
     } catch (err) {
       set({ error: err.message });

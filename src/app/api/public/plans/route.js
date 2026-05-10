@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/public/plans`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/public/plans`, {
       headers: { "ngrok-skip-browser-warning": "true" },
       cache: "no-store",
     });
@@ -17,7 +17,7 @@ export async function GET() {
     const data = await res.json();
     return NextResponse.json(data);
   } catch (err) {
-    console.error("❌ /api/public/plans proxy error:", err.message);
+    console.error("âŒ /api/public/plans proxy error:", err.message);
     return NextResponse.json({ error: "Failed to fetch plans", plans: [] }, { status: 500 });
   }
 }

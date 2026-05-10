@@ -1,11 +1,11 @@
-"use client";
+﻿"use client";
 import React, { useEffect, useState } from "react";
 import { BiSolidToggleRight, BiSolidToggleLeft } from "react-icons/bi";
 import { X, ChevronUp, ChevronDown } from "lucide-react";
 import axios from "axios";
 import useStaffStore from "@/store/useStaffStore";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API || "http://localhost:5000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
 
 const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
   const [isToggleChevron, setIsToggleChevron] = useState(false);
@@ -28,7 +28,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
     phone: "",
     role: "",
     shiftType: "",
-    responsibilities: "",
+    responsibility: "",
     payType: "",
     amount: "",
   });
@@ -66,8 +66,10 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
         email: staffData.email || "",
         phone: staffData.phone || "",
         role: staffData.role || "",
-        shiftType: staffData.shiftType || staffData.shift || "", // Try both keys
-        responsibilities: staffData.responsibilities || "",
+        shiftType: staffData.shiftType || staffData.shift || "",
+        responsibility: Array.isArray(staffData.responsibility)
+          ? staffData.responsibility.join(", ")
+          : (staffData.responsibility || staffData.responsibilities || ""),
         payType: staffData.payType || "",
         amount: staffData.amount || staffData.earnings || "", // Try both keys
       });
@@ -82,8 +84,15 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      await updateStaff(staffData?._id, formData, token);
-      onClose(); // close modal after saving
+      const payload = {
+        ...formData,
+        responsibility: formData.responsibility
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+      };
+      await updateStaff(staffData?._id, payload, token);
+      onClose();
     } catch (err) {
       console.error("Failed to update staff:", err);
     }
@@ -246,8 +255,8 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                 Responsibilities
               </span>
               <textarea
-                name="responsibilities"
-                value={formData.responsibilities}
+                name="responsibility"
+                value={formData.responsibility}
                 onChange={handleChange}
                 placeholder="Overseas operations of other staffs, approves reconciled shifts and give report to manager"
                 className="text-neutral-800 border-[2px] pl-3 pt-3  border-neutral-200 outline-none focus:border-1 focus:border-blue-500 w-full  rounded-2xl resize-y"
@@ -465,7 +474,7 @@ export default EditStaffModal;
 //     phone: 0,
 //     role: "",
 //     shiftType: "",
-//     responsibilities: "",
+//     responsibility: "",
 //     payType: "",
 //     amount: 0,
 //   });
@@ -479,7 +488,7 @@ export default EditStaffModal;
 //         phone: staffData.phone || 0,
 //         role: staffData.role || "",
 //         shiftType: staffData.shiftType || "",
-//         responsibilities: staffData.responsibilities || "",
+//         responsibility: staffData.responsibility || staffData.responsibilities || "",
 //         payType: staffData.payType || "",
 //         amount: staffData.amount || 0,
 //       });

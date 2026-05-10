@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
-// GET — invites for a specific branch
 export async function GET(request, { params }) {
+  const { branchId } = await params;
   const auth = request.headers.get("authorization") || "";
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API}/api/branches/${params.branchId}/invites`,
+      `${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/branches/${branchId}/invites`,
       {
         headers: {
           "ngrok-skip-browser-warning": "true",
@@ -17,7 +17,7 @@ export async function GET(request, { params }) {
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (err) {
-    console.error(`❌ GET /api/branches/${params.branchId} proxy error:`, err.message);
+    console.error(`❌ GET /api/branches/${branchId} proxy error:`, err.message);
     return NextResponse.json({ message: "Failed to fetch branch data" }, { status: 500 });
   }
 }

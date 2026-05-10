@@ -284,9 +284,10 @@ export default function CreateSubscriptionPlanModal({
     if (!formData.description.trim()) newErrors.description = "Description required"
     if (!formData.duration) newErrors.duration = "Duration required"
 
-    // Duplicate name check (skip when editing the same plan)
+    // Duplicate name check (skip self when editing)
+    const selfId = initialData?._id || initialData?.id
     const duplicate = adminPlans.find((p) => {
-      const isSelf = initialData?._id && (p._id === initialData._id || p.id === initialData._id)
+      const isSelf = selfId && (p._id === selfId || p.id === selfId)
       return !isSelf && p.name.trim().toLowerCase() === formData.name.trim().toLowerCase()
     })
     if (duplicate) newErrors.name = `A plan named "${duplicate.name}" already exists`
@@ -336,15 +337,15 @@ export default function CreateSubscriptionPlanModal({
     try {
       setLoading(true)
       const token = localStorage.getItem("token")
-      const { yearlyPrice: _y, ...rest } = formData
+      // Strip server-managed fields so MongoDB doesn't reject immutable-field updates
+      const { _id, id, __v, createdAt, updatedAt, yearlyPrice: _y, ...rest } = formData
       const payload = { ...rest, slug: formData.slug.toLowerCase().trim() }
-      const url = initialData?._id
-        ? `/api/admin/plans/${initialData._id}`
-        : `/api/admin/plans`
-      const method = initialData?._id ? "PATCH" : "POST"
+      const planId = initialData?._id || initialData?.id
+      const url = planId ? `/api/admin/plans/${planId}` : `/api/admin/plans`
+      const method = planId ? "PATCH" : "POST"
 
       await axios({ method, url, data: payload, headers: { Authorization: `Bearer ${token}` } })
-      toast.success(initialData?._id ? "Plan updated!" : "Plan created!")
+      toast.success(planId ? "Plan updated!" : "Plan created!")
       onSuccess?.()
       onClose()
     } catch (err) {
@@ -363,7 +364,7 @@ export default function CreateSubscriptionPlanModal({
         {/* Header */}
         <div className="sticky top-0 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 z-10">
           <h2 className="font-bold text-lg text-gray-900 dark:text-white">
-            {initialData?._id ? "Edit Plan" : "Create Plan"}
+            {initialData?._id || initialData?.id ? "Edit Plan" : "Create Plan"}
           </h2>
           <button onClick={onClose} className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
             <X size={20} />
@@ -373,7 +374,7 @@ export default function CreateSubscriptionPlanModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
 
           {/* Template Selector — create mode only */}
-          {!initialData?._id && (
+          {!initialData && (
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
                 Select Plan Template
@@ -623,10 +624,10 @@ export default function CreateSubscriptionPlanModal({
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  {initialData?._id ? "Updating..." : "Creating..."}
+                  {initialData?._id || initialData?.id ? "Updating..." : "Creating..."}
                 </>
               ) : (
-                initialData?._id ? "Update Plan" : "Create Plan"
+                initialData?._id || initialData?.id ? "Update Plan" : "Create Plan"
               )}
             </button>
           </div>

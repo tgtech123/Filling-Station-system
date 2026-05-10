@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -345,7 +345,7 @@ export default function SettingsPage() {
       const userId = user.id || user._id;
 
       await fetch(
-        `${process.env.NEXT_PUBLIC_API}/api/auth/update-staff/${userId}`,
+        `${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/auth/update-staff/${userId}`,
         {
           method: "POST",
           headers: {

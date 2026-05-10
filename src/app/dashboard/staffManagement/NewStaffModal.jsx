@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState } from "react";
 import { Plus, X, ChevronUp, ChevronDown, EyeOff, Eye } from "lucide-react";
 import { BsToggleOn, BsToggleOff } from "react-icons/bs";
@@ -44,7 +44,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
     password: "",
     confirmPassword: "",
     shiftType: "",
-    responsibility: [],
+    responsibility: "",
     addSaleTarget: false,
     payType: "",
     amount: 0,
@@ -71,16 +71,6 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
     setValidationError(""); // Clear error on input change
   };
 
-  // Handle responsibility input (convert to array)
-  const handleResponsibilityChange = (e) => {
-    const value = e.target.value;
-    const responsibilityArray = value.split(/\s+/).map((item) => item.trim());
-    setFormData((prev) => ({
-      ...prev,
-      responsibility: responsibilityArray,
-    }));
-  };
-  
   // Handle toggle for sales target
   const handleSalesTargetToggle = () => {
     setToggleOn(!toggleOn);
@@ -95,14 +85,14 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
     if (!formData.firstName.trim()) return "First name is required";
     if (!formData.lastName.trim()) return "Last name is required";
     if (!formData.email.trim()) return "Email is required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) return "Please enter a valid email address";
     if (!formData.phone.trim()) return "Phone is required";
     if (!formData.role.trim()) return "Role is required";
     if (!formData.password) return "Password is required";
     if (!formData.confirmPassword) return "Please confirm password";
     if (formData.password !== formData.confirmPassword) return "Passwords do not match";
     if (!formData.shiftType.trim()) return "Shift type is required";
-    if (formData.responsibility.length === 0 || !formData.responsibility[0]) 
-      return "Responsibilities are required";
+    if (!formData.responsibility.trim()) return "Responsibilities are required";
     if (!formData.payType.trim()) return "Pay type is required";
     if (!formData.amount) return "Amount is required";
     return null;
@@ -142,7 +132,10 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
         role: formData.role,
         password: formData.password.trim(),
         shiftType: formData.shiftType,
-        responsibility: formData.responsibility,
+        responsibility: formData.responsibility
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
         addSaleTarget: formData.addSaleTarget,
         payType: formData.payType,
         amount: parseFloat(formData.amount),
@@ -182,7 +175,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
         password: "",
         confirmPassword: "",
         shiftType: "",
-        responsibility: [],
+        responsibility: "",
         addSaleTarget: false,
         payType: "",
         amount: "",
@@ -409,8 +402,8 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
               <input
                 type="text"
                 name="responsibility"
-                value={formData.responsibility.join(" ")}
-                onChange={handleResponsibilityChange}
+                value={formData.responsibility}
+                onChange={handleInputChange}
                 placeholder="Overseas operations of other staffs, approves reconciled shifts and give report to manager"
                 className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
               />
@@ -543,7 +536,7 @@ export default NewStaffModal;
 //   // Loading and error states
 //   const [isLoading, setIsLoading] = useState(false);
 //   const [error, setError] = useState("");
-//   const API = process.env.NEXT_PUBLIC_API;
+//   const API = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
 
 //   // Form state
 //   const [formData, setFormData] = useState({

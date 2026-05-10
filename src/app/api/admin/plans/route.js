@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 export async function GET(request) {
   try {
     const auth = request.headers.get("authorization") || "";
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/admin/plans`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/admin/plans`, {
       headers: {
         "ngrok-skip-browser-warning": "true",
         Authorization: auth,
@@ -11,10 +11,11 @@ export async function GET(request) {
       cache: "no-store",
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
     return NextResponse.json(data, { status: res.status });
   } catch (err) {
-    console.error("❌ /api/admin/plans proxy error:", err.message);
+    console.error("âŒ /api/admin/plans proxy error:", err.message);
     return NextResponse.json({ error: "Failed to fetch plans", plans: [] }, { status: 500 });
   }
 }
@@ -23,7 +24,7 @@ export async function POST(request) {
   try {
     const auth = request.headers.get("authorization") || "";
     const body = await request.json();
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API}/api/admin/plans`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/admin/plans`, {
       method: "POST",
       headers: {
         "ngrok-skip-browser-warning": "true",
@@ -33,10 +34,11 @@ export async function POST(request) {
       body: JSON.stringify(body),
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
     return NextResponse.json(data, { status: res.status });
   } catch (err) {
-    console.error("❌ /api/admin/plans POST proxy error:", err.message);
+    console.error("âŒ /api/admin/plans POST proxy error:", err.message);
     return NextResponse.json({ error: "Failed to create plan" }, { status: 500 });
   }
 }

@@ -20,6 +20,7 @@ import Avatar from "./Avatar";
 import { useRouter } from "next/navigation";
 import usePaymentStore from "@/store/usePaymentStore";
 import useTermsStore from "@/store/useTermsStore";
+import LocationSelector from "@/components/LocationSelector";
 
 export default function RegisterManagerModal({ onclose, payerInfo }) {
   const [step, setStep] = useState(1);
@@ -48,11 +49,13 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
     image: "",
     stationName: "",
     stationId: "",
+    ownerName: "",
     stationEmail: "",
     stationPhone: "",
     stationAddress: "",
+    stationState: "",
     stationCity: "",
-    stationCountry: "",
+    stationCountry: "Nigeria",
     stationZipCode: "",
     licenseNumber: "",
     taxId: "",
@@ -84,6 +87,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
   useEffect(() => {
     fetchTerms();
   }, []);
+
 
   useEffect(() => {
     const stored = sessionStorage.getItem("selectedPlan");
@@ -174,9 +178,11 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
           emergencyContact: formData.emergencyContact,
           image: formData.image,
           stationName: formData.stationName,
+          ownerName: formData.ownerName,
           stationAddress: formData.stationAddress,
           stationEmail: formData.stationEmail,
           stationPhone: formData.stationPhone,
+          stationState: formData.stationState,
           stationCity: formData.stationCity,
           stationCountry: formData.stationCountry,
           stationZipCode: formData.stationZipCode,
@@ -253,12 +259,13 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
 
     if (currentStep === 2) {
       if (!formData.stationName?.trim()) errors.stationName = "Station name is required";
+      if (!formData.ownerName?.trim()) errors.ownerName = "Owner's name is required";
       if (!formData.stationEmail?.trim()) errors.stationEmail = "Station email is required";
       else if (!emailRegex.test(formData.stationEmail)) errors.stationEmail = "Please enter a valid email";
       if (!formData.stationPhone?.trim()) errors.stationPhone = "Station phone is required";
       if (!formData.stationAddress?.trim()) errors.stationAddress = "Station address is required";
+      if (!formData.stationState?.trim()) errors.stationState = "Station state is required";
       if (!formData.stationCity?.trim()) errors.stationCity = "Station city is required";
-      if (!formData.stationCountry?.trim()) errors.stationCountry = "Country is required";
       if (!formData.licenseNumber?.trim()) errors.licenseNumber = "License number is required";
       if (!formData.establishmentDate) errors.establishmentDate = "Establishment date is required";
     }
@@ -510,16 +517,19 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
               <MapPin size={15} className="text-gray-400 absolute top-[2.1rem] left-2.5" />
               <FieldError field="address" />
             </div>
-            <div>
-              <label className={labelCls}>City</label>
-              <input type="text" name="city" value={formData.city} onChange={handleInputChange} placeholder="Your city..." className={grayInputCls("city")} />
-              <FieldError field="city" />
-            </div>
-            <div>
-              <label className={labelCls}>State</label>
-              <input type="text" name="state" value={formData.state} onChange={handleInputChange} placeholder="Your state..." className={grayInputCls("state")} />
-              <FieldError field="state" />
-            </div>
+            <LocationSelector
+              country="Nigeria"
+              state={formData.state}
+              city={formData.city}
+              onStateChange={(v) => setFormData((p) => ({ ...p, state: v, city: "" }))}
+              onCityChange={(v) => setFormData((p) => ({ ...p, city: v }))}
+              showCountry={false}
+              errors={{ state: stepErrors.state, city: stepErrors.city }}
+              required={{ state: true, city: true }}
+              selectCls={null}
+              labelCls={labelCls}
+              wrapperCls=""
+            />
             <div>
               <label className={labelCls}>Zip Code</label>
               <input type="text" name="zipCode" value={formData.zipCode} onChange={handleInputChange} placeholder="45869" className={inputCls("")} />
@@ -563,6 +573,11 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
               <label className={labelCls}>Station ID</label>
               <input type="text" name="stationId" value={formData.stationId} onChange={handleInputChange} placeholder="0046" className={inputCls("")} />
             </div>
+            <div className="sm:col-span-2">
+              <label className={labelCls}>Owner's Name <span className="text-red-500">*</span></label>
+              <input type="text" name="ownerName" value={formData.ownerName} onChange={handleInputChange} placeholder="Full name of the station owner" className={inputCls("ownerName")} />
+              <FieldError field="ownerName" />
+            </div>
             <div className="relative">
               <label className={labelCls}>Station Email Address</label>
               <input type="email" name="stationEmail" value={formData.stationEmail} onChange={handleInputChange} placeholder="station2@gmail.com" className={inputCls("stationEmail", "pl-9")} />
@@ -581,16 +596,28 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
               <MapPin size={15} className="text-gray-400 absolute top-[2.1rem] left-2.5" />
               <FieldError field="stationAddress" />
             </div>
-            <div>
-              <label className={labelCls}>Station City</label>
-              <input type="text" name="stationCity" value={formData.stationCity} onChange={handleInputChange} placeholder="Your station city..." className={grayInputCls("stationCity")} />
-              <FieldError field="stationCity" />
-            </div>
-            <div>
-              <label className={labelCls}>Station Country</label>
-              <input type="text" name="stationCountry" value={formData.stationCountry} onChange={handleInputChange} placeholder="Your station country..." className={grayInputCls("stationCountry")} />
-              <FieldError field="stationCountry" />
-            </div>
+            <LocationSelector
+              country={formData.stationCountry}
+              state={formData.stationState}
+              city={formData.stationCity}
+              onCountryChange={(v) =>
+                setFormData((p) => ({ ...p, stationCountry: v, stationState: "", stationCity: "" }))
+              }
+              onStateChange={(v) =>
+                setFormData((p) => ({ ...p, stationState: v, stationCity: "" }))
+              }
+              onCityChange={(v) => setFormData((p) => ({ ...p, stationCity: v }))}
+              defaultCountry="Nigeria"
+              errors={{
+                country: stepErrors.stationCountry,
+                state: stepErrors.stationState,
+                city: stepErrors.stationCity,
+              }}
+              required={{ state: true, city: true }}
+              labels={{ country: "Station Country", state: "Station State", city: "Station City" }}
+              labelCls={labelCls}
+              wrapperCls=""
+            />
             <div>
               <label className={labelCls}>Zip Code</label>
               <input type="text" name="stationZipCode" value={formData.stationZipCode} onChange={handleInputChange} placeholder="45869" className={inputCls("")} />

@@ -10,7 +10,7 @@ const useTermsStore = create((set) => ({
     try {
       set({ loading: true, error: null });
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/api/admin/settings/public`
+        `/api/admin/settings/public`
       );
       set({
         termsText: response.data.data?.termsAndConditions || "No terms available",

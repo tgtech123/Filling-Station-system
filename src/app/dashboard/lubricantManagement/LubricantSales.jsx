@@ -7,7 +7,6 @@ import Pagination from "@/components/Pagination";
 import CustomTable from "@/components/Table";
 import useStaffStore from "@/store/useStaffStore";
 
-const API_URL = process.env.NEXT_PUBLIC_API || "";
 
 export default function LubricantSales() {
   const [loading, setLoading] = useState(false);
@@ -77,7 +76,7 @@ export default function LubricantSales() {
       setLoading(true);
       try {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        const res = await fetch(`${API_URL}/api/lubricant/transactions`, {
+        const res = await fetch(`/api/lubricant/transactions`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

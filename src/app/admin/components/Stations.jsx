@@ -10,6 +10,24 @@ import { Gauge, CreditCard, XCircle, PauseCircle } from "lucide-react";
 
 const TABLE_HEADERS = stationsTableData.headers;
 
+const PLAN_LABELS = {
+  free: "Free",
+  pro: "Pro",
+  "pro-max": "Pro Max",
+  enterprise: "Enterprise",
+  "enterprise-pro": "Enterprise Pro",
+  "enterprise-max": "Enterprise Max",
+};
+
+const formatPlan = (slug) => PLAN_LABELS[slug] || (slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : "—");
+
+const formatExpiry = (dateStr) => {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
 const Stations = ({ onViewStation }) => {
   const [search, setSearch] = useState("");
   const debounceRef = useRef(null);
@@ -36,18 +54,14 @@ const Stations = ({ onViewStation }) => {
     return stations.map((s, i) => ({
       id: s._id || s.id || `ST-${String(i + 1).padStart(3, "0")}`,
       stationName: s.name || s.stationName || "—",
-      owner: s.owner?.name || s.ownerName || s.location || "—",
-      plan: s.subscription?.plan || s.plan || "—",
-      expiryDate: s.subscription?.expiryDate
-        ? new Date(s.subscription.expiryDate).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })
-        : s.expiryDate || "—",
+      // backend returns ownerName (flat) and manager.name (nested) — prefer flat field
+      owner: s.ownerName || s.manager?.name || "—",
+      // backend returns plan as slug (e.g. "pro-max") or defaults to "free"
+      plan: formatPlan(s.plan || "free"),
+      // backend always sets planExpiryDate (free=30d, trial=7d, paid=payment date +1m/+1y)
+      expiryDate: formatExpiry(s.planExpiryDate),
       status: s.isActive === false ? "Suspended" : s.status || "Active",
       action: "more",
-      // keep the full raw object so modals can read it
       _raw: s,
     }));
   }, [stations]);

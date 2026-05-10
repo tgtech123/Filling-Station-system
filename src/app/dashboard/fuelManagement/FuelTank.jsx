@@ -56,7 +56,7 @@ export default function FuelTank() {
           <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
             <img src="/tank.png" alt="tank" className="w-8 h-8 opacity-40" />
           </div>
-          <p className="text-gray-500 dark:text-gray-400 font-semibold text-base">No tank recorded yet</p>
+          <p className="text-gray-500 dark:text-gray-400 font-semibold text-base">No tanks created at this time, create to continue...</p>
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Click "Add Fuel Tank" to add your first tank.</p>
         </div>
       ) : (

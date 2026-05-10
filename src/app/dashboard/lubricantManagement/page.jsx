@@ -73,12 +73,14 @@ export default function LubricantManagement() {
     const totalProducts = lubricants.length;
 
     const totalInventoryValue = lubricants.reduce((sum, lub) => {
+      if (!lub) return sum;
       const qty = Number(lub.qtyInStock) || 0;
       const price = Number(lub.unitPrice) || 0;
       return sum + qty * price;
     }, 0);
 
     const lowStockCount = lubricants.filter((lub) => {
+      if (!lub) return false;
       const qty = Number(lub.qtyInStock) || 0;
       const reorder = Number(lub.reOrderLevel) || 0;
       return qty < reorder;

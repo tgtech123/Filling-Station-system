@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 import React, { useState } from "react";
 import { Eye, Printer } from "lucide-react";
 import ReceiptModal from "./ReceiptModal";
 
-const API_URL = process.env.NEXT_PUBLIC_API;
+const API_URL = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
 
 const ActionButtons = ({ transactionId }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);

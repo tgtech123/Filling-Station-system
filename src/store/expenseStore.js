@@ -1,9 +1,9 @@
-// store/expenseStore.js
+﻿// store/expenseStore.js
 import { create } from 'zustand';
 import axios from 'axios';
 
 // For Next.js, use NEXT_PUBLIC_ prefix for client-side env variables
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com"}/api`;
 
 export const useExpenseStore = create((set, get) => ({
   // State

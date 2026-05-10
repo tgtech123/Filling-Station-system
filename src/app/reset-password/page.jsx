@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import LoginTwo from "@/sections/LoginTwo";
 import Link from "next/link";
@@ -21,7 +21,7 @@ export default function ResetPassword() {
             setError(null);
 
             try {
-              const API = process.env.NEXT_PUBLIC_API;
+              const API = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
 
               const res = await fetch(`${API}/api/auth/forgot-password`, {
                 method: "POST",

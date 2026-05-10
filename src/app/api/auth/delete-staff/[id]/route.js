@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 
 export async function POST(request, { params }) {
+  const { id } = await params;
   const auth = request.headers.get("authorization") || "";
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API}/api/auth/delete-staff/${params.id}`,
+      `${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/auth/delete-staff/${id}`,
       {
         method: "POST",
         headers: {
