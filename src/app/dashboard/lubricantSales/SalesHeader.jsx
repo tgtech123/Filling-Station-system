@@ -91,23 +91,23 @@ const SalesHeader = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white w-full h-fit rounded-md p-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-3">
+      <div className="bg-white w-full h-fit rounded-xl p-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:flex-wrap sm:justify-between mb-3">
         {/* Search Form */}
         <form
-          className="flex flex-col gap-4 md:flex-row md:items-center relative"
+          className="flex flex-col gap-3 sm:flex-row sm:items-center relative w-full sm:w-auto flex-1 min-w-0"
           onSubmit={(e) => e.preventDefault()}
           ref={inputRef}
         >
           {/* Date Input */}
-          <div className="flex items-center gap-1">
-            <Calendar className="text-purple-600" />
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Calendar className="text-purple-600" size={18} />
             <p className="text-purple-600 text-sm font-semibold">
               {formattedDate}
             </p>
           </div>
 
           {/* Search Input */}
-          <div className="flex relative w-full md:w-[400px]">
+          <div className="flex relative w-full sm:w-[340px] lg:w-[400px]">
             <input
               type="text"
               placeholder="Search by product name or barcode"
@@ -153,21 +153,21 @@ const SalesHeader = () => {
         </form>
 
         {/* Buttons */}
-        <div className="flex gap-4">
+        <div className="flex flex-col xs:flex-row sm:flex-row gap-2 w-full sm:w-auto flex-shrink-0">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-[#0080FF] flex gap-2 w-full md:w-auto px-4 py-2 text-white font-semibold hover:bg-blue-700 rounded-lg"
+            className="bg-[#0080FF] flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 text-white font-semibold hover:bg-blue-700 rounded-lg transition-colors"
           >
             Reprint
-            <BsPrinter size={24} />
+            <BsPrinter size={20} />
           </button>
 
-          <button 
-            onClick={() => setStockModalOpen(true)} 
-            className="border-2 border-[#0080FF] flex gap-2 w-full md:w-auto px-4 py-2 text-[#0080ff] font-semibold hover:bg-blue-700 hover:text-white hover:border-blue-700 rounded-lg"
+          <button
+            onClick={() => setStockModalOpen(true)}
+            className="border-2 border-[#0080FF] flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 text-[#0080ff] font-semibold hover:bg-blue-700 hover:text-white hover:border-blue-700 rounded-lg transition-colors"
           >
             Add Stock
-            <Plus size={24} />
+            <Plus size={20} />
           </button>
         </div>
 

@@ -35,8 +35,7 @@ import {
 } from "react-icons/io5";
 import { TfiBoltAlt } from "react-icons/tfi";
 import { BiSolidTachometer } from "react-icons/bi";
-import userAvatarImg from "../../assets/userAvatar.png";
-import UserAvatar from "./UserAvatar";
+import ProfileAvatar from "./ProfileAvatar";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { TbCurrencyNaira, TbTargetArrow } from "react-icons/tb";
@@ -45,7 +44,6 @@ import { CgTrack } from "react-icons/cg";
 import { GiExpense, GiTakeMyMoney } from "react-icons/gi";
 import { useState, useEffect, useRef } from "react";
 import { useImageStore } from "@/store/useImageStore";
-import Avatar from "@/components/Avatar";
 import useThemePersistence from "@/hooks/useThemePersistence";
 import usePaymentStore from "@/store/usePaymentStore";
 import AddBranchModal from "../AddBranchModal";
@@ -493,7 +491,7 @@ const visibleLinks = getVisibleLinks(userRole);
     // >
 
     <div
-  className={`lg:w-[280px] lg:flex lg:relative h-[100vh] top-0 left-0 bg-white dark:bg-gray-900 shadow-md transform transition-transform duration-500 ease-in-out ${
+  className={`w-[280px] lg:flex lg:relative h-[100vh] top-0 left-0 bg-white dark:bg-gray-900 shadow-md transform transition-transform duration-500 ease-in-out ${
     isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
   } lg:translate-x-0 lg:opacity-100 fixed z-50 lg:transition-none flex flex-col`}
 >
@@ -522,7 +520,7 @@ const visibleLinks = getVisibleLinks(userRole);
       {/* Mobile-only user profile card */}
       {!isLoading && userData && (
         <div className="lg:hidden mx-4 mt-3 mb-1 p-3 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center gap-3">
-          <Avatar
+          <ProfileAvatar
             userId={userData?.id || userData?.employeeId || userData?._id}
             username={fullName}
             size="md"
@@ -673,17 +671,24 @@ const visibleLinks = getVisibleLinks(userRole);
 
       {/* Footer */}
       <div className="flex-shrink-0 absolute bottom-4 left-4 right-4 p-3 rounded-[12px] border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
-        <div className="flex items-center justify-between">
-          <UserAvatar
-            userId={userData?.id || userData?.employeeId || userData?._id}
-            username={fullName}
-            userRole={userRole}
-          />
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <ProfileAvatar
+              userId={userData?.id || userData?.employeeId || userData?._id}
+              username={fullName}
+              size="sm"
+            />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[140px]">{fullName}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{roleInfo?.name}</p>
+            </div>
+          </div>
           <button
             onClick={handleLogout}
-            className="text-red-500 rounded-lg transition-colors"
+            className="text-red-500 rounded-lg transition-colors flex-shrink-0"
+            title="Logout"
           >
-            <LogOut size={32} className="cursor-pointer" />
+            <LogOut size={28} className="cursor-pointer" />
           </button>
         </div>
       </div>
