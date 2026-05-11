@@ -104,7 +104,7 @@ const Login = () => {
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
               <ArrowLeft size={28} className="hidden lg:block" />
-              <ArrowLeft size={28} className="lg:hidden block border-2 border-neutral-300 px-3 py-1 rounded-sm" />
+              <ArrowLeft size={28} className="lg:hidden block border-2 border-neutral-300 p-2 rounded-sm" />
               <h1 className="hidden lg:block">Back home</h1>
             </Link>
           </div>
