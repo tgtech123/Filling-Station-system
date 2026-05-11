@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { API_URL } from "@/lib/config";
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import DynamicSalesTable from "./DynamicSalesTable";
@@ -116,7 +117,7 @@ const LubSales = () => {
   const fetchLubricant = async (code, index) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`/api/lubricant/get-lubricant`, {
+      const res = await fetch(`${API_URL}/api/lubricant/get-lubricant`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -232,7 +233,7 @@ const LubSales = () => {
 
       // ✅ Send ALL items in ONE request
       const response = await fetch(
-        `/api/lubricant/sell-lubricant-transaction`,
+        `${API_URL}/api/lubricant/sell-lubricant-transaction`,
         {
           method: "POST",
           headers: {

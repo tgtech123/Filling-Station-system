@@ -1,40 +1,7 @@
 ﻿// FILE: @/store/useCashierDashboardStore.js
 
 import { create } from 'zustand';
-import axios from 'axios';
-
-// API Base URL - adjust according to your setup
-const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
-
-// Helper function to get auth token
-const getAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token') || sessionStorage.getItem('token');
-  }
-  return null;
-};
-
-// Create axios instance with default config
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add auth token to all requests
-api.interceptors.request.use(
-  (config) => {
-    const token = getAuthToken();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+import { api } from '@/lib/config';
 
 // Zustand store for Cashier Dashboard
 export const useCashierDashboardStore = create((set, get) => ({

@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import ToggleSwitch from "@/components/ToggleSwtich";
 import { Edit, Mail, MapPin, Phone, X, Save, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import LocationSelector from "@/components/LocationSelector";
-import axios from "axios";
+import { api } from "@/lib/config";
 import { useImageStore } from "@/store/useImageStore";
 
 export default function ManagerProfileModal({ onclose }) {
@@ -95,7 +95,7 @@ export default function ManagerProfileModal({ onclose }) {
       setSaving(true);
       setSaveError("");
       const token = localStorage.getItem("token");
-      await axios.post(
+      await api.post(
         `/api/auth/update-staff/${userId}`,
         {
           firstName: managerData.firstName,
@@ -108,8 +108,7 @@ export default function ManagerProfileModal({ onclose }) {
           zipCode: managerData.zipCode,
           emergencyContact: managerData.emergencyContact,
           ...(managerData.src && { image: managerData.src }),
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       // Sync localStorage so header/sidebar update immediately
       const user = JSON.parse(localStorage.getItem("user") || "{}");

@@ -1,39 +1,8 @@
 ﻿import { create } from 'zustand';
+import { api } from '@/lib/config';
 
-// API Base URL - adjust according to your setup
-const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
-
-// Helper function to get auth token
-const getAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token') || sessionStorage.getItem('token');
-  }
-  return null;
-};
-
-// Helper function for API calls
-const apiCall = async (endpoint) => {
-  const token = getAuthToken();
-  
-  if (!token) {
-    throw new Error('No authentication token found');
-  }
-
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || errorData.message || `HTTP error! status: ${response.status}`);
-  }
-
-  return response.json();
-};
+// Thin wrapper so response shape matches legacy fetch-based code (returns body directly)
+const apiCall = async (endpoint) => (await api.get(endpoint)).data;
 
 // Zustand store
 export const useAttendantDashboardStore = create((set, get) => ({

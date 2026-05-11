@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const useTermsStore = create((set) => ({
   termsText: "",
@@ -9,9 +9,7 @@ const useTermsStore = create((set) => ({
   fetchTerms: async () => {
     try {
       set({ loading: true, error: null });
-      const response = await axios.get(
-        `/api/admin/settings/public`
-      );
+      const response = await api.get(`/api/admin/settings/public`);
       set({
         termsText: response.data.data?.termsAndConditions || "No terms available",
         loading: false,

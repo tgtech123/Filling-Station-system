@@ -1,6 +1,6 @@
 ﻿// store/financialStore.js
 import { create } from 'zustand';
-import axios from 'axios';
+import { api } from '@/lib/config';
 
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com"}/api`;
 
@@ -41,7 +41,7 @@ export const useFinancialStore = create((set, get) => ({
     }));
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/financial/overview`, {
+      const response = await api.get(`/api/financial/overview`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -71,8 +71,8 @@ export const useFinancialStore = create((set, get) => ({
     }));
 
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/financial/revenue-breakdown`,
+      const response = await api.get(
+        `/api/financial/revenue-breakdown`,
         {
           params: { duration },
           headers: { 'Authorization': `Bearer ${token}` }
@@ -105,8 +105,8 @@ export const useFinancialStore = create((set, get) => ({
     }));
 
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/financial/expense-breakdown`,
+      const response = await api.get(
+        `/api/financial/expense-breakdown`,
         {
           params: { duration },
           headers: { 'Authorization': `Bearer ${token}` }
@@ -139,8 +139,8 @@ export const useFinancialStore = create((set, get) => ({
     }));
 
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/financial/revenue-analysis`,
+      const response = await api.get(
+        `/api/financial/revenue-analysis`,
         {
           headers: { 'Authorization': `Bearer ${token}` }
         }
@@ -172,8 +172,8 @@ export const useFinancialStore = create((set, get) => ({
     }));
 
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/financial/profit-margins`,
+      const response = await api.get(
+        `/api/financial/profit-margins`,
         {
           params: { duration },
           headers: { 'Authorization': `Bearer ${token}` }

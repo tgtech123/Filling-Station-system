@@ -3,7 +3,7 @@
 // Follows the same pattern as your existing stores.
 
 import { create } from 'zustand';
-import axios from 'axios';
+import { api } from '@/lib/config';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
 
@@ -106,11 +106,8 @@ const useManagerReportsStore = create((set, get) => ({
     setError('salesOverview', null);
 
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/manager/reports/sales-overview`,
-        {
-          headers: getAuthHeaders(),
-          params: { duration: resolved },
+      const response = await api.get(
+        `/api/manager/reports/sales-overview`, { params: { duration: resolved },
         }
       );
       const data = response.data.data;
@@ -140,11 +137,8 @@ const useManagerReportsStore = create((set, get) => ({
     setError('cashOverview', null);
 
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/manager/reports/cash-overview`,
-        {
-          headers: getAuthHeaders(),
-          params: { page: resolvedPage, limit: resolvedLimit },
+      const response = await api.get(
+        `/api/manager/reports/cash-overview`, { params: { page: resolvedPage, limit: resolvedLimit },
         }
       );
       const data = response.data.data;
@@ -187,8 +181,8 @@ const useManagerReportsStore = create((set, get) => ({
       if (merged.productType) params.productType = merged.productType;
       if (merged.shiftType)   params.shiftType   = merged.shiftType;
 
-      const response = await axios.get(
-        `${API_BASE_URL}/api/manager/reports/sales-and-cash`,
+      const response = await api.get(
+        `/api/manager/reports/sales-and-cash`,
         { headers: getAuthHeaders(), params }
       );
       const data = response.data.data;
@@ -214,10 +208,9 @@ const useManagerReportsStore = create((set, get) => ({
     set({ exportResult: null });
 
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/api/manager/reports/export`,
-        { ...params, format: 'json' },
-        { headers: getAuthHeaders() }
+      const response = await api.post(
+        `/api/manager/reports/export`,
+        { ...params, format: 'json' }
       );
       const result = response.data;
       set({ exportResult: result });
@@ -241,8 +234,8 @@ const useManagerReportsStore = create((set, get) => ({
     setError('export', null);
 
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/api/manager/reports/export`,
+      const response = await api.post(
+        `/api/manager/reports/export`,
         { ...params, format: 'csv' },
         { headers: getAuthHeaders(), responseType: 'blob' }
       );
@@ -300,8 +293,8 @@ const useManagerReportsStore = create((set, get) => ({
       if (merged.role)      params.role      = merged.role;
       if (merged.status)    params.status    = merged.status;
 
-      const response = await axios.get(
-        `${API_BASE_URL}/api/manager/activity-logs`,
+      const response = await api.get(
+        `/api/manager/activity-logs`,
         { headers: getAuthHeaders(), params }
       );
       const data = response.data.data;

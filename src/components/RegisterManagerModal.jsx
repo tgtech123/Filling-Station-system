@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { API_URL } from "@/lib/config";
 import {
   ArrowLeft,
   ArrowRight,
@@ -163,7 +164,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
         paymentReference = pv.reference || null;
       } catch {}
 
-      const response = await fetch(`/api/register`, {
+      const response = await fetch(`${API_URL}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

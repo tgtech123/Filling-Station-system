@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { API_URL } from "@/lib/config";
 import { useEffect, useState } from "react";
 import { useTankStore } from "@/store/tankStore";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
@@ -18,7 +19,7 @@ export default function FuelTank() {
       setDeleting(tankId);
       const token = localStorage.getItem("token");
 
-      const res = await fetch(`/api/tank/delete-tank/${tankId}`, {
+      const res = await fetch(`${API_URL}/api/tank/delete-tank/${tankId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

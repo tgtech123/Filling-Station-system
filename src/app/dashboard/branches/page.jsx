@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { api } from "@/lib/config";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import useBranchStore from "@/store/useBranchStore";
 import usePaymentStore from "@/store/usePaymentStore";
@@ -45,9 +45,8 @@ export default function BranchesPage() {
       overview.stations.forEach(async (s) => {
         try {
           const token = localStorage.getItem("token");
-          const res = await axios.get(
-            `/api/branches/${s.id}/invites`,
-            { headers: { Authorization: `Bearer ${token}` } }
+          const res = await api.get(
+            `/api/branches/${s.id}/invites`
           );
           setPendingInvites((prev) => ({
             ...prev,
@@ -62,9 +61,8 @@ export default function BranchesPage() {
     try {
       setReportLoading(true);
       const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `/api/branches/consolidated-report?period=${period}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await api.get(
+        `/api/branches/consolidated-report?period=${period}`
       );
       setReport(res.data.data);
     } catch (err) {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect, Suspense } from "react";
 import { CheckCircle, Building2, X, CreditCard, Zap } from "lucide-react";
 import FrequentlyQuestions from "./FrequentlyQuestions";
@@ -6,7 +6,7 @@ import usePlansStore from "@/store/usePlansStore";
 import RegisterManagerModal from "@/components/RegisterManagerModal";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const SkeletonCard = () => (
   <div className="flex flex-col bg-white rounded-2xl p-5 sm:p-6 border border-neutral-100 animate-pulse w-full">
@@ -60,10 +60,8 @@ const PricingPage = () => {
         if (fullName) setPayerName(fullName);
         if (user.email) setPayerEmail(user.email);
         setIsLoggedIn(true);
-        axios
-          .get("/api/payments/current-plan", {
-            headers: { Authorization: `Bearer ${token}` },
-          })
+        api
+          .get("/api/payments/current-plan")
           .then((res) => setCurrentPlan(res.data.data))
           .catch(() => {});
       }
@@ -141,10 +139,9 @@ const PricingPage = () => {
     try {
       setInitiatingPayment(true);
       const token = localStorage.getItem("token");
-      const response = await axios.post(
+      const response = await api.post(
         "/api/payments/initialize",
-        { planSlug: plan.slug, billingCycle: billing },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { planSlug: plan.slug, billingCycle: billing }
       );
       window.location.href = response.data.data.authorizationUrl;
     } catch (err) {
@@ -169,7 +166,7 @@ const PricingPage = () => {
     try {
       setInitiatingPayment(true);
       sessionStorage.setItem("payerInfo", JSON.stringify({ name: payerName, email: payerEmail }));
-      const response = await axios.post("/api/payments/initialize-guest", {
+      const response = await api.post("/api/payments/initialize-guest", {
         email: payerEmail, name: payerName,
         planSlug: selectedPlanForPayment.slug, billingCycle: billing,
       });

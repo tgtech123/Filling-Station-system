@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import usePumpStore from "@/store/pumpStore";
-import axios from "axios";
+import { api } from "@/lib/config";
 import toast from "react-hot-toast";
 
 export default function SchedulePumpMaintenanceModal({ onclose }) {
@@ -34,15 +34,14 @@ export default function SchedulePumpMaintenanceModal({ onclose }) {
     try {
       const token = localStorage.getItem("token");
       const BACKEND = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
-      await axios.post(
-        `${BACKEND}/api/pump/schedule-maintenance`,
+      await api.post(
+        `/api/pump/schedule-maintenance`,
         {
           pumpId: form.pumpId,
           reason: form.reason,
           startDate: form.startDate,
           endDate: form.endDate,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       const selectedPump = pumps.find((p) => p.pumpId === form.pumpId);
       const pumpName = selectedPump?.title || "Pump";

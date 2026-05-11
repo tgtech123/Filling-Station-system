@@ -1,5 +1,5 @@
 ﻿import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
 
@@ -37,9 +37,8 @@ const useSalesTargetStore = create((set) => ({
     console.log("StaffId from localStorage:", staffId);
     set({ loading: true, error: null });
     try {
-      const res = await axios.get(
-        `${API_BASE_URL}/api/staff/${staffId}/target`,
-        { headers: getAuthHeaders() }
+      const res = await api.get(
+        `/api/staff/${staffId}/target`
       );
       console.log("Target API response:", res.data);
       const target = res.data?.target ?? null;

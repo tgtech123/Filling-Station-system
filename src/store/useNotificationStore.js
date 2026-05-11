@@ -35,7 +35,7 @@ const useNotificationStore = create((set, get) => ({
     _setError("messages", null);
     console.log("🔔 Fetching messages, token:", !!localStorage.getItem("token"));
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/notifications/messages`, {
+      const res = await api.get(`/api/notifications/messages`, {
         headers: getAuthHeaders(),
       });
       console.log("🔔 Messages API response:", res.data);
@@ -59,7 +59,7 @@ const useNotificationStore = create((set, get) => ({
     _setLoading("alerts", true);
     _setError("alerts", null);
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/notifications/alerts`, {
+      const res = await api.get(`/api/notifications/alerts`, {
         headers: getAuthHeaders(),
       });
       const alerts = res.data?.alerts ?? res.data ?? [];
@@ -78,10 +78,9 @@ const useNotificationStore = create((set, get) => ({
   // ── Mark single message read ───────────────────────────────────────────────
   markMessageRead: async (id) => {
     try {
-      await axios.patch(
-        `${API_BASE_URL}/api/notifications/messages/${id}/read`,
-        {},
-        { headers: getAuthHeaders() }
+      await api.patch(
+        `/api/notifications/messages/${id}/read`,
+        {}
       );
       set((s) => {
         const messages = s.messages.map((m) =>
@@ -103,10 +102,9 @@ const useNotificationStore = create((set, get) => ({
   // ── Mark single alert read ─────────────────────────────────────────────────
   markAlertRead: async (id) => {
     try {
-      await axios.patch(
-        `${API_BASE_URL}/api/notifications/alerts/${id}/read`,
-        {},
-        { headers: getAuthHeaders() }
+      await api.patch(
+        `/api/notifications/alerts/${id}/read`,
+        {}
       );
     } catch (_) {}
     set((s) => {
@@ -120,10 +118,9 @@ const useNotificationStore = create((set, get) => ({
   // ── Mark all messages read ─────────────────────────────────────────────────
   markAllMessagesRead: async () => {
     try {
-      await axios.patch(
-        `${API_BASE_URL}/api/notifications/messages/read-all`,
-        {},
-        { headers: getAuthHeaders() }
+      await api.patch(
+        `/api/notifications/messages/read-all`,
+        {}
       );
     } catch (_) {}
     set((s) => ({
@@ -135,10 +132,9 @@ const useNotificationStore = create((set, get) => ({
   // ── Mark all alerts read ───────────────────────────────────────────────────
   markAllAlertsRead: async () => {
     try {
-      await axios.patch(
-        `${API_BASE_URL}/api/notifications/alerts/read-all`,
-        {},
-        { headers: getAuthHeaders() }
+      await api.patch(
+        `/api/notifications/alerts/read-all`,
+        {}
       );
     } catch (_) {}
     set((s) => ({

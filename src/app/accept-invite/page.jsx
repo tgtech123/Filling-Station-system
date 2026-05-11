@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 function AcceptInviteContent() {
   const searchParams = useSearchParams();
@@ -43,7 +43,7 @@ function AcceptInviteContent() {
 
     try {
       setLoading(true);
-      const response = await axios.post("/api/branches/accept-invite", { token, password });
+      const response = await api.post("/api/branches/accept-invite", { token, password });
 
       const { token: authToken, user, station } = response.data;
 
