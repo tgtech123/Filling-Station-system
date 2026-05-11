@@ -109,10 +109,10 @@ const Login = () => {
           <Image src="/station-logo.png" alt="Logo" width={200} height={140} />
 
           <h1 className="text-4xl font-bold text-[#323130] text-center">
-            Login to {settings?.platformName || "Flourish Station"}
+            Login to {settings?.platformName || "FuelDesk"}
           </h1>
           <p className="text-md text-gray-500 text-center">
-            Login to access your customized dashboard
+            Login to access your customized station dashboard
           </p>
 
           {upgraded && (

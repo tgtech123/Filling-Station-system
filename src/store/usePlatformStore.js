@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const usePlatformStore = create((set) => ({
   settings: null,
@@ -10,7 +10,7 @@ const usePlatformStore = create((set) => ({
   fetchPublicSettings: async () => {
     try {
       set({ loading: true });
-      const response = await axios.get(`/api/public/settings`);
+      const response = await api.get(`/api/public/settings`);
       set({ settings: response.data.data, loading: false });
     } catch (err) {
       set({ loading: false });
@@ -20,10 +20,7 @@ const usePlatformStore = create((set) => ({
   fetchAdminSettings: async () => {
     try {
       set({ loading: true });
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`/api/admin/settings`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`/api/admin/settings`);
       set({ settings: response.data.data, loading: false });
     } catch (err) {
       set({ loading: false });
@@ -33,12 +30,7 @@ const usePlatformStore = create((set) => ({
   updateSettings: async (updates) => {
     try {
       set({ saving: true });
-      const token = localStorage.getItem("token");
-      const response = await axios.patch(
-        `/api/admin/settings`,
-        updates,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await api.patch(`/api/admin/settings`, updates);
       set({ settings: response.data.data, saving: false });
       return { success: true };
     } catch (err) {

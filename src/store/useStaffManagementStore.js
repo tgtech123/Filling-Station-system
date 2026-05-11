@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const useStaffManagementStore = create((set) => ({
   staffData: null,
@@ -10,16 +10,14 @@ const useStaffManagementStore = create((set) => ({
     staffManagement: null,
   },
 
-  fetchStaffManagement: async (token) => {
+  fetchStaffManagement: async () => {
     set((state) => ({
       loading: { ...state.loading, staffManagement: true },
       errors: { ...state.errors, staffManagement: null },
     }));
 
     try {
-      const response = await axios.get("/api/dashboard/staff-management", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("/api/dashboard/staff-management");
 
       set((state) => ({
         staffData: response.data.data,

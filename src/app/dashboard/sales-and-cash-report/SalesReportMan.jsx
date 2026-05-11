@@ -93,7 +93,7 @@ const SalesReportMan = () => {
   });
 
   return (
-    <div className="px-10 mt-[2.125rem]">
+    <div className="px-4 sm:px-6 lg:px-10 mt-[2.125rem]">
 
       {/* ── Header Card ───────────────────────────────────────────────────────── */}
       <div className="bg-white rounded-2xl mt-[1.5rem] p-4 w-full">
@@ -112,7 +112,7 @@ const SalesReportMan = () => {
           </p>
 
           {/* Tab switcher */}
-          <div className="bg-white border-[1.7px] border-neutral-200 max-w-[28.5625rem] max-h-[3.0625rem] flex justify-between w-full p-1 rounded-2xl">
+          <div className="bg-white border-[1.7px] border-neutral-200 max-w-full sm:max-w-[28.5625rem] flex justify-between w-full p-1 rounded-2xl mt-3 lg:mt-0">
             <span
               onClick={() => setIsActiveTab("TabOne")}
               className={`flex w-fit font-semibold items-center px-8 py-1.5 gap-2 cursor-pointer rounded-lg ${
@@ -179,13 +179,13 @@ const SalesReportMan = () => {
               <h1 className="text-[0.8rem]">Latest sales activities</h1>
             </span>
 
-            <div className="relative flex items-center">
+            <div className="relative flex items-center w-full sm:w-auto">
               <input
                 type="text"
                 value={searchQue}
                 onChange={(e) => setSearchQue(e.target.value)}
                 placeholder="Search by txnId or product type"
-                className="w-[20rem] h-[2.785rem] rounded-lg pl-10 border-[1.7px] border-neutral-300 outline-none focus:border-2 focus:border-blue-600"
+                className="w-full sm:w-[20rem] h-[2.785rem] rounded-lg pl-10 border-[1.7px] border-neutral-300 outline-none focus:border-2 focus:border-blue-600"
               />
               <Search size={24} className="text-neutral-400 absolute ml-2" />
             </div>

@@ -306,8 +306,8 @@ const LubSales = () => {
   };
 
   return (
-    <div className="bg-white p-4 sm:p-6 md:p-8 flex flex-col rounded-xl gap-8 text-neutral-800 w-full">
-      <div className="mb-2 flex flex-col text-neutral-800 gap-2 sm:gap-3">
+    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 md:p-8 flex flex-col rounded-xl gap-8 text-neutral-800 dark:text-neutral-100 w-full">
+      <div className="mb-2 flex flex-col text-neutral-800 dark:text-neutral-100 gap-2 sm:gap-3">
         <h1 className="text-2xl sm:text-3xl font-bold">Lubricant Sales</h1>
         <p className="text-lg sm:text-xl font-medium">
           Record, print and export all sales receipt
@@ -327,8 +327,8 @@ const LubSales = () => {
       )}
 
       <div className="w-full overflow-x-auto rounded-lg border border-gray-100 pb-4">
-        <table className="min-w-[700px] text-sm text-left text-gray-700 w-full">
-          <thead className="bg-gray-100 text-md font-semibold text-gray-700">
+        <table className="min-w-[700px] text-sm text-left text-gray-700 dark:text-gray-200 w-full">
+          <thead className="bg-gray-100 dark:bg-gray-700 text-md font-semibold text-gray-700 dark:text-gray-200">
             <tr>
               <th className="px-4 py-3">Barcode</th>
               <th className="px-4 py-3">Product name</th>
@@ -339,7 +339,7 @@ const LubSales = () => {
             </tr>
           </thead>
 
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
             {rows.map((row, index) => (
               <tr key={index} className="text-sm">
                 <td className="px-5 py-2">
@@ -350,7 +350,7 @@ const LubSales = () => {
                     onKeyDown={(e) => handleBarcodeKeyPress(e, index)}
                     onBlur={(e) => handleBarcodeBlur(e, index)}
                     placeholder="Enter barcode and press Enter"
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-xl mt-2"
+                    className="w-full px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-xl mt-2"
                   />
                 </td>
                 <td className="px-5 py-2">
@@ -358,7 +358,7 @@ const LubSales = () => {
                     type="text"
                     value={row.productName}
                     disabled
-                    className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl mt-2"
+                    className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-200 rounded-xl mt-2"
                   />
                 </td>
                 <td className="px-5 py-2">
@@ -366,7 +366,7 @@ const LubSales = () => {
                     type="text"
                     value={row.unitPrice}
                     disabled
-                    className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl mt-2"
+                    className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-200 rounded-xl mt-2"
                   />
                 </td>
                 <td className="px-5 py-2">
@@ -375,7 +375,7 @@ const LubSales = () => {
                     min="1"
                     value={row.quantity}
                     onChange={(e) => handleQtyChange(e, index)}
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-xl mt-2"
+                    className="w-full px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-xl mt-2"
                   />
                 </td>
                 <td className="px-4 py-2">
@@ -383,7 +383,7 @@ const LubSales = () => {
                     type="text"
                     value={row.amount}
                     disabled
-                    className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl mt-2"
+                    className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-200 rounded-xl mt-2"
                   />
                 </td>
                 <td className="px-4 py-2">

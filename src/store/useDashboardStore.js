@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const useDashboardStore = create((set, get) => ({
   // State
@@ -15,16 +15,14 @@ const useDashboardStore = create((set, get) => ({
   },
 
   // Fetch Dashboard Metrics
-  fetchMetrics: async (token) => {
+  fetchMetrics: async () => {
     set((state) => ({
       loading: { ...state.loading, metrics: true },
       errors: { ...state.errors, metrics: null },
     }));
 
     try {
-      const response = await axios.get("/api/dashboard/metric", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("/api/dashboard/metric");
 
       set((state) => ({
         metrics: response.data,
@@ -47,16 +45,14 @@ const useDashboardStore = create((set, get) => ({
   },
 
   // Fetch Tank Status
-  fetchTankStatus: async (token) => {
+  fetchTankStatus: async () => {
     set((state) => ({
       loading: { ...state.loading, tankStatus: true },
       errors: { ...state.errors, tankStatus: null },
     }));
 
     try {
-      const response = await axios.get("/api/dashboard/tank-status", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("/api/dashboard/tank-status");
 
       set((state) => ({
         tankStatus: response.data,
@@ -79,9 +75,9 @@ const useDashboardStore = create((set, get) => ({
   },
 
   // Fetch all dashboard data at once
-  fetchDashboardData: async (token) => {
-    const metrics = await get().fetchMetrics(token);
-    const tankStatus = await get().fetchTankStatus(token);
+  fetchDashboardData: async () => {
+    const metrics = await get().fetchMetrics();
+    const tankStatus = await get().fetchTankStatus();
     return { metrics, tankStatus };
   },
 

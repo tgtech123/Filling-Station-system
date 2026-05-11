@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const useEmergencyStore = create((set) => ({
   emergencyMode: false,
@@ -7,10 +7,7 @@ const useEmergencyStore = create((set) => ({
 
   fetchStatus: async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get("/api/emergency/status", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/api/emergency/status");
       set({ emergencyMode: res.data.data?.active ?? res.data.active ?? false });
     } catch (err) {
       console.error("Failed to fetch emergency status:", err);
@@ -20,12 +17,7 @@ const useEmergencyStore = create((set) => ({
   activateEmergency: async () => {
     set({ loading: true });
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        "/api/emergency/activate",
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post("/api/emergency/activate", {});
       set({ emergencyMode: true, loading: false });
       return { success: true };
     } catch (err) {
@@ -40,12 +32,7 @@ const useEmergencyStore = create((set) => ({
   deactivateEmergency: async () => {
     set({ loading: true });
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        "/api/emergency/deactivate",
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post("/api/emergency/deactivate", {});
       set({ emergencyMode: false, loading: false });
       return { success: true };
     } catch (err) {

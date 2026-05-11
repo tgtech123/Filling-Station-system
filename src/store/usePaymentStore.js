@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const usePaymentStore = create((set, get) => ({
   // ── State
@@ -12,10 +12,7 @@ const usePaymentStore = create((set, get) => ({
   fetchCurrentPlan: async () => {
     try {
       set({ loading: true });
-      const token = localStorage.getItem("token");
-      const response = await axios.get("/api/payments/current-plan", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("/api/payments/current-plan");
       set({ currentPlan: response.data.data, loading: false });
     } catch (err) {
       set({ loading: false });
@@ -26,11 +23,9 @@ const usePaymentStore = create((set, get) => ({
   initializePayment: async (planSlug, billingCycle) => {
     try {
       set({ paymentLoading: true });
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
+      const response = await api.post(
         "/api/payments/initialize",
-        { planSlug, billingCycle },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { planSlug, billingCycle }
       );
       set({ paymentLoading: false });
       window.location.href = response.data.data.authorizationUrl;
@@ -45,10 +40,7 @@ const usePaymentStore = create((set, get) => ({
   verifyPayment: async (reference) => {
     try {
       set({ paymentLoading: true });
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`/api/payments/verify/${reference}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const response = await api.get(`/api/payments/verify/${reference}`);
       set({ paymentLoading: false });
       // Only refresh plan for authenticated users — guests have no account yet
       const isGuest = response.data?.data?.isGuest === true;

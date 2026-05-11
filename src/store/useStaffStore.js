@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const useStaffStore = create((set, get) => ({
   staff: [],
@@ -11,18 +11,13 @@ const useStaffStore = create((set, get) => ({
   },
   error: null,
 
-  createStaff: async (staffData, token) => {
+  createStaff: async (staffData) => {
     set((state) => ({
       loading: { ...state.loading, creating: true },
       error: null,
     }));
     try {
-      const res = await axios.post("/api/auth", staffData, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.post("/api/auth", staffData);
       const data = res.data;
       set((state) => ({
         staff: [...state.staff, data.staff],
@@ -40,15 +35,13 @@ const useStaffStore = create((set, get) => ({
     }
   },
 
-  getAllStaff: async (token) => {
+  getAllStaff: async () => {
     set((state) => ({
       loading: { ...state.loading, fetching: true },
       error: null,
     }));
     try {
-      const res = await axios.get("/api/auth", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/api/auth");
       set((state) => ({
         staff: res.data.staff || [],
         loading: { ...state.loading, fetching: false },
@@ -63,18 +56,13 @@ const useStaffStore = create((set, get) => ({
     }
   },
 
-  updateStaff: async (id, updatedData, token) => {
+  updateStaff: async (id, updatedData) => {
     set((state) => ({
       loading: { ...state.loading, updatingId: id },
       error: null,
     }));
     try {
-      const res = await axios.post(`/api/auth/update-staff/${id}`, updatedData, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.post(`/api/auth/update-staff/${id}`, updatedData);
       set((state) => ({
         staff: state.staff.map((s) => (s._id === id ? res.data.staff : s)),
         loading: { ...state.loading, updatingId: null },
@@ -89,17 +77,13 @@ const useStaffStore = create((set, get) => ({
     }
   },
 
-  deleteStaff: async (id, token) => {
+  deleteStaff: async (id) => {
     set((state) => ({
       loading: { ...state.loading, deletingId: id },
       error: null,
     }));
     try {
-      await axios.post(
-        `/api/auth/delete-staff/${id}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post(`/api/auth/delete-staff/${id}`, {});
       set((state) => ({
         staff: state.staff.filter((s) => s._id !== id),
         loading: { ...state.loading, deletingId: null },
