@@ -3,6 +3,7 @@ import { API_URL } from "@/lib/config";
 import React, { useState, useEffect } from "react";
 import { FiEyeOff } from "react-icons/fi";
 import { FiEye } from "react-icons/fi";
+import { ImSpinner3 } from "react-icons/im";
 import { ArrowLeft } from 'lucide-react';
 import LoginTwo from "../LoginTwo";
 import Link from "next/link";
@@ -103,17 +104,17 @@ const Login = () => {
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
               <ArrowLeft size={28} className="hidden lg:block" />
-              <ArrowLeft size={28} className="lg:hidden block border-2 border-neutral-300 p-1" />
+              <ArrowLeft size={28} className="lg:hidden block border-2 border-neutral-300 px-3 py-1 rounded-sm" />
               <h1 className="hidden lg:block">Back home</h1>
             </Link>
           </div>
 
           <Image src="/station-logo.png" alt="Logo" width={200} height={140} />
 
-          <h1 className="lg:text-[3rem] text-[5rem] font-bold text-[#323130] text-center">
+          <h1 className="text-[2.875rem] font-bold text-[#323130] text-center">
             Login to {settings?.platformName || "FuelDesk"}
           </h1>
-          <p className="text-sm text-gray-500 text-center">
+          <p className="text-[1rem] text-gray-500 text-center">
             Login to access your customized station dashboard
           </p>
 
@@ -186,8 +187,9 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 rounded-md font-semibold text-white h-[45px] hover:bg-blue-500 transition"
+              className="flex items-center justify-center gap-2 bg-blue-600 rounded-md font-semibold text-white h-[45px] hover:bg-blue-500 transition disabled:opacity-70 disabled:cursor-not-allowed"
             >
+              {loading && <ImSpinner3 className="animate-spin h-4 w-4" />}
               {loading ? "Signing in..." : "Sign In"}
               {/* <Link href="/dashboard">Sign In</Link> */}
             </button>
