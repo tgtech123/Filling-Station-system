@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const useFuelManagementStore = create((set) => ({
   fuelData: null,
@@ -10,16 +10,14 @@ const useFuelManagementStore = create((set) => ({
     fuelManagement: null,
   },
 
-  fetchFuelManagement: async (token) => {
+  fetchFuelManagement: async () => {
     set((state) => ({
       loading: { ...state.loading, fuelManagement: true },
       errors: { ...state.errors, fuelManagement: null },
     }));
 
     try {
-      const response = await axios.get("/api/dashboard/fuel-management", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get("/api/dashboard/fuel-management");
 
       set((state) => ({
         fuelData: response.data.data,

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const usePlansStore = create((set, get) => ({
   // ── State
@@ -12,7 +12,7 @@ const usePlansStore = create((set, get) => ({
   fetchPublicPlans: async () => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.get('/api/public/plans');
+      const response = await api.get('/api/public/plans');
       const raw = response.data.plans || response.data.data || [];
 
       // Deduplicate by name — keep the record with the latest updatedAt
@@ -39,11 +39,7 @@ const usePlansStore = create((set, get) => ({
   fetchAdminPlans: async () => {
     set({ loading: true, error: null });
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        '/api/admin/plans',
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await api.get('/api/admin/plans');
       set({
         adminPlans: response.data.plans || response.data.data || [],
         loading: false,
@@ -59,12 +55,7 @@ const usePlansStore = create((set, get) => ({
   // ── Create Plan
   createPlan: async (planData) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        '/api/admin/plans',
-        planData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await api.post('/api/admin/plans', planData);
       const newPlan = response.data.plan || response.data.data;
       if (newPlan) {
         set((state) => ({ adminPlans: [...state.adminPlans, newPlan] }));
@@ -82,12 +73,7 @@ const usePlansStore = create((set, get) => ({
   // ── Update Plan
   updatePlan: async (planId, updates) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.patch(
-        `/api/admin/plans/${planId}`,
-        updates,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await api.patch(`/api/admin/plans/${planId}`, updates);
       const updated = response.data.plan || response.data.data;
       set((state) => ({
         adminPlans: state.adminPlans.map((p) =>
@@ -108,11 +94,7 @@ const usePlansStore = create((set, get) => ({
   // ── Delete Plan
   deletePlan: async (planId) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(
-        `/api/admin/plans/${planId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.delete(`/api/admin/plans/${planId}`);
       set((state) => ({
         adminPlans: state.adminPlans.filter(
           (p) => p._id !== planId && p.id !== planId

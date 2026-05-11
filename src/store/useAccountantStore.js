@@ -1,22 +1,7 @@
 ﻿import { create } from 'zustand';
-import axios from 'axios';
+import { api } from '@/lib/config';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
 const ACCOUNTANT_ENDPOINT = '/api/accountant';
-
-// Helper function to get auth token
-const getAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token');
-  }
-  return null;
-};
-
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = getAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
 
 const useAccountantStore = create((set, get) => ({
   // State
@@ -126,9 +111,8 @@ const useAccountantStore = create((set, get) => ({
     setError('dashboard', null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}${ACCOUNTANT_ENDPOINT}/dashboard`, {
+      const response = await api.get(`${ACCOUNTANT_ENDPOINT}/dashboard`, {
         params: { duration },
-        headers: getAuthHeaders(),
       });
       
       set({ dashboard: response.data.data });
@@ -163,9 +147,8 @@ const useAccountantStore = create((set, get) => ({
         }
       });
 
-      const response = await axios.get(`${API_BASE_URL}${ACCOUNTANT_ENDPOINT}/audited-reconciled-sales`, {
+      const response = await api.get(`${ACCOUNTANT_ENDPOINT}/audited-reconciled-sales`, {
         params: queryParams,
-        headers: getAuthHeaders(),
       });
       
       set({ 
@@ -198,10 +181,8 @@ fetchIncomeStatement: async (startDate, endDate, compareStartDate = null, compar
       params.compareEndDate = compareEndDate;
     }
 
-    // ✅ FIXED: Added parentheses after axios.get
-    const response = await axios.get(`${API_BASE_URL}${ACCOUNTANT_ENDPOINT}/financial-statement/income-statement`, {
+    const response = await api.get(`${ACCOUNTANT_ENDPOINT}/financial-statement/income-statement`, {
       params,
-      headers: getAuthHeaders(),
     });
     
     set({ incomeStatement: response.data.data });
@@ -223,9 +204,8 @@ fetchIncomeStatement: async (startDate, endDate, compareStartDate = null, compar
     setError('balanceSheet', null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}${ACCOUNTANT_ENDPOINT}/financial-statement/balance-sheet`, {
+      const response = await api.get(`${ACCOUNTANT_ENDPOINT}/financial-statement/balance-sheet`, {
         params: { startDate, endDate },
-        headers: getAuthHeaders(),
       });
       
       set({ balanceSheet: response.data.data });
@@ -246,9 +226,8 @@ fetchIncomeStatement: async (startDate, endDate, compareStartDate = null, compar
     setError('cashflow', null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}${ACCOUNTANT_ENDPOINT}/financial-statement/cashflow`, {
+      const response = await api.get(`${ACCOUNTANT_ENDPOINT}/financial-statement/cashflow`, {
         params: { duration },
-        headers: getAuthHeaders(),
       });
       
       set({ cashflow: response.data.data });
@@ -269,9 +248,8 @@ fetchIncomeStatement: async (startDate, endDate, compareStartDate = null, compar
     setError('keyRatios', null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}${ACCOUNTANT_ENDPOINT}/financial-statement/key-ratios`, {
+      const response = await api.get(`${ACCOUNTANT_ENDPOINT}/financial-statement/key-ratios`, {
         params: { startDate, endDate },
-        headers: getAuthHeaders(),
       });
       
       set({ keyRatios: response.data.data });
@@ -292,9 +270,8 @@ fetchIncomeStatement: async (startDate, endDate, compareStartDate = null, compar
     setError('profitLoss', null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}${ACCOUNTANT_ENDPOINT}/profit-loss`, {
+      const response = await api.get(`${ACCOUNTANT_ENDPOINT}/profit-loss`, {
         params: { duration },
-        headers: getAuthHeaders(),
       });
       
       set({ profitLoss: response.data.data });
@@ -315,9 +292,8 @@ fetchIncomeStatement: async (startDate, endDate, compareStartDate = null, compar
     setError('incomeReport', null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}${ACCOUNTANT_ENDPOINT}/income`, {
+      const response = await api.get(`${ACCOUNTANT_ENDPOINT}/income`, {
         params: { duration },
-        headers: getAuthHeaders(),
       });
       
       set({ incomeReport: response.data.data });
@@ -338,9 +314,7 @@ fetchIncomeStatement: async (startDate, endDate, compareStartDate = null, compar
     setError('shiftDetails', null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/shift/${shiftId}`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await api.get(`/api/shift/${shiftId}`);
       
       set({ shiftDetails: response.data.data || response.data });
       return response.data.data || response.data;

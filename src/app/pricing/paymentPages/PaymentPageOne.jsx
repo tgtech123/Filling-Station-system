@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ChevronDown, ChevronRight, X } from "lucide-react";
+import { ChevronDown, ChevronRight, X, CreditCard, Building, Lock } from "lucide-react";
 import { ImSpinner3 } from "react-icons/im";
 import Image from "next/image";
 import SuccessPage from "./SuccessPage";
@@ -18,7 +18,6 @@ const PaymentPageOne = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Fetch countries via proxy (avoids CORS)
   useEffect(() => {
     setLoadingCountries(true);
     fetch("/api/public/locations/countries")
@@ -28,13 +27,8 @@ const PaymentPageOne = () => {
       .finally(() => setLoadingCountries(false));
   }, []);
 
-  // Fetch states when country changes
   useEffect(() => {
-    if (!selectedCountry) {
-      setStates([]);
-      setSelectedState("");
-      return;
-    }
+    if (!selectedCountry) { setStates([]); setSelectedState(""); return; }
     setLoadingStates(true);
     setStates([]);
     setSelectedState("");
@@ -48,10 +42,7 @@ const PaymentPageOne = () => {
   const handlePayment = async () => {
     setIsLoading(true);
     try {
-      // Replace this later with actual payment API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      //spins for 3 secs and then render the success page
       setIsLoading(false);
       setIsSuccess(true);
     } catch (err) {
@@ -60,314 +51,237 @@ const PaymentPageOne = () => {
     }
   };
 
-  // {if(isSuccess)
-  //   return <SuccessPage />
-  // }
+  const inputClass = "w-full h-12 px-4 border-2 border-gray-200 focus:border-blue-500 outline-none rounded-xl text-sm transition-colors";
+  const labelClass = "text-sm font-semibold text-gray-600 mb-1.5 block";
 
   return (
-    <div className="p-10">
+    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 py-6 sm:py-10">
+      {/* Success overlay */}
       {isSuccess && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white  max-w-lg w-full shadow-2xl rounded-2xl lg:p-8 p-3 max-h-[90vh] overflow-y-auto scrollbar-hide "
+            className="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto"
           >
-            <button 
-            onClick={() => setIsSuccess(false)} 
-            className="absolute top-10 right-132 bg-white rounded-full p-2 hover:scale-105 transition cursor-pointer "
+            <button
+              onClick={() => setIsSuccess(false)}
+              className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
             >
-            <X size={28} />
+              <X size={18} />
             </button>
             <SuccessPage />
           </div>
         </div>
       )}
 
-      <div className="flex gap-4 items-center">
-        <Image
-          src="/station-logo.png"
-          height={70}
-          width={120}
-          alt="station logo"
-        />
-        <h1 className="text-[1.5rem] font-semibold text-[#6B6B6B]">Checkout</h1>
-      </div>
-
-      <div className="lg:flex w-full lg:gap-5 mt-[3rem]">
-        {/* Left Column */}
-        <div className="flex-1 mb-[3rem]">
-          <h1 className="text-[1.75rem] font-semibold leading-[100%] mb-[2.75rem]">
-            1. Enter an email address for your station account
-          </h1>
-
-          <div className="flex flex-col gap-4 p-5 bg-white rounded-lg">
-            <label className="text-[1rem] font-medium">
-              Your email address:
-            </label>
-            <input
-              type="email"
-              placeholder="example@email.com"
-              className="lg:w-[41.3125rem] w-[20.3125rem] h-[3.75rem] border-2 border-[#D9D9D9] focus:border-2 focus:border-blue-600 outline-none pl-3 rounded-lg"
-            />
-          </div>
-
-          <h1 className="text-[1.75rem] font-semibold leading-[100%] mt-[2rem] mb-[2.75rem]">
-            2. Select a payment method
-          </h1>
-          {/* the left card */}
-          <div className="flex flex-col gap-4">
-            <div className="lg:w-full bg-white rounded-lg w-[22rem] h-auto  border-[1px] border-neutral-400 p-4 items-center">
-              <p className="flex justify-between">
-                <span className="text-[1.225rem] font-semibold ">
-                  Credit or debit card
-                </span>
-                <button onClick={() => setIsOpened(!isOpened)}>
-                  {isOpened ? (
-                    <ChevronRight size={26} className="ml-auto" />
-                  ) : (
-                    <ChevronDown size={26} className="ml-auto" />
-                  )}
-                </button>
-              </p>
-
-              {isOpened && (
-                <div>
-                  <hr className="border-[1.5px] border-neutral-300 mb-[1rem] mt-[1rem]" />
-                  <div className="mt-[2rem]">
-                    <h1 className="text-[1.25rem] font-medium leading-[121%] mb-[1.5rem]">
-                      Payment Information
-                    </h1>
-                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-7">
-                      <div className="flex flex-col gap-3">
-                        <label className="text-[1rem] font-medium text-[#6B6B6B]">
-                          First name
-                        </label>
-                        <input
-                          type="text"
-                          placeholder=""
-                          className=" w-[20rem] h-[3.75rem] pl-3 rounded-lg border-2 border-neutral-400 focus:border-2 focus:border-blue-600 outline-none "
-                        />
-                      </div>
-                      <div className="flex flex-col gap-3">
-                        <label className="text-[1rem] font-medium text-[#6B6B6B]">
-                          Last name
-                        </label>
-                        <input
-                          type="text"
-                          placeholder=""
-                          className=" w-[20rem] h-[3.75rem] pl-3 rounded-lg border-2 border-neutral-400 focus:border-2 focus:border-blue-600 outline-none "
-                        />
-                      </div>
-                      <div className="flex flex-col gap-3">
-                        <label className="text-[1rem] font-medium text-[#6B6B6B]">
-                          Card number
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="0000 0000 0000 0000"
-                          className=" w-[20rem] h-[3.75rem] pl-3 rounded-lg border-2 border-neutral-400 focus:border-2 focus:border-blue-600 outline-none "
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-3">
-                        <label className="text-[1rem] font-medium text-[#6B6B6B]">
-                          Expiration date
-                        </label>
-                        <input
-                          type="date"
-                          placeholder="MM/YY"
-                          className=" w-[20rem] h-[3.75rem] pl-3 pr-3 font-semibold text-blue-600 rounded-lg border-2 border-neutral-400 focus:border-2 focus:border-blue-600 outline-none "
-                        />
-                      </div>
-                      <div className="flex flex-col gap-3">
-                        <label className="text-[1rem] font-medium text-[#6B6B6B]">
-                          CVV/CVC
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="000"
-                          className=" w-[20rem] h-[3.75rem] pl-3  rounded-lg border-2 border-neutral-400 focus:border-2 focus:border-blue-600 outline-none "
-                        />
-                      </div>
-                    </div>
-                    <button className="text-white font-semibold bg-blue-500 text-[1rem] rounded-full mt-[2rem] flex ml-auto hover:bg-blue-700 px-6 py-3 ">
-                      Continue
-                    </button>
-                    <hr className="border-[1.5px] border-neutral-300 mb-[1rem] mt-[1rem]" />
-                    <p className="lg:text-[1rem] text-[0.875rem] font-medium leading-[-5%] mb-[2rem]">
-                      Services are subscription based. The subscription will
-                      automatically renew for an additional 1 month term unless
-                      you cancel it. You can manage your subscription (extend,
-                      upgrade, cancel auto-renewal) at any time from your
-                      Station Account using our instructions
-                    </p>
-
-                    <p className="lg:text-[1rem] text-[0.875rem] font-medium text-[#888888]">
-                      By purchasing this subscription and clicking “Continue”,
-                      you agree to the terms of service, auto-renewal terms,
-                      electronic document delivery, and acknowledge the privacy
-                      policy.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="lg:w-full bg-white rounded-lg w-[22rem] h-auto border-[1px] border-neutral-400 p-4 ">
-              <p className=" flex justify-between">
-                <span className="text-[1.225rem] font-semibold">
-                  Bank Transfer
-                </span>
-                <button onClick={() => setIsTransferOpened(!isTransferOpened)}>
-                  {isTransferOpened ? (
-                    <ChevronRight size={26} className="ml-auto" />
-                  ) : (
-                    <ChevronDown size={26} className="ml-auto" />
-                  )}
-                </button>
-              </p>
-
-              {isTransferOpened && (
-                <div>
-                  <div>
-                    <hr className="border-[1.5px] border-neutral-300 mb-[1rem] mt-[1rem]" />
-                    <div className="mt-[2rem]">
-                      <div className="flex flex-col items-center justify-center">
-                        <h1 className="lg:text-[1.375rem] text-[1.125rem] font-semibold text-neutral-400 mb-[1rem]">
-                          Transfer of ₦600,000 to:
-                        </h1>
-                        <p className="lg:text-[1.5rem] text-[1rem] font-semibold italic ">
-                          Polaris Bank
-                        </p>
-                        <span className="lg:text-[2.5rem] text-[1.375rem] font-bold text-[#0A0D13]">
-                          0123456781
-                        </span>
-                        <div className="lg:text-[1.5rem] text-[1.375rem]  font-bold text-blue-500">
-                          Acct Name:
-                          <span className="pl-2 text-red-500 italic">
-                            FuelDesk Management System
-                          </span>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={handlePayment}
-                        disabled={isLoading}
-                        className="text-white font-semibold bg-blue-500 text-[1rem] rounded-full mt-[2rem] flex gap-4 ml-auto hover:bg-blue-700 px-6 py-3 "
-                      >
-                        {isLoading ? " Processing ..." : "Confirm Payment"}
-                        {isLoading && (
-                          <ImSpinner3 size={26} className="animate-spin" />
-                        )}
-                      </button>
-
-                      <hr className="border-[1.5px] border-neutral-300 mb-[1rem] mt-[1rem]" />
-
-                      <p className="lg:text-[1rem] text-[0.875rem] font-medium text-[#888888]">
-                        By purchasing this subscription and clicking “Continue”,
-                        you agree to the terms of service, auto-renewal terms,
-                        electronic document delivery, and acknowledge the
-                        privacy policy.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="lg:w-full bg-white rounded-lg w-[22rem] h-[4.5rem] border-[1px] border-neutral-400 flex p-4 justify-between items-center">
-              <h1 className="text-[1.225rem] font-semibold">
-                Google Pay{" "}
-                <span className="text-neutral-300 font-medium italic">
-                  (currently not available)
-                </span>
-              </h1>
-              <ChevronDown size={26} />
-            </div>
-            <div className="lg:w-full bg-white rounded-lg w-[22rem] h-[4.5rem] border-[1px] border-neutral-400 flex p-4 justify-between items-center">
-              <h1 className="text-[1.225rem] font-semibold">
-                Crypto Currencies{" "}
-                <span className="text-neutral-300 font-medium italic">
-                  (currently not available)
-                </span>
-              </h1>
-              <ChevronDown size={26} />
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-8">
+          <Image src="/station-logo.png" height={50} width={90} alt="station logo" className="h-10 w-auto object-contain" />
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Checkout</h1>
+            <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
+              <Lock size={11} />
+              <span>Secure payment</span>
             </div>
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className="flex-1">
-          <h1 className="text-[1.75rem] font-semibold leading-[100%] mb-[2.75rem]">
-            Order summary
-          </h1>
-
-          <div className="bg-white w-full h-auto lg:p-5 p-3 border-[1px] border-neutral-300 rounded-xl">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* ── Left column ── */}
+          <div className="flex-1 min-w-0 space-y-6">
+            {/* Step 1 */}
             <div>
-              <h1 className="text-[1.25rem] font-medium mb-[0.875rem]">Plus</h1>
-              <p className="flex justify-between">
-                <span className="text-[#6B6B6B] text-[1.25rem] font-medium">
-                  Monthly plan ($22.5/mo)
-                </span>
-                <span className="text-[1.25rem] font-medium">$22.5</span>
-              </p>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center shrink-0">1</span>
+                <h2 className="text-base sm:text-lg font-bold text-gray-800">Enter email for your station account</h2>
+              </div>
+              <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border border-gray-100">
+                <label className={labelClass}>Your email address</label>
+                <input
+                  type="email"
+                  placeholder="example@email.com"
+                  className={inputClass}
+                />
+              </div>
             </div>
 
-            <hr className="border-[1.5px] border-neutral-200 mt-[2rem]" />
+            {/* Step 2 */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center shrink-0">2</span>
+                <h2 className="text-base sm:text-lg font-bold text-gray-800">Select a payment method</h2>
+              </div>
 
-            <div className="mt-[2rem]">
-              <div className="text-[1.25rem] font-medium mb-[0.875rem] flex items-center gap-3">
-                Tax country:
-                {/* Country Dropdown */}
-                <div className="flex justify-between gap-5">
+              <div className="space-y-3">
+                {/* Card payment */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <button
+                    onClick={() => setIsOpened(!isOpened)}
+                    className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+                        <CreditCard size={18} className="text-blue-600" />
+                      </div>
+                      <span className="font-semibold text-gray-800">Credit or Debit Card</span>
+                    </div>
+                    {isOpened
+                      ? <ChevronRight size={20} className="text-gray-400 rotate-90 transition-transform" />
+                      : <ChevronDown size={20} className="text-gray-400 transition-transform" />}
+                  </button>
+
+                  {isOpened && (
+                    <div className="px-4 sm:px-5 pb-5 border-t border-gray-100">
+                      <h3 className="font-semibold text-gray-800 mt-4 mb-4">Payment Information</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {[
+                          { label: "First name", type: "text", placeholder: "John" },
+                          { label: "Last name", type: "text", placeholder: "Doe" },
+                          { label: "Card number", type: "text", placeholder: "0000 0000 0000 0000", full: true },
+                          { label: "Expiration date", type: "date", placeholder: "MM/YY" },
+                          { label: "CVV / CVC", type: "text", placeholder: "000" },
+                        ].map(({ label, type, placeholder, full }) => (
+                          <div key={label} className={full ? "sm:col-span-2" : ""}>
+                            <label className={labelClass}>{label}</label>
+                            <input type={type} placeholder={placeholder} className={inputClass} />
+                          </div>
+                        ))}
+                      </div>
+                      <button className="mt-5 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full text-sm transition-colors active:scale-95">
+                        Continue
+                      </button>
+                      <p className="mt-4 text-xs text-gray-500 leading-relaxed">
+                        Services are subscription based. The subscription will automatically renew unless you cancel it. You can manage your subscription at any time from your Station Account.
+                      </p>
+                      <p className="mt-2 text-xs text-gray-400 leading-relaxed">
+                        By clicking "Continue", you agree to the terms of service, auto-renewal terms, and acknowledge the privacy policy.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bank transfer */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <button
+                    onClick={() => setIsTransferOpened(!isTransferOpened)}
+                    className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center">
+                        <Building size={18} className="text-green-600" />
+                      </div>
+                      <span className="font-semibold text-gray-800">Bank Transfer</span>
+                    </div>
+                    {isTransferOpened
+                      ? <ChevronRight size={20} className="text-gray-400 rotate-90 transition-transform" />
+                      : <ChevronDown size={20} className="text-gray-400 transition-transform" />}
+                  </button>
+
+                  {isTransferOpened && (
+                    <div className="px-4 sm:px-5 pb-5 border-t border-gray-100">
+                      <div className="flex flex-col items-center text-center py-5 bg-gray-50 rounded-xl mt-4">
+                        <p className="text-sm font-semibold text-gray-500 mb-2">Transfer ₦600,000 to:</p>
+                        <p className="text-base font-bold italic text-gray-700">Polaris Bank</p>
+                        <p className="text-3xl sm:text-4xl font-black text-gray-900 my-2 tracking-wider">0123456781</p>
+                        <p className="text-sm font-semibold text-blue-600">
+                          Acct: <span className="text-red-500 italic">FuelDesk Management System</span>
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handlePayment}
+                        disabled={isLoading}
+                        className="mt-5 w-full sm:w-auto px-8 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold rounded-full text-sm transition-colors flex items-center justify-center gap-3 active:scale-95"
+                      >
+                        {isLoading ? "Processing..." : "Confirm Payment"}
+                        {isLoading && <ImSpinner3 size={18} className="animate-spin" />}
+                      </button>
+                      <p className="mt-4 text-xs text-gray-400 leading-relaxed">
+                        By confirming payment, you agree to the terms of service, auto-renewal terms, and acknowledge the privacy policy.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Unavailable methods */}
+                {["Google Pay", "Crypto Currencies"].map((method) => (
+                  <div
+                    key={method}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between p-4 sm:p-5 opacity-50 cursor-not-allowed"
+                  >
+                    <div>
+                      <span className="font-semibold text-gray-600">{method}</span>
+                      <span className="ml-2 text-xs text-gray-400 italic">(not available)</span>
+                    </div>
+                    <ChevronDown size={18} className="text-gray-400" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Right column: Order summary ── */}
+          <div className="w-full lg:w-80 xl:w-96 shrink-0">
+            <h2 className="text-base sm:text-lg font-bold text-gray-800 mb-4">Order Summary</h2>
+
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 sticky top-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="font-bold text-gray-900 text-base">Plus Plan</p>
+                  <p className="text-sm text-gray-500">Monthly billing</p>
+                </div>
+                <span className="text-lg font-bold text-gray-900">$22.5</span>
+              </div>
+
+              <hr className="border-gray-100 mb-4" />
+
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-gray-600">Tax country</p>
+                <div className="space-y-2">
                   <select
                     value={selectedCountry}
                     onChange={(e) => setSelectedCountry(e.target.value)}
-                    className="border-2 border-neutral-300 lg:w-[18rem] w-fit py-1.5 rounded-lg"
                     disabled={loadingCountries}
+                    className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl px-3 py-2.5 text-sm outline-none transition-colors bg-white"
                   >
-                    <option value="">
-                      {loadingCountries ? "Loading..." : "Select country"}
-                    </option>
+                    <option value="">{loadingCountries ? "Loading..." : "Select country"}</option>
                     {countries.map((c) => (
-                      <option className="w-fit" key={c} value={c}>
-                        {c}
-                      </option>
+                      <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
 
-                  {/* State Dropdown — appears after country is selected */}
                   {selectedCountry && (
                     <select
                       value={selectedState}
                       onChange={(e) => setSelectedState(e.target.value)}
-                      className="border-2 border-neutral-300 px-3 py-1.5 rounded-lg lg:w-[18rem] w-fit"
+                      className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-xl px-3 py-2.5 text-sm outline-none transition-colors bg-white"
                     >
-                      <option value="">Select state</option>
+                      <option value="">{loadingStates ? "Loading..." : "Select state"}</option>
                       {states.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
+                        <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
                   )}
                 </div>
+
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Sales tax (0%)</span>
+                  <span className="font-medium text-gray-700">$0.00</span>
+                </div>
               </div>
 
-              <p className="flex justify-between">
-                <span className="text-[1.25rem] font-medium text-[#6B6B6B]">
-                  Sales tax 0%
-                </span>
-                <span className="text-[#191A15] text-[1.25rem] font-medium">
-                  $0.00
-                </span>
-              </p>
-            </div>
+              <hr className="border-gray-100 my-4" />
 
-            <div className="flex justify-between mt-[1rem]">
-              <h1 className="text-[1.375rem] font-semibold">Total</h1>
-              <h1 className="text-[1.375rem] font-semibold">$22.5</h1>
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-gray-900">Total</span>
+                <span className="text-xl font-black text-blue-600">$22.5</span>
+              </div>
+
+              <div className="mt-4 flex items-center justify-center gap-1.5 text-xs text-gray-400">
+                <Lock size={11} />
+                <span>256-bit SSL encrypted payment</span>
+              </div>
             </div>
           </div>
         </div>

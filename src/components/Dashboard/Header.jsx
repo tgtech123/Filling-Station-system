@@ -7,6 +7,7 @@ import {
 import UserAvatar from "./UserAvatar";
 import Image from "next/image";
 import stroke from "../../assets/stroke.png";
+import staticLogo from "../../assets/station-logo.png";
 import LogoutButton from "./LogoutButton";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -328,8 +329,35 @@ export default function Header({ toggleSidebar, showSidebar }) {
     );
   }
 
+  const stationLogo = userData?.station?.logoUrl || userData?.station?.logo || null;
+
   return (
-    <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white dark:bg-gray-900 flex items-center justify-end gap-3">
+    <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white dark:bg-gray-900 flex items-center justify-between gap-3">
+
+      {/* ── Left: hamburger + station logo ── */}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {/* Hamburger — mobile only */}
+        <div
+          onClick={toggleSidebar}
+          className="lg:hidden bg-[#0080FF] p-2 text-white rounded-md cursor-pointer hover:bg-blue-600 transition"
+        >
+          <Menu />
+        </div>
+
+        {/* Station logo */}
+        {stationLogo ? (
+          <img
+            src={stationLogo}
+            alt="station logo"
+            className="h-9 w-auto object-contain max-w-[110px]"
+          />
+        ) : (
+          <Image src={staticLogo} width={110} height={36} alt="station logo" className="h-9 w-auto object-contain" />
+        )}
+      </div>
+
+      {/* ── Right side ── */}
+      <div className="flex items-center gap-3">
 
       {/* ── Station Switcher (Enterprise super manager only, desktop) ── */}
       {isEnterprise && isSuperManager && branches.length >= 1 && (
@@ -491,13 +519,28 @@ export default function Header({ toggleSidebar, showSidebar }) {
         <Image src={stroke} alt="stroke" />
       </div>
 
-      <UserAvatar
-        userId={userId}
-        username={fullName}
-        userRole="View Profile"
-        currentImage={uploadedImage}
-        onProfileClick={userData?.role === "manager" ? () => setShowManagerProfile(true) : undefined}
-      />
+      {/* Desktop: avatar + name + role */}
+      <div className="hidden lg:flex">
+        <UserAvatar
+          userId={userId}
+          username={fullName}
+          userRole="View Profile"
+          currentImage={uploadedImage}
+          onProfileClick={userData?.role === "manager" ? () => setShowManagerProfile(true) : undefined}
+        />
+      </div>
+
+      {/* Mobile: avatar circle only (tappable) */}
+      <div className="lg:hidden">
+        <UserAvatar
+          userId={userId}
+          username={fullName}
+          userRole="View Profile"
+          currentImage={uploadedImage}
+          onProfileClick={userData?.role === "manager" ? () => setShowManagerProfile(true) : undefined}
+          compact
+        />
+      </div>
 
       <div className="hidden lg:flex">
         <Image src={stroke} alt="stroke" />
@@ -511,12 +554,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
         <LogoutButton />
       </div>
 
-      <div
-        onClick={toggleSidebar}
-        className="block lg:hidden absolute left-4 bg-[#0080FF] p-2 text-white text-lg rounded-md cursor-pointer hover:bg-blue-600 transition"
-      >
-        <Menu />
-      </div>
+      </div>{/* end right side */}
 
       {/* ── Modals ── */}
       {selectedMsg && (

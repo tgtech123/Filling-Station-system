@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const useAnalyticsStore = create((set, get) => ({
   revenueTrend: null,
@@ -11,11 +11,7 @@ const useAnalyticsStore = create((set, get) => ({
 
   fetchRevenueTrend: async (period = "monthly") => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `/api/dashboard/analytics/revenue?period=${period}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.get(`/api/dashboard/analytics/revenue?period=${period}`);
       set({ revenueTrend: res.data });
     } catch (err) {
       console.error(err);
@@ -24,11 +20,7 @@ const useAnalyticsStore = create((set, get) => ({
 
   fetchStaffPerformance: async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `/api/dashboard/analytics/staff-performance`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.get(`/api/dashboard/analytics/staff-performance`);
       set({ staffPerformance: res.data });
     } catch (err) {
       console.error(err);
@@ -37,11 +29,7 @@ const useAnalyticsStore = create((set, get) => ({
 
   fetchFuelBreakdown: async (period = "month") => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `/api/dashboard/analytics/fuel-breakdown?period=${period}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.get(`/api/dashboard/analytics/fuel-breakdown?period=${period}`);
       set({ fuelBreakdown: res.data });
     } catch (err) {
       console.error(err);
@@ -50,11 +38,7 @@ const useAnalyticsStore = create((set, get) => ({
 
   fetchComparison: async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `/api/dashboard/analytics/comparison`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.get(`/api/dashboard/analytics/comparison`);
       set({ comparison: res.data });
     } catch (err) {
       console.error(err);

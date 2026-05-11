@@ -5,29 +5,24 @@ import SalesReportMan from './SalesReportMan'
 
 const page = () => {
   return (
-         <div className='bg-neutral-100'>
+         <div className='bg-neutral-100 dark:bg-gray-950 min-h-screen'>
 
-            <header className="px-4 lg:px-[40px] mb-10 bg-white shadow-sm h-[170px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
-              <div className=" mt-2 lg:mt-0 flex flex-col lg:flex-row gap-0 lg:gap-4 items-center">
-                <Link href="/dashboard" className="cursor-pointer border-2 flex  gap-2  lg:border-[#0080ff]  py-2 px-4 rounded-[12px] text-[#0080ff] font-semibold">
-                  <ArrowLeft />
-                  Back to Dashboard
+            <header className="px-4 lg:px-10 py-4 mb-6 bg-white dark:bg-gray-900 shadow-sm flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:items-center">
+                <Link href="/dashboard" className="cursor-pointer flex gap-2 items-center border-2 border-[#0080ff] py-2 px-4 rounded-xl text-[#0080ff] font-semibold text-sm w-fit">
+                  <ArrowLeft size={18} />
+                  Back
                 </Link>
-                <h4 className="text-xl font-semibold">Sales and Cash report</h4>
+                <h4 className="text-lg sm:text-xl font-semibold dark:text-white">Sales and Cash Report</h4>
               </div>
-              <div className="flex gap-2 items-center">
-                <button 
-              //   onClick={() => setShowEmergencyModal(true)} 
-                className="text-sm lg:text-md cursor-pointer border-3 flex gap-2 items-center border-[#f00] hover:bg-[#f00] hover:text-white py-2 px-6 rounded-[12px] text-[#f00]">
+              <div className="flex flex-wrap gap-2 items-center">
+                <button className="text-sm cursor-pointer flex gap-2 items-center border-2 border-red-500 hover:bg-red-500 hover:text-white py-2 px-4 rounded-xl text-red-500 transition-colors">
                   Emergency Stop All
-                  <div className="border-2 text-sm border-[#f00] rounded=[14px]"><X size={16} className="text-[#f00]" /></div>
+                  <X size={16} />
                 </button>
-                <button
-                  // onClick={() => setShowMaintenanceModal(true)}
-                  className="cursor-pointer text-sm lg:text-md flex gap-2 bg-[#0080ff] text-white py-3 px-6 rounded-[12px] font-semibold"
-                >
+                <button className="cursor-pointer text-sm flex gap-2 items-center bg-[#0080ff] hover:bg-blue-700 text-white py-2 px-4 rounded-xl font-semibold transition-colors">
                   Schedule Maintenance
-                  <Wrench size={18} />
+                  <Wrench size={16} />
                 </button>
               </div>
           </header>

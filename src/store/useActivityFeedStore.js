@@ -1,13 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
-
-const getAuthHeaders = () => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-  return {};
-};
+import { api } from '@/lib/config';
 
 let _pollingInterval = null;
 
@@ -39,9 +31,7 @@ const useActivityFeedStore = create((set, get) => ({
     setLoading('activities', true);
     setError('activities', null);
     try {
-      const response = await axios.get('/api/activity', {
-        headers: getAuthHeaders(),
-      });
+      const response = await api.get('/api/activity');
       const activities = response.data.activities ?? [];
       set({ activities });
       return activities;
@@ -64,9 +54,7 @@ const useActivityFeedStore = create((set, get) => ({
     setLoading('productLevels', true);
     setError('productLevels', null);
     try {
-      const response = await axios.get('/api/product-levels', {
-        headers: getAuthHeaders(),
-      });
+      const response = await api.get('/api/product-levels');
       const productLevels = response.data.productLevels ?? [];
       set({ productLevels });
       return productLevels;

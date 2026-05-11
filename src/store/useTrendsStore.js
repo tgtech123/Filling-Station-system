@@ -1,22 +1,7 @@
 ﻿import { create } from 'zustand';
-import axios from 'axios';
+import { api } from '@/lib/config';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
 const TRENDS_ENDPOINT = '/api/trends';
-
-// Helper function to get auth token
-const getAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token');
-  }
-  return null;
-};
-
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = getAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
 
 const useTrendsStore = create((set, get) => ({
   // State
@@ -64,9 +49,8 @@ const useTrendsStore = create((set, get) => ({
     setError('dashboard', null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}${TRENDS_ENDPOINT}/dashboard`, {
+      const response = await api.get(`${TRENDS_ENDPOINT}/dashboard`, {
         params: { duration },
-        headers: getAuthHeaders(),
       });
       
       const data = response.data.data;

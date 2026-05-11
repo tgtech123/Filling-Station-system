@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const useBranchStore = create((set, get) => ({
   // ── State
@@ -14,10 +14,7 @@ const useBranchStore = create((set, get) => ({
   fetchBranches: async () => {
     try {
       set({ loading: true });
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`/api/branches`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`/api/branches`);
       set({
         branches: response.data.stations || [],
         currentStation: response.data.currentStation,
@@ -32,12 +29,7 @@ const useBranchStore = create((set, get) => ({
   switchStation: async (targetStationId) => {
     try {
       set({ switching: true });
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `/api/branches/switch`,
-        { targetStationId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await api.post(`/api/branches/switch`, { targetStationId });
 
       // Update token with new station context
       const newToken = response.data.token;
@@ -65,10 +57,7 @@ const useBranchStore = create((set, get) => ({
   fetchOverview: async () => {
     try {
       set({ loading: true });
-      const token = localStorage.getItem("token");
-      const response = await axios.get(`/api/branches/overview`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.get(`/api/branches/overview`);
       set({
         overview: response.data,
         loading: false,
@@ -82,12 +71,7 @@ const useBranchStore = create((set, get) => ({
   createBranch: async (branchData) => {
     try {
       set({ loading: true });
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `/api/branches/create`,
-        branchData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await api.post(`/api/branches/create`, branchData);
       set({ loading: false });
       // Refresh branches after creation
       await get().fetchBranches();

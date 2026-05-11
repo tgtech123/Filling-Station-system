@@ -1,30 +1,50 @@
 "use client";
+import { useState } from "react";
 import useImageStore from "@/store/useImageStore";
 import { getImageUrl } from "@/utils/imageUtils";
-import { User } from "lucide-react";
 
 const sizeMap = {
-  sm: { cls: "w-8 h-8", icon: 16 },
-  md: { cls: "w-12 h-12", icon: 20 },
-  lg: { cls: "w-16 h-16", icon: 28 },
-  xl: { cls: "w-24 h-24", icon: 40 },
+  sm: { cls: "w-8 h-8",   text: "text-xs"  },
+  md: { cls: "w-12 h-12", text: "text-sm"  },
+  lg: { cls: "w-16 h-16", text: "text-base"},
+  xl: { cls: "w-24 h-24", text: "text-xl"  },
 };
 
-export default function Avatar({ userId, currentImage, size = "md", className = "" }) {
+function getInitials(name) {
+  if (!name || typeof name !== "string") return "?";
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+export default function Avatar({ userId, username, currentImage, size = "md", className = "" }) {
+  const [errored, setErrored] = useState(false);
   const { getImage } = useImageStore();
 
   const storedUrl = userId ? getImage(userId) : null;
   const imageUrl = getImageUrl(storedUrl || currentImage);
-  const { cls, icon } = sizeMap[size] || sizeMap.md;
+  const showImage = imageUrl && !errored;
+  const { cls, text } = sizeMap[size] || sizeMap.md;
+  const initials = getInitials(username);
 
   return (
     <div
-      className={`${cls} rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0 ${className}`}
+      className={`${cls} rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center overflow-hidden flex-shrink-0 ${className}`}
     >
-      {imageUrl ? (
-        <img src={imageUrl} alt="Avatar" className="w-full h-full object-cover" />
+      {showImage ? (
+        <img
+          src={imageUrl}
+          alt={username || "Avatar"}
+          className="w-full h-full object-cover"
+          onError={() => setErrored(true)}
+          referrerPolicy="no-referrer"
+        />
       ) : (
-        <User size={icon} className="text-gray-400" />
+        <span className={`text-white font-bold select-none ${text}`}>{initials}</span>
       )}
     </div>
   );

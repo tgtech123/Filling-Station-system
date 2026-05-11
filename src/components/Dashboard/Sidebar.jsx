@@ -43,8 +43,9 @@ import { TbCurrencyNaira, TbTargetArrow } from "react-icons/tb";
 import { CiGrid41 } from "react-icons/ci";
 import { CgTrack } from "react-icons/cg";
 import { GiExpense, GiTakeMyMoney } from "react-icons/gi";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useImageStore } from "@/store/useImageStore";
+import Avatar from "@/components/Avatar";
 import useThemePersistence from "@/hooks/useThemePersistence";
 import usePaymentStore from "@/store/usePaymentStore";
 import AddBranchModal from "../AddBranchModal";
@@ -108,6 +109,22 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       fetchCurrentPlan();
     }
   }, [userRole]);
+
+  // Close drawer on route change (mobile)
+  const prevPathRef = useRef(pathname);
+  useEffect(() => {
+    if (prevPathRef.current !== pathname) {
+      prevPathRef.current = pathname;
+      if (isVisible) toggleSidebar();
+    }
+  }, [pathname]);
+
+  // Close drawer on Escape key
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape" && isVisible) toggleSidebar(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isVisible, toggleSidebar]);
 
   const toggleDropdown = (id) => {
     setOpenDropdown(openDropdown === id ? null : id);
@@ -483,7 +500,15 @@ const visibleLinks = getVisibleLinks(userRole);
 
       {/* Header */}
       <div className="flex-shrink-0 flex justify-between items-start pt-2 px-2">
-        <Image src={logo} width={130} alt="logo image" />
+        {userData?.station?.logoUrl || userData?.station?.logo ? (
+          <img
+            src={userData.station.logoUrl || userData.station.logo}
+            alt="station logo"
+            className="h-10 w-auto object-contain max-w-[130px]"
+          />
+        ) : (
+          <Image src={logo} width={130} alt="logo image" />
+        )}
         <div className="w-full flex justify-end px-4 pt-4 lg:hidden">
           <button
             onClick={toggleSidebar}
@@ -493,6 +518,21 @@ const visibleLinks = getVisibleLinks(userRole);
           </button>
         </div>
       </div>
+
+      {/* Mobile-only user profile card */}
+      {!isLoading && userData && (
+        <div className="lg:hidden mx-4 mt-3 mb-1 p-3 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center gap-3">
+          <Avatar
+            userId={userData?.id || userData?.employeeId || userData?._id}
+            username={fullName}
+            size="md"
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{fullName}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{roleInfo?.name}</p>
+          </div>
+        </div>
+      )}
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto scrollbar-hide overflow-x-hidden">

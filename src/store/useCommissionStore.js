@@ -1,22 +1,7 @@
 ﻿import { create } from 'zustand';
-import axios from 'axios';
+import { api } from '@/lib/config';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
 const COMMISSION_ENDPOINT = '/api/commissions';
-
-// Helper function to get auth token
-const getAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token');
-  }
-  return null;
-};
-
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = getAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
 
 const useCommissionStore = create((set, get) => ({
   // State
@@ -123,9 +108,8 @@ const useCommissionStore = create((set, get) => ({
     setError('overview', null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}${COMMISSION_ENDPOINT}/overview`, {
+      const response = await api.get(`${COMMISSION_ENDPOINT}/overview`, {
         params: { duration },
-        headers: getAuthHeaders(),
       });
       
       set({ overview: response.data.data });
@@ -150,9 +134,8 @@ const useCommissionStore = create((set, get) => ({
       if (month) params.month = month;
       if (year) params.year = year;
 
-      const response = await axios.get(`${API_BASE_URL}${COMMISSION_ENDPOINT}/staff-tracking`, {
+      const response = await api.get(`${COMMISSION_ENDPOINT}/staff-tracking`, {
         params,
-        headers: getAuthHeaders(),
       });
       
       set({ staffTracking: response.data.data.payments });
@@ -173,9 +156,7 @@ const useCommissionStore = create((set, get) => ({
     setError('commissionStructure', null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}${COMMISSION_ENDPOINT}/structure`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await api.get(`${COMMISSION_ENDPOINT}/structure`);
       
       set({ commissionStructure: response.data.data.structures });
       return response.data.data;
@@ -195,11 +176,7 @@ const useCommissionStore = create((set, get) => ({
     setError('updatingCommission', null);
 
     try {
-      const response = await axios.put(
-        `${API_BASE_URL}${COMMISSION_ENDPOINT}/structure`,
-        { structures },
-        { headers: getAuthHeaders() }
-      );
+      const response = await api.put(`${COMMISSION_ENDPOINT}/structure`, { structures });
       
       // Refresh the commission structure
       await fetchCommissionStructure();
@@ -221,9 +198,7 @@ const useCommissionStore = create((set, get) => ({
     setError('bonusStructure', null);
 
     try {
-      const response = await axios.get(`${API_BASE_URL}${COMMISSION_ENDPOINT}/bonus-structure`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await api.get(`${COMMISSION_ENDPOINT}/bonus-structure`);
       
       set({ bonusStructure: response.data.data.structures });
       return response.data.data;
@@ -243,11 +218,7 @@ const useCommissionStore = create((set, get) => ({
     setError('updatingBonus', null);
 
     try {
-      const response = await axios.put(
-        `${API_BASE_URL}${COMMISSION_ENDPOINT}/bonus-structure`,
-        { structures },
-        { headers: getAuthHeaders() }
-      );
+      const response = await api.put(`${COMMISSION_ENDPOINT}/bonus-structure`, { structures });
       
       // Refresh the bonus structure
       await fetchBonusStructure();
@@ -283,9 +254,8 @@ const useCommissionStore = create((set, get) => ({
         }
       });
 
-      const response = await axios.get(`${API_BASE_URL}${COMMISSION_ENDPOINT}/payment-history`, {
+      const response = await api.get(`${COMMISSION_ENDPOINT}/payment-history`, {
         params: queryParams,
-        headers: getAuthHeaders(),
       });
       
       set({ 
@@ -310,11 +280,7 @@ const useCommissionStore = create((set, get) => ({
     setError('calculating', null);
 
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}${COMMISSION_ENDPOINT}/calculate`,
-        { month, year },
-        { headers: getAuthHeaders() }
-      );
+      const response = await api.post(`${COMMISSION_ENDPOINT}/calculate`, { month, year });
       
       set({ calculationResult: response.data.data });
       return response.data;
@@ -334,11 +300,7 @@ const useCommissionStore = create((set, get) => ({
     setError('markingPaid', null);
 
     try {
-      const response = await axios.put(
-        `${API_BASE_URL}${COMMISSION_ENDPOINT}/payment/${paymentId}/mark-paid`,
-        { notes },
-        { headers: getAuthHeaders() }
-      );
+      const response = await api.put(`${COMMISSION_ENDPOINT}/payment/${paymentId}/mark-paid`, { notes });
       
       // Refresh payment history
       await fetchPaymentHistory();

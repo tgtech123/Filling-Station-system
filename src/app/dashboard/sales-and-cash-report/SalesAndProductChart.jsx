@@ -115,7 +115,7 @@ const SalesAndProductChart = () => {
 
   return (
     <div className="mt-[1.5rem]">
-      <div className="flex gap-7 w-full">
+      <div className="flex flex-col-reverse lg:flex-row gap-6 w-full">
 
         {/* ── Sales Trend Chart ──────────────────────────────────────────────── */}
         <div className="rounded-xl flex-1 p-2 border-2 border-neutral-200">
@@ -212,24 +212,24 @@ const SalesAndProductChart = () => {
             />
           </div>
 
-          <div className="lg:flex flex-wrap items-center lg:justify-between">
+          <div className="flex flex-col sm:flex-row items-center gap-6 sm:justify-between">
             {chartLoading ? (
-              <div className="flex items-center gap-8 w-full">
-                <div className="w-[200px] h-[200px] rounded-full bg-neutral-100 animate-pulse flex-shrink-0" />
-                <div className="flex flex-col gap-4 flex-1">
+              <div className="flex flex-col sm:flex-row items-center gap-8 w-full">
+                <div className="w-40 h-40 sm:w-[200px] sm:h-[200px] rounded-full bg-neutral-100 animate-pulse flex-shrink-0" />
+                <div className="flex flex-col gap-4 flex-1 w-full">
                   {[...Array(4)].map((_, i) => (
                     <div key={i} className="h-5 rounded-md bg-neutral-100 animate-pulse" />
                   ))}
                 </div>
               </div>
             ) : products.length === 0 ? (
-              <div className="w-[200px] h-[200px] flex items-center justify-center text-sm text-gray-400">
+              <div className="w-full h-40 flex items-center justify-center text-sm text-gray-400">
                 No data available
               </div>
             ) : (
               <>
-                <div className="relative">
-                  <svg width="200" height="200" className="transform -rotate-90">
+                <div className="relative flex-shrink-0">
+                  <svg viewBox="0 0 200 200" className="w-40 h-40 sm:w-[200px] sm:h-[200px] transform -rotate-90">
                     <circle cx="100" cy="100" r="70" fill="none" stroke="#e5e7eb" strokeWidth="40" />
                     {segments.map((p, i) => (
                       <circle
@@ -248,16 +248,16 @@ const SalesAndProductChart = () => {
                   </svg>
                 </div>
 
-                <div className="space-y-4 ml-6">
+                <div className="space-y-3 w-full">
                   {segments.map((p, index) => (
-                    <div key={index} className="flex items-center justify-between min-w-[200px]">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${getProductColor(p.product).bg}`} />
-                        <span className="text-gray-600 font-medium">{p.product}</span>
-                        <span className="text-gray-400 text-sm">{p.pct}%</span>
+                    <div key={index} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-3 h-3 rounded-full flex-shrink-0 ${getProductColor(p.product).bg}`} />
+                        <span className="text-gray-600 font-medium truncate">{p.product}</span>
+                        <span className="text-gray-400 text-sm flex-shrink-0">{p.pct}%</span>
                       </div>
-                      <span className="text-gray-500 text-sm ml-4">
-                        {(p.litres || 0).toLocaleString()} Litres
+                      <span className="text-gray-500 text-sm ml-4 flex-shrink-0">
+                        {(p.litres || 0).toLocaleString()} L
                       </span>
                     </div>
                   ))}
