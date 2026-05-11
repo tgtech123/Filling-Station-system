@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { API_URL } from "@/lib/config";
 
 export const useTankStore = create((set) => ({
   tanks: [],
@@ -11,7 +12,7 @@ export const useTankStore = create((set) => ({
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found");
 
-      const res = await fetch("/api/tank", {
+      const res = await fetch(`${API_URL}/api/tank`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

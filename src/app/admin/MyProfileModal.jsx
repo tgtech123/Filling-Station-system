@@ -5,7 +5,7 @@ import Avatar from "@/components/Avatar";
 import ImageUploadButton from "@/components/ImageUploadButton";
 import useImageStore from "@/store/useImageStore";
 import useAdminProfileStore from "@/store/useAdminProfileStore";
-import axios from "axios";
+import { api } from "@/lib/config";
 
 const MyProfileModal = ({ isOpen, onClose }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -97,10 +97,9 @@ const MyProfileModal = ({ isOpen, onClose }) => {
     try {
       setPasswordLoading(true);
       const token = localStorage.getItem("token");
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/auth/change-password`,
-        { currentPassword, newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.patch(
+        `/api/auth/change-password`,
+        { currentPassword, newPassword }
       );
       setPasswordSuccess("Password changed successfully!");
       setCurrentPassword("");

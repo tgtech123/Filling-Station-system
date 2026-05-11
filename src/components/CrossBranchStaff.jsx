@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
+﻿import { useState, useEffect } from "react";
+import { api } from "@/lib/config";
 import { ArrowRight, Users } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -19,9 +19,8 @@ export default function CrossBranchStaff() {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const res = await axios.get(
-        `/api/branches/staff`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await api.get(
+        `/api/branches/staff`
       );
       setData(res.data.data || []);
     } catch (err) {
@@ -37,14 +36,13 @@ export default function CrossBranchStaff() {
     try {
       setTransferring(true);
       const token = localStorage.getItem("token");
-      await axios.post(
+      await api.post(
         `/api/branches/staff/transfer`,
         {
           staffId: selectedStaff.id,
           fromStationId: selectedStaff.stationId,
           toStationId: targetStation,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       toast.success("Staff transferred!");
       setShowTransferModal(false);

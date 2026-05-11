@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { API_URL } from "@/lib/config";
 import React, { useState, useEffect } from "react";
 import { FiEyeOff } from "react-icons/fi";
 import { FiEye } from "react-icons/fi";
@@ -35,7 +36,7 @@ const Login = () => {
     setError(null);
 
     try {
-      const res = await fetch(`/api/auth/login`, {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

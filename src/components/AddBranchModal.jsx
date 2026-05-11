@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { X, MapPin, Phone, Loader2, CheckCircle, Mail } from "lucide-react";
 import LocationSelector from "@/components/LocationSelector";
 import toast from "react-hot-toast";
-import axios from "axios";
+import { api } from "@/lib/config";
 import useBranchStore from "@/store/useBranchStore";
 
 export default function AddBranchModal({ onClose, onUpgradeRequired }) {
@@ -93,10 +93,9 @@ export default function AddBranchModal({ onClose, onUpgradeRequired }) {
     try {
       setInviting(true);
       const token = localStorage.getItem("token");
-      await axios.post(
+      await api.post(
         `/api/branches/${createdBranch?.id}/invite`,
-        inviteData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        inviteData
       );
       toast.success(`Invite sent to ${inviteData.email}!`);
       onClose();

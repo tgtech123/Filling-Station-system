@@ -1,7 +1,6 @@
 ﻿import { create } from "zustand";
-import axios from "axios";
+import { api } from "@/lib/config";
 import toast from "react-hot-toast";
-import { API_URL } from "@/lib/config";
 
 const useAdminStore = create((set, get) => ({
   // State
@@ -48,10 +47,8 @@ const useAdminStore = create((set, get) => ({
   fetchOverview: async () => {
     set({ loading: true, error: null });
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/overview`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.get(
+        `/api/admin/overview`
       );
       set({ overview: response.data.data, loading: false });
       return response.data.data;
@@ -67,10 +64,8 @@ const useAdminStore = create((set, get) => ({
   // ── Stations Stats 
   fetchStationsStats: async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/overview`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.get(
+        `/api/admin/overview`
       );
       const d = response.data.data || {};
       set({
@@ -93,11 +88,9 @@ const useAdminStore = create((set, get) => ({
   // ── Reset Owner Password 
   resetStaffPassword: async (stationId, ownerId) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${API_URL}/api/admin/stations/${stationId}/reset-owner-password`,
-        { ownerId },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.post(
+        `/api/admin/stations/${stationId}/reset-owner-password`,
+        { ownerId }
       );
       return { success: true };
     } catch (error) {
@@ -111,10 +104,8 @@ const useAdminStore = create((set, get) => ({
   // ── Network Growth 
   fetchNetworkGrowth: async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/network-growth`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.get(
+        `/api/admin/network-growth`
       );
       const data = response.data.data || {};
       set({
@@ -134,11 +125,9 @@ const useAdminStore = create((set, get) => ({
   fetchStations: async (search = "") => {
     set({ loading: true, error: null });
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/stations`,
+      const response = await api.get(
+        `/api/admin/stations`,
         {
-          headers: { Authorization: `Bearer ${token}` },
           params: search ? { search } : {},
         }
       );
@@ -160,10 +149,8 @@ const useAdminStore = create((set, get) => ({
   fetchStationDetail: async (id) => {
     set({ loading: true, error: null });
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/stations/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.get(
+        `/api/admin/stations/${id}`
       );
       const payload = response.data.data || response.data;
       set({
@@ -184,10 +171,8 @@ const useAdminStore = create((set, get) => ({
   // ── Station Staff 
   fetchStationStaff: async (id) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/stations/${id}/staff`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.get(
+        `/api/admin/stations/${id}/staff`
       );
       // Backend returns: { message, total, staff: [...] }
       const staff = response.data.staff || response.data.data || [];
@@ -203,10 +188,9 @@ const useAdminStore = create((set, get) => ({
   // ── Station Shifts 
   fetchStationShifts: async (id, params = {}) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/stations/${id}/shifts`,
-        { headers: { Authorization: `Bearer ${token}` }, params }
+      const response = await api.get(
+        `/api/admin/stations/${id}/shifts`,
+        { params }
       );
       // Backend returns: { message, total, shifts: [...] }
       const shifts = response.data.shifts || response.data.data || [];
@@ -222,10 +206,8 @@ const useAdminStore = create((set, get) => ({
   // ── Station Tanks 
   fetchStationTanks: async (id) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/stations/${id}/tanks`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.get(
+        `/api/admin/stations/${id}/tanks`
       );
       // Backend returns: { message, tanks: [...] }
       const tanks = response.data.tanks || response.data.data || [];
@@ -241,10 +223,8 @@ const useAdminStore = create((set, get) => ({
   // ── Station Activity 
   fetchStationActivity: async (id) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/stations/${id}/activity`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.get(
+        `/api/admin/stations/${id}/activity`
       );
       // Backend returns: { message, total, activities: [...] }
       const activities = response.data.activities || response.data.data || [];
@@ -260,10 +240,8 @@ const useAdminStore = create((set, get) => ({
   // ── Station Errors 
   fetchStationErrors: async (id) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/stations/${id}/errors`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.get(
+        `/api/admin/stations/${id}/errors`
       );
       // Backend returns: { message, total, errors: [...] }
       const errors = response.data.errors || response.data.data || [];
@@ -280,10 +258,9 @@ const useAdminStore = create((set, get) => ({
   fetchActivityLogs: async (params = {}) => {
     set({ activityLoading: true, error: null });
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/activity-logs`,
-        { headers: { Authorization: `Bearer ${token}` }, params }
+      const response = await api.get(
+        `/api/admin/activity-logs`,
+        { params }
       );
       const logs =
         response.data.logs ||
@@ -313,11 +290,9 @@ const useAdminStore = create((set, get) => ({
   // ── Update Station Status 
   updateStationStatus: async (id, isActive) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.patch(
-        `${API_URL}/api/admin/stations/${id}/status`,
-        { isActive },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.patch(
+        `/api/admin/stations/${id}/status`,
+        { isActive }
       );
       set((state) => ({
         stations: state.stations.map((s) =>
@@ -348,11 +323,9 @@ const useAdminStore = create((set, get) => ({
   restoreStation: async (stationId) => {
     try {
       set({ loading: true });
-      const token = localStorage.getItem("token");
-      await axios.post(
-        `${API_URL}/api/admin/stations/${stationId}/restore`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.post(
+        `/api/admin/stations/${stationId}/restore`,
+        {}
       );
       set((state) => ({
         stations: state.stations.map((s) =>
@@ -376,10 +349,8 @@ const useAdminStore = create((set, get) => ({
   // ── Delete Station
   deleteStation: async (id) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(
-        `${API_URL}/api/admin/stations/${id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.delete(
+        `/api/admin/stations/${id}`
       );
       set((state) => ({
         stations: state.stations.filter((s) => s._id !== id && s.id !== id),
@@ -396,10 +367,8 @@ const useAdminStore = create((set, get) => ({
   // ── Payment Stats 
   fetchPaymentStats: async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${API_URL}/api/admin/payments/stats`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.get(
+        `/api/admin/payments/stats`
       );
       set({ paymentStats: response.data.data });
     } catch (err) {
@@ -411,7 +380,6 @@ const useAdminStore = create((set, get) => ({
   fetchPayments: async (params = {}) => {
     try {
       set({ paymentsLoading: true });
-      const token = localStorage.getItem("token");
       const queryParams = new URLSearchParams();
       if (params.page) queryParams.append("page", params.page);
       if (params.limit) queryParams.append("limit", params.limit);
@@ -420,9 +388,8 @@ const useAdminStore = create((set, get) => ({
       if (params.search) queryParams.append("search", params.search);
       if (params.duration && params.duration !== "Duration")
         queryParams.append("duration", params.duration);
-      const response = await axios.get(
-        `${API_URL}/api/admin/payments?${queryParams.toString()}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.get(
+        `/api/admin/payments?${queryParams.toString()}`
       );
       set({
         payments: response.data.data.rows || [],

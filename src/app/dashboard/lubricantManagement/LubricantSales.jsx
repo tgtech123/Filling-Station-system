@@ -1,5 +1,6 @@
-"use client";
+﻿"use client";
 
+import { API_URL } from "@/lib/config";
 import React, { useEffect, useMemo, useState } from "react";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import { Search } from "lucide-react";
@@ -76,7 +77,7 @@ export default function LubricantSales() {
       setLoading(true);
       try {
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        const res = await fetch(`/api/lubricant/transactions`, {
+        const res = await fetch(`${API_URL}/api/lubricant/transactions`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

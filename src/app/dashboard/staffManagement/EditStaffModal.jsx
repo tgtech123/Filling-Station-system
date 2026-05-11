@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { BiSolidToggleRight, BiSolidToggleLeft } from "react-icons/bi";
 import { X, ChevronUp, ChevronDown } from "lucide-react";
-import axios from "axios";
+import { api } from "@/lib/config";
 import useStaffStore from "@/store/useStaffStore";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
@@ -38,7 +38,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
     if (isOpen && staffData?._id) {
       const token = localStorage.getItem("token");
       axios
-        .get(`${API_BASE_URL}/api/staff/${staffData._id}/target`, {
+        .get(`/api/staff/${staffData._id}/target`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => {
@@ -353,10 +353,9 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                     setSavingTarget(true);
                     try {
                       const token = localStorage.getItem("token");
-                      const res = await axios.patch(
-                        `${API_BASE_URL}/api/staff/${staffData._id}/target`,
-                        { targetAmount: Number(targetAmount), duration: targetDuration },
-                        { headers: { Authorization: `Bearer ${token}` } }
+                      const res = await api.patch(
+                        `/api/staff/${staffData._id}/target`,
+                        { targetAmount: Number(targetAmount), duration: targetDuration }
                       );
                       setCurrentTarget(res.data?.target || res.data?.data || res.data);
                     } catch (err) {

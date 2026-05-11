@@ -66,7 +66,7 @@ export default function FrequentlyQuestions() {
             Frequently Asked Questions
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
-            Everything you need to know about {platformName || "Flourish Station"}
+            Everything you need to know about {platformName || "FuelDesk tech Ltd"}
           </p>
         </div>
 

@@ -1,6 +1,6 @@
 ﻿import { useState, useRef } from "react";
 import { Upload, Download, X, CheckCircle, AlertCircle } from "lucide-react";
-import axios from "axios";
+import { api } from "@/lib/config";
 import toast from "react-hot-toast";
 
 export default function BulkImportModal({ onClose, onSuccess }) {
@@ -62,10 +62,9 @@ export default function BulkImportModal({ onClose, onSuccess }) {
     try {
       setImporting(true);
       const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/staff/bulk-import`,
-        { staffList: csvData },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.post(
+        `/api/staff/bulk-import`,
+        { staffList: csvData }
       );
       setResults(response.data);
       setStep(3);

@@ -1,9 +1,7 @@
 ﻿// store/expenseStore.js
 import { create } from 'zustand';
-import axios from 'axios';
+import { api } from '@/lib/config';
 
-// For Next.js, use NEXT_PUBLIC_ prefix for client-side env variables
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com"}/api`;
 
 export const useExpenseStore = create((set, get) => ({
   // State
@@ -83,10 +81,7 @@ export const useExpenseStore = create((set, get) => ({
         ...(params.endDate || currentFilters.endDate) && { endDate: params.endDate || currentFilters.endDate }
       };
 
-      const response = await axios.get(`${API_BASE_URL}/expenses`, {
-        params: queryParams,
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/expenses`, { params: queryParams });
 
       set((state) => ({
         expenses: response.data.data,
@@ -115,9 +110,7 @@ export const useExpenseStore = create((set, get) => ({
     }));
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/expenses/${expenseId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/expenses/${expenseId}`);
 
       set((state) => ({
         currentExpense: response.data.data,
@@ -152,12 +145,7 @@ export const useExpenseStore = create((set, get) => ({
         ...(expenseData.expenseDate && { expenseDate: expenseData.expenseDate })
       };
 
-      const response = await axios.post(`${API_BASE_URL}/expenses`, payload, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await api.post(`/api/expenses`, payload);
 
       set((state) => ({
         loading: { ...state.loading, create: false }
@@ -187,16 +175,7 @@ export const useExpenseStore = create((set, get) => ({
     }));
 
     try {
-      const response = await axios.put(
-        `${API_BASE_URL}/expenses/${expenseId}`,
-        updateData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await api.put(`/api/expenses/${expenseId}`, updateData);
 
       set((state) => ({
         loading: { ...state.loading, update: false },
@@ -243,9 +222,7 @@ export const useExpenseStore = create((set, get) => ({
     }));
 
     try {
-      const response = await axios.delete(`${API_BASE_URL}/expenses/${expenseId}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await api.delete(`/api/expenses/${expenseId}`);
 
       set((state) => ({
         loading: { ...state.loading, delete: false }
@@ -283,10 +260,7 @@ export const useExpenseStore = create((set, get) => ({
         ...(filterParams.endDate || currentFilters.endDate) && { endDate: filterParams.endDate || currentFilters.endDate }
       };
 
-      const response = await axios.get(`${API_BASE_URL}/expenses/export`, {
-        params: queryParams,
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/expenses/export`, { params: queryParams });
 
       set((state) => ({
         loading: { ...state.loading, export: false }

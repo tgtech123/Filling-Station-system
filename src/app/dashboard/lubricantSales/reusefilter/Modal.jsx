@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import React, { useState, useEffect } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import Table from "@/components/Table";
@@ -24,7 +24,7 @@ const Modal = ({ isOpen, onClose }) => {
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch(`/api/lubricant/transactions`, {
+        const res = await fetch(`${API_URL}/api/lubricant/transactions`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

@@ -1,8 +1,8 @@
-"use client"
+﻿"use client"
 import { useState } from "react"
 import { X } from "lucide-react"
 import Multiselect from "multiselect-react-dropdown"
-import axios from "axios"
+import { api } from "@/lib/config"
 import toast from "react-hot-toast"
 
 const PLAN_TEMPLATES = {

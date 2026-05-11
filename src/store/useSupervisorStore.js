@@ -1,21 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
-
-const api = axios.create({
-  baseURL: '/api/supervisor',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add request interceptor to attach auth token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import { api } from '@/lib/config';
 
 const useSupervisorStore = create((set, get) => ({
   // State
@@ -52,7 +36,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchDashboard: async () => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/dashboard');
+      const response = await api.get('/api/supervisor/dashboard');
       set({ dashboard: response.data.data, loading: false });
       return response.data;
     } catch (error) {
@@ -65,7 +49,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchPendingShifts: async (params = {}) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/shift-approval/pending',  { params } );
+      const response = await api.get('/api/supervisor/shift-approval/pending',  { params } );
       set({
         pendingShifts: response.data.data.shifts,
         pagination: response.data.data.pagination,
@@ -81,7 +65,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchApprovedShifts: async (params = {}) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/shift-approval/approved', params );
+      const response = await api.get('/api/supervisor/shift-approval/approved', params );
       set({
         approvedShifts: response.data.data.shifts,
         pagination: response.data.data.pagination,
@@ -97,7 +81,7 @@ const useSupervisorStore = create((set, get) => ({
   clearStaleShifts: async () => {
     try {
       set({ loading: true, error: null });
-      const response = await api.delete('/shift-approval/clear-stale');
+      const response = await api.delete('/api/supervisor/shift-approval/clear-stale');
       set({ loading: false });
       return response.data;
     } catch (error) {
@@ -116,7 +100,7 @@ const useSupervisorStore = create((set, get) => ({
       data,
     });
 
-    const response = await api.post(`/shift-approval/${shiftId}/approve`, data);
+    const response = await api.post(`/api/supervisor/shift-approval/${shiftId}/approve`, data);
     // Immediately remove the approved shift from the list so the card disappears at once
     set((s) => ({
       loading: false,
@@ -136,7 +120,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchAttendantDirectory: async (params = {}) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/schedule/attendant-directory', { params });
+      const response = await api.get('/api/supervisor/schedule/attendant-directory', { params });
       set({ attendantDirectory: response.data.data, loading: false });
       return response.data;
     } catch (error) {
@@ -148,7 +132,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchScheduledAttendants: async (params = {}) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/schedule/scheduled-attendants', { params });
+      const response = await api.get('/api/supervisor/schedule/scheduled-attendants', { params });
       set({ scheduledAttendants: response.data.data, loading: false });
       return response.data;
     } catch (error) {
@@ -160,7 +144,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchScheduledAttendantsByType: async () => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/schedule/scheduled-attendants-by-type');
+      const response = await api.get('/api/supervisor/schedule/scheduled-attendants-by-type');
       set({ scheduledAttendantsByType: response.data.data, loading: false });
       return response.data;
     } catch (error) {
@@ -172,7 +156,7 @@ const useSupervisorStore = create((set, get) => ({
   scheduleAttendant: async (params) => {
   try {
     set({ loading: true, error: null });
-    const response = await api.post("/schedule/attendant", params);
+    const response = await api.post("/api/supervisor/schedule/attendant", params);
     set({ loading: false });
     // Refresh both — ScheduledAttendantsCard reads from dashboard.scheduledAttendants
     await get().fetchScheduledAttendants();
@@ -188,7 +172,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchSalesOverview: async (params = { duration: 'thismonth' }) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/reports/sales-overview', { params });
+      const response = await api.get('/api/supervisor/reports/sales-overview', { params });
       set({ salesOverview: response.data.data, loading: false });
       return response.data;
     } catch (error) {
@@ -200,7 +184,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchCashOverview: async (params = {}) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/reports/cash-overview', { params });
+      const response = await api.get('/api/supervisor/reports/cash-overview', { params });
       set({
         cashOverview: response.data.data,
         pagination: response.data.data.pagination,
@@ -216,7 +200,7 @@ const useSupervisorStore = create((set, get) => ({
   exportReport: async (data) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.post('/reports/export', data);
+      const response = await api.post('/api/supervisor/reports/export', data);
       set({ loading: false });
       return response.data;
     } catch (error) {
@@ -229,7 +213,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchActivityLogs: async (params = {}) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/activity-logs', { params });
+      const response = await api.get('/api/supervisor/activity-logs', { params });
       set({
         activityLogs: response.data.data,
         pagination: response.data.data.pagination,
@@ -246,7 +230,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchDipReadings: async () => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/dip-reading');
+      const response = await api.get('/api/supervisor/dip-reading');
       set({ dipReadings: response.data.data, loading: false });
       return response.data;
     } catch (error) {
@@ -258,7 +242,7 @@ const useSupervisorStore = create((set, get) => ({
   // submitDipReading: async (data) => {
   //   try {
   //     set({ loading: true, error: null });
-  //     const response = await api.post('/dip-reading', data);
+  //     const response = await api.post('/api/supervisor/dip-reading', data);
   //     set({ loading: false });
   //     // Refresh dip readings after submission
   //     await get().fetchDipReadings();
@@ -275,7 +259,7 @@ const useSupervisorStore = create((set, get) => ({
     // DEBUG
     console.log('Store: submitDipReading called with:', data);
     
-    const response = await api.post('/dip-reading', data);
+    const response = await api.post('/api/supervisor/dip-reading', data);
     
     console.log('Store: Response received:', response.data);
     
@@ -292,7 +276,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchDipReadingHistory: async (params = {}) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/dip-reading/history', { params });
+      const response = await api.get('/api/supervisor/dip-reading/history', { params });
       set({
         dipReadingHistory: response.data.data,
         pagination: response.data.data.pagination,
@@ -309,7 +293,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchPumpPerformance: async () => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/pump-performance');
+      const response = await api.get('/api/supervisor/pump-performance');
       set({ pumpPerformance: response.data.data, loading: false });
       return response.data;
     } catch (error) {
@@ -322,7 +306,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchStaffPerformance: async (params = {}) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/staff-performance', { params });
+      const response = await api.get('/api/supervisor/staff-performance', { params });
       set({
         staffPerformance: response.data.data,
         pagination: response.data.data.pagination,
@@ -338,7 +322,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchStaffDetailedPerformance: async (staffId, params = {}) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get(`/staff-performance/${staffId}`, { params });
+      const response = await api.get(`/api/supervisor/staff-performance/${staffId}`, { params });
       set({ staffDetailedPerformance: response.data.data, loading: false });
       return response.data;
     } catch (error) {
