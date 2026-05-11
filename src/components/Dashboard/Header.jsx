@@ -4,14 +4,14 @@ import {
   Bell, BellRing, Mail, Menu, X, Check, CheckCheck,
   TriangleAlert, Info, ChevronRight, Building2, ChevronDown, Plus, Crown,
 } from "lucide-react";
-import UserAvatar from "./UserAvatar";
+import ProfileAvatar from "./ProfileAvatar";
 import Image from "next/image";
+import Link from "next/link";
 import stroke from "../../assets/stroke.png";
 import staticLogo from "../../assets/station-logo.png";
 import LogoutButton from "./LogoutButton";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useImageStore } from "@/store/useImageStore";
 import useNotificationStore from "@/store/useNotificationStore";
 import useBranchStore from "@/store/useBranchStore";
 import usePaymentStore from "@/store/usePaymentStore";
@@ -212,7 +212,6 @@ function AlertsDropdown({ alerts, onMarkAll, onItemClick }) {
 export default function Header({ toggleSidebar, showSidebar }) {
   const [userData, setUserData] = useState(null);
   const router = useRouter();
-  const { getUserImage } = useImageStore();
 
   // notification store
   const {
@@ -308,7 +307,6 @@ export default function Header({ toggleSidebar, showSidebar }) {
       : userData?.firstName || userData?.lastName || "User";
 
   const userId = userData?._id || userData?.employeeId || userData?.id;
-  const uploadedImage = getUserImage(userId);
 
   const handleLogout = () => {
     stopPolling();
@@ -332,7 +330,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
   const stationLogo = userData?.station?.logoUrl || userData?.station?.logo || null;
 
   return (
-    <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white dark:bg-gray-900 flex items-center justify-between gap-3">
+    <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white dark:bg-gray-900 flex items-center justify-between gap-3 relative">
 
       {/* ── Left: hamburger + station logo ── */}
       <div className="flex items-center gap-3 flex-shrink-0">
@@ -354,6 +352,55 @@ export default function Header({ toggleSidebar, showSidebar }) {
         ) : (
           <Image src={staticLogo} width={110} height={36} alt="station logo" className="h-9 w-auto object-contain" />
         )}
+      </div>
+
+      {/* ── Center: notifications — visible on all screen sizes ── */}
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
+
+        {/* Messages */}
+        <div ref={msgRef} className="relative">
+          <button
+            onClick={() => { setMsgOpen((v) => !v); setAlertOpen(false); }}
+            className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
+            aria-label="Messages"
+          >
+            <Bell size={19} className={messageUnreadCount > 0 ? "text-[#1a71f6]" : "text-gray-600 dark:text-gray-300"} />
+            <UnreadBadge count={messageUnreadCount} />
+          </button>
+
+          {msgOpen && (
+            <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[min(320px,92vw)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
+              <MessagesDropdown
+                messages={messages}
+                onMarkAll={() => { markAllMessagesRead(); }}
+                onItemClick={handleMsgClick}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Alerts */}
+        <div ref={alertRef} className="relative">
+          <button
+            onClick={() => { setAlertOpen((v) => !v); setMsgOpen(false); }}
+            className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
+            aria-label="Alerts"
+          >
+            <Mail size={19} className={alertUnreadCount > 0 ? "text-amber-500" : "text-gray-600 dark:text-gray-300"} />
+            <UnreadBadge count={alertUnreadCount} />
+          </button>
+
+          {alertOpen && (
+            <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[min(320px,92vw)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
+              <AlertsDropdown
+                alerts={alerts}
+                onMarkAll={() => { markAllAlertsRead(); }}
+                onItemClick={handleAlertClick}
+              />
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* ── Right side ── */}
@@ -467,78 +514,49 @@ export default function Header({ toggleSidebar, showSidebar }) {
         </>
       )}
 
-      {/* ── Notification icons (desktop only) ── */}
-      <div className="hidden lg:flex items-center gap-2">
-
-        {/* Messages */}
-        <div ref={msgRef} className="relative">
-          <button
-            onClick={() => { setMsgOpen((v) => !v); setAlertOpen(false); }}
-            className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-11 h-11 rounded-xl flex items-center justify-center"
-            aria-label="Messages"
-          >
-            <Bell size={20} className={messageUnreadCount > 0 ? "text-[#1a71f6]" : "text-gray-600"} />
-            <UnreadBadge count={messageUnreadCount} />
-          </button>
-
-          {msgOpen && (
-            <div className="absolute right-0 top-[calc(100%+8px)] w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
-              <MessagesDropdown
-                messages={messages}
-                onMarkAll={() => { markAllMessagesRead(); }}
-                onItemClick={handleMsgClick}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Alerts */}
-        <div ref={alertRef} className="relative">
-          <button
-            onClick={() => { setAlertOpen((v) => !v); setMsgOpen(false); }}
-            className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-11 h-11 rounded-xl flex items-center justify-center"
-            aria-label="Alerts"
-          >
-            <Mail size={20} className={alertUnreadCount > 0 ? "text-amber-500" : "text-gray-600"} />
-            <UnreadBadge count={alertUnreadCount} />
-          </button>
-
-          {alertOpen && (
-            <div className="absolute right-0 top-[calc(100%+8px)] w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
-              <AlertsDropdown
-                alerts={alerts}
-                onMarkAll={() => { markAllAlertsRead(); }}
-                onItemClick={handleAlertClick}
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
       <div className="hidden lg:flex">
         <Image src={stroke} alt="stroke" />
       </div>
 
-      {/* Desktop: avatar + name + role */}
-      <div className="hidden lg:flex">
-        <UserAvatar
+      {/* Desktop: profile picture + name */}
+      <div className="hidden lg:flex items-center gap-2">
+        <ProfileAvatar
           userId={userId}
           username={fullName}
-          userRole="View Profile"
-          currentImage={uploadedImage}
+          size="md"
           onProfileClick={userData?.role === "manager" ? () => setShowManagerProfile(true) : undefined}
+          profileLabel={userData?.role === "manager" ? "Manager Profile" : "View Profile"}
         />
+        <div className="min-w-0">
+          <h4 className="text-black dark:text-white text-sm font-semibold truncate max-w-[120px]">
+            {fullName}
+          </h4>
+          <p className="text-xs text-[#1a71f6] font-semibold">
+            {userData?.role === "manager" ? (
+              <button
+                onClick={() => setShowManagerProfile(true)}
+                className="text-[#1a71f6] font-semibold hover:underline"
+              >
+                Manager Profile
+              </button>
+            ) : (
+              <Link href="/dashboard/profile" className="text-[#1a71f6] hover:underline">
+                View Profile
+              </Link>
+            )}
+          </p>
+        </div>
       </div>
 
-      {/* Mobile: avatar circle only (tappable) */}
+      {/* Mobile: profile picture — logout + profile in dropdown */}
       <div className="lg:hidden">
-        <UserAvatar
+        <ProfileAvatar
           userId={userId}
           username={fullName}
-          userRole="View Profile"
-          currentImage={uploadedImage}
+          size="md"
           onProfileClick={userData?.role === "manager" ? () => setShowManagerProfile(true) : undefined}
-          compact
+          profileLabel={userData?.role === "manager" ? "Manager Profile" : "View Profile"}
+          onLogout={handleLogout}
         />
       </div>
 
