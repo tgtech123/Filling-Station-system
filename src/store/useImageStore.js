@@ -22,7 +22,10 @@ const useImageStore = create(
             body: formData,
           });
 
-          if (!response.ok) throw new Error("Upload failed");
+          if (!response.ok) {
+            const errBody = await response.json().catch(() => ({}));
+            throw new Error(errBody.error || errBody.details || `Upload failed (${response.status})`);
+          }
 
           const data = await response.json();
 

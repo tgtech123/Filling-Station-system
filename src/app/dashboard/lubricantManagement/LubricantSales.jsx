@@ -46,30 +46,6 @@ export default function LubricantSales() {
     }
   }, [getAllStaff]);
 
-  // 🆕 Debug logs for staff
-  useEffect(() => {
-    console.log("=== STAFF DEBUG ===");
-    console.log("Staff array:", staff);
-    console.log("Staff count:", staff.length);
-    if (staff.length > 0) {
-      console.log("First staff member:", staff[0]);
-      console.log("Staff usernames:", staff.map(s => s.username));
-    }
-  }, [staff]);
-
-  // 🆕 Debug logs for transactions
-  useEffect(() => {
-    if (flatRows.length > 0) {
-      console.log("=== TRANSACTIONS DEBUG ===");
-      console.log("Total transactions:", flatRows.length);
-      console.log("First transaction row:", flatRows[0]);
-      console.log("Cashier in first transaction (index 1):", flatRows[0]?.[1]);
-      
-      // Get unique cashiers from transactions
-      const uniqueCashiers = [...new Set(flatRows.map(row => row[1]))];
-      console.log("Unique cashiers in transactions:", uniqueCashiers);
-    }
-  }, [flatRows]);
 
   useEffect(() => {
     let mounted = true;

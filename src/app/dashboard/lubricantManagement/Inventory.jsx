@@ -81,30 +81,32 @@ export default function Inventory() {
     // Transform lubricants data to array of arrays
     const inventoryData = useMemo(() => {
         if (!lubricants.length) return [];
-        
-        return lubricants.map(lub => {
-            const quantity = lub.qtyInStock || 0;
-            const price = lub.sellingPrice || lub.unitPrice || 0;
-            
-            const sale = salesMap.get(lub._id.toString());
-            const soldQty = sale?.quantity || 0;
 
-            return [
-                lub.productName,
-                lub.productType || "N/A",
-                quantity,
-                `₦${price?.toLocaleString() || 0}`,
-                soldQty
-            ];
-        });
+        return lubricants
+            .filter((lub) => lub && lub._id)
+            .map(lub => {
+                const quantity = lub.qtyInStock || 0;
+                const price = lub.sellingPrice || lub.unitPrice || 0;
+
+                const sale = salesMap.get(lub._id.toString());
+                const soldQty = sale?.quantity || 0;
+
+                return [
+                    lub.productName || "—",
+                    lub.productType || "N/A",
+                    quantity,
+                    `₦${price?.toLocaleString() || 0}`,
+                    soldQty
+                ];
+            });
     }, [lubricants, salesMap]);
 
     // Transform top selling products to array of arrays
     const topSellingData = useMemo(() => {
         if (!lubricants.length || salesMap.size === 0) return [];
-        
+
         const salesArray = Array.from(salesMap.entries()).map(([lubricantId, data]) => {
-            const lubricant = lubricants.find(lub => lub._id === lubricantId);
+            const lubricant = lubricants.filter(Boolean).find(lub => lub._id?.toString() === lubricantId);
             return {
                 lubricantId,
                 productName: lubricant?.productName || "Unknown",
@@ -126,8 +128,8 @@ export default function Inventory() {
     // Get progress bar data for top 4 products
     const progressData = useMemo(() => {
         if (!lubricants.length) return [];
-        
-        return lubricants.slice(0, 4).map(lub => {
+
+        return lubricants.filter(Boolean).slice(0, 4).map(lub => {
             const quantity = lub.qtyInStock || 0;
             const maxStock = lub.reOrderLevel ? lub.reOrderLevel * 20 : 100;
             const percentage = quantity > 0 ? Math.min((quantity / maxStock) * 100, 100) : 0;
