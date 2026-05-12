@@ -20,7 +20,13 @@ export default function ResetPassword() {
             setLoading(true);
             setError(null);
 
-            const SAFE_MSG = "An email will be sent to you if your email exists. Thank you!";
+            if (!email.trim()) {
+              setError("Please enter your email address.");
+              setLoading(false);
+              return;
+            }
+
+            const SAFE_MSG = "Check your mail! An email will be sent to you if your email exists. Redirecting to login...";
             try {
               const API = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
 
@@ -30,13 +36,13 @@ export default function ResetPassword() {
                 body: JSON.stringify({ email }),
               });
 
-              // Always show the same message — never reveal whether the email exists
               setMessage(SAFE_MSG);
             } catch {
               setMessage(SAFE_MSG);
             } finally {
               setLoading(false);
               setError(null);
+              setTimeout(() => router.push("/login"), 3000);
             }
           };
 
@@ -64,12 +70,15 @@ export default function ResetPassword() {
                     <input
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => { setEmail(e.target.value); if (error) setError(null); }}
                       placeholder="username123@gmail.com"
                       className="pl-2 border-[1.6px] rounded-md h-[43px] w-full focus:border-blue-600 outline-none"
                       required
                     />
                   </div>
+                {error && (
+                  <p className="text-sm text-red-500 font-medium -mt-2">{error}</p>
+                )}
                 {message && (
                   <div className="bg-yellow-50 border border-yellow-300 rounded-md px-4 py-3">
                     <p className="text-sm text-yellow-800 font-medium">{message}</p>
