@@ -6,6 +6,7 @@ import LocationSelector from "@/components/LocationSelector";
 import toast from "react-hot-toast";
 import { api } from "@/lib/config";
 import useBranchStore from "@/store/useBranchStore";
+import NumericInput from "@/components/inputs/NumericInput";
 
 export default function AddBranchModal({ onClose, onUpgradeRequired }) {
   const { createBranch } = useBranchStore();
@@ -192,8 +193,9 @@ export default function AddBranchModal({ onClose, onUpgradeRequired }) {
                   Phone
                 </label>
                 <div className="relative">
-                  <input
-                    type="text"
+                  <NumericInput
+                    variant="tel"
+                    maxLength={11}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="Branch phone number"

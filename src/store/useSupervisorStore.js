@@ -94,12 +94,6 @@ const useSupervisorStore = create((set, get) => ({
   try {
     set({ loading: true, error: null });
 
-    console.log("Approving shift:", {
-      shiftId,
-      url: `/shift-approval/${shiftId}/approve`,
-      data,
-    });
-
     const response = await api.post(`/api/supervisor/shift-approval/${shiftId}/approve`, data);
     // Immediately remove the approved shift from the list so the card disappears at once
     set((s) => ({
@@ -256,12 +250,7 @@ const useSupervisorStore = create((set, get) => ({
   try {
     set({ loading: true, error: null });
     
-    // DEBUG
-    console.log('Store: submitDipReading called with:', data);
-    
     const response = await api.post('/api/supervisor/dip-reading', data);
-    
-    console.log('Store: Response received:', response.data);
     
     set({ loading: false });
     await get().fetchDipReadings();

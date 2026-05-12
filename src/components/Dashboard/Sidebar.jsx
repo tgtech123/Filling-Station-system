@@ -36,6 +36,7 @@ import {
 import { TfiBoltAlt } from "react-icons/tfi";
 import { BiSolidTachometer } from "react-icons/bi";
 import ProfileAvatar from "./ProfileAvatar";
+import LogoutConfirmModal from "../LogoutConfirmModal";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { TbCurrencyNaira, TbTargetArrow } from "react-icons/tb";
@@ -43,7 +44,6 @@ import { CiGrid41 } from "react-icons/ci";
 import { CgTrack } from "react-icons/cg";
 import { GiExpense, GiTakeMyMoney } from "react-icons/gi";
 import { useState, useEffect, useRef } from "react";
-import { useImageStore } from "@/store/useImageStore";
 import useThemePersistence from "@/hooks/useThemePersistence";
 import usePaymentStore from "@/store/usePaymentStore";
 import AddBranchModal from "../AddBranchModal";
@@ -57,12 +57,12 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [mounted, setMounted] = useState(false);
 
-  const { getUserImage } = useImageStore();
   const { theme, setTheme } = useThemePersistence();
   const { currentPlan, fetchCurrentPlan } = usePaymentStore();
   const isEnterprise = currentPlan?.plan?.startsWith("enterprise");
   const isSuperManager = userData?.isSuperManager === true;
   const [showAddBranch, setShowAddBranch] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -76,19 +76,14 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
         
         if (userString) {
           const user = JSON.parse(userString);
-          console.log("📦 User from localStorage:", user);
-          
           if (user?.role) {
             const role = user.role.toLowerCase().trim();
-            console.log("✅ Setting role to:", role);
             setUserRole(role);
             setUserData(user);
           } else {
-            console.log("❌ No role found in user object");
             router.push("/login");
           }
         } else {
-          console.log("❌ No user found in localStorage");
           router.push("/login");
         }
       } catch (error) {
@@ -461,16 +456,6 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
 const visibleLinks = getVisibleLinks(userRole);
   const roleInfo = getRoleInfo(userRole);
 
-  useEffect(() => {
-    if (userRole) {
-      console.log("🔍 Sidebar Debug:");
-      console.log("- User Role:", userRole);
-      console.log("- Role Info:", roleInfo);
-      console.log("- Visible Links:", visibleLinks.length);
-      console.log("- Links:", visibleLinks.map(l => l.name));
-    }
-  }, [userRole, roleInfo, visibleLinks]);
-
   const fullName = userData?.firstName && userData?.lastName 
   ? `${userData.firstName} ${userData.lastName}` 
   : userData?.firstName || userData?.lastName || "User";
@@ -498,15 +483,18 @@ const visibleLinks = getVisibleLinks(userRole);
 
       {/* Header */}
       <div className="flex-shrink-0 flex justify-between items-start pt-2 px-2">
-        {userData?.station?.logoUrl || userData?.station?.logo ? (
-          <img
-            src={userData.station.logoUrl || userData.station.logo}
-            alt="station logo"
-            className="h-10 w-auto object-contain max-w-[130px]"
-          />
-        ) : (
-          <Image src={logo} width={130} alt="logo image" />
-        )}
+        {/* Logo on white pill — readable on both light and dark sidebar */}
+        <div className="bg-white rounded-lg px-2.5 py-1.5 border border-gray-100 shadow-sm flex items-center justify-center max-w-[140px]">
+          {userData?.station?.logoUrl || userData?.station?.logo ? (
+            <img
+              src={userData.station.logoUrl || userData.station.logo}
+              alt="station logo"
+              className="h-9 w-auto object-contain max-w-[120px]"
+            />
+          ) : (
+            <Image src={logo} width={120} height={36} alt="logo image" className="h-9 w-auto object-contain" />
+          )}
+        </div>
         <div className="w-full flex justify-end px-4 pt-4 lg:hidden">
           <button
             onClick={toggleSidebar}
@@ -521,7 +509,7 @@ const visibleLinks = getVisibleLinks(userRole);
       {!isLoading && userData && (
         <div className="lg:hidden mx-4 mt-3 mb-1 p-3 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex items-center gap-3">
           <ProfileAvatar
-            userId={userData?.id || userData?.employeeId || userData?._id}
+            userId={userData?._id || userData?.id || userData?.employeeId}
             username={fullName}
             size="md"
           />
@@ -674,7 +662,7 @@ const visibleLinks = getVisibleLinks(userRole);
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <ProfileAvatar
-              userId={userData?.id || userData?.employeeId || userData?._id}
+              userId={userData?._id || userData?.id || userData?.employeeId}
               username={fullName}
               size="sm"
             />
@@ -684,7 +672,7 @@ const visibleLinks = getVisibleLinks(userRole);
             </div>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={() => setShowLogoutConfirm(true)}
             className="text-red-500 rounded-lg transition-colors flex-shrink-0"
             title="Logout"
           >
@@ -696,6 +684,11 @@ const visibleLinks = getVisibleLinks(userRole);
       {showAddBranch && (
         <AddBranchModal onClose={() => setShowAddBranch(false)} />
       )}
+      <LogoutConfirmModal
+        isOpen={showLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }

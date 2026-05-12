@@ -20,31 +20,23 @@ export default function ResetPassword() {
             setLoading(true);
             setError(null);
 
+            const SAFE_MSG = "An email will be sent to you if your email exists. Thank you!";
             try {
               const API = process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
 
-              const res = await fetch(`${API}/api/auth/forgot-password`, {
+              await fetch(`${API}/api/auth/forgot-password`, {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
               });
 
-              const data = await res.json();
-
-              if (!res.ok) {
-                throw new Error(data.message || "Forgot password failed");
-              }
-
-              setMessage(data.message || "Reset link sent! Check your email.");
-            } catch (err) {
-              setError(err.message);
+              // Always show the same message — never reveal whether the email exists
+              setMessage(SAFE_MSG);
+            } catch {
+              setMessage(SAFE_MSG);
             } finally {
               setLoading(false);
-              setTimeout(()=>{
-                setMessage("")
-              }, 3000)
+              setError(null);
             }
           };
 
@@ -78,12 +70,11 @@ export default function ResetPassword() {
                       required
                     />
                   </div>
-                {error && <p className="text-sm text-red-600">
-                    {error}
-                  </p>}
-                {message && <p className="text-green-600 text-sm">
-                    {message}
-                  </p>}
+                {message && (
+                  <div className="bg-yellow-50 border border-yellow-300 rounded-md px-4 py-3">
+                    <p className="text-sm text-yellow-800 font-medium">{message}</p>
+                  </div>
+                )}
                   {/* Sign In Button */}
                    <button onClick={handleResetPassword} type='submit' className="bg-blue-600 flex justify-center items-center rounded-md font-semibold text-white h-[45px] hover:bg-blue-500 transition">
                     Reset

@@ -28,15 +28,12 @@ const DirectoryCard = ({searchQuery = ""}) => {
 
   const toggleDuty = (id) => {
     // Optional: You can call updateStaff() from store if duty status should persist to backend
-    console.log(`Toggled duty for staff with ID: ${id}`)
   }
 
   const handleEdit = (staff) => {
-    console.log("Edit", staff.firstName)
   }
 
   const handleDelete = (staff) => {
-    console.log("Delete", staff.firstName)
   }
 
   if (loading.fetching) return <p>Loading staff...</p>

@@ -17,10 +17,12 @@ import {
 import { useState, useEffect, useRef } from "react";
 import ToggleSwitch from "./ToggleSwtich";
 import ImageUploadButton from "./ImageUploadButton";
+import NumericInput from "@/components/inputs/NumericInput";
 import Avatar from "./Avatar";
 import { useRouter } from "next/navigation";
 import usePaymentStore from "@/store/usePaymentStore";
 import useTermsStore from "@/store/useTermsStore";
+import usePlansStore from "@/store/usePlansStore";
 import LocationSelector from "@/components/LocationSelector";
 
 export default function RegisterManagerModal({ onclose, payerInfo }) {
@@ -32,10 +34,12 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [stepErrors, setStepErrors] = useState({});
+  const [maxStaff, setMaxStaff] = useState(7); // default: free plan total (3+1+1+1+1)
   const stationImageId = useRef(`station-reg-${Date.now()}`).current;
   const router = useRouter();
   const { initializePayment } = usePaymentStore();
   const { termsText, loading: termsLoading, fetchTerms } = useTermsStore();
+  const { plans, fetchPublicPlans } = usePlansStore();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -87,7 +91,29 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
 
   useEffect(() => {
     fetchTerms();
+    fetchPublicPlans();
   }, []);
+
+  // Derive staff limit from the plan chosen on the pricing page
+  useEffect(() => {
+    if (plans.length === 0) return;
+    try {
+      const stored = sessionStorage.getItem("selectedPlan");
+      const slug = stored ? JSON.parse(stored).slug : null;
+      const plan = slug
+        ? plans.find((p) => p.slug === slug || (p.name || "").toLowerCase() === slug.toLowerCase())
+        : plans.find((p) => p.monthlyPrice === 0 || (p.slug || "").includes("free"));
+      if (plan?.staffLimits) {
+        const total = Object.values(plan.staffLimits).reduce((sum, v) => sum + (Number(v) || 0), 0);
+        if (total > 0) {
+          setMaxStaff(total);
+          setFormData((prev) => ({ ...prev, staffMembers: total }));
+        }
+      }
+    } catch {
+      // keep default of 7
+    }
+  }, [plans]);
 
 
   useEffect(() => {
@@ -508,7 +534,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
             </div>
             <div className="relative">
               <label className={labelCls}>Phone Number</label>
-              <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="08134249483" className={inputCls("phone", "pl-9")} />
+              <NumericInput variant="tel" maxLength={11} name="phone" value={formData.phone} onChange={handleInputChange} placeholder="08134249483" className={inputCls("phone", "pl-9")} />
               <Phone size={15} className="text-gray-400 absolute top-[2.1rem] left-2.5" />
               <FieldError field="phone" />
             </div>
@@ -537,7 +563,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
             </div>
             <div className="relative">
               <label className={labelCls}>Emergency Contact</label>
-              <input type="text" name="emergencyContact" value={formData.emergencyContact} onChange={handleInputChange} placeholder="08134249483" className={inputCls("", "pl-9")} />
+              <NumericInput variant="tel" maxLength={11} name="emergencyContact" value={formData.emergencyContact} onChange={handleInputChange} placeholder="08134249483" className={inputCls("", "pl-9")} />
               <Phone size={15} className="text-gray-400 absolute top-[2.1rem] left-2.5" />
             </div>
           </div>
@@ -587,7 +613,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
             </div>
             <div className="relative">
               <label className={labelCls}>Station Phone Number</label>
-              <input type="text" name="stationPhone" value={formData.stationPhone} onChange={handleInputChange} placeholder="08134249483" className={inputCls("stationPhone", "pl-9")} />
+              <NumericInput variant="tel" maxLength={11} name="stationPhone" value={formData.stationPhone} onChange={handleInputChange} placeholder="08134249483" className={inputCls("stationPhone", "pl-9")} />
               <Phone size={15} className="text-gray-400 absolute top-[2.1rem] left-2.5" />
               <FieldError field="stationPhone" />
             </div>
@@ -716,10 +742,13 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
             <div>
               <label className={labelCls}>Staff Members</label>
               <select name="staffMembers" value={formData.staffMembers} onChange={handleInputChange} className={selectCls("")}>
-                {Array.from({ length: 30 }, (_, i) => (
+                {Array.from({ length: maxStaff }, (_, i) => (
                   <option key={i + 1} value={i + 1}>{i + 1}</option>
                 ))}
               </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Your plan allows up to <span className="font-semibold">{maxStaff}</span> staff member{maxStaff === 1 ? "" : "s"}.
+              </p>
             </div>
 
             <div className="sm:col-span-2 lg:col-span-3">

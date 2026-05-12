@@ -4,6 +4,7 @@ import { BiSolidToggleRight, BiSolidToggleLeft } from "react-icons/bi";
 import { X, ChevronUp, ChevronDown } from "lucide-react";
 import { api } from "@/lib/config";
 import useStaffStore from "@/store/useStaffStore";
+import NumericInput from "@/components/inputs/NumericInput";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
 
@@ -36,11 +37,8 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
   // Fetch current sales target on open
   useEffect(() => {
     if (isOpen && staffData?._id) {
-      const token = localStorage.getItem("token");
-      axios
-        .get(`/api/staff/${staffData._id}/target`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+      api
+        .get(`/api/staff/${staffData._id}/target`)
         .then((res) => {
           const t = res.data?.target || null;
           if (t) {
@@ -50,14 +48,12 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
           }
         })
         .catch((err) => {
-          console.log("No existing target:", err.message);
         });
     }
   }, [isOpen, staffData?._id]);
 
   // Initialize form when modal opens or staffData changes
   useEffect(() => {
-    console.log("staffData received:", staffData); // Debug log
 
     if (isOpen && staffData) {
       setFormData({
@@ -107,7 +103,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white lg:w-[60.1875rem] w-fit rounded-2xl max-h-[90vh] "
+        className="bg-white dark:bg-gray-800 lg:w-[60.1875rem] w-[95vw] max-w-[60rem] rounded-2xl max-h-[90vh]"
       >
         <div className="overflow-y-auto scrollbar-hide max-h-[90vh] p-7">
           <p className="mb-[2rem] flex justify-between">
@@ -129,18 +125,18 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
           </p>
 
           <div>
-            <h1 className="text-[1.125rem] mb-[0.5rem] text-neutral-800">
+            <h1 className="text-[1.125rem] mb-[0.5rem] text-neutral-800 dark:text-gray-100">
               PERSONAL INFORMATION
             </h1>
 
-            <hr className="border-[1px] border-neutral-200" />
+            <hr className="border-[1px] border-neutral-200 dark:border-gray-700" />
 
             <form
               onSubmit={handleSave}
               className="mt-[1.5rem] grid grid-cols-1 lg:grid-cols-2 gap-3"
             >
               <span className="flex flex-col gap-2">
-                <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130]">
+                <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130] dark:text-gray-300">
                   First name
                 </label>
                 <input
@@ -149,11 +145,11 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   value={formData.firstName}
                   onChange={handleChange}
                   placeholder="First name"
-                  className="text-neutral-800 border-[2px] pl-3 border-neutral-200 outline-none focus:border-1 focus:border-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
+                  className="text-neutral-800 dark:text-gray-100 bg-white dark:bg-gray-700 border-[2px] pl-3 border-neutral-200 dark:border-gray-600 outline-none focus:border-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
                 />
               </span>
               <span className="flex flex-col gap-2">
-                <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130]">
+                <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130] dark:text-gray-300">
                   Last name
                 </label>
                 <input
@@ -162,11 +158,11 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   value={formData.lastName}
                   onChange={handleChange}
                   placeholder="Last name"
-                  className="text-neutral-800 pl-3 w-full lg:w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-200 outline-none focus:border-1 focus:border-blue-500 rounded-2xl"
+                  className="text-neutral-800 dark:text-gray-100 bg-white dark:bg-gray-700 pl-3 w-full lg:w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-200 dark:border-gray-600 outline-none focus:border-blue-500 rounded-2xl"
                 />
               </span>
               <span className="flex flex-col gap-2">
-                <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130]">
+                <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130] dark:text-gray-300">
                   Email
                 </label>
                 <input
@@ -175,15 +171,16 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Email address"
-                  className="text-neutral-800 pl-3 w-full lg:w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-200 outline-none focus:border-1 focus:border-blue-500 rounded-2xl"
+                  className="text-neutral-800 dark:text-gray-100 bg-white dark:bg-gray-700 pl-3 w-full lg:w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-200 dark:border-gray-600 outline-none focus:border-blue-500 rounded-2xl"
                 />
               </span>
               <span className="flex flex-col gap-2">
-                <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130]">
+                <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130] dark:text-gray-300">
                   Phone
                 </label>
-                <input
-                  type="text"
+                <NumericInput
+                  variant="tel"
+                  maxLength={11}
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
@@ -193,13 +190,13 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
               </span>
             </form>
 
-            <hr className="border-[1px] border-neutral-200 mt-[1rem]" />
+            <hr className="border-[1px] border-neutral-200 dark:border-gray-700 mt-[1rem]" />
 
             <h1 className="text-[1.125rem] mb-[1rem] text-neutral-800 mt-[1rem]">
               JOB INFORMATION
             </h1>
 
-            <hr className="border-[1px] border-neutral-200" />
+            <hr className="border-[1px] border-neutral-200 dark:border-gray-700" />
           </div>
 
           <div>
@@ -212,7 +209,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   value={formData.role}
                   onChange={handleChange}
                   placeholder="Role"
-                  className="text-neutral-800 border-[2px] pl-3 border-neutral-200 outline-none focus:border-1 focus:border-blue-500 focus:outline-none w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
+                  className="text-neutral-800 dark:text-gray-100 bg-white dark:bg-gray-700 border-[2px] pl-3 border-neutral-200 dark:border-gray-600 outline-none focus:border-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
                 />
 
                 <span
@@ -234,7 +231,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   value={formData.shiftType}
                   onChange={handleChange}
                   placeholder="Shift type"
-                  className="text-neutral-800 border-[2px] pl-3 border-neutral-200 outline-none focus:border-1 focus:border-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
+                  className="text-neutral-800 dark:text-gray-100 bg-white dark:bg-gray-700 border-[2px] pl-3 border-neutral-200 dark:border-gray-600 outline-none focus:border-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
                 />
 
                 <span
@@ -259,7 +256,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                 value={formData.responsibility}
                 onChange={handleChange}
                 placeholder="Overseas operations of other staffs, approves reconciled shifts and give report to manager"
-                className="text-neutral-800 border-[2px] pl-3 pt-3  border-neutral-200 outline-none focus:border-1 focus:border-blue-500 w-full  rounded-2xl resize-y"
+                className="text-neutral-800 dark:text-gray-100 bg-white dark:bg-gray-700 border-[2px] pl-3 pt-3 border-neutral-200 dark:border-gray-600 outline-none focus:border-blue-500 w-full rounded-2xl resize-y"
                 rows="3"
               />
             </span>
@@ -268,7 +265,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
           <div>
             {/* <hr className="border-[1px] border-neutral-100 mt-[1rem]" /> */}
 
-            <hr className="border-[1px] border-neutral-200 mt-[1.5rem] mb-[1rem]" />
+            <hr className="border-[1px] border-neutral-200 dark:border-gray-700 mt-[1.5rem] mb-[1rem]" />
             <p className="flex justify-between">
               <span className="text-[1.125rem] font-semibold ">
                 Add sales target
@@ -377,7 +374,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
               PAY INFORMATION
             </h1>
 
-            <hr className="border-[1px] border-neutral-200 mb-[0.75rem]" />
+            <hr className="border-[1px] border-neutral-200 dark:border-gray-700 mb-[0.75rem]" />
 
             <p className="grid grid-cols-1 lg:grid-cols-2 mb-[0.75rem] gap-3">
               <span className="flex flex-col gap-2 relative">
@@ -404,12 +401,12 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
               </span>
               <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Amount</label>
-                <input
-                  type="text"
+                <NumericInput
+                  variant="decimal"
                   name="amount"
                   value={formData.amount}
                   onChange={handleChange}
-                  placeholder="₦40,000"
+                  placeholder="40000"
                   className="text-neutral-800 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
                 />
               </span>
@@ -537,7 +534,7 @@ export default EditStaffModal;
 //           </p>
 
 //           <div>
-//             <h1 className="text-[1.125rem] mb-[0.5rem] text-neutral-800">
+//             <h1 className="text-[1.125rem] mb-[0.5rem] text-neutral-800 dark:text-gray-100">
 //               PERSONAL INFORMATION
 //             </h1>
 
@@ -548,7 +545,7 @@ export default EditStaffModal;
 //               className="mt-[1.5rem] grid grid-cols-1 lg:grid-cols-2 gap-3"
 //             >
 //               <span className="flex flex-col gap-2">
-//                 <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130]">
+//                 <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130] dark:text-gray-300">
 //                   First name
 //                 </label>
 //                 <input
@@ -561,7 +558,7 @@ export default EditStaffModal;
 //                 />
 //               </span>
 //               <span className="flex flex-col gap-2">
-//                 <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130]">
+//                 <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130] dark:text-gray-300">
 //                   Last name
 //                 </label>
 //                 <input
@@ -574,7 +571,7 @@ export default EditStaffModal;
 //                 />
 //               </span>
 //               <span className="flex flex-col gap-2">
-//                 <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130]">
+//                 <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130] dark:text-gray-300">
 //                   Email
 //                 </label>
 //                 <input
@@ -587,7 +584,7 @@ export default EditStaffModal;
 //                 />
 //               </span>
 //               <span className="flex flex-col gap-2">
-//                 <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130]">
+//                 <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130] dark:text-gray-300">
 //                   Phone
 //                 </label>
 //                 <input
@@ -600,7 +597,7 @@ export default EditStaffModal;
 //                 />
 //               </span>
 //               {/* <span className="flex flex-col gap-2 relative">
-//                 <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130]">
+//                 <label className="text-[0.875rem] font-bold leading-[150%] text-[#323130] dark:text-gray-300">
 //                   Temporary password
 //                 </label>
 //                 <input
@@ -620,7 +617,7 @@ export default EditStaffModal;
 //               </span> */}
 
 //               {/* <span className="flex flex-col gap-2 relative">
-//                 <label className="password-[0.875rem] font-bold leading-[150%] text-[#323130]">
+//                 <label className="password-[0.875rem] font-bold leading-[150%] text-[#323130] dark:text-gray-300">
 //                   Confirm temporary password
 //                 </label>
 //                 <input

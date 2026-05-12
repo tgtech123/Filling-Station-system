@@ -4,6 +4,7 @@ import { X } from "lucide-react"
 import Multiselect from "multiselect-react-dropdown"
 import { api } from "@/lib/config"
 import toast from "react-hot-toast"
+import NumericInput from "@/components/inputs/NumericInput"
 
 const PLAN_TEMPLATES = {
   free: {
@@ -442,12 +443,11 @@ export default function CreateSubscriptionPlanModal({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Monthly Price (₦)</label>
-                <input
-                  type="number"
+                <NumericInput
+                  variant="decimal"
                   name="monthlyPrice"
                   value={formData.monthlyPrice}
                   onChange={handleInputChange}
-                  min="0"
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
@@ -498,12 +498,11 @@ export default function CreateSubscriptionPlanModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Duration *</label>
-              <input
-                type="number"
+              <NumericInput
+                variant="numeric"
                 name="duration"
                 value={formData.duration}
                 onChange={handleInputChange}
-                min="1"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
@@ -528,9 +527,8 @@ export default function CreateSubscriptionPlanModal({
               {Object.keys(formData.staffLimits).map(role => (
                 <div key={role}>
                   <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 block capitalize">{role}</label>
-                  <input
-                    type="number"
-                    min="0"
+                  <NumericInput
+                    variant="numeric"
                     value={formData.staffLimits[role]}
                     onChange={(e) => handleStaffLimitChange(role, e.target.value)}
                     className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -587,23 +585,21 @@ export default function CreateSubscriptionPlanModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Display Order</label>
-              <input
-                type="number"
+              <NumericInput
+                variant="numeric"
                 name="order"
                 value={formData.order}
                 onChange={handleInputChange}
-                min="0"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">Max Branches</label>
-              <input
-                type="number"
+              <NumericInput
+                variant="numeric"
                 name="maxBranches"
                 value={formData.maxBranches}
                 onChange={handleInputChange}
-                min="1"
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>

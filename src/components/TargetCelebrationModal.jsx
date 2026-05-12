@@ -14,7 +14,6 @@ export default function TargetCelebrationModal() {
   }, [fetchMessages]);
 
   useEffect(() => {
-    console.log("🎯 All messages:", messages);
     if (!messages?.length) return;
     const targetMsg = messages.find(
       (m) =>
@@ -22,7 +21,6 @@ export default function TargetCelebrationModal() {
         m.category === "system_update" &&
         m.title?.toLowerCase().includes("met your target")
     );
-    console.log("🎯 Target notification found:", targetMsg);
     if (targetMsg) {
       setCelebrationMsg(targetMsg);
       setShowConfetti(true);

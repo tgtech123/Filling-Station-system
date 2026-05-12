@@ -6,6 +6,7 @@ import { FaInstagram, FaLinkedin } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
+import NumericInput from "@/components/inputs/NumericInput";
 import { FaSpinner } from "react-icons/fa";
 import usePlatformStore from "@/store/usePlatformStore";
 
@@ -189,8 +190,9 @@ export default function Contact() {
           </div>
           <div>
             <p className="font-semibold">Phone number</p>
-            <input
-              type="text"
+            <NumericInput
+              variant="tel"
+              maxLength={11}
               name="phoneNumber"
               value={formData.phoneNumber}
               onChange={handleChange}

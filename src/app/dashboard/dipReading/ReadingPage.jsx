@@ -4,7 +4,7 @@
 
 // export default function ReadingPage() {
 //     return (
-//         <div className="mt-3 bg-white p-3 lg:p-6 rounded-[24px]">
+//         <div className="mt-3 bg-white dark:bg-gray-800 p-3 lg:p-6 rounded-[24px]">
 //             {data.map((item) => (
 //                 <TankCard 
 //                     key={item.id}
@@ -35,22 +35,22 @@ export default function ReadingPage() {
 
   if (loading && !dipReadings) {
     return (
-      <div className="mt-3 bg-white p-3 lg:p-6 rounded-[24px] flex items-center justify-center min-h-[400px]">
-        <p className="text-gray-600">Loading dip readings...</p>
+      <div className="mt-3 bg-white dark:bg-gray-800 p-3 lg:p-6 rounded-[24px] flex items-center justify-center min-h-[400px]">
+        <p className="text-gray-600 dark:text-gray-300">Loading dip readings...</p>
       </div>
     );
   }
 
   if (!dipReadings?.tanks || dipReadings.tanks.length === 0) {
     return (
-      <div className="mt-3 bg-white p-3 lg:p-6 rounded-[24px] flex items-center justify-center min-h-[400px]">
-        <p className="text-gray-600 text-center">No tanks created at this time, create to continue...</p>
+      <div className="mt-3 bg-white dark:bg-gray-800 p-3 lg:p-6 rounded-[24px] flex items-center justify-center min-h-[400px]">
+        <p className="text-gray-600 dark:text-gray-300 text-center">No tanks created at this time, create to continue...</p>
       </div>
     );
   }
 
   return (
-    <div className="mt-3 bg-white p-3 lg:p-6 rounded-[24px]">
+    <div className="mt-3 bg-white dark:bg-gray-800 p-3 lg:p-6 rounded-[24px]">
       {dipReadings.tanks.map((tank) => (
         <TankCard
           key={tank._id}

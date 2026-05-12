@@ -424,7 +424,6 @@ export default function EmployeeCard({
         <div className="flex justify-between gap-2 mt-4">
           <button
             onClick={() => {
-              console.log("Edit clicked, staff data:", staff);
               setIsOpen(true);
             }}
             className="flex font-semibold justify-center items-center w-full gap-1 px-3 py-1 rounded-xl bg-[#0080FF] text-white hover:bg-blue-700"

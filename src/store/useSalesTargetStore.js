@@ -34,13 +34,9 @@ const useSalesTargetStore = create((set) => ({
       set({ error: "No staff ID found", loading: false });
       return;
     }
-    console.log("StaffId from localStorage:", staffId);
     set({ loading: true, error: null });
     try {
-      const res = await api.get(
-        `/api/staff/${staffId}/target`
-      );
-      console.log("Target API response:", res.data);
+      const res = await api.get(`/api/staff/${staffId}/target`);
       const target = res.data?.target ?? null;
       set({ target, loading: false });
     } catch (err) {

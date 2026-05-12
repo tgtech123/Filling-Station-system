@@ -11,6 +11,7 @@ import { GiExpense, GiFuelTank } from "react-icons/gi";
 import AddTankModal from "./AddTankModal";
 import ScheduleDeliveryModal from "./ScheduleDeliveryModal";
 import Link from "next/link";
+import { useTankStore } from "@/store/tankStore";
 
 export default function FuelManagement() {
     const [activeTab, setActiveTab] = useState("fuelTank");
@@ -18,6 +19,8 @@ export default function FuelManagement() {
     const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
 
     const { fuelData, loading, errors, fetchFuelManagement } = useFuelManagementStore();
+    const { tanks } = useTankStore();
+    const hasTanks = tanks && tanks.length > 0;
 
     useEffect(() => {
       const token = localStorage.getItem("token");
@@ -56,10 +59,25 @@ export default function FuelManagement() {
           <h4 className="text-2xl font-semibold">Fuel Management</h4>
         </div>
         <div>
-          <button onClick={handleOpenDeliveryModal} className="cursor-pointer border-3 flex gap-2 border-[#0080ff] hover:bg-[#0080ff] hover:text-white py-2 px-6 rounded-[12px] text-[#0080ff] font-semibold">
-            Schedule Delivery
-            <Plus />
-          </button>
+          <div className="relative group">
+            <button
+              onClick={hasTanks ? handleOpenDeliveryModal : undefined}
+              disabled={!hasTanks}
+              className={`border-3 flex gap-2 py-2 px-6 rounded-[12px] font-semibold transition-colors ${
+                hasTanks
+                  ? "cursor-pointer border-[#0080ff] hover:bg-[#0080ff] hover:text-white text-[#0080ff]"
+                  : "cursor-not-allowed border-gray-300 text-gray-400 bg-gray-50"
+              }`}
+            >
+              Schedule Delivery
+              <Plus />
+            </button>
+            {!hasTanks && (
+              <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gray-800 text-white text-xs font-medium rounded-lg px-3 py-1.5 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                Add a fuel tank first to schedule delivery
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

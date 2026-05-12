@@ -307,7 +307,7 @@ const LubSales = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 md:p-8 flex flex-col rounded-xl gap-8 text-neutral-800 dark:text-neutral-100 w-full">
+    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 md:p-8 flex flex-col rounded-xl gap-6 text-neutral-800 dark:text-neutral-100 w-full min-w-0">
       <div className="mb-2 flex flex-col text-neutral-800 dark:text-neutral-100 gap-2 sm:gap-3">
         <h1 className="text-2xl sm:text-3xl font-bold">Lubricant Sales</h1>
         <p className="text-lg sm:text-xl font-medium">
@@ -327,8 +327,8 @@ const LubSales = () => {
         </div>
       )}
 
-      <div className="w-full overflow-x-auto rounded-lg border border-gray-100 pb-4">
-        <table className="min-w-[700px] text-sm text-left text-gray-700 dark:text-gray-200 w-full">
+      <div className="w-full overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700 pb-2 -mx-0">
+        <table className="min-w-[620px] text-sm text-left text-gray-700 dark:text-gray-200 w-full">
           <thead className="bg-gray-100 dark:bg-gray-700 text-md font-semibold text-gray-700 dark:text-gray-200">
             <tr>
               <th className="px-4 py-3">Barcode</th>

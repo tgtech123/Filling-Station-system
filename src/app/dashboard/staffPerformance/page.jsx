@@ -259,7 +259,6 @@ export default function StaffPerformance() {
   ];
 
   const handleApplyFilter = async (filters) => {
-    console.log("Filters applied:", filters);
 
     // Extract selected attendants
     const selectedAttendantNames = Object.entries(filters.attendant || {})

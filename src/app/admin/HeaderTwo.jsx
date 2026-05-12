@@ -7,9 +7,11 @@ import useAdminProfileStore from "@/store/useAdminProfileStore";
 import useThemePersistence from "@/hooks/useThemePersistence";
 import { Sun, Moon, Menu, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
+import LogoutConfirmModal from "@/components/LogoutConfirmModal";
 
 const HeaderTwo = ({ onMenuClick }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [mounted, setMounted] = useState(false);
   const USER_ID = "admin-user-1";
 
@@ -120,7 +122,7 @@ const HeaderTwo = ({ onMenuClick }) => {
         <div className="hidden lg:block h-8 w-px bg-gray-200 dark:bg-gray-700" />
 
         <div
-          onClick={handleLogout}
+          onClick={() => setShowLogoutConfirm(true)}
           className="hidden lg:flex items-center justify-center cursor-pointer"
         >
           <div className="border-2 border-red-600 rounded-2xl px-3 py-2 flex items-center gap-2.5 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
@@ -134,6 +136,11 @@ const HeaderTwo = ({ onMenuClick }) => {
       <MyProfileModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+      <LogoutConfirmModal
+        isOpen={showLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
       />
     </div>
   );

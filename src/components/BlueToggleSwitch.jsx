@@ -7,13 +7,10 @@ export default function BlueToggleSwitch({enabled, pumpId}) {
 
 
   const handleUpdate = async () => {
-      console.log("pumpId ==", pumpId)
-      
-      const response = await updatePump({
+      await updatePump({
         pumpId: pumpId,
         status: enabled ? "Inactive" : "Active",
       })
-      console.log("response ==", response)
       await getPumps()
 
   }

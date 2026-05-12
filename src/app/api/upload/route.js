@@ -1,7 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 
-// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -10,9 +9,6 @@ cloudinary.config({
 
 export async function POST(request) {
   try {
-    console.log("📥 Upload request received");
-
-    // Check Cloudinary configuration
     if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
       console.error("❌ Cloudinary not configured");
       return NextResponse.json(
@@ -25,21 +21,13 @@ export async function POST(request) {
     const file = data.get("file");
     const userId = data.get("userId");
 
-    console.log("📦 File received:", file?.name, file?.size, "bytes");
-    console.log("👤 User ID:", userId);
-
     if (!file) {
-      console.error("❌ No file in request");
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    console.log("📤 Uploading to Cloudinary...");
-
-    // Upload to Cloudinary
     const uploadResponse = await new Promise((resolve, reject) => {
       cloudinary.uploader
         .upload_stream(
@@ -50,23 +38,16 @@ export async function POST(request) {
             resource_type: "image",
             transformation: [
               { width: 500, height: 500, crop: "limit" },
-              { quality: "auto" }
-            ]
+              { quality: "auto" },
+            ],
           },
           (error, result) => {
-            if (error) {
-              console.error("❌ Cloudinary error:", error);
-              reject(error);
-            } else {
-              console.log("✅ Cloudinary upload successful");
-              resolve(result);
-            }
+            if (error) { console.error("❌ Cloudinary error:", error); reject(error); }
+            else resolve(result);
           }
         )
         .end(buffer);
     });
-
-    console.log("✅ Image URL:", uploadResponse.secure_url);
 
     return NextResponse.json({
       success: true,
@@ -77,10 +58,7 @@ export async function POST(request) {
   } catch (error) {
     console.error("❌ Upload failed:", error);
     return NextResponse.json(
-      {
-        error: "Upload failed",
-        details: error.message || "Unknown error",
-      },
+      { error: "Upload failed", details: error.message || "Unknown error" },
       { status: 500 }
     );
   }

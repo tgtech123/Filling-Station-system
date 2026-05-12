@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useTankStore } from "@/store/tankStore";
+import NumericInput from "@/components/inputs/NumericInput";
 
 export default function ScheduleDeliveryModal({ onclose }) {
   const [tank, setTank] = useState("");
@@ -136,8 +137,8 @@ export default function ScheduleDeliveryModal({ onclose }) {
           {/* Price per litre */}
           <div>
             <p className="text-sm font-semibold">Price / litre (₦)</p>
-            <input
-              type="number"
+            <NumericInput
+              variant="decimal"
               className="w-full border-2 border-gray-300 p-2 rounded-[8px]"
               placeholder="Enter price"
               value={price}
@@ -149,8 +150,8 @@ export default function ScheduleDeliveryModal({ onclose }) {
           {/* Quantity */}
           <div>
             <p className="text-sm font-semibold">Quantity (Litres)</p>
-            <input
-              type="number"
+            <NumericInput
+              variant="numeric"
               className="w-full border-2 border-gray-300 p-2 rounded-[8px]"
               placeholder="Enter quantity"
               value={quantity}

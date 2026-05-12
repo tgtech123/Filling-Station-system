@@ -53,7 +53,6 @@ const Login = () => {
       }
 
       const data = await res.json();
-      console.log("res:", data?.token);
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));

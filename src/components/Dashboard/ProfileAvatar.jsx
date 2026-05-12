@@ -22,18 +22,40 @@ export default function ProfileAvatar({
   profileLabel = "View Profile",
   onLogout,
 }) {
-  const [errored, setErrored] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef(null);
-  const fileRef = useRef(null);
-  const { getImage, uploadImage } = useImageStore();
+  const [imgError, setImgError]       = useState(false);
+  const [uploading, setUploading]     = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [open, setOpen]               = useState(false);
+  const wrapRef  = useRef(null);
+  const fileRef  = useRef(null);
 
-  const storedUrl = userId ? getImage(userId) : null;
-  const showImage = !!(storedUrl && !errored);
-  const initials = getInitials(username);
-  const sz = sizeMap[size] || sizeMap.md;
+  // ── Targeted selector: subscribes ONLY to this user's image URL.
+  // Zustand re-renders the component exactly when userImages[userId] changes —
+  // not on any other store update.  The raw URL (already CDN-transformed by
+  // uploadImage) is returned directly; no double-transform needed.
+  const storedUrl = useImageStore((state) =>
+    userId ? (state.userImages[userId] ?? null) : null
+  );
+  const uploadImage = useImageStore((state) => state.uploadImage);
 
+  // When the stored URL changes (immediately after a successful upload),
+  // clear any previous image-load error so the new photo can display.
+  useEffect(() => {
+    if (storedUrl) setImgError(false);
+  }, [storedUrl]);
+
+  // Auto-dismiss upload error after 4 s
+  useEffect(() => {
+    if (!uploadError) return;
+    const t = setTimeout(() => setUploadError(""), 4000);
+    return () => clearTimeout(t);
+  }, [uploadError]);
+
+  const showImage = !!(storedUrl && !imgError);
+  const initials  = getInitials(username);
+  const sz        = sizeMap[size] || sizeMap.md;
+
+  // Close dropdown on outside click
   useEffect(() => {
     if (!open) return;
     function onOutside(e) {
@@ -46,13 +68,15 @@ export default function ProfileAvatar({
   const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !userId) return;
+    setUploadError("");
     setUploading(true);
     setOpen(false);
     try {
       await uploadImage(file, userId);
-      setErrored(false);
+      // storedUrl will update via the selector above → triggers re-render → shows photo
     } catch (err) {
       console.error("Profile photo upload failed:", err);
+      setUploadError("Upload failed — please try again.");
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -61,6 +85,14 @@ export default function ProfileAvatar({
 
   return (
     <div className="relative" ref={wrapRef}>
+
+      {/* Upload-error tooltip */}
+      {uploadError && (
+        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs font-medium rounded-lg px-3 py-1.5 whitespace-nowrap z-[300] shadow-lg pointer-events-none">
+          {uploadError}
+        </div>
+      )}
+
       {/* Avatar circle — click opens dropdown */}
       <button
         type="button"
@@ -78,19 +110,20 @@ export default function ProfileAvatar({
               src={storedUrl}
               alt={username || "Profile"}
               className="w-full h-full object-cover"
-              onError={() => setErrored(true)}
+              onError={() => setImgError(true)}
               referrerPolicy="no-referrer"
             />
           ) : (
             <span className={`text-white font-bold select-none ${sz.text}`}>{initials}</span>
           )}
-          {/* Hover overlay */}
+
+          {/* Hover camera overlay */}
           <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity rounded-full flex items-center justify-center">
             <Camera size={sz.cam} className="text-white" />
           </div>
         </div>
 
-        {/* Camera badge when no photo — indicates upload available */}
+        {/* Camera badge — signals that a photo can be uploaded */}
         {!showImage && !uploading && (
           <div
             className={`absolute -bottom-0.5 -right-0.5 ${sz.badge} bg-blue-600 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-900`}

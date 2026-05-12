@@ -13,7 +13,8 @@ export default function ImageUploadButton({
   maxSizeMB = 5,
 }) {
   const fileRef = useRef(null);
-  const { uploadImage, loading } = useImageStore();
+  const { uploadImage } = useImageStore();
+  const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(currentImage || null);
 
   const handleFileSelect = async (e) => {
@@ -25,17 +26,21 @@ export default function ImageUploadButton({
       return;
     }
 
+    // Show local preview immediately
     const reader = new FileReader();
     reader.onload = (ev) => setPreview(ev.target?.result);
     reader.readAsDataURL(file);
 
+    setLoading(true);
     try {
       const result = await uploadImage(file, userId);
       toast.success("Image uploaded!");
       onUploadComplete?.(result.url);
-    } catch {
-      toast.error("Upload failed");
+    } catch (err) {
+      toast.error("Upload failed. Please try again.");
       setPreview(currentImage || null);
+    } finally {
+      setLoading(false);
     }
   };
 

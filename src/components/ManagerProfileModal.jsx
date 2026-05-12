@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import LocationSelector from "@/components/LocationSelector";
 import { api } from "@/lib/config";
 import { useImageStore } from "@/store/useImageStore";
+import NumericInput from "@/components/inputs/NumericInput";
 
 export default function ManagerProfileModal({ onclose }) {
   const [active, setActive] = useState("personalInfo");
@@ -316,7 +317,7 @@ export default function ManagerProfileModal({ onclose }) {
               </div>
               <div className="relative">
                 <p className="font-semibold text-sm mb-1 dark:text-gray-300">Phone number</p>
-                <input type="text" disabled={!isEditMode} value={managerData.phone}
+                <NumericInput variant="tel" maxLength={11} disabled={!isEditMode} value={managerData.phone}
                   onChange={e => handleInputChange("phone", e.target.value)} className={inputCls(true)} />
                 <Phone size={15} className="absolute top-9 left-3 text-gray-400" />
               </div>
@@ -352,7 +353,7 @@ export default function ManagerProfileModal({ onclose }) {
               </div>
               <div className="relative">
                 <p className="font-semibold text-sm mb-1 dark:text-gray-300">Emergency contact</p>
-                <input type="text" disabled={!isEditMode} value={managerData.emergencyContact}
+                <NumericInput variant="tel" maxLength={11} disabled={!isEditMode} value={managerData.emergencyContact}
                   onChange={e => handleInputChange("emergencyContact", e.target.value)} className={inputCls(true)} />
                 <Phone size={15} className="absolute top-9 left-3 text-gray-400" />
               </div>
@@ -385,7 +386,7 @@ export default function ManagerProfileModal({ onclose }) {
               </div>
               <div className="relative">
                 <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station phone</p>
-                <input type="text" disabled={!isEditMode} value={managerData.stationPhone}
+                <NumericInput variant="tel" maxLength={11} disabled={!isEditMode} value={managerData.stationPhone}
                   onChange={e => handleInputChange("stationPhone", e.target.value)} className={inputCls(true)} />
                 <Phone size={15} className="absolute top-9 left-3 text-gray-400" />
               </div>

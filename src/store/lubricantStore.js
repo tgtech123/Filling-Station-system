@@ -129,14 +129,12 @@ export const useLubricantStore = create((set, get) => ({
       if (!res.ok) throw new Error("Failed to fetch lubricant sales");
       const data = await res.json();
 
-      console.log("Raw sales response:", data);
 
       // Handle both { data: [...] } and direct array responses
       const salesData = Array.isArray(data)
         ? data
         : data.data || data.sales || [];
 
-      console.log("Processed sales data:", salesData);
 
       set({ sales: salesData, loading: false });
       return salesData;
@@ -157,7 +155,6 @@ export const useLubricantStore = create((set, get) => ({
       if (!res.ok) throw new Error("Failed to fetch weekly summary");
       const data = await res.json();
 
-      console.log("Weekly summary response:", data);
 
       // Handle nested data structure - the summary is in data.data
       const summaryData = data.data || data;
@@ -181,7 +178,6 @@ export const useLubricantStore = create((set, get) => ({
       if (!res.ok) throw new Error("Failed to fetch daily summary");
       const data = await res.json();
 
-      console.log("Daily summary response:", data);
 
       // Handle nested data structure
       const summaryData = data.summary || data;
@@ -203,7 +199,6 @@ export const useLubricantStore = create((set, get) => ({
       if (!res.ok) throw new Error("Failed to fetch monthly summary");
       const data = await res.json();
 
-      console.log("Monthly summary response:", data);
 
       // Handle nested data structure - the summary is in data.data
       const summaryData = data.data || data;
