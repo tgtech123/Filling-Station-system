@@ -76,7 +76,7 @@ export default function ProfileAvatar({
       // storedUrl will update via the selector above → triggers re-render → shows photo
     } catch (err) {
       console.error("Profile photo upload failed:", err);
-      setUploadError("Upload failed — please try again.");
+      setUploadError(err?.message || "Upload failed — please try again.");
     } finally {
       setUploading(false);
       e.target.value = "";

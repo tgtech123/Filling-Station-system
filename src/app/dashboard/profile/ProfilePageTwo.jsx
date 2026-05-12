@@ -46,8 +46,7 @@ export default function ProfilePageTwo() {
       
       if (userString) {
         const user = JSON.parse(userString);
-        console.log("📦 Loaded user data:", user);
-        
+
         // Map user data to profile format
         const mappedProfile = {
           id: user.id || user._id || user.employeeId,
@@ -71,7 +70,6 @@ export default function ProfilePageTwo() {
         
         setProfileData(mappedProfile);
       } else {
-        console.log("❌ No user found in localStorage");
         router.push("/login");
       }
     } catch (error) {

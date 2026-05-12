@@ -35,6 +35,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [stepErrors, setStepErrors] = useState({});
   const [maxStaff, setMaxStaff] = useState(7); // default: free plan total (3+1+1+1+1)
+  const [stationLogoPreview, setStationLogoPreview] = useState(null);
   const stationImageId = useRef(`station-reg-${Date.now()}`).current;
   const router = useRouter();
   const { initializePayment } = usePaymentStore();
@@ -482,10 +483,11 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
   );
 
   // ── Shared modal wrapper ──
-  const modalWrap = "bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-xl max-w-3xl w-full mx-auto max-h-[92vh] sm:max-h-[88vh] overflow-y-auto scrollbar-hide modal-content";
+  const modalWrap = "bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-t-2xl sm:rounded-xl shadow-xl max-w-3xl w-full mx-auto max-h-[92vh] overflow-y-auto scrollbar-hide modal-content";
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-3 sm:p-4 z-50">
+    <div className="fixed inset-0 bg-black/50 z-50 overflow-y-auto">
+      <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
 
       {/* ── STEP 1 ── */}
       {step === 1 && (
@@ -670,15 +672,17 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
             <div className="flex items-center gap-4 mt-1">
               <Avatar
                 userId={stationImageId}
-                currentImage={formData.stationImage}
+                currentImage={formData.stationImage || stationLogoPreview}
                 size="lg"
               />
               <ImageUploadButton
                 userId={stationImageId}
                 currentImage={formData.stationImage}
-                onUploadComplete={(url) =>
-                  setFormData((prev) => ({ ...prev, stationImage: url }))
-                }
+                onLocalPreview={(base64) => setStationLogoPreview(base64)}
+                onUploadComplete={(url) => {
+                  setFormData((prev) => ({ ...prev, stationImage: url }));
+                  setStationLogoPreview(null);
+                }}
                 label="Upload Logo"
               />
             </div>
@@ -925,7 +929,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
 
       {/* ── STEP 5 (success) ── */}
       {step === 5 && (
-        <div className="bg-white dark:bg-gray-800 p-5 sm:p-8 rounded-xl shadow-xl max-w-2xl w-full mx-auto max-h-[90vh] overflow-y-auto scrollbar-hide">
+        <div className="bg-white dark:bg-gray-800 p-5 sm:p-8 rounded-t-2xl sm:rounded-xl shadow-xl max-w-2xl w-full mx-auto max-h-[92vh] overflow-y-auto scrollbar-hide">
           <div className="mx-auto mb-5 h-16 w-16 sm:h-20 sm:w-20 rounded-full flex justify-center bg-green-600 items-center">
             <Check className="text-white" size={28} />
           </div>
@@ -980,6 +984,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 }

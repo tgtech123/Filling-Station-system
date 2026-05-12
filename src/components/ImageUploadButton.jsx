@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Upload, X } from "lucide-react";
 import useImageStore from "@/store/useImageStore";
 import toast from "react-hot-toast";
@@ -8,6 +8,7 @@ export default function ImageUploadButton({
   userId,
   currentImage,
   onUploadComplete,
+  onLocalPreview,
   label = "Upload Image",
   accept = "image/*",
   maxSizeMB = 5,
@@ -16,6 +17,11 @@ export default function ImageUploadButton({
   const { uploadImage } = useImageStore();
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(currentImage || null);
+
+  // Sync preview when parent sets a new currentImage (e.g. after navigating between steps)
+  useEffect(() => {
+    if (currentImage && !preview) setPreview(currentImage);
+  }, [currentImage]);
 
   const handleFileSelect = async (e) => {
     const file = e.target.files?.[0];
@@ -26,9 +32,14 @@ export default function ImageUploadButton({
       return;
     }
 
-    // Show local preview immediately
+    // Show local preview immediately — fires onLocalPreview so parent
+    // can display the image in a separate Avatar before upload finishes
     const reader = new FileReader();
-    reader.onload = (ev) => setPreview(ev.target?.result);
+    reader.onload = (ev) => {
+      const base64 = ev.target?.result;
+      setPreview(base64);
+      onLocalPreview?.(base64);
+    };
     reader.readAsDataURL(file);
 
     setLoading(true);
@@ -37,8 +48,9 @@ export default function ImageUploadButton({
       toast.success("Image uploaded!");
       onUploadComplete?.(result.url);
     } catch (err) {
-      toast.error("Upload failed. Please try again.");
+      toast.error(err?.message || "Upload failed. Please try again.");
       setPreview(currentImage || null);
+      onLocalPreview?.(currentImage || null);
     } finally {
       setLoading(false);
     }

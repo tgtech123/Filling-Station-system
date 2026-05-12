@@ -43,7 +43,7 @@ export const useLubricantStore = create((set, get) => ({
       const result = await res.json();
 
       // Handle both { data: [...] } and direct array responses
-      const lubricantsData = Array.isArray(result) ? result : result.data || [];
+      const lubricantsData = (Array.isArray(result) ? result : result.data || []).filter(Boolean);
       set({ lubricants: lubricantsData, loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
@@ -82,12 +82,15 @@ export const useLubricantStore = create((set, get) => ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to add lubricant");
 
+      const newItem = data.data || data.lubricant || data;
       set((state) => ({
-        lubricants: [...state.lubricants, data.data],
+        lubricants: newItem
+          ? [...state.lubricants, newItem]
+          : state.lubricants,
         loading: false,
       }));
 
-      return data.data;
+      return newItem;
     } catch (err) {
       set({ error: err.message, loading: false });
       throw err;
