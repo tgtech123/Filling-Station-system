@@ -91,7 +91,7 @@ const SalesHeader = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white w-full h-fit rounded-xl p-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:flex-wrap sm:justify-between mb-3">
+      <div className="bg-white dark:bg-gray-800 w-full h-fit rounded-xl p-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:flex-wrap sm:justify-between mb-3 border border-gray-100 dark:border-gray-700">
         {/* Search Form */}
         <form
           className="flex flex-col gap-3 sm:flex-row sm:items-center relative w-full sm:w-auto flex-1 min-w-0"
@@ -111,7 +111,7 @@ const SalesHeader = () => {
             <input
               type="text"
               placeholder="Search by product name or barcode"
-              className="py-2 pl-3 pr-10 outline-none focus:border-[#FF9D29] w-full border-[1.5px] border-neutral-300 rounded-lg"
+              className="py-2 pl-3 pr-10 outline-none focus:border-[#FF9D29] w-full border-[1.5px] border-neutral-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400 rounded-lg"
               value={searchTerm}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
@@ -134,15 +134,15 @@ const SalesHeader = () => {
 
             {/* 🆕 Enhanced Dropdown with better styling */}
             {showDropdown && results.length > 0 && (
-              <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto z-50 shadow-lg">
+              <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md mt-1 max-h-60 overflow-y-auto z-50 shadow-lg">
                 {results.map((item) => (
                   <div
                     key={item._id}
                     onClick={() => handleProductSelect(item)}
-                    className="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200 last:border-b-0"
+                    className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-b-0"
                   >
-                    <p className="font-semibold">{item.productName}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-semibold dark:text-gray-100">{item.productName}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Barcode: {item.barcode}
                     </p>
                   </div>

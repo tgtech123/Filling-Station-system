@@ -123,28 +123,28 @@ const DynamicSalesTable = ({
   return (
     <>
       {/* Main UI */}
-      <div className="mt-20 w-full px-4 sm:px-6 md:px-0">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 md:gap-6">
-          <form className="flex flex-col md:flex-row gap-4 md:gap-6 w-full">
+      <div className="w-full">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <form className="flex flex-col sm:flex-row gap-4 w-full">
             {/* Total Amount */}
-            <div className="flex flex-col w-full md:max-w-md">
-              <label className="font-bold mb-1">Total Amount</label>
+            <div className="flex flex-col w-full sm:max-w-xs">
+              <label className="font-bold mb-1 text-sm">Total Amount</label>
               <input
                 type="number"
                 disabled
                 value={totalAmount || ""}
-                className="bg-neutral-200 w-full py-2 px-3 rounded-lg outline-none"
+                className="bg-neutral-200 dark:bg-gray-700 dark:text-gray-200 w-full py-2 px-3 rounded-lg outline-none"
                 placeholder="₦0.00"
               />
             </div>
 
             {/* Payment Method */}
-            <div className="flex flex-col w-full md:max-w-md">
-              <label className="font-bold mb-1">Payment Method</label>
+            <div className="flex flex-col w-full sm:max-w-xs">
+              <label className="font-bold mb-1 text-sm">Payment Method</label>
               <select
                 value={paymentMethod}
                 onChange={(e) => handlePaymentMethodChange(e.target.value)}
-                className="w-full py-2 pl-3 rounded-lg border border-neutral-300 outline-none"
+                className="w-full py-2 pl-3 rounded-lg border border-neutral-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 outline-none"
               >
                 <option value="POS">POS</option>
                 <option value="transfer">Transfer</option>
@@ -155,14 +155,12 @@ const DynamicSalesTable = ({
           </form>
 
           {/* Record Button */}
-          <div className="mt-2 md:mt-0">
-            <button
-              onClick={handleSubmit}
-              className="bg-[#0080FF] hover:bg-blue-700 text-white flex items-center gap-2 px-5 py-2 rounded-lg font-semibold"
-            >
-              Record <LuPlus size={20} />
-            </button>
-          </div>
+          <button
+            onClick={handleSubmit}
+            className="bg-[#0080FF] hover:bg-blue-700 text-white flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold w-full sm:w-auto flex-shrink-0 transition-colors"
+          >
+            Record <LuPlus size={20} />
+          </button>
         </div>
       </div>
 

@@ -3,6 +3,7 @@
 import { ArrowRightLeft, Check, Clock, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { IoWarning } from "react-icons/io5";
+import NumericInput from "@/components/inputs/NumericInput";
 import useSupervisorStore from "@/store/useSupervisorStore";
 
 export default function TankCard({
@@ -165,8 +166,8 @@ export default function TankCard({
           {/* Manual Reading */}
           <div className="flex-1">
             <p className="text-sm font-semibold mb-2">Manual Reading</p>
-            <input
-              type="number"
+            <NumericInput
+              variant="numeric"
               value={manualReading}
               onChange={(e) => setManualReading(e.target.value)}
               className="bg-white w-full p-3 rounded-[12px] text-sm border-2 border-[#d5d3d3] placeholder:text-[#e7e7e7]"

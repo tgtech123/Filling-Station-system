@@ -59,8 +59,6 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
       staffs: false,
     },
   });
-  console.log("form data==",formData)
-
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -160,7 +158,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
 
 
       // ✅ Success
-      console.log("Staff created successfully!");
+;
       setNewStaffName(`${formData.firstName} ${formData.lastName}`)
       setIsModalOpen(true);
 

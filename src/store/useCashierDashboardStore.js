@@ -67,17 +67,7 @@ export const useCashierDashboardStore = create((set, get) => ({
     set({ isLoading: true, error: null });
     
     try {
-      console.log('🔍 Fetching weekly lubricant summary...');
-      
       const response = await api.get('/api/lubricant/weekly-summary');
-
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📊 WEEKLY LUBRICANT SUMMARY');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('Period:', response.data.period);
-      console.log('Total Lubricants:', response.data.totalLubricants);
-      console.log('Top Three:', response.data.topThree);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
       set({
         weeklyLubricantSummary: {
@@ -116,7 +106,6 @@ export const useCashierDashboardStore = create((set, get) => ({
     try {
       const response = await api.get('/api/lubricant/daily-summary');
 
-      console.log('📅 Daily Lubricant Summary:', response.data);
 
       set({
         dailyLubricantSummary: response.data.summary,
@@ -146,7 +135,6 @@ export const useCashierDashboardStore = create((set, get) => ({
     try {
       const response = await api.get('/api/lubricant/monthly-summary');
 
-      console.log('📆 Monthly Lubricant Summary:', response.data);
 
       set({
         monthlyLubricantSummary: {

@@ -11,6 +11,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useLubricantStore } from "@/store/lubricantStore";
+import NumericInput from "@/components/inputs/NumericInput";
 
 export default function LubricantStockModal({ onClose }) {
   const d = new Date();
@@ -560,8 +561,8 @@ export default function LubricantStockModal({ onClose }) {
                         />
                       </td>
                       <td className="px-4 py-2">
-                        <input
-                          type="number"
+                        <NumericInput
+                          variant="decimal"
                           value={row.amount}
                           onChange={(e) => handleAmountChange(e, index)}
                           placeholder="Enter amount"
@@ -569,9 +570,8 @@ export default function LubricantStockModal({ onClose }) {
                         />
                       </td>
                       <td className="px-4 py-2">
-                        <input
-                          type="number"
-                          min="1"
+                        <NumericInput
+                          variant="numeric"
                           value={row.quantity}
                           onChange={(e) => handleQtyChange(e, index)}
                           className="w-full px-3 py-2 border border-neutral-300 rounded-xl"
@@ -594,12 +594,10 @@ export default function LubricantStockModal({ onClose }) {
                         />
                       </td>
                       <td className="px-4 py-2">
-                        <input
-                          type="number"
+                        <NumericInput
+                          variant="decimal"
                           value={row.sellingPercentage}
-                          onChange={(e) =>
-                            handleSellingPercentageChange(e, index)
-                          }
+                          onChange={(e) => handleSellingPercentageChange(e, index)}
                           disabled={!row.isEditing}
                           className={`w-full px-3 py-2 border border-neutral-300 rounded-xl ${
                             !row.isEditing ? "bg-neutral-100 text-gray-700" : ""
@@ -607,8 +605,8 @@ export default function LubricantStockModal({ onClose }) {
                         />
                       </td>
                       <td className="px-4 py-2">
-                        <input
-                          type="number"
+                        <NumericInput
+                          variant="decimal"
                           value={row.unitPrice}
                           onChange={(e) => handleUnitPriceChange(e, index)}
                           disabled={!row.isEditing}

@@ -17,6 +17,7 @@ import useBranchStore from "@/store/useBranchStore";
 import usePaymentStore from "@/store/usePaymentStore";
 import AddBranchModal from "../AddBranchModal";
 import ManagerProfileModal from "../ManagerProfileModal";
+import LogoutConfirmModal from "../LogoutConfirmModal";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -60,8 +61,8 @@ function UnreadBadge({ count }) {
 
 function DropdownHeader({ title, onMarkAll, markAllLabel = "Mark all read" }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
-      <p className="text-sm font-semibold text-gray-800">{title}</p>
+    <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100 dark:border-gray-700">
+      <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">{title}</p>
       <button
         onClick={onMarkAll}
         className="cursor-pointer flex items-center gap-1 text-xs font-semibold text-[#1a71f6] hover:text-blue-800 transition-colors"
@@ -79,7 +80,7 @@ function EmptyState({ message }) {
       <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-2">
         <Bell size={18} className="text-gray-300" />
       </div>
-      <p className="text-sm text-neutral-400">{message}</p>
+      <p className="text-sm text-neutral-400 dark:text-gray-500">{message}</p>
     </div>
   );
 }
@@ -235,6 +236,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [showAddBranch, setShowAddBranch] = useState(false);
   const [showManagerProfile, setShowManagerProfile] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // selected item for modal
   const [selectedMsg, setSelectedMsg] = useState(null);
@@ -306,7 +308,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
       ? `${userData.firstName} ${userData.lastName}`
       : userData?.firstName || userData?.lastName || "User";
 
-  const userId = userData?._id || userData?.employeeId || userData?.id;
+  const userId = userData?._id || userData?.id || userData?.employeeId;
 
   const handleLogout = () => {
     stopPolling();
@@ -342,16 +344,18 @@ export default function Header({ toggleSidebar, showSidebar }) {
           <Menu />
         </div>
 
-        {/* Station logo */}
-        {stationLogo ? (
-          <img
-            src={stationLogo}
-            alt="station logo"
-            className="h-9 w-auto object-contain max-w-[110px]"
-          />
-        ) : (
-          <Image src={staticLogo} width={110} height={36} alt="station logo" className="h-9 w-auto object-contain" />
-        )}
+        {/* Station logo — white pill so it reads clearly in dark mode too */}
+        <div className="bg-white rounded-lg px-2.5 py-1.5 border border-gray-100 shadow-sm flex items-center justify-center flex-shrink-0 max-w-[120px]">
+          {stationLogo ? (
+            <img
+              src={stationLogo}
+              alt="station logo"
+              className="h-8 w-auto object-contain max-w-[100px]"
+            />
+          ) : (
+            <Image src={staticLogo} width={100} height={32} alt="station logo" className="h-8 w-auto object-contain" />
+          )}
+        </div>
       </div>
 
       {/* ── Center: notifications — visible on all screen sizes ── */}
@@ -556,7 +560,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
           size="md"
           onProfileClick={userData?.role === "manager" ? () => setShowManagerProfile(true) : undefined}
           profileLabel={userData?.role === "manager" ? "Manager Profile" : "View Profile"}
-          onLogout={handleLogout}
+          onLogout={() => setShowLogoutConfirm(true)}
         />
       </div>
 
@@ -565,7 +569,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
       </div>
 
       <div
-        onClick={handleLogout}
+        onClick={() => setShowLogoutConfirm(true)}
         className="cursor-pointer border-2 border-red-400 p-2 rounded-[12px] hidden lg:flex items-center gap-3 hover:bg-red-50 transition"
       >
         <p className="text-[#ff1f1f] font-semibold">Logout</p>
@@ -587,6 +591,11 @@ export default function Header({ toggleSidebar, showSidebar }) {
       {showManagerProfile && (
         <ManagerProfileModal onclose={() => setShowManagerProfile(false)} />
       )}
+      <LogoutConfirmModal
+        isOpen={showLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+      />
     </div>
   );
 }

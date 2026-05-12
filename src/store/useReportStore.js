@@ -15,7 +15,6 @@ const normalizeBaseURL = (url) => {
 
 const NORMALIZED_API_URL = normalizeBaseURL(API_BASE_URL);
 
-console.log('🔧 Report Store API Base URL:', NORMALIZED_API_URL);
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -26,42 +25,21 @@ const apiClient = axios.create({
   timeout: 30000, // 30 second timeout
 });
 
-// Add request interceptor to log and add auth
+// Add request interceptor to add auth
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    
-    console.log('📤 API Request:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      baseURL: config.baseURL,
-      fullURL: `${config.baseURL}${config.url}`,
-      params: config.params,
-      hasToken: !!token,
-    });
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      console.warn('⚠️ No auth token found in localStorage');
     }
-
     return config;
   },
-  (error) => {
-    console.error('❌ Request interceptor error:', error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add response interceptor for better error logging
+// Add response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response:', {
-      url: response.config.url,
-      status: response.status,
-      dataKeys: response.data ? Object.keys(response.data) : [],
-    });
     return response;
   },
   (error) => {

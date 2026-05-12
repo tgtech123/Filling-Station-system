@@ -55,61 +55,102 @@ function getActivityStyle(item) {
 
 function SubscriptionBanner() {
   const [dismissed, setDismissed] = useState(false);
+  const { currentPlan } = usePaymentStore();
 
-  const expiryDate = (() => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      return user.subscriptionExpiry || user.planExpiry || "2026-06-12";
-    } catch {
-      return "2026-06-12";
-    }
-  })();
+  if (dismissed || !currentPlan) return null;
 
-  const daysLeft = Math.floor(
-    (new Date(expiryDate).getTime() - Date.now()) / 86400000
-  );
+  const isFree = !currentPlan.plan || currentPlan.plan === "free";
+  const days = currentPlan.daysRemaining ?? null;
+  const isExpired = !isFree && days !== null && days <= 0;
+  const isExpiringSoon = !isFree && days !== null && days > 0 && days <= 30;
 
-  if (dismissed || daysLeft > 30) return null;
+  // Active paid plan with plenty of time — nothing to show
+  if (!isFree && !isExpired && !isExpiringSoon) return null;
 
-  const expired = daysLeft <= 0;
-  const formattedDate = new Date(expiryDate).toLocaleDateString("en-US", {
-    month: "long", day: "numeric", year: "numeric",
-  });
+  // Compute display date from daysRemaining
+  const expiresOn = days !== null
+    ? new Date(Date.now() + days * 86400000).toLocaleDateString("en-US", {
+        month: "long", day: "numeric", year: "numeric",
+      })
+    : null;
 
+  const planLabel = currentPlan.planName || "your plan";
+
+  if (isFree) {
+    return (
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg px-4 py-3 mb-4 border-l-4 bg-blue-50 border-l-blue-500">
+        <div className="flex items-start sm:items-center gap-3 min-w-0">
+          <AlertCircle size={20} className="text-blue-500 shrink-0 mt-0.5 sm:mt-0" />
+          <p className="text-sm font-medium text-blue-800 leading-snug">
+            You are on the <span className="font-semibold">Free Plan</span>. Upgrade to access more staff slots, advanced analytics, and seamless operations.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+          <Link
+            href="/pricing"
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors whitespace-nowrap"
+          >
+            Upgrade Plan
+          </Link>
+          <button
+            onClick={() => setDismissed(true)}
+            className="cursor-pointer p-1 rounded-md text-blue-400 hover:bg-blue-100 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isExpired) {
+    return (
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg px-4 py-3 mb-4 border-l-4 bg-red-50 border-l-red-500">
+        <div className="flex items-start sm:items-center gap-3 min-w-0">
+          <XCircle size={20} className="text-red-500 shrink-0 mt-0.5 sm:mt-0" />
+          <p className="text-sm font-medium text-red-700 leading-snug">
+            Your <span className="font-semibold">{planLabel}</span> has expired. You are now on the Free plan (view-only mode). Upgrade to restore full access.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+          <Link
+            href="/pricing"
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-red-500 hover:bg-red-600 transition-colors whitespace-nowrap"
+          >
+            Upgrade Plan
+          </Link>
+          <button
+            onClick={() => setDismissed(true)}
+            className="cursor-pointer p-1 rounded-md text-red-400 hover:bg-red-100 transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // isExpiringSoon
   return (
-    <div
-      className={`flex items-center justify-between gap-3 rounded-lg px-4 py-3 mb-4 border-l-4 transition-all duration-300 ${
-        expired
-          ? "bg-red-50 border-l-red-500"
-          : "bg-amber-50 border-l-orange-400"
-      }`}
-    >
-      <div className="flex items-center gap-3 min-w-0">
-        {expired
-          ? <XCircle size={20} className="text-red-500 shrink-0" />
-          : <AlertCircle size={20} className="text-orange-500 shrink-0" />
-        }
-        <p className={`text-sm font-medium truncate ${expired ? "text-red-700" : "text-amber-800"}`}>
-          {expired
-            ? <>Subscription plan expired. <span className="font-semibold">"View-only"</span> in Free plan.</>
-            : <>Your Plus Monthly Plan expires <span className="font-semibold">{formattedDate}</span>. Renew subscription to continue enjoying benefits.</>
-          }
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg px-4 py-3 mb-4 border-l-4 bg-amber-50 border-l-orange-400">
+      <div className="flex items-start sm:items-center gap-3 min-w-0">
+        <AlertCircle size={20} className="text-orange-500 shrink-0 mt-0.5 sm:mt-0" />
+        <p className="text-sm font-medium text-amber-800 leading-snug">
+          Your <span className="font-semibold">{planLabel}</span> expires{" "}
+          {expiresOn ? <><span className="font-semibold">{expiresOn}</span> ({days} day{days === 1 ? "" : "s"} left).</> : `in ${days} day${days === 1 ? "" : "s"}.`}{" "}
+          Renew to continue enjoying benefits.
         </p>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
         <Link
           href="/dashboard/system-settings"
-          className={`text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition-colors ${
-            expired ? "bg-red-500 hover:bg-red-600" : "bg-orange-500 hover:bg-orange-600"
-          }`}
+          className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-orange-500 hover:bg-orange-600 transition-colors whitespace-nowrap"
         >
-          {expired ? "Upgrade Plan" : "Renew Subscription"}
+          Renew Subscription
         </Link>
         <button
           onClick={() => setDismissed(true)}
-          className={`cursor-pointer p-1 rounded-md transition-colors ${
-            expired ? "text-red-400 hover:bg-red-100" : "text-orange-400 hover:bg-orange-100"
-          }`}
+          className="cursor-pointer p-1 rounded-md text-orange-400 hover:bg-orange-100 transition-colors"
         >
           <X size={16} />
         </button>
@@ -205,7 +246,7 @@ export default function ManagerDashboard() {
         {/* Header Section */}
         <DisplayCard>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <h2 className="text-2xl font-semibold">Welcome back, {fullName}</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold">Welcome back, {fullName}</h2>
             <div className="flex items-center gap-2">
               <span
                 className={`px-2 py-1 rounded-full text-xs font-semibold ${
@@ -273,7 +314,7 @@ export default function ManagerDashboard() {
             <h2 className="text-2xl font-semibold">Quick Actions</h2>
             <p>Perform overall operations in one click</p>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {reportType.map((item) => (
                 <QuickActionsCard key={item.id} {...item} />
               ))}
@@ -318,10 +359,10 @@ export default function ManagerDashboard() {
                         <div className="flex gap-2">
                           <div className="mt-1">{icon}</div>
                           <div>
-                            <h5 className={`text-md font-semibold ${color}`}>
+                            <h5 className={`text-sm font-semibold ${color}`}>
                               {item.title}
                             </h5>
-                            <p className="text-sm font-semibold text-gray-600">
+                            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                               {item.description}
                             </p>
                           </div>

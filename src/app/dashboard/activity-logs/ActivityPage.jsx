@@ -110,42 +110,40 @@ const ActivityPage = () => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 mt-[1.5rem] max-w-full mx-8 mb-[1rem]">
-      <div className="flex flex-wrap justify-between">
-        <div className="flex-wrap gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
           <h1 className="text-[1.375rem] font-semibold">Recent Transactions</h1>
-          <p className="text-[1rem] font-[400px]">Latest activity logs</p>
+          <p className="text-[1rem] text-gray-500 dark:text-gray-400">Latest activity logs</p>
         </div>
 
-          {/* Search — controlled externally so we can read the value */}
-        <div className="grid lg:grid-cols-4 grid-cols-1 max-w-full">
-          <div className="flex relative items-center">
+        <div className="flex flex-col gap-2 sm:items-end flex-shrink-0">
+          {/* Search */}
+          <div className="relative flex items-center w-full sm:w-auto">
+            <Search size={16} className="absolute left-3 text-gray-400 pointer-events-none" />
             <input
               type="text"
               value={searchTerm}
               onChange={handleSearchChange}
               placeholder="Search by user or action"
-              className="border-2 pl-10 border-neutral-300  rounded-2xl text-sm focus:outline-none focus:border-blue-500 lg:w-[18.75rem] h-[2.5rem] w-full"
+              className="border-2 pl-9 pr-3 py-2 border-neutral-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:placeholder-gray-400 rounded-2xl text-sm focus:outline-none focus:border-blue-500 w-full sm:w-[18rem]"
             />
-
-            <Search className="flex absolute left-2 " />
-
           </div>
 
-          <div className="flex gap-4 lg:mt-0 mt-[0.75rem]">
-            <button className="border-2 border-neutral-300 mt-0 lg:w-[18.75rem] h-[2.5rem] w-full rounded-2xl font-semibold">
+          {/* Duration · Filter · Export */}
+          <div className="flex gap-2 flex-wrap">
+            <button className="border-2 border-neutral-300 dark:border-gray-600 dark:text-gray-200 px-4 py-2 rounded-2xl font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               Duration
             </button>
-            <button className="border-2 border-neutral-300 lg:w-[18.75rem] h-[2.5rem] w-full rounded-2xl font-semibold flex items-center justify-center gap-2">
-              Filter 
-              <IoFilter size={26} />
+            <button className="border-2 border-neutral-300 dark:border-gray-600 dark:text-gray-200 px-4 py-2 rounded-2xl font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              Filter
+              <IoFilter size={18} />
             </button>
-            <button className=" bg-blue-500 text-white lg:w-[18.75rem] h-[2.5rem] w-full flex gap-2 items-center justify-center rounded-2xl hover:bg-blue-700 font-bold">
+            <button className="bg-blue-500 text-white px-4 py-2 flex gap-2 items-center rounded-2xl hover:bg-blue-700 font-bold text-sm transition-colors">
               Export
-              <Download />
+              <Download size={16} />
             </button>
           </div>
         </div>
-      
       </div>
 
       {/* Error */}

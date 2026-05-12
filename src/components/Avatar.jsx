@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useImageStore from "@/store/useImageStore";
 import { getImageUrl } from "@/utils/imageUtils";
 
@@ -23,9 +23,13 @@ function getInitials(name) {
 
 export default function Avatar({ userId, username, currentImage, size = "md", className = "" }) {
   const [errored, setErrored] = useState(false);
-  const { getImage } = useImageStore();
 
-  const storedUrl = userId ? getImage(userId) : null;
+  // Targeted selector — re-renders only when this user's image changes
+  const storedUrl = useImageStore((s) => (userId ? (s.userImages[userId] ?? null) : null));
+
+  // Reset error flag when a new URL arrives after upload
+  useEffect(() => { if (storedUrl) setErrored(false); }, [storedUrl]);
+
   const imageUrl = getImageUrl(storedUrl || currentImage);
   const showImage = imageUrl && !errored;
   const { cls, text } = sizeMap[size] || sizeMap.md;

@@ -17,10 +17,12 @@ import Image from "next/image";
 import { useImageStore } from "@/store/useImageStore";
 import useAdminProfileStore from "@/store/useAdminProfileStore";
 import { useRouter } from "next/navigation";
+import LogoutConfirmModal from "@/components/LogoutConfirmModal";
 
 const SidebarTwo = ({ activeItem, setActiveItem, sidebarOpen, setSidebarOpen }) => {
   const [mounted, setMounted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const USER_ID = "admin-user-1";
 
   const { adminName, adminImage, adminRole, initProfile } = useAdminProfileStore();
@@ -155,7 +157,7 @@ const SidebarTwo = ({ activeItem, setActiveItem, sidebarOpen, setSidebarOpen }) 
                 {adminRole || "Admin"}
               </div>
             </div>
-            <button onClick={handleLogout} className="text-gray-400 hover:text-gray-600">
+            <button onClick={() => setShowLogoutConfirm(true)} className="text-gray-400 hover:text-gray-600">
               <Image
                 src="/log-out-1.png"
                 height={22}
@@ -166,6 +168,11 @@ const SidebarTwo = ({ activeItem, setActiveItem, sidebarOpen, setSidebarOpen }) 
           </div>
         </div>
       </motion.aside>
+      <LogoutConfirmModal
+        isOpen={showLogoutConfirm}
+        onCancel={() => setShowLogoutConfirm(false)}
+        onConfirm={handleLogout}
+      />
     </>
   );
 };

@@ -33,17 +33,13 @@ const useNotificationStore = create((set, get) => ({
     const { _setLoading, _setError } = get();
     _setLoading("messages", true);
     _setError("messages", null);
-    console.log("🔔 Fetching messages, token:", !!localStorage.getItem("token"));
     try {
       const res = await api.get(`/api/notifications/messages`, {
         headers: getAuthHeaders(),
       });
-      console.log("🔔 Messages API response:", res.data);
-      console.log("🔔 Messages array:", res.data?.messages);
       const messages = res.data?.messages ?? res.data ?? [];
       const messageUnreadCount = messages.filter((m) => !m.read).length;
       set({ messages, messageUnreadCount });
-      console.log("Messages response:", res.data);
     } catch (err) {
       const msg =
         err.response?.data?.message || err.message || "Failed to fetch messages";
@@ -65,7 +61,6 @@ const useNotificationStore = create((set, get) => ({
       const alerts = res.data?.alerts ?? res.data ?? [];
       const alertUnreadCount = alerts.filter((a) => !a.read).length;
       set({ alerts, alertUnreadCount });
-      console.log("Alerts response:", res.data);
     } catch (err) {
       const msg =
         err.response?.data?.message || err.message || "Failed to fetch alerts";

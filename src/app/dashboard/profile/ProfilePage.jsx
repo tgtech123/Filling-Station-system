@@ -233,11 +233,10 @@ import { useImageStore } from "@/store/useImageStore";
 const ProfilePage = ({ profileData, isEditable = false, onChange }) => {
   const sectionStyle = "grid grid-cols-1 sm:grid-cols-2 gap-4";
 
-  const { getUserImage } = useImageStore();
+  const userId = profileData?._id || profileData?.id || profileData?.employeeId;
 
-const userId = profileData?.id || profileData?.employeeId || profileData?._id;
-
-const userImage = getUserImage(userId);
+  // Targeted selector — reactive to this user's image updates
+  const userImage = useImageStore((s) => (userId ? (s.userImages[userId] ?? null) : null));
 
   // Calculate progress percentage
   const progressPercentage = profileData?.currentSales && profileData?.targetSales

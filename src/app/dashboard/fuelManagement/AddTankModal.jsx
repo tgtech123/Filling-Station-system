@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useTankStore } from "@/store/tankStore";
+import NumericInput from "@/components/inputs/NumericInput";
 
 export default function AddTankModal({ onclose }) {
   const [title, setTitle] = useState("");
@@ -99,18 +100,24 @@ export default function AddTankModal({ onclose }) {
           </div>
           <div>
             <p className="text-sm font-semibold">Fuel Type</p>
-            <input
-              type="text"
-              className="w-full border-2 border-gray-300 p-2 rounded-[8px]"
-              placeholder="E.g Diesel"
+            <select
+              className="w-full border-2 border-gray-300 p-2 rounded-[8px] bg-white"
               value={fuelType}
               onChange={(e) => setFuelType(e.target.value)}
-            />
+            >
+              <option value="">Select fuel type</option>
+              <option value="PMS">PMS (Premium Motor Spirit)</option>
+              <option value="AGO">AGO (Diesel)</option>
+              <option value="Petrol">Petrol</option>
+              <option value="Diesel">Diesel</option>
+              <option value="Kerosene">Kerosene</option>
+              <option value="Gas">Gas (LPG)</option>
+            </select>
           </div>
           <div>
             <p className="text-sm font-semibold">Capped Limit (in litres)</p>
-            <input
-              type="number"
+            <NumericInput
+              variant="numeric"
               className="w-full border-2 border-gray-300 p-2 rounded-[8px]"
               placeholder="E.g 10000"
               value={cappedLimit}
@@ -119,8 +126,8 @@ export default function AddTankModal({ onclose }) {
           </div>
           <div className="mb-4">
             <p className="text-sm font-semibold">Threshold</p>
-            <input
-              type="number"
+            <NumericInput
+              variant="numeric"
               className="w-full border-2 border-gray-300 p-2 rounded-[8px]"
               placeholder="E.g 2000"
               value={threshold}
