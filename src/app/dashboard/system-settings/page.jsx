@@ -16,11 +16,18 @@ const API =
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const MOCK_SESSIONS = [
-  { id: 1, device: "Chrome on Windows", ip: "102.88.34.21", lastActive: "Just now", current: true },
-  { id: 2, device: "Safari on iPhone",  ip: "197.211.58.44", lastActive: "2 hrs ago",  current: false },
-  { id: 3, device: "Firefox on MacOS",  ip: "41.58.100.12",  lastActive: "Yesterday",  current: false },
-];
+function detectDevice() {
+  if (typeof window === "undefined") return "Current Browser";
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad/.test(ua)) return "Safari on iPhone";
+  if (/Android.*Chrome/.test(ua)) return "Chrome on Android";
+  if (/Android/.test(ua)) return "Browser on Android";
+  if (/Macintosh/.test(ua) && /Safari/.test(ua) && !/Chrome/.test(ua)) return "Safari on Mac";
+  if (/Macintosh/.test(ua)) return "Chrome on Mac";
+  if (/Windows/.test(ua) && /Firefox/.test(ua)) return "Firefox on Windows";
+  if (/Windows/.test(ua)) return "Chrome on Windows";
+  return "Current Browser";
+}
 
 const LOGIN_KEYWORDS = ["logged in", "login", "failed login", "sign in"];
 
@@ -64,7 +71,7 @@ function getToken() { return localStorage.getItem("token") || ""; }
 
 function SectionCard({ children }) {
   return (
-    <div className="bg-white dark:bg-gray-800 dark:border-gray-700 rounded-2xl border border-neutral-200 w-full p-10 shadow-sm overflow-hidden mb-5">
+    <div className="bg-white dark:bg-gray-800 dark:border-gray-700 rounded-2xl border border-neutral-200 w-full shadow-sm overflow-hidden mb-5">
       {children}
     </div>
   );
@@ -196,81 +203,161 @@ function TwoFADisableModal({ onConfirm, onClose, saving }) {
 
 // ── Billing Modals ────────────────────────────────────────────────────────────
 
-function UpgradeModal({ onClose, currentPlanSlug }) {
+const PLAN_MONTHLY = { pro: 14900, max: 29900 };
+const PLAN_YEARLY  = { pro: 149000, max: 299000 };
+
+function UpgradeModal({ onClose, currentPlanSlug, onUpgrade }) {
+  const [billingCycle, setBillingCycle] = useState("monthly");
+  const [selectedPlan, setSelectedPlan] = useState(
+    currentPlanSlug === "max" ? "max" : "pro"
+  );
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const plans = [
+    { slug: "pro", name: "Pro Plan", features: PRO_FEATURES, color: "neutral", price: billingCycle === "yearly" ? PLAN_YEARLY.pro : PLAN_MONTHLY.pro },
+    { slug: "max", name: "Max Plan", features: MAX_FEATURES, color: "blue",    price: billingCycle === "yearly" ? PLAN_YEARLY.max : PLAN_MONTHLY.max },
+  ];
+
+  async function handlePay() {
+    if (selectedPlan === currentPlanSlug) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      await onUpgrade(selectedPlan, billingCycle);
+    } catch (e) {
+      setErr(e?.message || "Failed to initialise payment. Please try again.");
+      setBusy(false);
+    }
+  }
+
+  const upgradeTarget = plans.find((p) => p.slug === selectedPlan);
+  const price = upgradeTarget
+    ? `₦${(upgradeTarget.price).toLocaleString()} / ${billingCycle === "yearly" ? "yr" : "mo"}`
+    : "";
+
   return (
     <ModalBackdrop onClose={onClose}>
-      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
-        <div className="flex justify-between items-center px-6 py-4 border-b border-neutral-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex justify-between items-center px-6 py-4 border-b border-neutral-200 dark:border-gray-700 shrink-0">
           <div className="flex items-center gap-2">
             <Zap size={18} className="text-[#1a71f6]" />
-            <h3 className="text-base font-semibold">Compare Plans</h3>
+            <h3 className="text-base font-semibold">Upgrade Plan</h3>
           </div>
           <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6">
-          <div className="rounded-2xl border-[2px] border-neutral-200 p-5">
-            <div className="flex items-center justify-between mb-1">
-              <h4 className="font-semibold text-gray-800">Pro Plan</h4>
-              {currentPlanSlug === "pro" && (
-                <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Current</span>
-              )}
-            </div>
-            <p className="text-2xl font-bold text-gray-900 mb-4">₦14,900<span className="text-sm font-normal text-neutral-400">/mo</span></p>
-            <ul className="space-y-2">
-              {PRO_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm text-gray-600">
-                  <CheckCircle size={14} className="text-green-500 shrink-0" />{f}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="rounded-2xl border-[2px] border-[#1a71f6] bg-gradient-to-b from-blue-50 to-white p-5 relative overflow-hidden">
-            {currentPlanSlug !== "max" && (
-              <div className="absolute top-3 right-3 text-xs bg-[#1a71f6] text-white font-semibold px-2 py-0.5 rounded-full">Recommended</div>
-            )}
-            <div className="flex items-center justify-between mb-1">
-              <h4 className="font-semibold text-gray-800">Max Plan</h4>
-              {currentPlanSlug === "max" && (
-                <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Current</span>
-              )}
-            </div>
-            <p className="text-2xl font-bold text-[#1a71f6] mb-4">₦29,900<span className="text-sm font-normal text-neutral-400">/mo</span></p>
-            <ul className="space-y-2">
-              {MAX_FEATURES.map((f) => (
-                <li key={f} className="flex items-center gap-2 text-sm text-gray-700">
-                  <CheckCircle size={14} className="text-[#1a71f6] shrink-0" />{f}
-                </li>
-              ))}
-            </ul>
+
+        {/* Billing cycle toggle */}
+        <div className="flex justify-center px-6 pt-4 shrink-0">
+          <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+            {["monthly", "yearly"].map((cycle) => (
+              <button
+                key={cycle}
+                onClick={() => setBillingCycle(cycle)}
+                className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors capitalize ${
+                  billingCycle === cycle
+                    ? "bg-white text-gray-800 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {cycle}
+                {cycle === "yearly" && <span className="ml-1.5 text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full">Save 16%</span>}
+              </button>
+            ))}
           </div>
         </div>
-        <div className="px-6 pb-6">
-          <button onClick={onClose} className="w-full py-3 rounded-xl bg-[#1a71f6] text-white font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-            <Zap size={16} />
-            Contact Support to Upgrade
+
+        {/* Plan cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6 overflow-y-auto">
+          {plans.map((plan) => {
+            const isCurrent  = plan.slug === currentPlanSlug;
+            const isSelected = plan.slug === selectedPlan;
+            const isBlue     = plan.color === "blue";
+            return (
+              <button
+                key={plan.slug}
+                onClick={() => !isCurrent && setSelectedPlan(plan.slug)}
+                disabled={isCurrent}
+                className={`rounded-2xl border-[2px] p-5 text-left transition-all w-full ${
+                  isCurrent
+                    ? "border-neutral-200 opacity-60 cursor-not-allowed"
+                    : isSelected
+                    ? isBlue ? "border-[#1a71f6] bg-blue-50" : "border-gray-700 bg-gray-50"
+                    : "border-neutral-200 hover:border-gray-400"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="font-semibold text-gray-800">{plan.name}</h4>
+                  {isCurrent
+                    ? <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Current</span>
+                    : isSelected
+                    ? <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isBlue ? "bg-[#1a71f6] text-white" : "bg-gray-700 text-white"}`}>Selected</span>
+                    : null
+                  }
+                </div>
+                <p className={`text-2xl font-bold mb-3 ${isBlue && !isCurrent ? "text-[#1a71f6]" : "text-gray-900"}`}>
+                  ₦{plan.price.toLocaleString()}
+                  <span className="text-sm font-normal text-neutral-400">/{billingCycle === "yearly" ? "yr" : "mo"}</span>
+                </p>
+                <ul className="space-y-1.5">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 text-xs text-gray-600">
+                      <CheckCircle size={12} className={isBlue && !isCurrent ? "text-[#1a71f6] shrink-0" : "text-green-500 shrink-0"} />{f}
+                    </li>
+                  ))}
+                </ul>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pb-6 shrink-0">
+          {err && <p className="text-xs text-red-500 mb-2 text-center">{err}</p>}
+          <button
+            onClick={handlePay}
+            disabled={busy || selectedPlan === currentPlanSlug}
+            className="w-full py-3 rounded-xl bg-[#1a71f6] text-white font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {busy ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
+            {busy ? "Redirecting to payment..." : `Pay ${price} — Upgrade Now`}
           </button>
+          <p className="text-center text-[11px] text-neutral-400 mt-2">You will be redirected to Paystack to complete payment securely.</p>
         </div>
       </div>
     </ModalBackdrop>
   );
 }
 
-function CancelPlanModal({ onConfirm, onClose }) {
+function CancelPlanModal({ onClose, planName }) {
+  const subject = encodeURIComponent("Subscription Cancellation Request");
+  const body    = encodeURIComponent(
+    `Hi FuelDesk Support,\n\nI would like to cancel my ${planName || "current"} subscription.\n\nPlease process this request at the end of my current billing period.\n\nThank you.`
+  );
   return (
     <ModalBackdrop onClose={onClose}>
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-base font-semibold">Cancel Subscription?</h3>
+          <h3 className="text-base font-semibold">Cancel Subscription</h3>
           <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
         </div>
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
           <p className="text-sm text-amber-800 leading-relaxed">
-            Are you sure you want to cancel? You will lose access to all plan features at the end of your current billing period.
+            To cancel your subscription, please contact our support team. Your plan will remain active until the end of the current billing period.
           </p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-[#1a71f6] text-sm text-white font-semibold hover:bg-blue-700 transition-colors">Keep Plan</button>
-          <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl border-[2px] border-red-400 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors">Yes, Cancel</button>
+        <div className="flex flex-col gap-2">
+          <a
+            href={`mailto:support@flourishstation.com?subject=${subject}&body=${body}`}
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl border-[2px] border-red-400 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors text-center"
+          >
+            Email Support to Cancel
+          </a>
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-[#1a71f6] text-sm text-white font-semibold hover:bg-blue-700 transition-colors">
+            Keep My Plan
+          </button>
         </div>
       </div>
     </ModalBackdrop>
@@ -294,8 +381,14 @@ export default function SettingsPage() {
   const [showDisableModal, setShowDisableModal] = useState(false);
   const [twoFASaving, setTwoFASaving] = useState(false);
 
-  // Sessions
-  const [sessions, setSessions] = useState(MOCK_SESSIONS);
+  // Sessions — only the current device (multi-device tracking needs backend sessions)
+  const [sessions] = useState(() => [{
+    id: 1,
+    device: detectDevice(),
+    ip: "—",
+    lastActive: "Just now",
+    current: true,
+  }]);
 
   // Notification prefs
   const [notifPrefs, setNotifPrefs] = useState({
@@ -423,6 +516,17 @@ export default function SettingsPage() {
     toast.success("Other sessions logged out");
   }
 
+  async function handleUpgrade(planSlug, billingCycle) {
+    const res = await fetch(`${API}/api/payments/initialize`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+      body: JSON.stringify({ planSlug, billingCycle, country: "NG" }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to initialise payment");
+    window.location.href = data.data.authorizationUrl;
+  }
+
   // ── Plan display values ─────────────────────────────────────────
   const planSlug    = planData?.plan || "free";
   const planName    = planData?.planName || (planSlug === "free" ? "Free Plan" : planSlug === "pro" ? "Pro Plan" : "Max Plan");
@@ -436,7 +540,7 @@ export default function SettingsPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-3xl mx-auto py-6 px-3 lg:px-4">
+      <div className="max-w-3xl mx-auto py-4 px-3 sm:px-4">
 
         <div className="mb-7">
           <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
@@ -651,15 +755,15 @@ export default function SettingsPage() {
               </div>
             ) : (
               <div className="rounded-xl border border-neutral-200 overflow-hidden">
-                <div className="grid grid-cols-4 bg-gray-50 dark:bg-gray-700 px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
-                  <span>Date</span><span>Amount</span><span>Status</span><span className="text-right">Plan</span>
+                <div className="grid grid-cols-3 sm:grid-cols-4 bg-gray-50 dark:bg-gray-700 px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+                  <span>Date</span><span>Amount</span><span>Status</span><span className="hidden sm:block text-right">Plan</span>
                 </div>
                 {billingHistory.map((row, i) => (
-                  <div key={row.id} className={`grid grid-cols-4 items-center px-4 py-3 text-sm ${i < billingHistory.length - 1 ? "border-b border-neutral-100" : ""}`}>
+                  <div key={row.id} className={`grid grid-cols-3 sm:grid-cols-4 items-center px-4 py-3 text-sm ${i < billingHistory.length - 1 ? "border-b border-neutral-100" : ""}`}>
                     <span className="text-gray-700 font-medium text-xs sm:text-sm">{row.date}</span>
                     <span className="font-semibold text-gray-800 text-xs sm:text-sm">{row.amount}</span>
                     <span><span className="text-[10px] sm:text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">{row.status}</span></span>
-                    <span className="text-right text-xs text-gray-500">{row.planName}</span>
+                    <span className="hidden sm:block text-right text-xs text-gray-500">{row.planName}</span>
                   </div>
                 ))}
               </div>
@@ -684,11 +788,15 @@ export default function SettingsPage() {
         />
       )}
       {showUpgradeModal && (
-        <UpgradeModal currentPlanSlug={planSlug} onClose={() => setShowUpgradeModal(false)} />
+        <UpgradeModal
+          currentPlanSlug={planSlug}
+          onClose={() => setShowUpgradeModal(false)}
+          onUpgrade={handleUpgrade}
+        />
       )}
       {showCancelModal && (
         <CancelPlanModal
-          onConfirm={() => { setPlanCancelled(true); setShowCancelModal(false); toast("Subscription cancellation scheduled", { icon: "⚠️" }); }}
+          planName={planName}
           onClose={() => setShowCancelModal(false)}
         />
       )}

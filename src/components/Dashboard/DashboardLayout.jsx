@@ -3,27 +3,44 @@
 import Sidebar from "@/components/Dashboard/Sidebar";
 import Header from "@/components/Dashboard/Header";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 
 function DashboardLayout({ children }) {
+  const router = useRouter();
   const [showSidebar, setShowSidebar] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [daysLeft, setDaysLeft] = useState(null);
   const [endsAt, setEndsAt] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Idle session timeout — logs out after 20 min of inactivity
+  useSessionTimeout();
 
   useEffect(() => {
+    // Auth guard — redirect to login if no token
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+    if (!token || !user) {
+      router.replace("/login");
+      return;
+    }
+
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      if (user.accessMode === "read-only") {
+      const parsed = JSON.parse(user);
+      if (parsed.accessMode === "read-only") {
         setIsReadOnly(true);
-        setDaysLeft(user.gracePeriodDaysLeft ?? null);
-        setEndsAt(user.gracePeriodEndsAt ?? null);
+        setDaysLeft(parsed.gracePeriodDaysLeft ?? null);
+        setEndsAt(parsed.gracePeriodEndsAt ?? null);
       }
     } catch {
-      // ignore
+      // ignore parse errors
     }
-  }, []);
+
+    setAuthChecked(true);
+  }, [router]);
 
   const formattedEndsAt = endsAt
     ? new Date(endsAt).toLocaleDateString("en-US", {
@@ -35,6 +52,15 @@ function DashboardLayout({ children }) {
 
   function toggleSidebar() {
     setShowSidebar(!showSidebar);
+  }
+
+  // Don't render dashboard until auth is verified (prevents flash for unauthenticated users)
+  if (!authChecked) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
   }
 
   return (

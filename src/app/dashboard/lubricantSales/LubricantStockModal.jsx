@@ -84,12 +84,10 @@ export default function LubricantStockModal({ onClose }) {
     if (!barcode) return;
 
     try {
-      console.log("Fetching barcode:", barcode);
       const response = await getLubricantByBarcode(barcode);
 
       if (response && response.data) {
         const lubricant = response.data;
-        console.log("🔍 Full Lubricant data:", lubricant);
 
         setRows((prevRows) => {
           const newRows = [...prevRows];
@@ -261,7 +259,6 @@ export default function LubricantStockModal({ onClose }) {
 
   // Select product from search
   const selectProductFromSearch = (lubricant) => {
-    console.log("Selecting product:", lubricant);
     setSearchError(""); // Clear search error
 
     setRows((prevRows) => {
@@ -374,7 +371,6 @@ export default function LubricantStockModal({ onClose }) {
       })),
       totalAmount: parseFloat(calculateTotalAmount()),
     };
-    console.log("Purchase data to save:", purchaseData);
 
     try {
       setIsSaving(true);
@@ -401,277 +397,343 @@ export default function LubricantStockModal({ onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-[#f6f6f6] dark:bg-gray-900 p-6 rounded-lg shadow-xl max-w-7xl w-full mx-auto max-h-[90vh] overflow-y-auto scrollbar-hide">
-        {/* Header */}
-        <section className="flex flex-col lg:flex-row gap-8 relative items-center">
-          <div className="w-3/8">
-            <h3 className="text-2xl mb-2 font-semibold">
-              Add Lubricant Stock Purchase
-            </h3>
-            <p>Record purchased lubricants in your station</p>
-          </div>
-          {/* Search */}
-          <div className="relative w-3/8">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={handleSearch}
-              className="border-2 w-full border-gray-300 rounded-md p-2"
-              placeholder="Search product name"
-            />
-            <Search className="text-gray-300 absolute top-3 right-3" />
+    <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
+      <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="bg-[#f6f6f6] dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-7xl max-h-[92vh] overflow-y-auto">
 
-            {/* Search Error */}
-            {searchError && (
-              <div className="absolute top-full left-0 right-0 bg-red-50 border border-red-300 rounded-md mt-1 p-3 z-50 shadow-lg">
-                <div className="flex items-center gap-2 text-red-700">
-                  <AlertCircle size={18} />
-                  <p className="text-sm font-medium">{searchError}</p>
+          {/* ── Header ── */}
+          <div className="sticky top-0 bg-[#f6f6f6] dark:bg-gray-900 z-10 px-4 sm:px-6 pt-5 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="min-w-0">
+                <h3 className="text-lg sm:text-2xl font-semibold leading-tight">
+                  Add Lubricant Stock Purchase
+                </h3>
+                <p className="text-sm text-gray-500 mt-0.5">Record purchased lubricants in your station</p>
+              </div>
+              <button
+                onClick={onClose}
+                className="shrink-0 p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="relative w-full">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={handleSearch}
+                className="border-2 w-full border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg p-2.5 pr-10 text-sm focus:border-blue-400 focus:outline-none"
+                placeholder="Search product by name to add to stock..."
+              />
+              <Search size={18} className="text-gray-400 absolute top-1/2 -translate-y-1/2 right-3 pointer-events-none" />
+
+              {searchError && (
+                <div className="absolute top-full left-0 right-0 bg-red-50 border border-red-300 rounded-md mt-1 p-3 z-50 shadow-lg">
+                  <div className="flex items-center gap-2 text-red-700">
+                    <AlertCircle size={16} />
+                    <p className="text-sm font-medium">{searchError}</p>
+                  </div>
+                </div>
+              )}
+
+              {showSearchDropdown && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md mt-1 max-h-52 overflow-y-auto z-50 shadow-lg">
+                  {searchResults.map((lubricant) => (
+                    <div
+                      key={lubricant._id}
+                      onClick={() => selectProductFromSearch(lubricant)}
+                      className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-b-0"
+                    >
+                      <p className="font-semibold text-sm dark:text-white">{lubricant.productName}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Barcode: {lubricant.barcode}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="px-4 sm:px-6 pb-6">
+
+            {/* ── Purchase details ── */}
+            <div className="mt-4 bg-white dark:bg-gray-800 p-4 rounded-xl">
+              <div className="flex items-center gap-1.5 mb-4">
+                <Calendar size={16} className="text-purple-600" />
+                <p className="text-purple-600 text-sm font-semibold">{formattedDate}</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <p className="text-sm font-semibold mb-1">Supplier</p>
+                  <input
+                    type="text"
+                    value={supplier}
+                    onChange={(e) => setSupplier(e.target.value)}
+                    placeholder="Enter supplier name"
+                    className="border-2 w-full p-2 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:border-blue-400 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold mb-1">Invoice No.</p>
+                  <input
+                    type="text"
+                    value={invoiceNo}
+                    onChange={(e) => setInvoiceNo(e.target.value)}
+                    placeholder="Enter invoice number"
+                    className="border-2 w-full p-2 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:border-blue-400 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold mb-1">Payment Method</p>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="border-2 w-full p-2 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:border-blue-400 focus:outline-none"
+                  >
+                    <option value="">Select Method</option>
+                    <option value="POS">POS</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Transfer">Transfer</option>
+                  </select>
                 </div>
               </div>
-            )}
-
-            {/* Search dropdown */}
-            {showSearchDropdown && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md mt-1 max-h-60 overflow-y-auto z-50 shadow-lg">
-                {searchResults.map((lubricant) => (
-                  <div
-                    key={lubricant._id}
-                    onClick={() => selectProductFromSearch(lubricant)}
-                    className="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-200"
-                  >
-                    <p className="font-semibold">{lubricant.productName}</p>
-                    <p className="text-sm text-gray-600">
-                      Barcode: {lubricant.barcode}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          {/* Close */}
-          <div className="absolute right-0 top-0 cursor-pointer">
-            <X onClick={onClose} />
-          </div>
-        </section>
-
-        {/* Main */}
-        <section className="mt-10 bg-white dark:bg-gray-800 p-3 rounded-lg">
-          <div className="flex mb-8 items-center gap-1">
-            <Calendar className="text-purple-600" />
-            <p className="text-purple-600 text-sm font-semibold">
-              {formattedDate}
-            </p>
-          </div>
-
-          <div className="flex flex-col lg:flex-row gap-3">
-            {/* Supplier */}
-            <div className="w-full">
-              <p className="font-semibold mb-1">Supplier</p>
-              <input
-                type="text"
-                value={supplier}
-                onChange={(e) => setSupplier(e.target.value)}
-                placeholder="Enter supplier name"
-                className="border-2 w-full p-2 rounded-md border-gray-300"
-              />
             </div>
-            {/* Invoice number */}
-            <div className="w-full">
-              <p className="font-semibold mb-1">Invoice No.</p>
-              <input
-                type="text"
-                value={invoiceNo}
-                onChange={(e) => setInvoiceNo(e.target.value)}
-                placeholder="Enter no"
-                className="border-2 w-full p-2 rounded-md border-gray-300"
-              />
-            </div>
-            {/* Payment method */}
-            <div className="w-full">
-              <p className="font-semibold mb-1">Payment Method</p>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="border-2 w-full p-2 rounded-md border-gray-300"
-              >
-                <option value="">Select Method</option>
-                <option value="POS">POS</option>
-                <option value="Cash">Cash</option>
-                <option value="Transfer">Transfer</option>
-              </select>
-            </div>
-          </div>
-        </section>
 
-        <section className="bg-white dark:bg-gray-800 mt-10 p-4 rounded-md">
-          {message && (
-            <div
-              className={`p-3 rounded-lg text-sm font-semibold mb-4 ${
-                message.startsWith("✅")
-                  ? "bg-green-100 text-green-700 border border-green-300"
-                  : "bg-red-100 text-red-700 border border-red-300"
-              }`}
-            >
-              {message}
-            </div>
-          )}
+            {/* ── Items section ── */}
+            <div className="bg-white dark:bg-gray-800 mt-4 p-4 rounded-xl">
+              {message && (
+                <div className={`p-3 rounded-lg text-sm font-semibold mb-4 ${
+                  message.startsWith("✅")
+                    ? "bg-green-100 text-green-700 border border-green-300"
+                    : "bg-red-100 text-red-700 border border-red-300"
+                }`}>
+                  {message}
+                </div>
+              )}
 
-          <div className="w-full overflow-x-auto rounded-lg border border-gray-100 pb-4">
-            <table className="min-w-[1200px] text-sm text-left text-gray-700 w-full">
-              <thead className="bg-gray-100 text-md font-semibold text-gray-700">
-                <tr>
-                  <th className="px-4 py-3">Barcode</th>
-                  <th className="px-4 py-3">Product name</th>
-                  <th className="px-4 py-3">Amount</th>
-                  <th className="px-4 py-3">Quantity</th>
-                  <th className="px-4 py-3">Unit Cost</th>
-                  <th className="px-4 py-3">Old unit cost</th>
-                  <th className="px-4 py-3">% Selling price</th>
-                  <th className="px-4 py-3">Unit price</th>
-                  <th className="px-4 py-3">Action</th>
-                </tr>
-              </thead>
-
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              {/* Mobile card layout */}
+              <div className="flex flex-col gap-3 sm:hidden">
                 {rows.map((row, index) => (
-                  <React.Fragment key={index}>
-                    <tr  className="text-sm">
-                      <td className="px-4 py-2">
+                  <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-gray-700">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-sm font-semibold text-gray-500 dark:text-gray-300">Item {index + 1}</span>
+                      <div className="flex items-center gap-3">
+                        <SquarePen
+                          size={16}
+                          className={`cursor-pointer ${row.isEditing ? "text-green-600" : "text-blue-500"}`}
+                          onClick={() => toggleEdit(index)}
+                        />
+                        <Trash2
+                          size={16}
+                          className="cursor-pointer text-red-500 hover:text-red-400"
+                          onClick={() => handleDeleteRow(index)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      {/* Barcode */}
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Barcode</label>
                         <input
                           type="text"
                           value={row.barcode}
                           onChange={(e) => handleBarcodeChange(e, index)}
                           onKeyDown={(e) => handleBarcodeKeyPress(e, index)}
-                          placeholder="Enter barcode + Enter"
-                          className={`w-full px-3 py-2 border rounded-xl ${
-                            row.error
-                              ? "border-red-300 bg-red-50"
-                              : "border-neutral-300"
+                          onBlur={() => fetchLubricantByBarcode(index)}
+                          placeholder="Scan or type barcode"
+                          className={`w-full px-3 py-2 border rounded-lg text-sm ${
+                            row.error ? "border-red-300 bg-red-50" : "border-neutral-300 dark:border-gray-500 dark:bg-gray-600 dark:text-white"
                           }`}
                         />
-                      </td>
-                      <td className="px-4 py-2">
+                      </div>
+
+                      {/* Product name */}
+                      <div>
+                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Product Name</label>
                         <input
                           type="text"
                           value={row.productName}
                           disabled
-                          className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl text-gray-700"
+                          className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200 rounded-lg text-sm"
                         />
-                      </td>
-                      <td className="px-4 py-2">
-                        <NumericInput
-                          variant="decimal"
-                          value={row.amount}
-                          onChange={(e) => handleAmountChange(e, index)}
-                          placeholder="Enter amount"
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-xl"
-                        />
-                      </td>
-                      <td className="px-4 py-2">
-                        <NumericInput
-                          variant="numeric"
-                          value={row.quantity}
-                          onChange={(e) => handleQtyChange(e, index)}
-                          className="w-full px-3 py-2 border border-neutral-300 rounded-xl"
-                        />
-                      </td>
-                      <td className="px-4 py-2">
-                        <input
-                          type="number"
-                          value={row.unitCost}
-                          disabled
-                          className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl text-gray-700"
-                        />
-                      </td>
-                      <td className="px-4 py-2">
-                        <input
-                          type="text"
-                          value={row.oldUnitCost}
-                          disabled
-                          className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 rounded-xl text-gray-700"
-                        />
-                      </td>
-                      <td className="px-4 py-2">
-                        <NumericInput
-                          variant="decimal"
-                          value={row.sellingPercentage}
-                          onChange={(e) => handleSellingPercentageChange(e, index)}
-                          disabled={!row.isEditing}
-                          className={`w-full px-3 py-2 border border-neutral-300 rounded-xl ${
-                            !row.isEditing ? "bg-neutral-100 text-gray-700" : ""
-                          }`}
-                        />
-                      </td>
-                      <td className="px-4 py-2">
-                        <NumericInput
-                          variant="decimal"
-                          value={row.unitPrice}
-                          onChange={(e) => handleUnitPriceChange(e, index)}
-                          disabled={!row.isEditing}
-                          className={`w-full px-3 py-2 border border-neutral-300 rounded-xl ${
-                            !row.isEditing ? "bg-neutral-100 text-gray-700" : ""
-                          }`}
-                        />
-                      </td>
-                      <td className="px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <SquarePen
-                            size={18}
-                            className={`cursor-pointer ${
-                              row.isEditing
-                                ? "text-green-600 hover:text-green-800"
-                                : "text-blue-600 hover:text-blue-800"
-                            }`}
-                            onClick={() => toggleEdit(index)}
-                          />
-                          <Trash2
-                            size={18}
-                            className="cursor-pointer text-red-500 hover:text-red-400"
-                            onClick={() => handleDeleteRow(index)}
+                      </div>
+
+                      {/* Amount + Quantity */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Amount (₦)</label>
+                          <NumericInput
+                            variant="decimal"
+                            value={row.amount}
+                            onChange={(e) => handleAmountChange(e, index)}
+                            placeholder="0.00"
+                            className="w-full px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-600 dark:text-white rounded-lg text-sm"
                           />
                         </div>
-                      </td>
-                    </tr>
-                    {/* Row Error Message */}
-                    {row.error && (
-                      <tr>
-                        <td colSpan="9" className="px-4 py-2">
-                          <div className="bg-red-50 border border-red-300 rounded-lg p-2 flex items-center gap-2 text-red-700">
-                            <AlertCircle size={16} />
-                            <p className="text-xs font-medium">{row.error}</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Quantity</label>
+                          <NumericInput
+                            variant="numeric"
+                            value={row.quantity}
+                            onChange={(e) => handleQtyChange(e, index)}
+                            className="w-full px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-600 dark:text-white rounded-lg text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Unit cost + Old unit cost */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Unit Cost</label>
+                          <input
+                            type="text"
+                            value={row.unitCost}
+                            disabled
+                            className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Old Unit Cost</label>
+                          <input
+                            type="text"
+                            value={row.oldUnitCost}
+                            disabled
+                            className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200 rounded-lg text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* % Selling + Unit price */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">% Selling Price</label>
+                          <NumericInput
+                            variant="decimal"
+                            value={row.sellingPercentage}
+                            onChange={(e) => handleSellingPercentageChange(e, index)}
+                            disabled={!row.isEditing}
+                            className={`w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm ${!row.isEditing ? "bg-neutral-100 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200" : "dark:bg-gray-600 dark:border-gray-500 dark:text-white"}`}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Unit Price</label>
+                          <NumericInput
+                            variant="decimal"
+                            value={row.unitPrice}
+                            onChange={(e) => handleUnitPriceChange(e, index)}
+                            disabled={!row.isEditing}
+                            className={`w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm ${!row.isEditing ? "bg-neutral-100 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200" : "dark:bg-gray-600 dark:border-gray-500 dark:text-white"}`}
+                          />
+                        </div>
+                      </div>
+
+                      {row.error && (
+                        <div className="bg-red-50 border border-red-300 rounded-lg p-2 flex items-center gap-2 text-red-700">
+                          <AlertCircle size={14} />
+                          <p className="text-xs font-medium">{row.error}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
 
-          <div className="mt-6 flex justify-between items-center">
-            {/* Total Amount */}
-            <div className="bg-[#d9edff] py-4 pl-4 pr-20 rounded-lg">
-              <p className="text-[#1a71f6] text-sm">Total Amount</p>
-              <p className="text-2xl text-blue-500 font-semibold">
-                ₦{calculateTotalAmount()}
-              </p>
+              {/* Desktop table layout */}
+              <div className="hidden sm:block w-full overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700 pb-4">
+                <table className="min-w-[1100px] text-sm text-left text-gray-700 dark:text-gray-200 w-full">
+                  <thead className="bg-gray-100 dark:bg-gray-700 font-semibold text-gray-700 dark:text-gray-200">
+                    <tr>
+                      <th className="px-4 py-3">Barcode</th>
+                      <th className="px-4 py-3">Product name</th>
+                      <th className="px-4 py-3">Amount</th>
+                      <th className="px-4 py-3">Quantity</th>
+                      <th className="px-4 py-3">Unit Cost</th>
+                      <th className="px-4 py-3">Old unit cost</th>
+                      <th className="px-4 py-3">% Selling price</th>
+                      <th className="px-4 py-3">Unit price</th>
+                      <th className="px-4 py-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {rows.map((row, index) => (
+                      <React.Fragment key={index}>
+                        <tr className="text-sm">
+                          <td className="px-4 py-2">
+                            <input
+                              type="text"
+                              value={row.barcode}
+                              onChange={(e) => handleBarcodeChange(e, index)}
+                              onKeyDown={(e) => handleBarcodeKeyPress(e, index)}
+                              onBlur={() => fetchLubricantByBarcode(index)}
+                              placeholder="Enter barcode + Enter"
+                              className={`w-full px-3 py-2 border rounded-xl ${row.error ? "border-red-300 bg-red-50" : "border-neutral-300 dark:border-gray-500 dark:bg-gray-700 dark:text-white"}`}
+                            />
+                          </td>
+                          <td className="px-4 py-2">
+                            <input type="text" value={row.productName} disabled className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300 rounded-xl" />
+                          </td>
+                          <td className="px-4 py-2">
+                            <NumericInput variant="decimal" value={row.amount} onChange={(e) => handleAmountChange(e, index)} placeholder="Enter amount" className="w-full px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-700 dark:text-white rounded-xl" />
+                          </td>
+                          <td className="px-4 py-2">
+                            <NumericInput variant="numeric" value={row.quantity} onChange={(e) => handleQtyChange(e, index)} className="w-full px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-700 dark:text-white rounded-xl" />
+                          </td>
+                          <td className="px-4 py-2">
+                            <input type="number" value={row.unitCost} disabled className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300 rounded-xl" />
+                          </td>
+                          <td className="px-4 py-2">
+                            <input type="text" value={row.oldUnitCost} disabled className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300 rounded-xl" />
+                          </td>
+                          <td className="px-4 py-2">
+                            <NumericInput variant="decimal" value={row.sellingPercentage} onChange={(e) => handleSellingPercentageChange(e, index)} disabled={!row.isEditing} className={`w-full px-3 py-2 border border-neutral-300 rounded-xl ${!row.isEditing ? "bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300" : "dark:bg-gray-700 dark:border-gray-500 dark:text-white"}`} />
+                          </td>
+                          <td className="px-4 py-2">
+                            <NumericInput variant="decimal" value={row.unitPrice} onChange={(e) => handleUnitPriceChange(e, index)} disabled={!row.isEditing} className={`w-full px-3 py-2 border border-neutral-300 rounded-xl ${!row.isEditing ? "bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300" : "dark:bg-gray-700 dark:border-gray-500 dark:text-white"}`} />
+                          </td>
+                          <td className="px-4 py-2">
+                            <div className="flex items-center gap-2">
+                              <SquarePen size={18} className={`cursor-pointer ${row.isEditing ? "text-green-600 hover:text-green-800" : "text-blue-600 hover:text-blue-800"}`} onClick={() => toggleEdit(index)} />
+                              <Trash2 size={18} className="cursor-pointer text-red-500 hover:text-red-400" onClick={() => handleDeleteRow(index)} />
+                            </div>
+                          </td>
+                        </tr>
+                        {row.error && (
+                          <tr>
+                            <td colSpan="9" className="px-4 py-2">
+                              <div className="bg-red-50 border border-red-300 rounded-lg p-2 flex items-center gap-2 text-red-700">
+                                <AlertCircle size={16} />
+                                <p className="text-xs font-medium">{row.error}</p>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Footer */}
+              <div className="mt-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                <div className="bg-[#d9edff] py-4 px-5 rounded-xl">
+                  <p className="text-[#1a71f6] text-sm">Total Amount</p>
+                  <p className="text-2xl text-blue-500 font-semibold">₦{calculateTotalAmount()}</p>
+                </div>
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className={`flex gap-2 items-center justify-center py-3 font-semibold px-8 rounded-xl text-white transition-colors ${isSaving ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+                >
+                  {isSaving ? "Saving..." : "Save"}
+                  <Save size={18} />
+                </button>
+              </div>
             </div>
-
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`flex gap-2 items-center ${
-                isSaving ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
-              } text-white py-3 font-semibold px-6 rounded-lg`}
-            >
-              {isSaving ? "Saving..." : "Save"}
-              <Save />
-            </button>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );

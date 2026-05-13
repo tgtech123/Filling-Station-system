@@ -21,6 +21,7 @@ import {
   Network,
   Plus,
   BarChart2,
+  Package,
 } from "lucide-react";
 import { RiOilLine } from "react-icons/ri";
 import { PiToggleLeftFill, PiToggleRightFill } from "react-icons/pi";
@@ -257,6 +258,13 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       link: "/dashboard/lubricantSales",
       roles: ["cashier"],
     },
+    {
+      id: "procurement-view",
+      name: "View Procurement",
+      icon: <Package size={20} />,
+      link: "/dashboard/procurement-view",
+      roles: ["cashier"],
+    },
     // Attendant links
     {
       id: "shift",
@@ -306,6 +314,13 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       name: "Staff Performance",
       icon: <TbTargetArrow size={20} />,
       link: "/dashboard/staffPerformance",
+      roles: ["supervisor"],
+    },
+    {
+      id: "supervisor-procurement-view",
+      name: "View Procurement",
+      icon: <Package size={20} />,
+      link: "/dashboard/procurement-view",
       roles: ["supervisor"],
     },
     // Accountant links
@@ -401,6 +416,13 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       name: "Analytics",
       icon: <BarChart2 size={18} />,
       link: "/dashboard/analytics",
+      roles: ["manager"],
+    },
+    {
+      id: "procurement",
+      name: "Procure Lubricants",
+      icon: <Package size={20} />,
+      link: "/dashboard/procurement",
       roles: ["manager"],
     },
     //Admin links
@@ -628,10 +650,15 @@ const visibleLinks = getVisibleLinks(userRole);
           {/* Tools */}
           <p className="mb-4 text-xs font-semibold">TOOLS</p>
           <div className="links text-sm space-y-1">
-            <div className="flex items-center cursor-pointer gap-3 rounded-[12px] px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200">
+            <Link
+              href="/dashboard/help"
+              className={`flex items-center gap-3 rounded-[12px] px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 ${
+                pathname === "/dashboard/help" ? "bg-[#ff9d29] text-white" : ""
+              }`}
+            >
               <CircleQuestionMark size={18} />
               <span>Help & Support</span>
-            </div>
+            </Link>
             <div className="flex items-center justify-between gap-2 rounded-[12px] px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200">
               <div className="flex gap-3 items-center cursor-pointer">
                 <Moon size={18} />

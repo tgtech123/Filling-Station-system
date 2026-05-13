@@ -34,12 +34,9 @@ export default function Inventory() {
     const salesMap = useMemo(() => {
         const map = new Map();
         
-        console.log(`${viewMode} summary:`, activeSummary);
-        
         const summaryArray = Array.isArray(activeSummary) ? activeSummary : [];
-        
+
         if (!summaryArray.length) {
-            console.log(`No ${viewMode} summary data available`);
             return map;
         }
         
@@ -57,8 +54,6 @@ export default function Inventory() {
                 });
             }
         });
-        
-        console.log(`${viewMode} sales map:`, Array.from(map.entries()));
         
         return map;
     }, [activeSummary, viewMode]);
