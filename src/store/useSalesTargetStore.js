@@ -1,16 +1,6 @@
 ﻿import { create } from "zustand";
 import { api } from "@/lib/config";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
-
-const getAuthHeaders = () => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-  return {};
-};
-
 const getStaffId = () => {
   if (typeof window !== "undefined") {
     try {

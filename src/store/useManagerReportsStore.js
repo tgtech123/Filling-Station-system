@@ -5,20 +5,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/config';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
-
-// ─── Auth helpers ─────────────────────────────────────────────────────────────
-const getAuthToken = () => {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('token');
-  }
-  return null;
-};
-
-const getAuthHeaders = () => {
-  const token = getAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
 
 // ─── Client-side search filter for activity logs ──────────────────────────────
 const applySearchFilter = (logs = [], search = '') => {
@@ -181,10 +167,7 @@ const useManagerReportsStore = create((set, get) => ({
       if (merged.productType) params.productType = merged.productType;
       if (merged.shiftType)   params.shiftType   = merged.shiftType;
 
-      const response = await api.get(
-        `/api/manager/reports/sales-and-cash`,
-        { headers: getAuthHeaders(), params }
-      );
+      const response = await api.get(`/api/manager/reports/sales-and-cash`, { params });
       const data = response.data.data;
       set({ salesAndCash: data, salesAndCashFilters: merged });
       return data;
@@ -237,7 +220,7 @@ const useManagerReportsStore = create((set, get) => ({
       const response = await api.post(
         `/api/manager/reports/export`,
         { ...params, format: 'csv' },
-        { headers: getAuthHeaders(), responseType: 'blob' }
+        { responseType: 'blob' }
       );
 
       const disposition = response.headers['content-disposition'] || '';
@@ -293,10 +276,7 @@ const useManagerReportsStore = create((set, get) => ({
       if (merged.role)      params.role      = merged.role;
       if (merged.status)    params.status    = merged.status;
 
-      const response = await api.get(
-        `/api/manager/activity-logs`,
-        { headers: getAuthHeaders(), params }
-      );
+      const response = await api.get(`/api/manager/activity-logs`, { params });
       const data = response.data.data;
       const filtered = applySearchFilter(data.logs, merged.search);
       set({ activityLogs: data, filteredActivityLogs: filtered, activityLogsFilters: merged });
