@@ -36,11 +36,6 @@ export const useExpenseStore = create((set, get) => ({
     export: null
   },
 
-  // Get token from localStorage
-  getToken: () => {
-    return localStorage.getItem('token');
-  },
-
   // Set filters
   setFilters: (newFilters) => {
     set((state) => ({
@@ -62,7 +57,7 @@ export const useExpenseStore = create((set, get) => ({
 
   // Fetch All Expenses (with pagination and filters)
   fetchExpenses: async (params = {}) => {
-    const token = get().getToken();
+
     const currentFilters = get().filters;
     const currentPagination = get().pagination;
 
@@ -102,7 +97,7 @@ export const useExpenseStore = create((set, get) => ({
 
   // Fetch Single Expense by ID
   fetchExpenseById: async (expenseId) => {
-    const token = get().getToken();
+
 
     set((state) => ({
       loading: { ...state.loading, currentExpense: true },
@@ -130,7 +125,7 @@ export const useExpenseStore = create((set, get) => ({
 
   // Create New Expense
   createExpense: async (expenseData) => {
-    const token = get().getToken();
+
 
     set((state) => ({
       loading: { ...state.loading, create: true },
@@ -167,7 +162,7 @@ export const useExpenseStore = create((set, get) => ({
 
   // Update Expense
   updateExpense: async (expenseId, updateData, ) => {
-    const token = get().getToken();
+
 
     set((state) => ({
       loading: { ...state.loading, update: true },
@@ -214,7 +209,7 @@ export const useExpenseStore = create((set, get) => ({
 
   // Delete Expense
   deleteExpense: async (expenseId) => {
-    const token = get().getToken();
+
 
     set((state) => ({
       loading: { ...state.loading, delete: true },
@@ -244,7 +239,7 @@ export const useExpenseStore = create((set, get) => ({
 
   // Export Expenses
   exportExpenses: async (filterParams = {}) => {
-    const token = get().getToken();
+
     const currentFilters = get().filters;
 
     set((state) => ({

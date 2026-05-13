@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
@@ -7,9 +7,12 @@ import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import {
   Palette, Shield, Bell, Receipt, Sun, Moon, Smartphone,
   Monitor, LogOut, X, CheckCircle, XCircle, CreditCard,
-  Zap, Download,
+  Zap, Loader2,
 } from "lucide-react";
 import useActivityFeedStore from "@/store/useActivityFeedStore";
+
+const API =
+  process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -19,38 +22,20 @@ const MOCK_SESSIONS = [
   { id: 3, device: "Firefox on MacOS",  ip: "41.58.100.12",  lastActive: "Yesterday",  current: false },
 ];
 
-const BILLING_HISTORY = [
-  { id: 1, date: "Apr 1, 2026",  amount: "₦14,900", status: "Paid" },
-  { id: 2, date: "Mar 1, 2026",  amount: "₦14,900", status: "Paid" },
-  { id: 3, date: "Feb 1, 2026",  amount: "₦14,900", status: "Paid" },
-];
-
 const LOGIN_KEYWORDS = ["logged in", "login", "failed login", "sign in"];
 
 const NOTIF_KEYS = [
-  {
-    key: "emailNotifications",
-    label: "Email Notifications",
-    desc: "Receive updates and alerts via email",
-  },
-  {
-    key: "lowStockAlerts",
-    label: "Low Stock Alerts",
-    desc: "Get notified when fuel or lubricant stock drops below threshold",
-  },
-  {
-    key: "shiftCompletionAlerts",
-    label: "Shift Completion Alerts",
-    desc: "Get notified when an attendant completes a shift",
-  },
-  {
-    key: "unauthorizedAccessAlerts",
-    label: "Unauthorized Access Alerts",
-    desc: "Get notified of failed login attempts and suspicious activity",
-  },
+  { key: "emailNotifications", label: "Email Notifications",       desc: "Receive updates and alerts via email",                              backendField: "email"    },
+  { key: "lowStockAlerts",     label: "Low Stock Alerts",          desc: "Get notified when fuel or lubricant stock drops below threshold",    backendField: "lowStock" },
+  { key: "shiftCompletionAlerts", label: "Shift Completion Alerts", desc: "Get notified when an attendant completes a shift",                  backendField: "sales"   },
+  { key: "unauthorizedAccessAlerts", label: "Unauthorized Access Alerts", desc: "Get notified of failed login attempts and suspicious activity", backendField: "push"  },
 ];
 
-// ── Small helpers ─────────────────────────────────────────────────────────────
+const PLAN_PRICE = { free: "Free", pro: "₦14,900 / month", max: "₦29,900 / month" };
+const PRO_FEATURES = ["Up to 5 staff accounts", "Fuel & lubricant tracking", "Sales & cash reports", "Export reports (PDF/CSV)", "Activity logs", "Email support"];
+const MAX_FEATURES = ["Unlimited staff accounts", "Everything in Pro", "AI-powered insights", "Custom report builder", "Priority 24/7 support", "Multi-branch support", "API access"];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function relativeTime(timestamp) {
   const diff = Date.now() - new Date(timestamp).getTime();
@@ -68,7 +53,14 @@ function isLoginActivity(item) {
   return LOGIN_KEYWORDS.some((kw) => text.includes(kw));
 }
 
-// ── Shared UI primitives ──────────────────────────────────────────────────────
+function getUser() {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "{}");
+  } catch { return {}; }
+}
+function getToken() { return localStorage.getItem("token") || ""; }
+
+// ── UI Primitives ─────────────────────────────────────────────────────────────
 
 function SectionCard({ children }) {
   return (
@@ -81,10 +73,7 @@ function SectionCard({ children }) {
 function SectionHeader({ icon, title, subtitle, accent = "#1a71f6" }) {
   return (
     <div className="flex items-start gap-3 p-5 pb-4 border-b border-neutral-200">
-      <div
-        className="mt-0.5 flex items-center justify-center w-9 h-9 rounded-xl shrink-0"
-        style={{ background: `${accent}18` }}
-      >
+      <div className="mt-0.5 flex items-center justify-center w-9 h-9 rounded-xl shrink-0" style={{ background: `${accent}18` }}>
         <span style={{ color: accent }}>{icon}</span>
       </div>
       <div>
@@ -95,12 +84,13 @@ function SectionHeader({ icon, title, subtitle, accent = "#1a71f6" }) {
   );
 }
 
-function Toggle({ enabled, onToggle, colorOn = "#22c55e" }) {
+function Toggle({ enabled, onToggle, colorOn = "#22c55e", busy = false }) {
   return (
     <button
       onClick={onToggle}
+      disabled={busy}
       aria-pressed={enabled}
-      className="relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none"
+      className="relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
       style={{ backgroundColor: enabled ? colorOn : "#d1d5db" }}
     >
       <span
@@ -111,14 +101,17 @@ function Toggle({ enabled, onToggle, colorOn = "#22c55e" }) {
   );
 }
 
-function ToggleRow({ label, hint, enabled, onToggle }) {
+function ToggleRow({ label, hint, enabled, onToggle, busy }) {
   return (
     <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-neutral-100 last:border-0">
       <div className="min-w-0">
         <p className="text-sm font-semibold text-gray-800">{label}</p>
         {hint && <p className="text-xs text-neutral-400 mt-0.5 leading-snug">{hint}</p>}
       </div>
-      <Toggle enabled={enabled} onToggle={onToggle} />
+      <div className="flex items-center gap-2">
+        {busy && <Loader2 size={14} className="animate-spin text-gray-400" />}
+        <Toggle enabled={enabled} onToggle={onToggle} busy={busy} />
+      </div>
     </div>
   );
 }
@@ -136,8 +129,7 @@ function ModalBackdrop({ children, onClose }) {
 
 // ── 2FA Modals ────────────────────────────────────────────────────────────────
 
-function TwoFAEnableModal({ onConfirm, onClose }) {
-  const [code, setCode] = useState("");
+function TwoFAEnableModal({ onConfirm, onClose, saving }) {
   return (
     <ModalBackdrop onClose={onClose}>
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
@@ -150,28 +142,22 @@ function TwoFAEnableModal({ onConfirm, onClose }) {
             <X size={18} />
           </button>
         </div>
-        <div className="flex justify-center mb-5">
-          <div className="w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-dashed border-blue-200 rounded-2xl flex items-center justify-center text-blue-400 text-xs text-center px-3 leading-relaxed">
-            QR Code<br />Placeholder<br /><span className="text-[10px] text-blue-300">scan with auth app</span>
-          </div>
+        <div className="bg-blue-50 rounded-xl p-4 mb-5">
+          <p className="text-sm text-blue-800 leading-relaxed">
+            Enabling Two-Factor Authentication adds an extra layer of security to your account. You will be required to verify your identity on each login.
+          </p>
         </div>
-        <p className="text-xs text-neutral-500 mb-3 text-center">Enter the 6-digit code from your authenticator app</p>
-        <input
-          type="text"
-          maxLength={6}
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-          placeholder="000000"
-          className="w-full h-12 text-center text-2xl tracking-[0.5em] border-[2px] border-neutral-300 rounded-xl focus:border-[#1a71f6] outline-none mb-4 font-mono"
-        />
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border-[2px] border-neutral-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border-[2px] border-neutral-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
           <button
-            onClick={() => code.length === 6 && onConfirm()}
-            disabled={code.length !== 6}
-            className="flex-1 py-2.5 rounded-xl bg-[#1a71f6] text-sm text-white font-semibold hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={onConfirm}
+            disabled={saving}
+            className="flex-1 py-2.5 rounded-xl bg-[#1a71f6] text-sm text-white font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Confirm
+            {saving && <Loader2 size={14} className="animate-spin" />}
+            Enable 2FA
           </button>
         </div>
       </div>
@@ -179,7 +165,7 @@ function TwoFAEnableModal({ onConfirm, onClose }) {
   );
 }
 
-function TwoFADisableModal({ onConfirm, onClose }) {
+function TwoFADisableModal({ onConfirm, onClose, saving }) {
   return (
     <ModalBackdrop onClose={onClose}>
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
@@ -191,8 +177,17 @@ function TwoFADisableModal({ onConfirm, onClose }) {
           <p className="text-sm text-red-700 leading-relaxed">Disabling 2FA will make your account less secure. You can re-enable it at any time.</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border-[2px] border-neutral-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">Keep Enabled</button>
-          <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl bg-red-600 text-sm text-white font-semibold hover:bg-red-700 transition-colors">Disable 2FA</button>
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border-[2px] border-neutral-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+            Keep Enabled
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={saving}
+            className="flex-1 py-2.5 rounded-xl bg-red-600 text-sm text-white font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {saving && <Loader2 size={14} className="animate-spin" />}
+            Disable 2FA
+          </button>
         </div>
       </div>
     </ModalBackdrop>
@@ -201,10 +196,7 @@ function TwoFADisableModal({ onConfirm, onClose }) {
 
 // ── Billing Modals ────────────────────────────────────────────────────────────
 
-const PRO_FEATURES = ["Up to 5 staff accounts", "Fuel & lubricant tracking", "Sales & cash reports", "Export reports (PDF/CSV)", "Activity logs", "Email support"];
-const MAX_FEATURES = ["Unlimited staff accounts", "Everything in Pro", "AI-powered insights", "Custom report builder", "Priority 24/7 support", "Multi-branch support", "API access"];
-
-function UpgradeModal({ onClose }) {
+function UpgradeModal({ onClose, currentPlanSlug }) {
   return (
     <ModalBackdrop onClose={onClose}>
       <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden">
@@ -216,11 +208,12 @@ function UpgradeModal({ onClose }) {
           <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6">
-          {/* Pro */}
           <div className="rounded-2xl border-[2px] border-neutral-200 p-5">
             <div className="flex items-center justify-between mb-1">
               <h4 className="font-semibold text-gray-800">Pro Plan</h4>
-              <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Current</span>
+              {currentPlanSlug === "pro" && (
+                <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Current</span>
+              )}
             </div>
             <p className="text-2xl font-bold text-gray-900 mb-4">₦14,900<span className="text-sm font-normal text-neutral-400">/mo</span></p>
             <ul className="space-y-2">
@@ -231,10 +224,16 @@ function UpgradeModal({ onClose }) {
               ))}
             </ul>
           </div>
-          {/* Max */}
           <div className="rounded-2xl border-[2px] border-[#1a71f6] bg-gradient-to-b from-blue-50 to-white p-5 relative overflow-hidden">
-            <div className="absolute top-3 right-3 text-xs bg-[#1a71f6] text-white font-semibold px-2 py-0.5 rounded-full">Recommended</div>
-            <h4 className="font-semibold text-gray-800 mb-1">Max Plan</h4>
+            {currentPlanSlug !== "max" && (
+              <div className="absolute top-3 right-3 text-xs bg-[#1a71f6] text-white font-semibold px-2 py-0.5 rounded-full">Recommended</div>
+            )}
+            <div className="flex items-center justify-between mb-1">
+              <h4 className="font-semibold text-gray-800">Max Plan</h4>
+              {currentPlanSlug === "max" && (
+                <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Current</span>
+              )}
+            </div>
             <p className="text-2xl font-bold text-[#1a71f6] mb-4">₦29,900<span className="text-sm font-normal text-neutral-400">/mo</span></p>
             <ul className="space-y-2">
               {MAX_FEATURES.map((f) => (
@@ -246,10 +245,7 @@ function UpgradeModal({ onClose }) {
           </div>
         </div>
         <div className="px-6 pb-6">
-          <button
-            onClick={onClose}
-            className="w-full py-3 rounded-xl bg-[#1a71f6] text-white font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-          >
+          <button onClick={onClose} className="w-full py-3 rounded-xl bg-[#1a71f6] text-white font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
             <Zap size={16} />
             Contact Support to Upgrade
           </button>
@@ -269,7 +265,7 @@ function CancelPlanModal({ onConfirm, onClose }) {
         </div>
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
           <p className="text-sm text-amber-800 leading-relaxed">
-            Are you sure you want to cancel? You will lose access to all Pro features at the end of your current billing period.
+            Are you sure you want to cancel? You will lose access to all plan features at the end of your current billing period.
           </p>
         </div>
         <div className="flex gap-2">
@@ -281,42 +277,49 @@ function CancelPlanModal({ onConfirm, onClose }) {
   );
 }
 
-// ── Main Settings Page ────────────────────────────────────────────────────────
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
   const { theme, setTheme } = useThemePersistence();
   const [mounted, setMounted] = useState(false);
-
-  // ── Appearance
   const isDark = mounted && theme === "dark";
 
-  // ── 2FA
+  // Plan
+  const [planData, setPlanData] = useState(null);
+  const [planLoading, setPlanLoading] = useState(true);
+
+  // 2FA
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
   const [showEnableModal, setShowEnableModal] = useState(false);
   const [showDisableModal, setShowDisableModal] = useState(false);
+  const [twoFASaving, setTwoFASaving] = useState(false);
 
-  // ── Sessions
+  // Sessions
   const [sessions, setSessions] = useState(MOCK_SESSIONS);
 
-  // ── Notification prefs (persisted to localStorage)
+  // Notification prefs
   const [notifPrefs, setNotifPrefs] = useState({
     emailNotifications: true,
     lowStockAlerts: true,
     shiftCompletionAlerts: false,
     unauthorizedAccessAlerts: true,
   });
+  const [savingNotif, setSavingNotif] = useState(null);
 
-  // ── Billing
+  // Billing
+  const [billingHistory, setBillingHistory] = useState([]);
+  const [billingLoading, setBillingLoading] = useState(true);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [planCancelled, setPlanCancelled] = useState(false);
 
-  // ── Activity feed
   const { activities, fetchActivity } = useActivityFeedStore();
 
   useEffect(() => {
     setMounted(true);
     fetchActivity();
+    fetchPlan();
+
     try {
       const saved = localStorage.getItem("notifPrefs");
       if (saved) setNotifPrefs(JSON.parse(saved));
@@ -325,7 +328,25 @@ export default function SettingsPage() {
 
   const loginHistory = activities.filter(isLoginActivity).slice(0, 5);
 
-  // ── Handlers
+  // ── Data fetching ───────────────────────────────────────────────
+
+  async function fetchPlan() {
+    setPlanLoading(true);
+    try {
+      const res = await fetch(`${API}/api/payments/current-plan`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPlanData(data.data);
+        if (data.data?.planStatus === "cancelled") setPlanCancelled(true);
+      }
+    } catch {}
+    finally { setPlanLoading(false); setBillingLoading(false); }
+  }
+
+  // ── Handlers ────────────────────────────────────────────────────
+
   function handleThemeToggle() {
     setTheme(isDark ? "light" : "dark");
   }
@@ -334,39 +355,67 @@ export default function SettingsPage() {
     twoFAEnabled ? setShowDisableModal(true) : setShowEnableModal(true);
   }
 
-  async function handleNotifToggle(key) {
+  async function confirm2FAEnable() {
+    setTwoFASaving(true);
+    try {
+      const user = getUser();
+      const userId = user.id || user._id;
+      const res = await fetch(`${API}/api/auth/update-staff/${userId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ twoFactorAuthEnabled: true }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setTwoFAEnabled(true);
+      setShowEnableModal(false);
+      toast.success("2FA enabled successfully");
+    } catch {
+      toast.error("Failed to enable 2FA. Please try again.");
+      setShowEnableModal(false);
+    } finally { setTwoFASaving(false); }
+  }
+
+  async function confirm2FADisable() {
+    setTwoFASaving(true);
+    try {
+      const user = getUser();
+      const userId = user.id || user._id;
+      const res = await fetch(`${API}/api/auth/update-staff/${userId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ twoFactorAuthEnabled: false }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setTwoFAEnabled(false);
+      setShowDisableModal(false);
+      toast.success("2FA disabled");
+    } catch {
+      toast.error("Failed to disable 2FA. Please try again.");
+      setShowDisableModal(false);
+    } finally { setTwoFASaving(false); }
+  }
+
+  async function handleNotifToggle(key, backendField) {
+    const prev = { ...notifPrefs };
     const next = { ...notifPrefs, [key]: !notifPrefs[key] };
     setNotifPrefs(next);
     localStorage.setItem("notifPrefs", JSON.stringify(next));
-
+    setSavingNotif(key);
     try {
-      const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const user = getUser();
       const userId = user.id || user._id;
-
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com"}/api/auth/update-staff/${userId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            notificationPreferences: {
-              email: next.emailNotifications,
-              lowStock: next.lowStockAlerts,
-              sales: next.shiftCompletionAlerts,
-              push: next.unauthorizedAccessAlerts,
-            },
-          }),
-        }
-      );
+      const res = await fetch(`${API}/api/staff/${userId}/notification-preferences`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ [backendField]: next[key] }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      toast.success("Preferences saved");
     } catch {
-      // localStorage already updated — backend sync failed silently
-    }
-
-    toast.success("Preferences saved");
+      setNotifPrefs(prev);
+      localStorage.setItem("notifPrefs", JSON.stringify(prev));
+      toast.error("Failed to save preferences. Please try again.");
+    } finally { setSavingNotif(null); }
   }
 
   function handleLogoutOthers() {
@@ -374,31 +423,33 @@ export default function SettingsPage() {
     toast.success("Other sessions logged out");
   }
 
+  // ── Plan display values ─────────────────────────────────────────
+  const planSlug    = planData?.plan || "free";
+  const planName    = planData?.planName || (planSlug === "free" ? "Free Plan" : planSlug === "pro" ? "Pro Plan" : "Max Plan");
+  const planStatus  = planData?.planStatus || "active";
+  const planPrice   = PLAN_PRICE[planSlug] || "Free";
+  const planExpiry  = planData?.planExpiryDate
+    ? new Date(planData.planExpiryDate).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })
+    : null;
+  const daysLeft    = planData?.daysRemaining ?? null;
+  const isFree      = planSlug === "free";
+
   return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto py-6 px-3 lg:px-4">
 
-        {/* Page header */}
         <div className="mb-7">
           <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
           <p className="text-sm text-neutral-400 mt-1">Manage your preferences, security, and subscription</p>
         </div>
 
-        {/* ── APPEARANCE ──────────────────────────────────────────────────── */}
+        {/* ── APPEARANCE ── */}
         <SectionCard>
-          <SectionHeader
-            icon={<Palette size={18} />}
-            title="Appearance"
-            subtitle="Customize how the dashboard looks"
-            accent="#1a71f6"
-          />
+          <SectionHeader icon={<Palette size={18} />} title="Appearance" subtitle="Customize how the dashboard looks" accent="#1a71f6" />
           <div className="flex items-center justify-between gap-4 px-5 py-4">
             <div className="flex items-center gap-3">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isDark ? "bg-indigo-950" : "bg-amber-50"}`}>
-                {isDark
-                  ? <Moon size={18} className="text-indigo-300" />
-                  : <Sun size={18} className="text-amber-500" />
-                }
+                {isDark ? <Moon size={18} className="text-indigo-300" /> : <Sun size={18} className="text-amber-500" />}
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-800">Theme Mode</p>
@@ -408,45 +459,30 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs font-medium text-neutral-500 hidden sm:block">
-                {isDark ? "Dark" : "Light"}
-              </span>
-              <Toggle
-                enabled={isDark}
-                onToggle={handleThemeToggle}
-                colorOn="#1a71f6"
-              />
+              <span className="text-xs font-medium text-neutral-500 hidden sm:block">{isDark ? "Dark" : "Light"}</span>
+              <Toggle enabled={isDark} onToggle={handleThemeToggle} colorOn="#1a71f6" />
             </div>
           </div>
         </SectionCard>
 
-        {/* ── NOTIFICATIONS ───────────────────────────────────────────────── */}
+        {/* ── NOTIFICATIONS ── */}
         <SectionCard>
-          <SectionHeader
-            icon={<Bell size={18} />}
-            title="Notifications"
-            subtitle="Choose which alerts you want to receive"
-            accent="#7f27ff"
-          />
-          {NOTIF_KEYS.map(({ key, label, desc }) => (
+          <SectionHeader icon={<Bell size={18} />} title="Notifications" subtitle="Choose which alerts you want to receive" accent="#7f27ff" />
+          {NOTIF_KEYS.map(({ key, label, desc, backendField }) => (
             <ToggleRow
               key={key}
               label={label}
               hint={desc}
               enabled={notifPrefs[key]}
-              onToggle={() => handleNotifToggle(key)}
+              onToggle={() => handleNotifToggle(key, backendField)}
+              busy={savingNotif === key}
             />
           ))}
         </SectionCard>
 
-        {/* ── SECURITY ────────────────────────────────────────────────────── */}
+        {/* ── SECURITY ── */}
         <SectionCard>
-          <SectionHeader
-            icon={<Shield size={18} />}
-            title="Security"
-            subtitle="Manage your account security settings"
-            accent="#04910c"
-          />
+          <SectionHeader icon={<Shield size={18} />} title="Security" subtitle="Manage your account security settings" accent="#04910c" />
 
           {/* 2FA */}
           <div className="px-5 py-4 border-b border-neutral-100">
@@ -458,12 +494,11 @@ export default function SettingsPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {twoFAEnabled && (
-                  <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full hidden sm:block">
-                    Enabled
-                  </span>
+                {twoFASaving && <Loader2 size={14} className="animate-spin text-gray-400" />}
+                {twoFAEnabled && !twoFASaving && (
+                  <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full hidden sm:block">Enabled</span>
                 )}
-                <Toggle enabled={twoFAEnabled} onToggle={handle2FAToggle} />
+                <Toggle enabled={twoFAEnabled} onToggle={handle2FAToggle} busy={twoFASaving} />
               </div>
             </div>
           </div>
@@ -476,10 +511,7 @@ export default function SettingsPage() {
                 <p className="text-xs text-neutral-400 mt-0.5">Devices currently signed in</p>
               </div>
               {sessions.length > 1 && (
-                <button
-                  onClick={handleLogoutOthers}
-                  className="cursor-pointer shrink-0 flex items-center gap-1.5 text-xs font-semibold text-red-500 border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
-                >
+                <button onClick={handleLogoutOthers} className="cursor-pointer shrink-0 flex items-center gap-1.5 text-xs font-semibold text-red-500 border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
                   <LogOut size={12} />
                   <span className="hidden sm:block">Logout others</span>
                   <span className="sm:hidden">Logout</span>
@@ -492,8 +524,7 @@ export default function SettingsPage() {
                   <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
                     {session.device.toLowerCase().includes("iphone") || session.device.toLowerCase().includes("android")
                       ? <Smartphone size={15} className="text-[#1a71f6]" />
-                      : <Monitor size={15} className="text-[#1a71f6]" />
-                    }
+                      : <Monitor size={15} className="text-[#1a71f6]" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -526,8 +557,7 @@ export default function SettingsPage() {
                       <div className="flex items-center gap-3 min-w-0">
                         {failed
                           ? <XCircle size={16} className="text-red-500 shrink-0" />
-                          : <CheckCircle size={16} className="text-green-600 shrink-0" />
-                        }
+                          : <CheckCircle size={16} className="text-green-600 shrink-0" />}
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-gray-800 truncate">{item.title}</p>
                           <p className="text-xs text-neutral-400 truncate">{item.description}</p>
@@ -547,60 +577,59 @@ export default function SettingsPage() {
           </div>
         </SectionCard>
 
-        {/* ── SUBSCRIPTION & BILLING ───────────────────────────────────────── */}
+        {/* ── SUBSCRIPTION & BILLING ── */}
         <SectionCard>
-          <SectionHeader
-            icon={<Receipt size={18} />}
-            title="Subscription & Billing"
-            subtitle="Manage your plan and payment history"
-            accent="#e27d00"
-          />
+          <SectionHeader icon={<Receipt size={18} />} title="Subscription & Billing" subtitle="Manage your plan and payment history" accent="#e27d00" />
 
           {/* Current plan card */}
           <div className="px-5 py-4 border-b border-neutral-100">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 text-white relative overflow-hidden">
-              {/* Decorative circles */}
-              <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/10 rounded-full" />
-              <div className="absolute -bottom-8 -right-2 w-32 h-32 bg-white/5 rounded-full" />
-
-              <div className="relative flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <CreditCard size={18} className="text-blue-200" />
-                    <span className="text-sm font-medium text-blue-100">Current Plan</span>
+            {planLoading ? (
+              <div className="h-32 rounded-2xl bg-gray-100 animate-pulse" />
+            ) : (
+              <div className={`rounded-2xl p-5 text-white relative overflow-hidden ${isFree ? "bg-gradient-to-r from-gray-600 to-gray-700" : "bg-gradient-to-r from-blue-600 to-indigo-600"}`}>
+                <div className="absolute -top-6 -right-6 w-24 h-24 bg-white/10 rounded-full" />
+                <div className="absolute -bottom-8 -right-2 w-32 h-32 bg-white/5 rounded-full" />
+                <div className="relative flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CreditCard size={18} className={isFree ? "text-gray-300" : "text-blue-200"} />
+                      <span className={`text-sm font-medium ${isFree ? "text-gray-300" : "text-blue-100"}`}>Current Plan</span>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-1">{planName}</h3>
+                    <p className={`text-sm ${isFree ? "text-gray-300" : "text-blue-200"}`}>{planPrice}</p>
+                    {planExpiry && !isFree && (
+                      <p className={`text-xs mt-1 ${daysLeft !== null && daysLeft <= 7 ? "text-red-300 font-semibold" : "text-blue-300"}`}>
+                        Next renewal: {planExpiry}{daysLeft !== null && daysLeft <= 7 ? ` (${daysLeft} days left)` : ""}
+                      </p>
+                    )}
+                    {isFree && (
+                      <p className="text-xs mt-1 text-gray-400">Upgrade to unlock more features</p>
+                    )}
                   </div>
-                  <h3 className="text-2xl font-bold mb-1">Pro Plan</h3>
-                  <p className="text-blue-200 text-sm">₦14,900 / month</p>
-                  <p className="text-blue-300 text-xs mt-1">Next renewal: May 1, 2026</p>
-                </div>
-                <div className="shrink-0">
-                  {planCancelled ? (
-                    <span className="text-xs bg-red-500/30 text-red-200 font-semibold px-3 py-1 rounded-full border border-red-400/40">
-                      Cancelling
-                    </span>
-                  ) : (
-                    <span className="text-xs bg-green-500/30 text-green-200 font-semibold px-3 py-1 rounded-full border border-green-400/40">
-                      Active
-                    </span>
-                  )}
+                  <div className="shrink-0">
+                    {planCancelled ? (
+                      <span className="text-xs bg-red-500/30 text-red-200 font-semibold px-3 py-1 rounded-full border border-red-400/40">Cancelling</span>
+                    ) : (
+                      <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${
+                        planStatus === "active"
+                          ? "bg-green-500/30 text-green-200 border-green-400/40"
+                          : "bg-red-500/30 text-red-200 border-red-400/40"
+                      }`}>
+                        {planStatus === "active" ? "Active" : planStatus}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Plan action buttons */}
             <div className="flex flex-col sm:flex-row gap-2 mt-3">
-              <button
-                onClick={() => setShowUpgradeModal(true)}
-                className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#1a71f6] text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
-              >
+              <button onClick={() => setShowUpgradeModal(true)} className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#1a71f6] text-white text-sm font-semibold hover:bg-blue-700 transition-colors">
                 <Zap size={15} />
-                Upgrade to Max Plan
+                {isFree ? "Upgrade Plan" : "Upgrade to Max Plan"}
               </button>
-              {!planCancelled && (
-                <button
-                  onClick={() => setShowCancelModal(true)}
-                  className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-[2px] border-red-300 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors"
-                >
+              {!planCancelled && !isFree && (
+                <button onClick={() => setShowCancelModal(true)} className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-[2px] border-red-300 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors">
                   <X size={15} />
                   Cancel Subscription
                 </button>
@@ -611,36 +640,30 @@ export default function SettingsPage() {
           {/* Billing history */}
           <div className="px-5 py-4">
             <p className="text-sm font-semibold text-gray-800 mb-3">Billing History</p>
-            <div className="rounded-xl border border-neutral-200 overflow-hidden">
-              {/* Table header */}
-              <div className="grid grid-cols-4 bg-gray-50 dark:bg-gray-700 px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
-                <span>Date</span>
-                <span>Amount</span>
-                <span>Status</span>
-                <span className="text-right">Action</span>
+            {billingLoading ? (
+              <div className="space-y-2">
+                {[1, 2].map((i) => <div key={i} className="h-10 rounded-xl bg-gray-100 animate-pulse" />)}
               </div>
-              {/* Rows */}
-              {BILLING_HISTORY.map((row, i) => (
-                <div
-                  key={row.id}
-                  className={`grid grid-cols-4 items-center px-4 py-3 text-sm ${i < BILLING_HISTORY.length - 1 ? "border-b border-neutral-100" : ""}`}
-                >
-                  <span className="text-gray-700 font-medium text-xs sm:text-sm">{row.date}</span>
-                  <span className="font-semibold text-gray-800 text-xs sm:text-sm">{row.amount}</span>
-                  <span>
-                    <span className="text-[10px] sm:text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">
-                      {row.status}
-                    </span>
-                  </span>
-                  <div className="flex justify-end">
-                    <button className="cursor-pointer flex items-center gap-1 text-xs font-semibold text-[#1a71f6] hover:text-blue-800 transition-colors">
-                      <Download size={13} />
-                      <span className="hidden sm:block">Download</span>
-                    </button>
-                  </div>
+            ) : billingHistory.length === 0 ? (
+              <div className="rounded-xl border border-neutral-200 px-4 py-6 text-center">
+                <p className="text-sm text-neutral-400">No billing history available for this station.</p>
+                {isFree && <p className="text-xs text-neutral-300 mt-1">Billing records will appear here after your first payment.</p>}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-neutral-200 overflow-hidden">
+                <div className="grid grid-cols-4 bg-gray-50 dark:bg-gray-700 px-4 py-2.5 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+                  <span>Date</span><span>Amount</span><span>Status</span><span className="text-right">Plan</span>
                 </div>
-              ))}
-            </div>
+                {billingHistory.map((row, i) => (
+                  <div key={row.id} className={`grid grid-cols-4 items-center px-4 py-3 text-sm ${i < billingHistory.length - 1 ? "border-b border-neutral-100" : ""}`}>
+                    <span className="text-gray-700 font-medium text-xs sm:text-sm">{row.date}</span>
+                    <span className="font-semibold text-gray-800 text-xs sm:text-sm">{row.amount}</span>
+                    <span><span className="text-[10px] sm:text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">{row.status}</span></span>
+                    <span className="text-right text-xs text-gray-500">{row.planName}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </SectionCard>
       </div>
@@ -648,18 +671,20 @@ export default function SettingsPage() {
       {/* ── Modals ── */}
       {showEnableModal && (
         <TwoFAEnableModal
-          onConfirm={() => { setTwoFAEnabled(true); setShowEnableModal(false); toast.success("2FA enabled successfully"); }}
+          saving={twoFASaving}
+          onConfirm={confirm2FAEnable}
           onClose={() => setShowEnableModal(false)}
         />
       )}
       {showDisableModal && (
         <TwoFADisableModal
-          onConfirm={() => { setTwoFAEnabled(false); setShowDisableModal(false); toast.success("2FA disabled"); }}
+          saving={twoFASaving}
+          onConfirm={confirm2FADisable}
           onClose={() => setShowDisableModal(false)}
         />
       )}
       {showUpgradeModal && (
-        <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
+        <UpgradeModal currentPlanSlug={planSlug} onClose={() => setShowUpgradeModal(false)} />
       )}
       {showCancelModal && (
         <CancelPlanModal

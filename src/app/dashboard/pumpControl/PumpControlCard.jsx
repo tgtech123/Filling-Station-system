@@ -17,9 +17,10 @@ export default function PumpControlCard({
   ltsSold,
   lastMaintenance,
 }) {
-  const { deletePump } = usePumpStore(); // remove global loading
+  const { deletePump } = usePumpStore();
   const [enabled, setEnabled] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false); // local loading
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
 
   useEffect(() => {
     if (["Active", "Idle", "Maintenance"].includes(status)) {
@@ -29,14 +30,16 @@ export default function PumpControlCard({
     }
   }, [status]);
 
-  // handle delete pump
-  // handle delete pump
   const handleDelete = async () => {
-    if (window.confirm(`Are you sure you want to delete "${pumpName}"?`)) {
-      setIsDeleting(true);
+    if (!window.confirm(`Are you sure you want to delete "${pumpName}"?`)) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
       await deletePump(pumpId);
+    } catch (err) {
+      setDeleteError(err?.message || "Failed to delete pump.");
+    } finally {
       setIsDeleting(false);
-      window.alert(`"${pumpName}" deleted successfully`);
     }
   };
 
@@ -127,15 +130,17 @@ export default function PumpControlCard({
         </div>
       </section>
 
-      {/* 🧹 update and delete pump card section */}
-      <div className="mt-[1.5rem] flex gap-5">
+      <div className="mt-6 flex flex-col gap-2">
+        {deleteError && (
+          <p className="text-xs text-red-600 font-medium">{deleteError}</p>
+        )}
         <button
           onClick={handleDelete}
           disabled={isDeleting}
-          className={`px-3 py-1.5 rounded-md text-white font-bold ${
+          className={`px-3 py-1.5 rounded-md text-white text-sm font-semibold transition-colors ${
             isDeleting
-              ? "bg-red-200 cursor-not-allowed"
-              : "bg-red-200 hover:bg-red-700"
+              ? "bg-red-300 cursor-not-allowed"
+              : "bg-red-500 hover:bg-red-700"
           }`}
         >
           {isDeleting ? "Deleting..." : "Delete Pump"}

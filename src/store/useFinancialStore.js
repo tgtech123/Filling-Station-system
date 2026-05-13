@@ -2,8 +2,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/config';
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com"}/api`;
-
 export const useFinancialStore = create((set, get) => ({
   // State
   overview: null,
@@ -26,24 +24,15 @@ export const useFinancialStore = create((set, get) => ({
     profitMargins: null
   },
 
-  // Get token from localStorage
-  getToken: () => {
-    return localStorage.getItem('token');
-  },
-
   // Fetch Financial Overview
   fetchOverview: async () => {
-    const token = get().getToken();
-    
     set((state) => ({
       loading: { ...state.loading, overview: true },
       errors: { ...state.errors, overview: null }
     }));
 
     try {
-      const response = await api.get(`/api/financial/overview`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const response = await api.get(`/api/financial/overview`);
 
       set((state) => ({
         overview: response.data.data,
@@ -63,21 +52,13 @@ export const useFinancialStore = create((set, get) => ({
 
   // Fetch Revenue Breakdown
   fetchRevenueBreakdown: async (duration = 'today') => {
-    const token = get().getToken();
-    
     set((state) => ({
       loading: { ...state.loading, revenueBreakdown: true },
       errors: { ...state.errors, revenueBreakdown: null }
     }));
 
     try {
-      const response = await api.get(
-        `/api/financial/revenue-breakdown`,
-        {
-          params: { duration },
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      );
+      const response = await api.get(`/api/financial/revenue-breakdown`, { params: { duration } });
 
       set((state) => ({
         revenueBreakdown: response.data.data,
@@ -97,21 +78,13 @@ export const useFinancialStore = create((set, get) => ({
 
   // Fetch Expense Breakdown
   fetchExpenseBreakdown: async (duration = 'today') => {
-    const token = get().getToken();
-    
     set((state) => ({
       loading: { ...state.loading, expenseBreakdown: true },
       errors: { ...state.errors, expenseBreakdown: null }
     }));
 
     try {
-      const response = await api.get(
-        `/api/financial/expense-breakdown`,
-        {
-          params: { duration },
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      );
+      const response = await api.get(`/api/financial/expense-breakdown`, { params: { duration } });
 
       set((state) => ({
         expenseBreakdown: response.data.data,
@@ -131,20 +104,13 @@ export const useFinancialStore = create((set, get) => ({
 
   // Fetch Revenue Analysis
   fetchRevenueAnalysis: async () => {
-    const token = get().getToken();
-    
     set((state) => ({
       loading: { ...state.loading, revenueAnalysis: true },
       errors: { ...state.errors, revenueAnalysis: null }
     }));
 
     try {
-      const response = await api.get(
-        `/api/financial/revenue-analysis`,
-        {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      );
+      const response = await api.get(`/api/financial/revenue-analysis`);
 
       set((state) => ({
         revenueAnalysis: response.data.data,
@@ -164,21 +130,13 @@ export const useFinancialStore = create((set, get) => ({
 
   // Fetch Profit Margins
   fetchProfitMargins: async (duration = 'thismonth') => {
-    const token = get().getToken();
-    
     set((state) => ({
       loading: { ...state.loading, profitMargins: true },
       errors: { ...state.errors, profitMargins: null }
     }));
 
     try {
-      const response = await api.get(
-        `/api/financial/profit-margins`,
-        {
-          params: { duration },
-          headers: { 'Authorization': `Bearer ${token}` }
-        }
-      );
+      const response = await api.get(`/api/financial/profit-margins`, { params: { duration } });
 
       set((state) => ({
         profitMargins: response.data.data,

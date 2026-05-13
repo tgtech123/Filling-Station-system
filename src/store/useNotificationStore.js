@@ -1,15 +1,5 @@
 ﻿import { create } from "zustand";
-import axios from "axios";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
-
-const getAuthHeaders = () => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-  return {};
-};
+import { api } from "@/lib/config";
 
 let _pollingInterval = null;
 
@@ -34,9 +24,7 @@ const useNotificationStore = create((set, get) => ({
     _setLoading("messages", true);
     _setError("messages", null);
     try {
-      const res = await api.get(`/api/notifications/messages`, {
-        headers: getAuthHeaders(),
-      });
+      const res = await api.get(`/api/notifications/messages`);
       const messages = res.data?.messages ?? res.data ?? [];
       const messageUnreadCount = messages.filter((m) => !m.read).length;
       set({ messages, messageUnreadCount });
@@ -55,9 +43,7 @@ const useNotificationStore = create((set, get) => ({
     _setLoading("alerts", true);
     _setError("alerts", null);
     try {
-      const res = await api.get(`/api/notifications/alerts`, {
-        headers: getAuthHeaders(),
-      });
+      const res = await api.get(`/api/notifications/alerts`);
       const alerts = res.data?.alerts ?? res.data ?? [];
       const alertUnreadCount = alerts.filter((a) => !a.read).length;
       set({ alerts, alertUnreadCount });

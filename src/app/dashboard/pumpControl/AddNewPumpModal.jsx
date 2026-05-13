@@ -34,27 +34,18 @@ export default function AddNewPumpModal({ onclose }) {
     e.preventDefault();
 
     if (!formData.tankId || !formData.pricePerLtr || !formData.startDate) {
-      setMessage({
-        type: "error",
-        text: "Please fill in all required fields.",
-      });
+      setMessage({ type: "error", text: "Please fill in all required fields." });
       return;
     }
-    await addPump(formData);
 
-    if (error) {
-      setMessage({ type: "error", text: error });
-    } else {
-      setMessage({ type: "Sucess", text: "Pump added sucessfully!" });
-      //clears fields after pump added successfully
-      setFormData({ tank: "", pricePerLtr: "", startDate: "", title: "" });
-
-      await getPumps ()
-      //closes the modal too
-      setTimeout(() => {
-        setMessage(null); 
-        onclose();
-      }, 1500);
+    try {
+      await addPump(formData);
+      setMessage({ type: "success", text: "Pump added successfully!" });
+      setFormData({ tankId: "", pricePerLtr: "", startDate: "", title: "" });
+      await getPumps();
+      setTimeout(() => { setMessage(null); onclose(); }, 1500);
+    } catch (err) {
+      setMessage({ type: "error", text: err?.message || "Failed to add pump. Please try again." });
     }
   };
 
