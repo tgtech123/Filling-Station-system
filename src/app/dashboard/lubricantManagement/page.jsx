@@ -139,26 +139,24 @@ export default function LubricantManagement() {
 
   return (
     <div className="bg-gray-100 min-h-screen">
-      <header className="px-4 lg:px-[40px] mb-10 bg-white dark:bg-gray-900 shadow-sm py-4 lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
-        <div className=" mt-2 lg:mt-0 flex flex-col lg:flex-row gap-0 lg:gap-4 items-center">
+      <header className="px-4 lg:px-[40px] mb-4 lg:mb-6 bg-white dark:bg-gray-900 shadow-sm py-4 flex flex-col sm:flex-row gap-3 sm:gap-0 items-start sm:items-center sm:justify-between">
+        <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 sm:items-center">
           <Link
             href="/dashboard"
-            className="cursor-pointer border-3 flex  gap-2 border-none lg:border-[#0080ff]  py-2 px-6 rounded-[12px] text-[#0080ff] font-semibold"
+            className="cursor-pointer flex gap-2 items-center border-2 border-[#0080ff] py-2 px-4 rounded-[12px] text-[#0080ff] font-semibold text-sm"
           >
-            <ArrowLeft />
-            Back to Dashboard
+            <ArrowLeft size={18} />
+            Back
           </Link>
-          <h4 className="text-2xl font-semibold">Lubricant Management</h4>
+          <h4 className="text-xl sm:text-2xl font-semibold">Lubricant Management</h4>
         </div>
-        <div>
-          <button
-            onClick={handleOpenLubricantModal}
-            className="cursor-pointer border-3 flex gap-2 border-[#0080ff] hover:bg-[#0080ff] hover:text-white py-2 px-6 rounded-[12px] text-[#0080ff] font-semibold"
-          >
-            Add Lubricant
-            <Plus />
-          </button>
-        </div>
+        <button
+          onClick={handleOpenLubricantModal}
+          className="cursor-pointer flex gap-2 items-center border-2 border-[#0080ff] hover:bg-[#0080ff] hover:text-white py-2 px-5 rounded-[12px] text-[#0080ff] font-semibold text-sm transition-colors"
+        >
+          <Plus size={18} />
+          Add Lubricant
+        </button>
       </header>
 
       <div className="px-6 lg:px-[40px]">
@@ -183,44 +181,44 @@ export default function LubricantManagement() {
       </div>
 
       {/* Navigation Tab */}
-      <div className="mt-10 px-6 lg:px-[40px] flex flex-col text-sm lg:text-md gap-3 lg:gap-0 lg:flex-row justify-between items-start lg:items-center">
-        <div className="bg-white border-2 border-gray-300 flex gap-4 py-2 px-6 rounded-[10px]">
+      <div className="mt-4 lg:mt-8 px-4 lg:px-[40px] flex flex-col sm:flex-row text-sm gap-3 sm:gap-0 sm:justify-between sm:items-center">
+        <div className="bg-white border-2 border-gray-300 flex gap-2 py-2 px-3 rounded-[10px] w-full sm:w-auto overflow-x-auto">
           <div
             id="Lubricant sales"
             onClick={() => handleClick("Lubricant sales")}
-            className={`px-6 py-2 rounded-[8px] cursor-pointer ${
+            className={`px-4 py-2 rounded-[8px] cursor-pointer whitespace-nowrap ${
               activeTab === "Lubricant sales"
                 ? "bg-[#d9edff] font-semibold text-[#0080ff]"
                 : "bg-transparent text-inherit"
             } flex items-center gap-2`}
           >
-            <Home className="hidden lg:flex" />
-            Lubricant sales
+            <Home size={16} className="hidden sm:flex shrink-0" />
+            Lubricant Sales
           </div>
           <div
             id="Inventory"
             onClick={() => handleClick("Inventory")}
-            className={`px-6 py-2 rounded-[8px] cursor-pointer ${
+            className={`px-4 py-2 rounded-[8px] cursor-pointer whitespace-nowrap ${
               activeTab === "Inventory"
                 ? "bg-[#d9edff] font-semibold text-[#0080ff]"
                 : "bg-transparent text-inherit"
             } flex items-center gap-2`}
           >
-            <Home className="hidden lg:flex" />
+            <Home size={16} className="hidden sm:flex shrink-0" />
             Inventory
           </div>
         </div>
 
         <div
           onClick={() => setShowLubricantTracker(true)}
-          className="p-2 flex font-semibold cursor-pointer text-[#0080ff] items-center border-2 rounded-[8px] border-[#0080ff]"
+          className="p-2 flex font-semibold cursor-pointer text-[#0080ff] items-center gap-1 border-2 rounded-[8px] border-[#0080ff] w-fit text-sm"
         >
           Track Invoice Record
-          <CgTrack size={24} className="text-[#0080ff]" />
+          <CgTrack size={20} className="text-[#0080ff]" />
         </div>
       </div>
 
-      <div className=" min-h-screen h-auto mt-10 px-6 pb-10 lg:px-[40px]">
+      <div className="min-h-screen h-auto mt-4 lg:mt-8 px-4 pb-10 lg:px-[40px]">
         {activeTab === "Lubricant sales" && <LubricantSales />}
         {activeTab === "Inventory" && <Inventory />}
       </div>

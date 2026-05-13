@@ -49,18 +49,19 @@ export default function ResetPassword() {
       
    
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 h-screen overflow-hidden">
-      <div className="w-full h-full flex items-center justify-center bg-white px-4">
-              <div className="w-full max-w-md flex flex-col justify-center items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen lg:h-screen lg:overflow-hidden">
+      <div className="w-full flex items-center justify-center bg-white px-4 py-10 lg:py-0 lg:h-screen lg:overflow-y-auto">
+        <div className="w-full max-w-md flex flex-col items-start">
                   <Image
                     src="/station-logo.png"
                     alt='Logo'
                     width={200}
                     height={140}
+                    className="w-28 sm:w-40 lg:w-[200px] h-auto"
                   />
-      
-                <h1 className="mt-10 text-4xl font-bold text-[#323130] text-center">Reset Password</h1>
-                <p className="text-md text-gray-500 text-center">Enter email to get a reset code sent to your mail</p>
+
+                <h1 className="mt-6 text-3xl sm:text-4xl font-bold text-[#323130]">Reset Password</h1>
+                <p className="text-sm sm:text-base text-gray-500">Enter email to get a reset code sent to your mail</p>
       
                 <form  className="flex flex-col gap-4 mt-6 w-full">
                   {/* Email */}

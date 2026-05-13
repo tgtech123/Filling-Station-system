@@ -211,7 +211,7 @@ export default function LubricantSales() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="p-2 min-w-[300px] lg:min-w-[400px] rounded-[8px] w-full border-2 border-gray-300 focus:border-blue-500 focus:outline-none"
+            className="p-2 w-full sm:w-[300px] lg:w-[400px] rounded-[8px] border-2 border-gray-300 focus:border-blue-500 focus:outline-none"
             placeholder="Search transactions..."
           />
           <Search className="text-gray-400 absolute top-2 right-3" />
@@ -339,7 +339,7 @@ export default function LubricantSales() {
           {/* Total Amount Display */}
           {totalItems > 0 && (
             <div className="mt-6 flex justify-end">
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg px-6 py-4 min-w-[250px]">
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg px-6 py-4 w-full sm:w-auto sm:min-w-[250px]">
                 <p className="text-sm text-gray-600 mb-1">
                   {searchTerm || hasActiveFilters ? "Filtered Total Amount" : "Total Amount"}
                 </p>

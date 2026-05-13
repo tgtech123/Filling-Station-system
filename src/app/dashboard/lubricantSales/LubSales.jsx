@@ -327,7 +327,101 @@ const LubSales = () => {
         </div>
       )}
 
-      <div className="w-full overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700 pb-2 -mx-0">
+      {/* ── Mobile card layout (< sm) ── */}
+      <div className="flex flex-col gap-3 sm:hidden">
+        {rows.map((row, index) => (
+          <div
+            key={index}
+            className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 bg-gray-50 dark:bg-gray-700"
+          >
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm font-semibold text-gray-500 dark:text-gray-300">
+                Item {index + 1}
+              </span>
+              <button
+                onClick={() => handleDeleteRow(index)}
+                className="flex items-center gap-1 text-red-500 text-xs font-semibold hover:text-red-400"
+              >
+                Remove <X size={13} />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {/* Barcode — full width */}
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">
+                  Barcode
+                </label>
+                <input
+                  type="text"
+                  value={row.barcode}
+                  onChange={(e) => handleBarcodeChange(e, index)}
+                  onKeyDown={(e) => handleBarcodeKeyPress(e, index)}
+                  onBlur={(e) => handleBarcodeBlur(e, index)}
+                  placeholder="Scan or type barcode, press Enter"
+                  className="w-full px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-600 dark:text-gray-100 rounded-lg text-sm"
+                />
+              </div>
+
+              {/* Product name — full width */}
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">
+                  Product Name
+                </label>
+                <input
+                  type="text"
+                  value={row.productName}
+                  disabled
+                  className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200 rounded-lg text-sm"
+                />
+              </div>
+
+              {/* Unit price + Quantity side by side */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">
+                    Unit Price (₦)
+                  </label>
+                  <input
+                    type="text"
+                    value={row.unitPrice}
+                    disabled
+                    className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">
+                    Quantity
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={row.quantity}
+                    onChange={(e) => handleQtyChange(e, index)}
+                    className="w-full px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-600 dark:text-gray-100 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Amount — full width, highlighted */}
+              <div>
+                <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">
+                  Amount (₦)
+                </label>
+                <input
+                  type="text"
+                  value={row.amount ? `₦${Number(row.amount).toLocaleString()}` : ""}
+                  disabled
+                  className="w-full px-3 py-2 border border-blue-200 bg-blue-50 dark:bg-gray-600 dark:border-gray-500 rounded-lg text-sm font-semibold text-blue-700 dark:text-blue-300"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Desktop table layout (≥ sm) ── */}
+      <div className="hidden sm:block w-full overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700 pb-2">
         <table className="min-w-[620px] text-sm text-left text-gray-700 dark:text-gray-200 w-full">
           <thead className="bg-gray-100 dark:bg-gray-700 text-md font-semibold text-gray-700 dark:text-gray-200">
             <tr>
@@ -339,7 +433,6 @@ const LubSales = () => {
               <th className="px-4 py-3">Action</th>
             </tr>
           </thead>
-
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
             {rows.map((row, index) => (
               <tr key={index} className="text-sm">

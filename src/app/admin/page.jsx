@@ -10,6 +10,7 @@ import PaymentAndBilling from './components/PaymentAndBilling';
 import ActivityLogs from './components/ActivityLogs';
 import Settings from './components/Settings';
 import StationDetail from './components/StationDetail';
+import SupportPage from './components/SupportPage';
 
 const Page = () => {
   const [activePage, setActivePage] = useState('Dashboard');
@@ -52,6 +53,8 @@ const Page = () => {
         return <ActivityLogs />;
       case 'Settings':
         return <Settings />;
+      case 'Support':
+        return <SupportPage />;
       case 'StationDetail':
         return (
           <StationDetail
