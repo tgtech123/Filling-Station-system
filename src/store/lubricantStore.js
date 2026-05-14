@@ -9,6 +9,7 @@ export const useLubricantStore = create((set, get) => ({
   weeklySummary: {},
   dailySummary: {},
   loading: false,
+  transactionsLoading: false,
   error: null,
   selectedProductForSale: null,
 
@@ -316,22 +317,18 @@ export const useLubricantStore = create((set, get) => ({
 
   // Get all lubricant transactions (sales grouped)
   fetchAllTransactions: async () => {
-    set({ loading: true, error: null });
+    set({ transactionsLoading: true });
     try {
       const res = await fetch(`${API_URL}/api/lubricant/transactions`, {
         method: "GET",
         headers: get().getAuthHeaders(),
       });
-
       if (!res.ok) throw new Error("Failed to fetch transactions");
-
       const data = await res.json();
-
-      // Save only the array into store
       const transactionsData = Array.isArray(data) ? data : data.data || [];
-      set({ transactions: transactionsData, loading: false });
+      set({ transactions: transactionsData, transactionsLoading: false });
     } catch (err) {
-      set({ error: err.message, loading: false });
+      set({ error: err.message, transactionsLoading: false });
     }
   },
 }));

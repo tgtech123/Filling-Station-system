@@ -114,7 +114,7 @@ const PricingPage = () => {
   };
 
   const comingSoonFeatures = [
-    "Priority support","Dedicated support","White-glove onboarding",
+    "Dedicated support","White-glove onboarding",
     "Dedicated account manager","Custom SLA agreement","API access","Custom integrations",
   ];
 

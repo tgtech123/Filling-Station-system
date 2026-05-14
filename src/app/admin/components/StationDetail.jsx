@@ -517,14 +517,14 @@ const StationDetail = ({ stationId, onBack }) => {
       {/* ── STAFF TAB ──────────────────────────────────────── */}
       {activeTab === "Staff" && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4">
             <h2 className="text-[1rem] font-semibold">Staff Members</h2>
             <input
               type="text"
               value={staffSearch}
               onChange={(e) => setStaffSearch(e.target.value)}
               placeholder="Search by name or role..."
-              className="border-2 border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:border-blue-500 outline-none w-[220px]"
+              className="border-2 border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:border-blue-500 outline-none w-full sm:w-[220px]"
             />
           </div>
           {filteredStaff.length === 0 ? (

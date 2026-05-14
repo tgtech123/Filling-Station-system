@@ -4,19 +4,18 @@ import { ArrowDownToLine, ListFilter } from "lucide-react";
 
 const SearchBarButtons = ({ searchValue, onSearchChange, onExport }) => {
   return (
-    <div className="flex justify-end items-center gap-4">
+    <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3">
       {/* SEARCH */}
-      <div className="relative">
+      <div className="relative w-full sm:w-auto">
         <input
           type="text"
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search by station name or owner"
-          className="w-[350px] py-2 rounded-lg pl-10 border-[2px] font-semibold
+          className="w-full sm:w-[350px] py-2 rounded-lg pl-10 border-[2px] font-semibold
                      text-neutral-600 focus:border-blue-600 outline-none
                      border-[#E5E5E5]"
         />
-
         <Image
           src="/mystery.png"
           height={20}
@@ -27,30 +26,27 @@ const SearchBarButtons = ({ searchValue, onSearchChange, onExport }) => {
       </div>
 
       {/* FILTERS + EXPORT */}
-      <div className="flex gap-3">
-        <div className="flex gap-3">
-          <select className="py-2 px-3 rounded-md font-semibold border-[2px]
-                             border-neutral-300 focus:border-blue-600">
-            <option value="">All Status</option>
-            <option>Active</option>
-            <option>Maintenance</option>
-            <option>Suspended</option>
-          </select>
+      <div className="flex flex-wrap gap-2 sm:gap-3">
+        <select className="flex-1 sm:flex-none py-2 px-3 rounded-md font-semibold border-[2px]
+                           border-neutral-300 focus:border-blue-600 min-w-0">
+          <option value="">All Status</option>
+          <option>Active</option>
+          <option>Maintenance</option>
+          <option>Suspended</option>
+        </select>
 
-          <button className="py-2 px-3 rounded-md font-semibold border-[2px]
-                             border-neutral-300 focus:border-blue-600 flex gap-3 ">
-            <ListFilter size={24} />
-            Filter
-          </button>
-         
-        </div>
+        <button className="flex-1 sm:flex-none py-2 px-3 rounded-md font-semibold border-[2px]
+                           border-neutral-300 focus:border-blue-600 flex gap-2 items-center justify-center">
+          <ListFilter size={20} />
+          Filter
+        </button>
 
         <button
           onClick={onExport}
-          className="bg-[#0080FF] hover:bg-blue-900 text-white
-                     font-semibold px-4 py-2 rounded-lg flex gap-3 items-center"
+          className="flex-1 sm:flex-none bg-[#0080FF] hover:bg-blue-900 text-white
+                     font-semibold px-4 py-2 rounded-lg flex gap-2 items-center justify-center"
         >
-          <ArrowDownToLine size={22} />
+          <ArrowDownToLine size={20} />
           Export
         </button>
       </div>

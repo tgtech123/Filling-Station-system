@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
-const IDLE_TIMEOUT = 20 * 60 * 1000; // 20 minutes
+const IDLE_TIMEOUT = 40 * 60 * 1000; // 40 minutes
 
 export function useSessionTimeout() {
   const router = useRouter();

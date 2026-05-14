@@ -119,11 +119,11 @@ const MyProfileModal = ({ isOpen, onClose }) => {
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/50 z-50 w-full flex items-center justify-center"
+      className="fixed inset-0 bg-black/50 z-50 w-full flex items-start sm:items-center justify-center overflow-y-auto px-4 py-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex flex-col p-8 bg-white dark:bg-gray-800 w-[56.3125rem] max-h-[90vh] overflow-y-auto scrollbar-hide rounded-xl"
+        className="flex flex-col p-5 sm:p-8 bg-white dark:bg-gray-800 w-full max-w-[56.3125rem] max-h-[90dvh] overflow-y-auto scrollbar-hide rounded-xl my-auto"
       >
         <span
           onClick={onClose}

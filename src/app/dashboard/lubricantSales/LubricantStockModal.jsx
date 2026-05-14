@@ -398,8 +398,8 @@ export default function LubricantStockModal({ onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
-      <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
-        <div className="bg-[#f6f6f6] dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-7xl max-h-[92vh] overflow-y-auto">
+      <div className="flex min-h-full items-start sm:items-center justify-center p-0 sm:p-4">
+        <div className="bg-[#f6f6f6] dark:bg-gray-900 rounded-b-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-7xl max-h-screen sm:max-h-[92vh] overflow-y-auto">
 
           {/* ── Header ── */}
           <div className="sticky top-0 bg-[#f6f6f6] dark:bg-gray-900 z-10 px-4 sm:px-6 pt-5 pb-4 border-b border-gray-200 dark:border-gray-700">

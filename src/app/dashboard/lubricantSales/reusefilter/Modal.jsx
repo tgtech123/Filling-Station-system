@@ -1,5 +1,5 @@
-﻿'use client';
-import React, { useState, useEffect } from "react";
+'use client';
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import Table from "@/components/Table";
 import ActionButtons from "./ActionButtons";
@@ -8,86 +8,83 @@ import { BsFilter } from "react-icons/bs";
 import { HiChevronDown, HiChevronUp } from "react-icons/hi2";
 import { GrSearch } from "react-icons/gr";
 import ExportButton from "@/components/ExportButton";
+import { useLubricantStore } from "@/store/lubricantStore";
+
+const formatPayment = (txn) => {
+  if (txn.paymentMethod !== "mixed" || !txn.paymentBreakdown) return txn.paymentMethod || "N/A";
+  const bd = txn.paymentBreakdown;
+  const parts = [];
+  if (bd.cash     > 0) parts.push(`Cash ₦${Number(bd.cash).toLocaleString()}`);
+  if (bd.transfer > 0) parts.push(`Transfer ₦${Number(bd.transfer).toLocaleString()}`);
+  if (bd.POS      > 0) parts.push(`POS ₦${Number(bd.POS).toLocaleString()}`);
+  return parts.length > 0 ? parts.join(" + ") : "mixed";
+};
 
 const Modal = ({ isOpen, onClose }) => {
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [salesData, setSalesData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const { transactions, transactionsLoading, fetchAllTransactions } = useLubricantStore();
+
+  const [isFilterOpen, setIsFilterOpen]   = useState(false);
+  const [filteredData, setFilteredData]   = useState([]);
+  const [searchTerm, setSearchTerm]       = useState("");
   const [toggleChevron, setToggleChevron] = useState(false);
-  const [loading, setLoading] = useState(true);
+
+  const txnIdToMongoId = useRef({});
 
   const handleChevron = () => setToggleChevron(!toggleChevron);
 
+  // Fetch fresh data every time the modal opens
   useEffect(() => {
-    const fetchSales = async () => {
-      setLoading(true);
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${API_URL}/api/lubricant/transactions`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const result = await res.json();
-
-        if (res.ok && result.data) {
-          console.log("Fetched transactions:", result.data);
-
-          //  Convert each transaction to array for Table, attach _id
-          const formatted = result.data.map((transaction, index) => {
-            const productNames = transaction.items.map(i => i.productName).join(", ");
-            const totalQty = transaction.items.reduce((sum, i) => sum + i.qtySold, 0);
-
-            const rowArray = [
-              index + 1,                 
-              transaction.txnId || "N/A", 
-              productNames || "N/A",      
-              totalQty,                 
-              transaction.paymentMethod || "N/A",
-              transaction.totalAmount || 0,
-              new Date(transaction.date).toLocaleString() || "N/A",
-            ];
-
-            // Attach _id for ActionButtons (won't break Table)
-            rowArray._id = transaction.transactionId;
-
-            return rowArray;
-          });
-
-          setSalesData(formatted);
-          setFilteredData(formatted);
-        } else {
-          console.error(result.error || "Failed to load data");
-        }
-      } catch (err) {
-        console.error("Error fetching sales data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (isOpen) fetchSales();
+    if (isOpen) fetchAllTransactions();
   }, [isOpen]);
 
-  // 🔍 Search by txnId
+  // Derive formatted rows + id map from store whenever transactions change
+  const salesData = useMemo(() => {
+    const idMap = {};
+    const rows = transactions.map((txn, index) => {
+      const productNames = txn.items?.map(i => i.productName).join(", ") || "N/A";
+      const totalQty     = txn.items?.reduce((s, i) => s + i.qtySold, 0) ?? 0;
+      const txnId        = txn.txnId || "N/A";
+      const key          = `${txnId}__${index}`;
+      idMap[key]         = txn.transactionId;
+      return [
+        index + 1,
+        txnId,
+        productNames,
+        totalQty,
+        formatPayment(txn),
+        txn.totalAmount || 0,
+        new Date(txn.date).toLocaleString() || "N/A",
+        key,
+        txn.paymentMethod || "",       // row[8] — raw method for filtering
+        txn.paymentBreakdown || null,  // row[9] — raw breakdown for filtering
+      ];
+    });
+    txnIdToMongoId.current = idMap;
+    return rows;
+  }, [transactions]);
+
+  // Keep filteredData in sync whenever salesData changes (new sale arrived)
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredData(salesData);
+    } else {
+      setFilteredData(
+        salesData.filter(row => String(row[1]).toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+  }, [salesData, searchTerm]);
+
   const handleSearch = (term) => {
     setSearchTerm(term);
     if (!term.trim()) {
       setFilteredData(salesData);
     } else {
       setFilteredData(
-        salesData.filter(row =>
-          row[1].toLowerCase().includes(term.toLowerCase())
-        )
+        salesData.filter(row => String(row[1]).toLowerCase().includes(term.toLowerCase()))
       );
     }
   };
 
-  // Filter example
   const handleApplyFilter = (filters) => {
     let newData = salesData;
     if (!filters.products.includes("All")) {
@@ -98,10 +95,26 @@ const Modal = ({ isOpen, onClose }) => {
       );
     }
     if (!filters.payments.includes("All")) {
-      newData = newData.filter(row => filters.payments.includes(row[4]));
+      newData = newData.filter(row => {
+        const method    = row[8];
+        const breakdown = row[9];
+        return filters.payments.some(filterPay => {
+          const f = filterPay.toLowerCase();
+          if (method === "mixed" && breakdown) {
+            // For mixed payments, check if the selected method had a non-zero amount
+            if (f === "cash")     return Number(breakdown.cash     || 0) > 0;
+            if (f === "transfer") return Number(breakdown.transfer || 0) > 0;
+            if (f === "pos")      return Number(breakdown.POS      || 0) > 0;
+          }
+          return method?.toLowerCase() === f;
+        });
+      });
     }
     setFilteredData(newData);
   };
+
+  // Slice off the hidden key column for export
+  const exportData = filteredData.map(row => row.slice(0, 7));
 
   if (!isOpen) return null;
 
@@ -128,7 +141,7 @@ const Modal = ({ isOpen, onClose }) => {
                 value={searchTerm}
                 onChange={e => handleSearch(e.target.value)}
                 placeholder="Search by Transaction ID"
-                className="border-[1.5px] py-2 outline-none w-[400px] text-neutral-700 pl-3 rounded-lg"
+                className="border-[1.5px] py-2 outline-none w-full sm:w-[400px] text-neutral-700 pl-3 pr-10 rounded-lg"
               />
               <GrSearch size={22} className="absolute top-3 text-neutral-400 right-3" />
             </div>
@@ -156,8 +169,8 @@ const Modal = ({ isOpen, onClose }) => {
               </button>
 
               <ExportButton
-                data={filteredData}
-                columns={["S/N","Transaction ID","Product","Qty","Payment","Price","Date"]}
+                data={exportData}
+                columns={["S/N", "Transaction ID", "Product", "Qty", "Payment", "Price", "Date"]}
                 fileName="Sales_Reports"
                 format="excel"
               />
@@ -165,13 +178,17 @@ const Modal = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {loading ? (
+        {transactionsLoading ? (
           <p className="text-center py-10 text-gray-500">Loading sales...</p>
         ) : (
           <Table
-            columns={["S/N","Transaction ID","Product","Qty","Payment","Price","Date"]}
-            data={filteredData}
-            renderActions={row => <ActionButtons transactionId={row._id} />}
+            columns={["S/N", "Transaction ID", "Product", "Qty", "Payment", "Price", "Date"]}
+            data={filteredData.map(row => row.slice(0, 7))}
+            renderActions={(_, rowIndex) => {
+              const key = filteredData[rowIndex]?.[7];
+              const transactionId = txnIdToMongoId.current[key];
+              return <ActionButtons transactionId={transactionId} />;
+            }}
           />
         )}
 
@@ -181,8 +198,8 @@ const Modal = ({ isOpen, onClose }) => {
               <FilterModal
                 isOpen={isFilterOpen}
                 onClose={() => setIsFilterOpen(false)}
-                products={["Engine oil (1L)","Motor Grease","Gametol Oil","Shell Oil","Ali Lub."]}
-                paymentTypes={["POS","Transfer","Cash"]}
+                products={["Engine oil (1L)", "Motor Grease", "Gametol Oil", "Shell Oil", "Ali Lub."]}
+                paymentTypes={["POS", "Transfer", "Cash"]}
                 onApply={filters => {
                   handleApplyFilter(filters);
                   setIsFilterOpen(false);
