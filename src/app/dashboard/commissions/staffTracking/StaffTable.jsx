@@ -103,18 +103,18 @@ export default function StaffTable() {
     ];
 
     return (
-        <div className="bg-white p-4 rounded-[20px] w-full">
-            <div className="flex items-center justify-between mb-4">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-[20px] w-full">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
                 <div>
-                    <h2 className="text-gray-600 text-2xl font-semibold">Staff Tracking</h2>
-                    <p className="my-4 font-semibold text-lg text-gray-500">Monthly staff commission tracking</p>
+                    <h2 className="text-gray-600 dark:text-gray-100 text-2xl font-semibold">Staff Tracking</h2>
+                    <p className="mt-1 font-semibold text-lg text-gray-500 dark:text-gray-400">Monthly staff commission tracking</p>
                 </div>
 
                 <div className="flex gap-3">
                     <select
                         value={selectedMonth || ''}
                         onChange={handleMonthChange}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         {months.map(month => (
                             <option key={month.value} value={month.value}>
@@ -126,7 +126,7 @@ export default function StaffTable() {
                     <select
                         value={selectedYear || ''}
                         onChange={handleYearChange}
-                        className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                         {years.map(year => (
                             <option key={year} value={year}>

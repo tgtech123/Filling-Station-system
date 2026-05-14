@@ -72,30 +72,30 @@ const PaymentHist = () => {
           {/* Duration Dropdown */}
           <div
             onClick={handleToggleChev}
-            className="relative flex justify-between items-center gap-3 px-4 py-2 text-neutral-600 font-bold border-2 border-neutral-300 rounded-xl cursor-pointer"
+            className="relative flex justify-between items-center gap-3 px-4 py-2 text-neutral-600 dark:text-gray-200 font-bold border-2 border-neutral-300 dark:border-gray-600 rounded-xl cursor-pointer"
           >
             <h1>Duration</h1>
             {isToggleChev ? (
-              <HiChevronUp className="text-neutral-600" size={24} />
+              <HiChevronUp className="text-neutral-600 dark:text-gray-300" size={24} />
             ) : (
-              <HiChevronDown className="text-neutral-600" size={24} />
+              <HiChevronDown className="text-neutral-600 dark:text-gray-300" size={24} />
             )}
 
             {isToggleChev && (
               <div className="flex flex-col w-56 sm:w-64 bg-white dark:bg-gray-800 absolute top-12 left-0 shadow-lg rounded-xl border border-neutral-200 dark:border-gray-700 z-20">
                 {/* From & To */}
                 <div className="flex flex-col sm:flex-row justify-between p-2 gap-3">
-                  <button className="flex-1 flex justify-between items-center px-4 py-2 border-[1.5px] rounded-lg font-medium">
+                  <button className="flex-1 flex justify-between items-center px-4 py-2 border-[1.5px] dark:border-gray-600 rounded-lg font-medium dark:text-gray-200">
                     From
-                    <HiChevronDown className="text-neutral-600" size={20} />
+                    <HiChevronDown className="text-neutral-600 dark:text-gray-400" size={20} />
                   </button>
-                  <button className="flex-1 flex justify-between items-center px-4 py-2 border-[1.5px] rounded-lg font-medium">
+                  <button className="flex-1 flex justify-between items-center px-4 py-2 border-[1.5px] dark:border-gray-600 rounded-lg font-medium dark:text-gray-200">
                     To
-                    <HiChevronDown className="text-neutral-600" size={20} />
+                    <HiChevronDown className="text-neutral-600 dark:text-gray-400" size={20} />
                   </button>
                 </div>
 
-                <hr className="my-2 mx-2 border-t border-neutral-100" />
+                <hr className="my-2 mx-2 border-t border-neutral-100 dark:border-gray-700" />
 
                 {/* Quick Select */}
                 <div className="flex flex-col gap-2 font-light px-2 mb-3">
@@ -103,7 +103,7 @@ const PaymentHist = () => {
                     (label) => (
                       <span
                         key={label}
-                        className="w-full text-left px-2 border border-neutral-200 hover:bg-blue-600 hover:text-white py-1 rounded-lg font-medium cursor-pointer"
+                        className="w-full text-left px-2 border border-neutral-200 dark:border-gray-600 dark:text-gray-300 hover:bg-blue-600 hover:text-white py-1 rounded-lg font-medium cursor-pointer"
                       >
                         {label}
                       </span>
@@ -111,7 +111,7 @@ const PaymentHist = () => {
                   )}
                 </div>
 
-                <hr className="my-2 mx-2 border-t border-neutral-100" />
+                <hr className="my-2 mx-2 border-t border-neutral-100 dark:border-gray-700" />
 
                 <button className="w-[90%] mx-auto py-2 bg-[#0080FF] hover:bg-blue-700 text-center text-white font-semibold mb-3 rounded-lg">
                   Save

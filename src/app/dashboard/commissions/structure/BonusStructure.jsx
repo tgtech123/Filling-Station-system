@@ -45,7 +45,7 @@ const BonusStructure = () => {
     if (bonusStructure && bonusStructure.length > 0) {
       const transformedData = bonusStructure.map(bonus => ({
         achievements: bonus.achievement || bonus.name || 'N/A',
-        bonusAmount: bonus.amount ? `₦${bonus.amount.toLocaleString('en-US')}` : '₦0',
+        bonusAmount: bonus.bonusAmount != null ? `₦${Number(bonus.bonusAmount).toLocaleString('en-US')}` : '₦0',
         frequency: bonus.frequency || 'N/A',
       }));
 
@@ -56,7 +56,7 @@ const BonusStructure = () => {
   }, [bonusStructure]);
 
   return (
-    <div className='rounded-2xl bg-white p-6 mt-5 text-neutral-800'>
+    <div className='rounded-2xl bg-white dark:bg-gray-800 p-6 mt-5 text-neutral-800 dark:text-gray-100'>
       <div>
         <h1 className='text-2xl font-bold'>Bonus structure</h1>
         

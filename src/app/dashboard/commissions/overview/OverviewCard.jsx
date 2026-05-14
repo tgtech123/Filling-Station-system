@@ -106,10 +106,10 @@ const OverviewCard = ({ duration = 'thismonth' }) => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mt-8 gap-4">
               {[1, 2, 3, 4].map((index) => (
-                <div key={index} className="bg-white rounded-lg p-6 animate-pulse border">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+                <div key={index} className="bg-white dark:bg-gray-700 rounded-lg p-6 animate-pulse border dark:border-gray-600">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-4"></div>
+                  <div className="h-8 bg-gray-200 dark:bg-gray-600 rounded w-1/2 mb-2"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/4"></div>
                 </div>
               ))}
             </div>
@@ -153,10 +153,10 @@ const OverviewCard = ({ duration = 'thismonth' }) => {
 
   return (
     <div>
-      <div className='bg-white w-full rounded-2xl p-6'>
+      <div className='bg-white dark:bg-gray-800 w-full rounded-2xl p-6'>
         <div>
-          <h1 className='text-neutral-800 font-semibold text-xl'>Overview</h1>
-          <p className='text-neutral-800 text-md'>Overview of staff performance and commissions</p>
+          <h1 className='text-neutral-800 dark:text-gray-100 font-semibold text-xl'>Overview</h1>
+          <p className='text-neutral-800 dark:text-gray-400 text-md'>Overview of staff performance and commissions</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 mt-8 gap-4">
             {stats.map((item, index) => (
@@ -175,7 +175,7 @@ const OverviewCard = ({ duration = 'thismonth' }) => {
         </div>
       </div>
                   
-      <div className='bg-white rounded-2xl mt-4 p-6'>
+      <div className='bg-white dark:bg-gray-800 rounded-2xl mt-4 p-6'>
         <OverviewChart/>
       </div>
     </div>

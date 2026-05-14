@@ -14,10 +14,10 @@ const StaffManagement = () => {
   }, [fetchStaffManagement]);
 
   return (
-    <div className='bg-neutral-100 mt-22 p-6'>
-      <div className='p-4 bg-white rounded-xl w-full mt-3 shadow-md'>
-        <h1 className='text-xl mb-2 font-bold text-neutral-700'>Staff Management</h1>
-        <p className='text-md font-medium text-neutral-700'>Manage staff schedules and responsibilities</p>
+    <div className='bg-neutral-100 dark:bg-gray-900 mt-22 p-6'>
+      <div className='p-4 bg-white dark:bg-gray-800 rounded-xl w-full mt-3 shadow-md'>
+        <h1 className='text-xl mb-2 font-bold text-neutral-700 dark:text-neutral-100'>Staff Management</h1>
+        <p className='text-md font-medium text-neutral-700 dark:text-neutral-300'>Manage staff schedules and responsibilities</p>
 
         {loading.staffManagement ? (
           <p className="text-gray-500 mt-4">Loading staff data...</p>

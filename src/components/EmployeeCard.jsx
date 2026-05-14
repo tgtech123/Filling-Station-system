@@ -69,20 +69,20 @@
 //           </div>
 //         </div>
 
-//         <hr className="px-2 py-3" />
+//         <hr className="px-2 py-3 dark:border-gray-600" />
 
 //         {/* Info */}
 //         <div className="text-sm space-y-2">
-//           <p className="flex items-center gap-2 text-gray-600">
+//           <p className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
 //             <Clock className="w-4 h-4" /> {shift}
 //           </p>
-//           <p className="flex items-center gap-2 text-gray-600">
+//           <p className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
 //             <Phone className="w-4 h-4" /> {phone}
 //           </p>
-//           <p className="flex items-center gap-2 text-gray-600">
+//           <p className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
 //             <Mail className="w-4 h-4" /> {email}
 //           </p>
-//           <p className="text-gray-600 flex items-center gap">
+//           <p className="text-gray-600 dark:text-gray-300 flex items-center gap">
 //             <span>
 //               <TbCurrencyNaira size={22} />
 //             </span>
@@ -123,7 +123,7 @@
 
 //           <button
 //             onClick={() => setIsModalOpen(true)}
-//             className="flex items-center gap-1 px-3 py-1 rounded-full border-[1.5px] border-neutral-700 bg-transparent text-neutral-700 hover:bg-red-600 hover:text-white hover:border-white"
+//             className="flex items-center gap-1 px-3 py-1 rounded-full border-[1.5px] border-neutral-700 dark:border-gray-400 bg-transparent text-neutral-700 dark:text-gray-300 hover:bg-red-600 hover:text-white hover:border-white"
 //           >
 //             <Trash2 className="w-4 h-8" />
 //           </button>
@@ -330,12 +330,12 @@ export default function EmployeeCard({
 
   return (
     <>
-      <div className="bg-white text-neutral-800 rounded-2xl p-4 w-auto max-w-sm border-[1.5px]">
+      <div className="bg-white dark:bg-gray-800 text-neutral-800 dark:text-neutral-100 rounded-2xl p-4 w-auto max-w-sm border-[1.5px] dark:border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex gap-1">
             {/* User image/profile */}
-            <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-300 flex items-center justify-center">
+            <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center">
               {userImage ? (
                 <Image
                   src={userImage}
@@ -345,13 +345,13 @@ export default function EmployeeCard({
                   sizes="40px"
                 />
               ) : (
-                <User size={20} className="text-gray-400" />
+                <User size={20} className="text-gray-400 dark:text-gray-500" />
               )}
             </div>
             
             <div>
-              <h2 className="font-semibold text-lg">{name}</h2>
-              <p className="text-gray-500 text-sm">{role}</p>
+              <h2 className="font-semibold text-lg dark:text-neutral-100">{name}</h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">{role}</p>
             </div>
           </div>
           <div className="flex flex-col items-center gap-2">
@@ -380,20 +380,20 @@ export default function EmployeeCard({
           </div>
         </div>
 
-        <hr className="px-2 py-3" />
+        <hr className="px-2 py-3 dark:border-gray-600" />
 
         {/* Info */}
         <div className="text-sm space-y-2">
-          <p className="flex items-center gap-2 text-gray-600">
+          <p className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
             <Clock className="w-4 h-4" /> {shift}
           </p>
-          <p className="flex items-center gap-2 text-gray-600">
+          <p className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
             <Phone className="w-4 h-4" /> {phone}
           </p>
-          <p className="flex items-center gap-2 text-gray-600">
+          <p className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
             <Mail className="w-4 h-4" /> {email}
           </p>
-          <p className="text-gray-600 flex items-center gap">
+          <p className="text-gray-600 dark:text-gray-300 flex items-center gap">
             <span>
               <TbCurrencyNaira size={22} />
             </span>
@@ -414,10 +414,10 @@ export default function EmployeeCard({
 
         {/* Responsibilities */}
         <div className="">
-          <h3 className="font-semibold text-gray-700 text-md mb-1">
+          <h3 className="font-semibold text-gray-700 dark:text-gray-200 text-md mb-1">
             Responsibilities
           </h3>
-          <p className="text-[12px]">{responsibilities}</p>
+          <p className="text-[12px] dark:text-gray-300">{responsibilities}</p>
         </div>
 
         {/* Actions */}
@@ -433,7 +433,7 @@ export default function EmployeeCard({
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-1 px-3 py-1 rounded-full border-[1.5px] border-neutral-700 bg-transparent text-neutral-700 hover:bg-red-600 hover:text-white hover:border-white"
+            className="flex items-center gap-1 px-3 py-1 rounded-full border-[1.5px] border-neutral-700 dark:border-gray-400 bg-transparent text-neutral-700 dark:text-gray-300 hover:bg-red-600 hover:text-white hover:border-white"
           >
             <Trash2 className="w-4 h-8" />
           </button>

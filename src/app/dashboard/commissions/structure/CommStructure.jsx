@@ -29,9 +29,9 @@ const CommStructure = () => {
     if (commissionStructure && commissionStructure.length > 0) {
       const transformedData = commissionStructure.map(structure => ({
         role: structure.role || 'N/A',
-        baseRate: structure.baseRate ? `${structure.baseRate}%` : '-',
-        tier1: structure.tier1Rate ? `${structure.tier1Rate}%` : '-',
-        tier2: structure.tier2Rate ? `${structure.tier2Rate}%` : '-',
+        baseRate: structure.baseRate != null ? `${structure.baseRate}%` : '-',
+        tier1: structure.tier1 != null ? `${structure.tier1}%` : '-',
+        tier2: structure.tier2 != null ? `${structure.tier2}%` : '-',
       }));
 
       setCommissionTableData(transformedData);
@@ -44,8 +44,8 @@ const CommStructure = () => {
     <div>
       <div className='p-6 bg-white dark:bg-gray-800 rounded-2xl'>
         <div>
-          <h1 className='text-2xl text-neutral-800 font-bold'>Commission Structure</h1>
-          <p className='text-[19px] text-neutral-800'>Staff commission rate by roles</p>
+          <h1 className='text-2xl text-neutral-800 dark:text-gray-100 font-bold'>Commission Structure</h1>
+          <p className='text-[19px] text-neutral-800 dark:text-gray-400'>Staff commission rate by roles</p>
         </div>
 
         {loading.commissionStructure ? (
