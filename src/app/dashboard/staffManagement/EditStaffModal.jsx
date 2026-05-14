@@ -223,27 +223,21 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   )}
                 </span>
               </span>
-              <span className="flex flex-col gap-2 relative">
+              <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Shift type</label>
-                <input
-                  type="text"
+                <select
                   name="shiftType"
                   value={formData.shiftType}
                   onChange={handleChange}
-                  placeholder="Shift type"
                   className="text-neutral-800 dark:text-gray-100 bg-white dark:bg-gray-700 border-[2px] pl-3 border-neutral-200 dark:border-gray-600 outline-none focus:border-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
-                />
-
-                <span
-                  onClick={() => setIsToggleChevTwo(!isToggleChevTwo)}
-                  className="absolute text-neutral-500 top-10 right-6 cursor-pointer"
                 >
-                  {isToggleChevTwo ? (
-                    <ChevronUp size={26} />
-                  ) : (
-                    <ChevronDown size={26} />
-                  )}
-                </span>
+                  <option value="">Select shift</option>
+                  <option value="One-Day-Morning">One-Day Morning (6AM – 2PM)</option>
+                  <option value="One-Day-Evening">One-Day Evening (2PM – 10PM)</option>
+                  <option value="Day-Off">Day-Off / Fulltime (6AM – 10PM)</option>
+                  <option value="24/7">24/7 (Round the Clock)</option>
+                  <option value="Full-Time">Full-Time (8AM – 6PM)</option>
+                </select>
               </span>
             </p>
 

@@ -7,7 +7,7 @@ import useCommissionStore from '@/store/useCommissionStore';
 const COMMISSION_HEADERS = ["Role", "Base Rate %", "Tier 1", "Tier 2"];
 const BONUS_HEADERS = ["Achievement", "Bonus Amount", "Frequency"];
 
-// ── Conversions between backend objects and display rows ──────────────────────
+// ── Conversions between backend objects and display rows 
 
 const commissionToRow = (s) => [
   s.role.charAt(0).toUpperCase() + s.role.slice(1),
@@ -88,7 +88,7 @@ const StaffCommision = () => {
         updateBonusStructure(editableBonus.map(rowToBonus)),
       ]);
       setIsEditMode(false);
-      setSaveMessage("✅ Changes saved successfully!");
+      setSaveMessage("Changes saved successfully!");
     } catch {
       setSaveMessage("❌ Failed to save. Please try again.");
     } finally {
