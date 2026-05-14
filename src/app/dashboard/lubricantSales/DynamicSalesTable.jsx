@@ -24,8 +24,8 @@ const MixedPaymentModal = ({ totalAmount, onClose, onConfirm }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-6 w-[90%] sm:w-[400px] shadow-lg">
+    <div className="fixed inset-0 bg-black/50 bg-opacity-40 flex items-center justify-center z-50 px-4">
+      <div className="bg-white rounded-xl p-6 w-full max-w-[400px] shadow-lg">
         <h2 className="text-xl font-bold mb-4">Mixed Payment Breakdown</h2>
 
         <div className="flex flex-col gap-3">
@@ -88,6 +88,7 @@ const DynamicSalesTable = ({
   paymentMethod,
   setPaymentMethod,
   onSubmit,
+  loading = false,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [paymentBreakdown, setPaymentBreakdown] = useState(null);
@@ -157,9 +158,21 @@ const DynamicSalesTable = ({
           {/* Record Button */}
           <button
             onClick={handleSubmit}
-            className="bg-[#0080FF] hover:bg-blue-700 text-white flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold w-full sm:w-auto flex-shrink-0 transition-colors"
+            disabled={loading}
+            className={`text-white flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold w-full sm:w-auto flex-shrink-0 transition-colors ${
+              loading ? "bg-blue-400 cursor-not-allowed" : "bg-[#0080FF] hover:bg-blue-700"
+            }`}
           >
-            Record <LuPlus size={20} />
+            {loading ? (
+              <>
+                Recording...
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              </>
+            ) : (
+              <>
+                Record <LuPlus size={20} />
+              </>
+            )}
           </button>
         </div>
       </div>

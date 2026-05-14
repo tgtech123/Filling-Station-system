@@ -317,10 +317,10 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       roles: ["supervisor"],
     },
     {
-      id: "supervisor-procurement-view",
-      name: "View Procurement",
+      id: "supervisor-procurement",
+      name: "Procure Lubricants",
       icon: <Package size={20} />,
-      link: "/dashboard/procurement-view",
+      link: "/dashboard/procurement",
       roles: ["supervisor"],
     },
     // Accountant links

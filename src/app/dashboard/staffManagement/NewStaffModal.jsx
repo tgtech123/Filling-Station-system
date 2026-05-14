@@ -213,13 +213,13 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
     <>
     <div
       onClick={onClose}
-      className="bg-black/50 w-full flex justify-center items-center fixed inset-0 z-50 h-auto"
+      className="bg-black/50 w-full flex justify-center items-start sm:items-center fixed inset-0 z-50 overflow-y-auto py-4 px-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white lg:w-[60.1875rem] w-fit rounded-2xl max-h-[90vh] overflow-hidden"
+        className="bg-white w-full max-w-[60.1875rem] rounded-2xl my-auto"
       >
-        <div className="overflow-y-auto max-h-[90vh] p-5">
+        <div className="overflow-y-auto max-h-[90dvh] p-5">
           <p className="mb-[2rem] flex justify-between">
             <span className="flex flex-col">
               <span className="text-[1.5rem] font-semibold leading-[100%] mb-[0.75rem]">
@@ -266,7 +266,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   value={formData.firstName}
                   onChange={handleInputChange}
                   placeholder="Sam"
-                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
+                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
                 />
               </span>
               <span className="flex flex-col gap-2">
@@ -279,7 +279,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   value={formData.lastName}
                   onChange={handleInputChange}
                   placeholder="Doe"
-                  className="text-neutral-500 pl-3 w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 rounded-2xl"
+                  className="text-neutral-500 pl-3 w-full h-[3.25rem] border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 rounded-2xl"
                 />
               </span>
               <span className="flex flex-col gap-2">
@@ -292,7 +292,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="sam@example.com"
-                  className="text-neutral-500 pl-3 w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 rounded-2xl"
+                  className="text-neutral-500 pl-3 w-full h-[3.25rem] border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 rounded-2xl"
                 />
               </span>
               <span className="flex flex-col gap-2">
@@ -305,7 +305,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   value={formData.phone}
                   onChange={handleInputChange}
                   placeholder="+1234567890"
-                  className="text-neutral-500 pl-3 w-[27.719rem] h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
+                  className="text-neutral-500 pl-3 w-full h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </span>
               <span className="flex flex-col gap-2 relative">
@@ -318,7 +318,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   type={isToggleTwo ? "text" : "password"}
                   onChange={handleInputChange}
                   placeholder="Enter your password"
-                  className="text-neutral-500 pl-3 w-[27.719rem] h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
+                  className="text-neutral-500 pl-3 w-full h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <span
                   onClick={() => setIsToggleTwo(!isToggleTwo)}
@@ -338,7 +338,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   type={showVisible ? "text" : "password"}
                   onChange={handleInputChange}
                   placeholder="Confirm password"
-                  className="text-neutral-500 pl-3 w-[27.719rem] h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
+                  className="text-neutral-500 pl-3 w-full h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <span
                   onClick={() => setShowVisible(!showVisible)}
@@ -366,7 +366,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   name="role"
                   value={formData.role}
                   onChange={handleInputChange}
-                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl bg-white"
+                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl bg-white"
                 >
                   <option value="">Select role</option>
                   <option value="attendant">Attendant</option>
@@ -382,7 +382,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   name="shiftType"
                   value={formData.shiftType}
                   onChange={handleInputChange}
-                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl bg-white"
+                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl bg-white"
                 >
                   <option value="">Select shift</option>
                   <option value="morning">Morning</option>
@@ -440,7 +440,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   name="payType"
                   value={formData.payType}
                   onChange={handleInputChange}
-                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl bg-white"
+                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl bg-white"
                 >
                   <option value="">Select pay type</option>
                   <option value="hourly">Hourly</option>
@@ -457,7 +457,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   value={formData.amount}
                   onChange={handleInputChange}
                   placeholder="40000"
-                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
+                  className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
                 />
               </span>
             </p>
@@ -774,7 +774,7 @@ export default NewStaffModal;
 //                   value={formData.firstName}
 //                   onChange={handleInputChange}
 //                   placeholder="Sam"
-//                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
+//                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
 //                 />
 //               </span>
 //               <span className="flex flex-col gap-2">
@@ -787,7 +787,7 @@ export default NewStaffModal;
 //                   value={formData.lastName}
 //                   onChange={handleInputChange}
 //                   placeholder="Doe"
-//                   className="text-neutral-500 pl-3 w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 rounded-2xl"
+//                   className="text-neutral-500 pl-3 w-full h-[3.25rem] border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 rounded-2xl"
 //                 />
 //               </span>
 //               <span className="flex flex-col gap-2">
@@ -800,7 +800,7 @@ export default NewStaffModal;
 //                   value={formData.email}
 //                   onChange={handleInputChange}
 //                   placeholder="sam@example.com"
-//                   className="text-neutral-500 pl-3 w-[27.719rem] h-[3.25rem] border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 rounded-2xl"
+//                   className="text-neutral-500 pl-3 w-full h-[3.25rem] border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 rounded-2xl"
 //                 />
 //               </span>
 //               <span className="flex flex-col gap-2">
@@ -813,7 +813,7 @@ export default NewStaffModal;
 //                   value={formData.phone}
 //                   onChange={handleInputChange}
 //                   placeholder="+1234567890"
-//                   className="text-neutral-500 pl-3 w-[27.719rem] h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
+//                   className="text-neutral-500 pl-3 w-full h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
 //                 />
 //               </span>
 //               <span className="flex flex-col gap-2 relative">
@@ -826,7 +826,7 @@ export default NewStaffModal;
 //                   type={isToggleTwo ? "text" : "password"}
 //                   onChange={handleInputChange}
 //                   placeholder="Enter your password"
-//                   className="text-neutral-500 pl-3 w-[27.719rem] h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
+//                   className="text-neutral-500 pl-3 w-full h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
 //                 />
 //                 <span
 //                   onClick={() => setIsToggleTwo(!isToggleTwo)}
@@ -846,7 +846,7 @@ export default NewStaffModal;
 //                   type={showVisible ? "text" : "password"}
 //                   onChange={handleInputChange}
 //                   placeholder="Confirm password"
-//                   className="text-neutral-500 pl-3 w-[27.719rem] h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
+//                   className="text-neutral-500 pl-3 w-full h-[3.25rem] rounded-2xl border-[2px] border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500"
 //                 />
 //                 <span
 //                   onClick={() => setShowVisible(!showVisible)}
@@ -876,7 +876,7 @@ export default NewStaffModal;
 //                   value={formData.role}
 //                   onChange={handleInputChange}
 //                   placeholder="Cashier"
-//                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
+//                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
 //                 />
 
 //                 <span
@@ -898,7 +898,7 @@ export default NewStaffModal;
 //                   value={formData.shiftType}
 //                   onChange={handleInputChange}
 //                   placeholder="Morning"
-//                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
+//                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
 //                 />
 
 //                 <span
@@ -963,7 +963,7 @@ export default NewStaffModal;
 //                   value={formData.payType}
 //                   onChange={handleInputChange}
 //                   placeholder="Monthly Salary"
-//                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
+//                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
 //                 />
 
 //                 <span
@@ -985,7 +985,7 @@ export default NewStaffModal;
 //                   value={formData.amount}
 //                   onChange={handleInputChange}
 //                   placeholder="40000"
-//                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-[27.719rem] h-[3.25rem] rounded-2xl"
+//                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
 //                 />
 //               </span>
 //             </p>

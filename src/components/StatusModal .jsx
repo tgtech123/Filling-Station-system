@@ -10,8 +10,8 @@ const StatusModal = ({ onClose, onApprove, onReject, row }) => {
   const [expenseId, date, category, description, amount, submittedBy] = row;
 
   return (
-    <div onClick={onClose} className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl p-6 w-[400px]">
+    <div onClick={onClose} className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+      <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-[400px]">
         {/* ✅ Header */}
         <p className="text-xl text-[#1A71F6] font-bold mb-4 flex gap-5 ">
             <GiSplitArrows size={26}/>

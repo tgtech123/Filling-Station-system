@@ -1,17 +1,16 @@
 ﻿"use client";
 
-import { API_URL } from "@/lib/config";
 import React, { useEffect, useMemo, useState } from "react";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import { Search } from "lucide-react";
 import Pagination from "@/components/Pagination";
 import CustomTable from "@/components/Table";
 import useStaffStore from "@/store/useStaffStore";
+import { useLubricantStore } from "@/store/lubricantStore";
 
 
 export default function LubricantSales() {
-  const [loading, setLoading] = useState(false);
-  const [transactionsRaw, setTransactionsRaw] = useState([]);
+  const { transactions: transactionsRaw, transactionsLoading: loading, fetchAllTransactions } = useLubricantStore();
   const [flatRows, setFlatRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,75 +37,87 @@ export default function LubricantSales() {
     }
   };
 
-  // 🆕 Fetch staff on mount
+  // Fetch staff on mount
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (token) {
-      getAllStaff(token);
-    }
+    if (token) getAllStaff(token);
   }, [getAllStaff]);
 
-
+  // Fetch transactions from shared store on mount
   useEffect(() => {
-    let mounted = true;
-    const fetchTransactions = async () => {
-      setLoading(true);
-      try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-        const res = await fetch(`${API_URL}/api/lubricant/transactions`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-        });
-
-        if (!res.ok) {
-          const errText = await res.text();
-          throw new Error(errText || "Failed to fetch transactions");
-        }
-
-        const json = await res.json();
-        const dataArray = Array.isArray(json?.data) ? json.data : [];
-        if (mounted) setTransactionsRaw(dataArray);
-      } catch (err) {
-        console.error("Error fetching transactions:", err);
-        if (mounted) setTransactionsRaw([]);
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    fetchTransactions();
-    return () => { mounted = false; };
+    fetchAllTransactions();
   }, []);
 
   // Flatten transactions -> array of arrays for CustomTable
+  // row layout: [date, cashier, txnId, barcode, productName, qty, amount, displayPayment, filterKey]
+  //   [7] displayPayment — shown in the table  (e.g. "Cash (mixed)")
+  //   [8] filterKey      — used for filtering  (e.g. "cash")
   useEffect(() => {
     const rows = [];
     (transactionsRaw || []).forEach((txn) => {
-      const date = txn?.date ? formatDate(txn.date) : "";
-      const cashier = txn?.staffName ?? "Unknown";
-      const txnId = txn?.txnId ?? "";
-      const payment = txn?.paymentMethod ?? "";
+      const date      = txn?.date ? formatDate(txn.date) : "";
+      const cashier   = txn?.staffName ?? "Unknown";
+      const txnId     = txn?.txnId ?? "";
+      const method    = txn?.paymentMethod ?? "";
+      const breakdown = txn?.paymentBreakdown;
+      const items     = Array.isArray(txn.items) ? txn.items : [];
 
-      const items = Array.isArray(txn.items) ? txn.items : [];
+      if (method === "mixed") {
+        // Build one row per active breakdown component (breakdown amount as the amount)
+        const components = breakdown ? [
+          { key: "cash",     label: "Cash (mixed)",     amount: Number(breakdown.cash     || 0) },
+          { key: "transfer", label: "Transfer (mixed)",  amount: Number(breakdown.transfer || 0) },
+          { key: "POS",      label: "POS (mixed)",       amount: Number(breakdown.POS      || 0) },
+        ].filter((c) => c.amount > 0) : [];
 
-      if (items.length === 0) {
-        rows.push([date, cashier, txnId, "", "", 0, 0, payment]);
+        const productSummary =
+          items.length === 0  ? "—" :
+          items.length === 1  ? (items[0]?.productName ?? "—") :
+          `${items[0]?.productName ?? "Item"} +${items.length - 1} more`;
+
+        const totalQty = items.reduce((s, i) => s + (i?.qtySold || 0), 0);
+
+        if (components.length > 0) {
+          // Has breakdown — push one row per payment component
+          components.forEach(({ key, label, amount }) => {
+            rows.push([date, cashier, txnId, "", productSummary, totalQty, amount, label, key]);
+          });
+        } else {
+          // No breakdown data (old transaction) — show as a single "mixed" row per item
+          if (items.length === 0) {
+            rows.push([date, cashier, txnId, "", productSummary, totalQty, txn.totalAmount || 0, "mixed", "mixed"]);
+          } else {
+            items.forEach((it) => {
+              rows.push([
+                date, cashier, txnId,
+                it?.barcode ?? "",
+                it?.productName ?? "",
+                it?.qtySold ?? 0,
+                it?.amount ?? 0,
+                "mixed", "mixed",
+              ]);
+            });
+          }
+        }
       } else {
-        items.forEach((it) => {
-          rows.push([
-            date,
-            cashier,
-            txnId,
-            it?.barcode ?? "",
-            it?.productName ?? "",
-            it?.qtySold ?? 0,
-            it?.amount ?? 0,
-            payment
-          ]);
-        });
+        // Non-mixed: one row per item (unchanged behaviour)
+        if (items.length === 0) {
+          rows.push([date, cashier, txnId, "", "", 0, 0, method, method]);
+        } else {
+          items.forEach((it) => {
+            rows.push([
+              date,
+              cashier,
+              txnId,
+              it?.barcode ?? "",
+              it?.productName ?? "",
+              it?.qtySold ?? 0,
+              it?.amount ?? 0,
+              method,
+              method,
+            ]);
+          });
+        }
       }
     });
 
@@ -139,9 +150,10 @@ export default function LubricantSales() {
       result = result.filter((row) => row[0] === selectedDate);
     }
 
-    // Apply payment type filter
+    // Apply payment type filter — use canonical key [8] so "cash" matches
+    // both pure-cash rows and "Cash (mixed)" rows
     if (selectedPaymentType) {
-      result = result.filter((row) => row[7] === selectedPaymentType);
+      result = result.filter((row) => row[8] === selectedPaymentType);
     }
 
     return result;
@@ -163,14 +175,20 @@ export default function LubricantSales() {
 
   useEffect(() => setCurrentPage(1), [searchTerm, selectedCashier, selectedDate, selectedPaymentType]);
 
-  // 🆕 Get unique payment types from transactions
+  // Get unique canonical payment types for the filter dropdown (row[8])
   const paymentTypes = useMemo(() => {
     const types = new Set();
     flatRows.forEach((row) => {
-      if (row[7]) types.add(row[7]);
+      if (row[8]) types.add(row[8]);
     });
     return Array.from(types);
   }, [flatRows]);
+
+  // Human-readable label for a canonical payment key
+  const paymentTypeLabel = (key) => {
+    const map = { cash: "Cash", transfer: "Transfer", POS: "POS", mixed: "Mixed" };
+    return map[key] ?? key;
+  };
 
   // 🆕 Get unique dates from transactions
   const uniqueDates = useMemo(() => {
@@ -277,7 +295,7 @@ export default function LubricantSales() {
               <option value="">All Payment Types</option>
               {paymentTypes.map((type) => (
                 <option key={type} value={type}>
-                  {type}
+                  {paymentTypeLabel(type)}
                 </option>
               ))}
             </select>
@@ -315,7 +333,7 @@ export default function LubricantSales() {
             )}
             {selectedPaymentType && (
               <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                Payment: {selectedPaymentType}
+                Payment: {paymentTypeLabel(selectedPaymentType)}
               </span>
             )}
           </div>

@@ -99,13 +99,13 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
   return (
     <div
       onClick={onClose}
-      className="bg-black/50 w-full flex justify-center items-center fixed inset-0 z-50 h-auto"
+      className="bg-black/50 w-full flex justify-center items-start sm:items-center fixed inset-0 z-50 overflow-y-auto px-4 py-4"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white dark:bg-gray-800 lg:w-[60.1875rem] w-[95vw] max-w-[60rem] rounded-2xl max-h-[90vh]"
+        className="bg-white dark:bg-gray-800 w-full max-w-[60rem] rounded-2xl my-auto"
       >
-        <div className="overflow-y-auto scrollbar-hide max-h-[90vh] p-7">
+        <div className="overflow-y-auto scrollbar-hide max-h-[90dvh] p-5 sm:p-7">
           <p className="mb-[2rem] flex justify-between">
             <span className="flex flex-col">
               <span className="text-[1.5rem] font-semibold leading-[100%] mb-[0.75rem]">

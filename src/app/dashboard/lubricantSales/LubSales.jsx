@@ -19,12 +19,13 @@ const LubSales = () => {
   ]);
   const [paymentMethod, setPaymentMethod] = useState("POS");
   const [message, setMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [receiptData, setReceiptData] = useState(null);
 
   // 🆕 Get selected product from store
-  const { selectedProductForSale, clearSelectedProductForSale } = useLubricantStore();
+  const { selectedProductForSale, clearSelectedProductForSale, fetchAllTransactions } = useLubricantStore();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -217,8 +218,9 @@ const LubSales = () => {
     );
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async ({ paymentBreakdown } = {}) => {
     try {
+      setIsSubmitting(true);
       const token = localStorage.getItem("token");
       const user = JSON.parse(localStorage.getItem("user"));
 
@@ -247,6 +249,9 @@ const LubSales = () => {
               unitPrice: Number(item.unitPrice),
             })),
             paymentMethod: normalizedPaymentMethod,
+            ...(normalizedPaymentMethod === "mixed" && paymentBreakdown
+              ? { paymentBreakdown }
+              : {}),
           }),
         }
       );
@@ -284,6 +289,8 @@ const LubSales = () => {
       };
 
       setMessage("✅ Sale recorded successfully!");
+      // Refresh transaction store so reprint tables update immediately
+      fetchAllTransactions();
 
       setTimeout(() => {
         setReceiptData(receiptPayload);
@@ -302,7 +309,8 @@ const LubSales = () => {
       }, 2000);
     } catch (err) {
       setMessage(`❌ ${err.message || "Server error, please try again."}`);
-      console.error("Sale error:", err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -502,6 +510,7 @@ const LubSales = () => {
         paymentMethod={paymentMethod}
         setPaymentMethod={setPaymentMethod}
         onSubmit={handleSubmit}
+        loading={isSubmitting}
       />
 
       <ReceiptModal

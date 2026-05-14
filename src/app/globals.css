@@ -310,10 +310,21 @@ html.dark .bg-\[\#F1F9F1\] {
 
 html {
   font-size: 16px;
+  -webkit-text-size-adjust: 100%; /* prevent iOS from auto-resizing text */
 }
 
-@media (max-width: 640px) {
-  html { font-size: 14px; }
+/*
+  iOS Safari zooms in on any input with font-size < 16px.
+  This prevents the page from jumping/zooming when a user taps any input field.
+  touch-action: manipulation disables the 300ms double-tap-to-zoom delay on inputs.
+*/
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
 }
 
 /* Responsive containers */

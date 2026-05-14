@@ -61,7 +61,7 @@ const Table = ({
                 })}
                 {renderActions && (
                   <td className="px-4 py-3 whitespace-nowrap">
-                    {renderActions(row)}
+                    {renderActions(row, rowIndex)}
                   </td>
                 )}
               </tr>

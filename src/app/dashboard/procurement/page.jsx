@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
 import {
   Package, ShoppingCart, Plus, Minus, Trash2, Send,
   RefreshCw, CheckCircle, AlertTriangle, XCircle,
-  Eye, Edit3, Save, FileText, TruckIcon, BadgeCheck,
+  Eye, Edit3, Save, FileText, TruckIcon, BadgeCheck, Filter, ArrowLeft,
+  Search, ChevronDown,
 } from "lucide-react";
 import useProcurementStore from "@/store/useProcurementStore";
 import toast from "react-hot-toast";
@@ -13,6 +15,7 @@ const URGENCY = {
   out_of_stock: { label: "Out of Stock", bg: "bg-red-100",    text: "text-red-700",    dot: "bg-red-500"    },
   critical:     { label: "Critical",     bg: "bg-orange-100", text: "text-orange-700", dot: "bg-orange-500" },
   low:          { label: "Low Stock",    bg: "bg-yellow-100", text: "text-yellow-700", dot: "bg-yellow-400" },
+  healthy:      { label: "Healthy",      bg: "bg-green-100",  text: "text-green-700",  dot: "bg-green-500"  },
 };
 
 const STATUS_CONFIG = {
@@ -32,7 +35,7 @@ function StatusBadge({ status }) {
 }
 
 function UrgencyBadge({ urgency }) {
-  const u = URGENCY[urgency] || URGENCY.low;
+  const u = URGENCY[urgency] || URGENCY.healthy;
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${u.bg} ${u.text}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${u.dot}`} />
@@ -42,8 +45,9 @@ function UrgencyBadge({ urgency }) {
 }
 
 function StockBar({ current, max }) {
-  const pct = max > 0 ? Math.min((current / max) * 100, 100) : 0;
-  const color = pct === 0 ? "bg-red-500" : pct < 50 ? "bg-orange-400" : pct < 80 ? "bg-yellow-400" : "bg-green-400";
+  // when no reorder threshold is set (max=0), treat stock as full
+  const pct = max > 0 ? Math.min((current / max) * 100, 100) : (current > 0 ? 100 : 0);
+  const color = pct === 0 ? "bg-red-500" : pct < 50 ? "bg-orange-400" : pct < 100 ? "bg-yellow-400" : "bg-green-400";
   return (
     <div className="w-full bg-gray-100 rounded-full h-1.5 mt-1.5">
       <div className={`${color} h-1.5 rounded-full transition-all`} style={{ width: `${pct}%` }} />
@@ -91,9 +95,83 @@ function OrderCard({ order, onView, onDelete }) {
 }
 
 // ─── Order detail modal ──────────────────────────────────────────────────────
-function OrderDetailModal({ order, onClose }) {
-  const [actioning, setActioning] = useState(false);
-  const { markOrdered, markReceived } = useProcurementStore();
+function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
+  const [order, setOrder]               = useState(initialOrder);
+  const [actioning, setActioning]       = useState(false);
+  const [isEditing, setIsEditing]       = useState(false);
+  const [saving, setSaving]             = useState(false);
+  const [editVendorName, setEditVendorName] = useState("");
+  const [editVendorPhone, setEditVendorPhone] = useState("");
+  const [editNotes, setEditNotes]       = useState("");
+  const [editItems, setEditItems]       = useState([]);
+  const [productSearch, setProductSearch] = useState("");
+  const [showAddProducts, setShowAddProducts] = useState(false);
+
+  const { markOrdered, markReceived, updateProcurement, reorderItems, fetchReorderItems } = useProcurementStore();
+
+  const canEdit = (role === "manager" || role === "supervisor") &&
+    (order.status === "draft" || order.status === "submitted");
+
+  const enterEdit = () => {
+    setEditVendorName(order.vendorName || "");
+    setEditVendorPhone(order.vendorPhone || "");
+    setEditNotes(order.notes || "");
+    setEditItems((order.items || []).map(i => ({ ...i })));
+    if (!reorderItems.length) fetchReorderItems();
+    setIsEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setIsEditing(false);
+    setShowAddProducts(false);
+    setProductSearch("");
+  };
+
+  const updateEditQty = (lubricantId, qty) => {
+    const n = Math.max(1, parseInt(qty) || 1);
+    setEditItems(prev => prev.map(i =>
+      i.lubricantId?.toString() === lubricantId?.toString() ? { ...i, quantityToProcure: n } : i
+    ));
+  };
+
+  const removeEditItem = (lubricantId) =>
+    setEditItems(prev => prev.filter(i => i.lubricantId?.toString() !== lubricantId?.toString()));
+
+  const addProduct = (product) => {
+    const id = product._id.toString();
+    if (editItems.some(i => i.lubricantId?.toString() === id)) return;
+    setEditItems(prev => [...prev, {
+      lubricantId:       id,
+      productName:       product.productName,
+      productType:       product.productType || "",
+      brand:             product.brand || "",
+      currentStock:      product.qtyInStock ?? 0,
+      reOrderLevel:      product.reOrderLevel ?? 0,
+      quantityToProcure: Math.max(1, (product.reOrderLevel ?? 0) - (product.qtyInStock ?? 0)),
+      unitCost:          product.unitCost ?? 0,
+    }]);
+  };
+
+  const handleSave = async () => {
+    if (!editItems.length) { toast.error("At least one item is required"); return; }
+    setSaving(true);
+    const result = await updateProcurement(order._id, {
+      vendorName:  editVendorName,
+      vendorPhone: editVendorPhone,
+      notes:       editNotes,
+      items:       editItems,
+    });
+    setSaving(false);
+    if (result.success) {
+      toast.success("Order updated successfully");
+      setOrder(result.data);
+      if (onUpdate) onUpdate(result.data);
+      setIsEditing(false);
+      setShowAddProducts(false);
+    } else {
+      toast.error(result.error || "Failed to update order");
+    }
+  };
 
   const handleAction = async (fn, label) => {
     setActioning(true);
@@ -103,26 +181,41 @@ function OrderDetailModal({ order, onClose }) {
     else toast.error(result.error || "Action failed");
   };
 
-  const totalEstimate = order.items?.reduce((s, i) => s + i.quantityToProcure * i.unitCost, 0) || 0;
+  const viewTotal = order.items?.reduce((s, i) => s + i.quantityToProcure * i.unitCost, 0) || 0;
+  const editTotal = editItems.reduce((s, i) => s + i.quantityToProcure * (i.unitCost || 0), 0);
+
+  const availableProducts = reorderItems.filter(p => {
+    if (editItems.some(i => i.lubricantId?.toString() === p._id.toString())) return false;
+    if (!productSearch) return true;
+    const q = productSearch.toLowerCase();
+    return p.productName?.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q);
+  });
 
   return (
     <div
       className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center sm:p-4"
-      onClick={onClose}
+      onClick={isEditing ? undefined : onClose}
     >
       <div
         className="bg-white dark:bg-gray-900 w-full sm:rounded-2xl sm:max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl rounded-t-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle — mobile only */}
+        {/* Drag handle */}
         <div className="sm:hidden flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
         </div>
 
-        {/* Header */}
+        {/* ── Header ───────────────────────────────────────────────── */}
         <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 sm:px-6 py-4 flex items-start justify-between gap-3 z-10">
           <div className="min-w-0">
-            <p className="font-bold text-gray-900 dark:text-white">{order.procurementNumber}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-bold text-gray-900 dark:text-white">{order.procurementNumber}</p>
+              {isEditing && (
+                <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-semibold">
+                  Editing
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-2 mt-1">
               <StatusBadge status={order.status} />
               <span className="text-xs text-gray-400">
@@ -130,87 +223,283 @@ function OrderDetailModal({ order, onClose }) {
               </span>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl shrink-0 mt-0.5">
-            <XCircle size={20} className="text-gray-400" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0 mt-0.5">
+            {!isEditing && canEdit && (
+              <button
+                onClick={enterEdit}
+                className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-semibold hover:bg-blue-100 transition-colors"
+              >
+                <Edit3 size={13} /> Edit
+              </button>
+            )}
+            {isEditing && (
+              <>
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !editItems.length}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold disabled:opacity-50 transition-colors"
+                >
+                  <Save size={13} /> {saving ? "Saving…" : "Save"}
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-semibold hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+              </>
+            )}
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">
+              <XCircle size={20} className="text-gray-400" />
+            </button>
+          </div>
         </div>
 
         <div className="p-4 sm:p-6 space-y-4">
-          {/* Info cards — stack on mobile, side-by-side on sm+ */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-1">
-              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Vendor</p>
-              <p className="font-bold text-gray-900 dark:text-white">{order.vendorName || "—"}</p>
-              <p className="text-sm text-gray-500">{order.vendorPhone || "—"}</p>
-            </div>
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-1">
-              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Procured By</p>
-              <p className="font-bold text-gray-900 dark:text-white">{order.procuredByName}</p>
-              <p className="text-xs text-gray-400">{order.stationName}</p>
-            </div>
-          </div>
 
-          {/* Items table — horizontally scrollable on mobile */}
+          {/* ── Vendor / Procured By ─────────────────────────────────── */}
+          {isEditing ? (
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-3">
+              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Vendor Details</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">Vendor / Supplier Name</label>
+                  <input
+                    value={editVendorName}
+                    onChange={(e) => setEditVendorName(e.target.value)}
+                    placeholder="e.g. ABC Lubricants Ltd"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 block mb-1">Vendor Phone</label>
+                  <input
+                    value={editVendorPhone}
+                    onChange={(e) => setEditVendorPhone(e.target.value)}
+                    placeholder="e.g. 080 1234 5678"
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-1">
+                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Vendor</p>
+                <p className="font-bold text-gray-900 dark:text-white">{order.vendorName || "—"}</p>
+                <p className="text-sm text-gray-500">{order.vendorPhone || "—"}</p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-1">
+                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Procured By</p>
+                <p className="font-bold text-gray-900 dark:text-white">{order.procuredByName}</p>
+                <p className="text-xs text-gray-400">{order.stationName}</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Items table ──────────────────────────────────────────── */}
           <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700 -mx-4 sm:mx-0">
-            <table className="w-full text-sm min-w-[560px]">
+            <table className="w-full text-sm min-w-[520px]">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  {["Product", "Brand", "In Stock", "Threshold", "Qty to Buy", "Unit Cost", "Total"].map((h) => (
+                  {(isEditing
+                    ? ["Product", "Stock / Lvl", "Qty", "Unit Cost", "Total", ""]
+                    : ["Product", "Brand", "In Stock", "Threshold", "Qty to Buy", "Unit Cost", "Total"]
+                  ).map((h) => (
                     <th key={h} className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                {order.items?.map((item, i) => (
-                  <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td className="px-3 sm:px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">{item.productName}</td>
-                    <td className="px-3 sm:px-4 py-3 text-gray-500 whitespace-nowrap">{item.brand || "—"}</td>
-                    <td className="px-3 sm:px-4 py-3 text-gray-700 dark:text-gray-300">{item.currentStock}</td>
-                    <td className="px-3 sm:px-4 py-3 text-gray-500">{item.reOrderLevel}</td>
-                    <td className="px-3 sm:px-4 py-3 font-bold text-blue-600">{item.quantityToProcure}</td>
-                    <td className="px-3 sm:px-4 py-3 text-gray-500 whitespace-nowrap">₦{item.unitCost?.toLocaleString() || 0}</td>
-                    <td className="px-3 sm:px-4 py-3 font-semibold whitespace-nowrap">₦{(item.quantityToProcure * item.unitCost).toLocaleString()}</td>
-                  </tr>
-                ))}
+                {isEditing
+                  ? editItems.map((item) => (
+                    <tr key={item.lubricantId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="px-3 sm:px-4 py-3">
+                        <p className="font-medium text-gray-900 dark:text-white text-xs sm:text-sm whitespace-nowrap">{item.productName}</p>
+                        <p className="text-xs text-gray-400">{item.brand}</p>
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+                        {item.currentStock} / {item.reOrderLevel || "—"}
+                      </td>
+                      <td className="px-3 sm:px-4 py-3">
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => updateEditQty(item.lubricantId, item.quantityToProcure - 1)}
+                            className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-blue-100 active:scale-95 transition-transform"
+                          ><Minus size={11} /></button>
+                          <input
+                            type="number" min={1}
+                            value={item.quantityToProcure}
+                            onChange={(e) => updateEditQty(item.lubricantId, e.target.value)}
+                            className="w-12 border border-gray-300 dark:border-gray-600 rounded-lg text-center text-sm py-1 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                          />
+                          <button
+                            onClick={() => updateEditQty(item.lubricantId, item.quantityToProcure + 1)}
+                            className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-blue-100 active:scale-95 transition-transform"
+                          ><Plus size={11} /></button>
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 text-xs text-gray-500 whitespace-nowrap">₦{item.unitCost?.toLocaleString() || 0}</td>
+                      <td className="px-3 sm:px-4 py-3 text-xs font-semibold whitespace-nowrap">
+                        ₦{(item.quantityToProcure * (item.unitCost || 0)).toLocaleString()}
+                      </td>
+                      <td className="px-3 sm:px-4 py-3">
+                        <button
+                          onClick={() => removeEditItem(item.lubricantId)}
+                          className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        ><Trash2 size={13} /></button>
+                      </td>
+                    </tr>
+                  ))
+                  : order.items?.map((item, i) => (
+                    <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="px-3 sm:px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">{item.productName}</td>
+                      <td className="px-3 sm:px-4 py-3 text-gray-500 whitespace-nowrap">{item.brand || "—"}</td>
+                      <td className="px-3 sm:px-4 py-3 text-gray-700 dark:text-gray-300">{item.currentStock}</td>
+                      <td className="px-3 sm:px-4 py-3 text-gray-500">{item.reOrderLevel || "—"}</td>
+                      <td className="px-3 sm:px-4 py-3 font-bold text-blue-600">{item.quantityToProcure}</td>
+                      <td className="px-3 sm:px-4 py-3 text-gray-500 whitespace-nowrap">₦{item.unitCost?.toLocaleString() || 0}</td>
+                      <td className="px-3 sm:px-4 py-3 font-semibold whitespace-nowrap">₦{(item.quantityToProcure * item.unitCost).toLocaleString()}</td>
+                    </tr>
+                  ))
+                }
               </tbody>
               <tfoot>
                 <tr className="bg-blue-50 dark:bg-blue-900/10">
-                  <td colSpan={6} className="px-3 sm:px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300 text-sm">Estimated Total</td>
-                  <td className="px-3 sm:px-4 py-3 font-bold text-blue-700 whitespace-nowrap">₦{totalEstimate.toLocaleString()}</td>
+                  <td colSpan={isEditing ? 4 : 6} className="px-3 sm:px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300 text-sm">
+                    Estimated Total
+                  </td>
+                  <td colSpan={isEditing ? 2 : 1} className="px-3 sm:px-4 py-3 font-bold text-blue-700 whitespace-nowrap">
+                    ₦{(isEditing ? editTotal : viewTotal).toLocaleString()}
+                  </td>
                 </tr>
               </tfoot>
             </table>
           </div>
 
-          {order.notes && (
+          {/* ── Add Products (edit mode) ──────────────────────────────── */}
+          {isEditing && (
+            <div className="border border-dashed border-blue-300 dark:border-blue-700 rounded-xl overflow-hidden">
+              <button
+                onClick={() => setShowAddProducts(!showAddProducts)}
+                className="w-full flex items-center justify-between px-4 py-3 bg-blue-50/60 dark:bg-blue-900/10 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-sm font-semibold text-blue-700 dark:text-blue-400"
+              >
+                <span className="flex items-center gap-2"><Plus size={14} /> Add Products to Order</span>
+                <ChevronDown size={15} className={`transition-transform duration-200 ${showAddProducts ? "rotate-180" : ""}`} />
+              </button>
+              {showAddProducts && (
+                <div className="p-3 space-y-2 bg-white dark:bg-gray-900 border-t border-dashed border-blue-200 dark:border-blue-800">
+                  <div className="relative">
+                    <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <input
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      placeholder="Search product name or brand…"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-xl pl-8 pr-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                    />
+                  </div>
+                  <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
+                    {availableProducts.length === 0 ? (
+                      <p className="text-xs text-gray-400 text-center py-5">
+                        {reorderItems.length === 0 ? "Loading products…" : productSearch ? "No products match your search" : "All products already in this order"}
+                      </p>
+                    ) : availableProducts.map((p) => (
+                      <div key={p._id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.productName}</p>
+                          <p className="text-xs text-gray-400">{p.brand} · In stock: {p.qtyInStock}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <UrgencyBadge urgency={p.urgency} />
+                          <button
+                            onClick={() => addProduct(p)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors"
+                          >
+                            <Plus size={11} /> Add
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Notes ───────────────────────────────────────────────── */}
+          {isEditing ? (
+            <div>
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Notes</label>
+              <textarea
+                value={editNotes}
+                onChange={(e) => setEditNotes(e.target.value)}
+                placeholder="Additional notes (optional)…"
+                rows={2}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white resize-none"
+              />
+            </div>
+          ) : order.notes ? (
             <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800 rounded-xl p-4">
               <p className="text-xs font-semibold text-amber-600 uppercase mb-1">Notes</p>
               <p className="text-sm text-gray-700 dark:text-gray-300">{order.notes}</p>
             </div>
+          ) : null}
+
+          {/* ── Status actions (view mode) ───────────────────────────── */}
+          {!isEditing && (order.status === "submitted" || order.status === "ordered") && (
+            <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+              {role !== "manager" && (
+                <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-2.5">
+                  <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
+                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                    Marking as received <strong>will not update stock levels</strong>. Ask the manager to confirm receipt and update inventory.
+                  </p>
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row gap-3">
+                {order.status === "submitted" && (
+                  <button
+                    disabled={actioning}
+                    onClick={() => handleAction(markOrdered, "ordered")}
+                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto"
+                  >
+                    <TruckIcon size={14} /> Mark as Ordered
+                  </button>
+                )}
+                {["submitted", "ordered"].includes(order.status) && (
+                  <button
+                    disabled={actioning}
+                    onClick={() => handleAction(markReceived, "received")}
+                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto"
+                  >
+                    <BadgeCheck size={14} />
+                    <span>
+                      Mark Received
+                      {role === "manager" && <span className="hidden sm:inline"> — auto-updates stock</span>}
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
           )}
 
-          {/* Status actions — full-width stacked on mobile */}
-          {(order.status === "submitted" || ["submitted", "ordered"].includes(order.status)) && (
+          {/* ── Edit mode — bottom save/cancel ───────────────────────── */}
+          {isEditing && (
             <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
-              {order.status === "submitted" && (
-                <button
-                  disabled={actioning}
-                  onClick={() => handleAction(markOrdered, "ordered")}
-                  className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto"
-                >
-                  <TruckIcon size={14} /> Mark as Ordered
-                </button>
-              )}
-              {["submitted", "ordered"].includes(order.status) && (
-                <button
-                  disabled={actioning}
-                  onClick={() => handleAction(markReceived, "received")}
-                  className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto"
-                >
-                  <BadgeCheck size={14} />
-                  <span>Mark Received <span className="hidden sm:inline">— auto-updates stock</span></span>
-                </button>
-              )}
+              <button
+                onClick={cancelEdit}
+                className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:border-gray-400 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving || !editItems.length}
+                className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors shadow-sm active:scale-[0.98]"
+              >
+                <Save size={14} />
+                {saving ? "Saving changes…" : "Save Changes"}
+              </button>
             </div>
           )}
         </div>
@@ -245,14 +534,19 @@ export default function ProcurementPage() {
     fetchProcurements();
   }, []);
 
-  const procuredBy   = userData ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "Manager" : "Manager";
-  const stationLogo  = userData?.station?.logoUrl || userData?.station?.logo || userData?.station?.image || "";
-  const stationName  = userData?.station?.name || "";
+  const procuredBy    = userData ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "Manager" : "Manager";
+  const stationLogo   = userData?.station?.logoUrl || userData?.station?.logo || userData?.station?.image || "";
+  const stationName   = userData?.station?.name || "";
   const stationAddress = userData?.station?.address || "";
 
-  const filteredReorder = urgencyFilter === "all"
+  const filteredItems = urgencyFilter === "all"
     ? reorderItems
     : reorderItems.filter((i) => i.urgency === urgencyFilter);
+
+  const needsAttentionCount = useMemo(
+    () => reorderItems.filter((i) => i.urgency !== "healthy").length,
+    [reorderItems]
+  );
 
   const toggleSelect = (item) => {
     const id = item._id.toString();
@@ -263,14 +557,14 @@ export default function ProcurementPage() {
     } else {
       next.add(id);
       setDraftItems((p) => [...p, {
-        lubricantId:      id,
-        productName:      item.productName,
-        productType:      item.productType || "",
-        brand:            item.brand || "",
-        currentStock:     item.qtyInStock || 0,
-        reOrderLevel:     item.reOrderLevel || 0,
-        quantityToProcure: Math.max(1, (item.reOrderLevel || 0) - (item.qtyInStock || 0)),
-        unitCost:         item.unitCost || 0,
+        lubricantId:       id,
+        productName:       item.productName,
+        productType:       item.productType || "",
+        brand:             item.brand || "",
+        currentStock:      item.qtyInStock ?? 0,
+        reOrderLevel:      item.reOrderLevel ?? 0,
+        quantityToProcure: Math.max(1, (item.reOrderLevel ?? 0) - (item.qtyInStock ?? 0)),
+        unitCost:          item.unitCost ?? 0,
       }]);
     }
     setSelected(next);
@@ -314,7 +608,7 @@ export default function ProcurementPage() {
     if (!cr.success) { setSubmitting(false); toast.error(cr.error || "Failed to create"); return; }
     const sr = await submitProcurement(cr.data._id);
     setSubmitting(false);
-    if (sr.success) { toast.success(`${cr.data.procurementNumber} submitted — cashier notified`); resetForm(); setActiveTab("orders"); }
+    if (sr.success) { toast.success(`${cr.data.procurementNumber} submitted`); resetForm(); setActiveTab("orders"); }
     else toast.error(sr.error || "Failed to submit");
   };
 
@@ -332,11 +626,19 @@ export default function ProcurementPage() {
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4 sm:py-5">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Lubricant Procurement</h1>
-              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Select low-stock products, set vendor details and submit</p>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/dashboard"
+                className="flex items-center justify-center w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shrink-0"
+                title="Back to Dashboard"
+              >
+                <ArrowLeft size={17} />
+              </Link>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Lubricant Procurement</h1>
+                <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Select products to procure, set vendor details and submit</p>
+              </div>
             </div>
-            {/* Tabs — full width on mobile, auto on desktop */}
             <div className="flex gap-2 w-full sm:w-auto">
               {["new", "orders"].map((t) => (
                 <button
@@ -362,31 +664,44 @@ export default function ProcurementPage() {
         {activeTab === "new" && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
 
-            {/* LEFT — Reorder threshold list */}
+            {/* LEFT — All lubricants inventory list */}
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <h2 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-sm sm:text-base">
-                  <AlertTriangle size={17} className="text-orange-500 shrink-0" />
-                  Products at Reorder Threshold
-                  {reorderItems.length > 0 && (
-                    <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full">
-                      {reorderItems.length}
-                    </span>
+                <div>
+                  <h2 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-sm sm:text-base">
+                    <Package size={17} className="text-blue-500 shrink-0" />
+                    Lubricant Inventory
+                    {reorderItems.length > 0 && (
+                      <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                        {reorderItems.length}
+                      </span>
+                    )}
+                  </h2>
+                  {needsAttentionCount > 0 && (
+                    <p className="text-xs text-orange-500 mt-0.5 flex items-center gap-1">
+                      <AlertTriangle size={11} />
+                      {needsAttentionCount} product{needsAttentionCount !== 1 ? "s" : ""} need attention
+                    </p>
                   )}
-                </h2>
+                </div>
                 <div className="flex items-center gap-2">
-                  <select
-                    value={urgencyFilter}
-                    onChange={(e) => setUrgencyFilter(e.target.value)}
-                    className="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-2 dark:bg-gray-800 dark:text-white outline-none"
-                  >
-                    <option value="all">All levels</option>
-                    <option value="out_of_stock">Out of Stock</option>
-                    <option value="critical">Critical</option>
-                    <option value="low">Low Stock</option>
-                  </select>
+                  <div className="flex items-center gap-1.5 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-800">
+                    <Filter size={12} className="text-gray-400 shrink-0" />
+                    <select
+                      value={urgencyFilter}
+                      onChange={(e) => setUrgencyFilter(e.target.value)}
+                      className="text-xs bg-transparent dark:text-white outline-none cursor-pointer"
+                    >
+                      <option value="all">All Products</option>
+                      <option value="out_of_stock">Out of Stock</option>
+                      <option value="critical">Critical</option>
+                      <option value="low">Low Stock</option>
+                      <option value="healthy">Healthy</option>
+                    </select>
+                  </div>
                   <button
                     onClick={fetchReorderItems}
+                    title="Refresh inventory"
                     className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
                   >
                     <RefreshCw size={14} className={reorderLoading ? "animate-spin" : ""} />
@@ -398,19 +713,31 @@ export default function ProcurementPage() {
                 <div className="flex items-center justify-center h-36">
                   <RefreshCw size={24} className="animate-spin text-blue-500" />
                 </div>
-              ) : filteredReorder.length === 0 ? (
+              ) : reorderItems.length === 0 ? (
                 <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 sm:p-10 text-center">
-                  <CheckCircle size={32} className="text-green-400 mx-auto mb-3" />
-                  <p className="font-semibold text-gray-700 dark:text-gray-300 text-sm">All stock levels are healthy</p>
-                  <p className="text-xs text-gray-400 mt-1">No products have reached their reorder threshold</p>
+                  <Package size={32} className="text-gray-300 mx-auto mb-3" />
+                  <p className="font-semibold text-gray-700 dark:text-gray-300 text-sm">No lubricant products found</p>
+                  <p className="text-xs text-gray-400 mt-1">Add lubricant products in the Lubricant Management section</p>
+                </div>
+              ) : filteredItems.length === 0 ? (
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 text-center">
+                  <CheckCircle size={28} className="text-green-400 mx-auto mb-2" />
+                  <p className="font-semibold text-gray-700 dark:text-gray-300 text-sm">No products match this filter</p>
+                  <button
+                    onClick={() => setUrgencyFilter("all")}
+                    className="mt-2 text-xs text-blue-600 hover:underline"
+                  >
+                    Show all products
+                  </button>
                 </div>
               ) : (
-                /* On mobile no height cap — let it flow. On xl (side-by-side) cap with scroll. */
                 <div className="space-y-2 xl:max-h-[65vh] xl:overflow-y-auto xl:pr-1">
-                  {filteredReorder.map((item) => {
+                  {filteredItems.map((item) => {
                     const id = item._id.toString();
                     const isSelected = selected.has(id);
-                    const pct = item.reOrderLevel > 0 ? Math.round((item.qtyInStock / item.reOrderLevel) * 100) : 0;
+                    const pct = item.reOrderLevel > 0
+                      ? Math.round((item.qtyInStock / item.reOrderLevel) * 100)
+                      : item.qtyInStock > 0 ? 100 : 0;
                     return (
                       <label
                         key={id}
@@ -420,7 +747,6 @@ export default function ProcurementPage() {
                             : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
                         }`}
                       >
-                        {/* Larger touch target for checkbox */}
                         <div className="flex items-center justify-center w-5 h-5 mt-0.5 shrink-0">
                           <input
                             type="checkbox"
@@ -439,7 +765,9 @@ export default function ProcurementPage() {
                           </div>
                           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-500">
                             <span>In stock: <strong className="text-gray-800 dark:text-gray-200">{item.qtyInStock}</strong></span>
-                            <span>Threshold: <strong className="text-gray-800 dark:text-gray-200">{item.reOrderLevel}</strong></span>
+                            {item.reOrderLevel > 0 && (
+                              <span>Threshold: <strong className="text-gray-800 dark:text-gray-200">{item.reOrderLevel}</strong></span>
+                            )}
                             <span className="text-gray-400">{pct}%</span>
                           </div>
                           <StockBar current={item.qtyInStock} max={item.reOrderLevel} />
@@ -526,7 +854,6 @@ export default function ProcurementPage() {
                     </p>
                   </div>
                 ) : (
-                  /* Horizontally scrollable table on mobile */
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm min-w-[480px]">
                       <thead className="bg-gray-50 dark:bg-gray-800">
@@ -544,10 +871,9 @@ export default function ProcurementPage() {
                               <p className="text-xs text-gray-400">{item.brand}</p>
                             </td>
                             <td className="px-3 sm:px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
-                              {item.currentStock} / {item.reOrderLevel}
+                              {item.currentStock} / {item.reOrderLevel || "—"}
                             </td>
                             <td className="px-3 sm:px-4 py-3">
-                              {/* Touch-friendly +/- controls — min 44px tap area */}
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => updateDraftQty(item.lubricantId, item.quantityToProcure - 1)}
@@ -601,7 +927,6 @@ export default function ProcurementPage() {
                     rows={2}
                     className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white resize-none"
                   />
-                  {/* Stack buttons on xs, side-by-side on sm+ */}
                   <div className="flex flex-col sm:flex-row gap-3">
                     <button
                       onClick={handleSaveDraft}
@@ -664,6 +989,8 @@ export default function ProcurementPage() {
         <OrderDetailModal
           order={viewOrder}
           onClose={() => setViewOrder(null)}
+          onUpdate={(updated) => setViewOrder(updated)}
+          role={userData?.role}
         />
       )}
     </div>
