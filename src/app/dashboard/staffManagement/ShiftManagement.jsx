@@ -6,41 +6,41 @@ import { HiOutlineBriefcase } from "react-icons/hi2";
 
 const ShiftManagement = () => {
   return (
-    <div className="flex bg-white p-4 mt-4 rounded-2xl">
+    <div className="flex bg-white dark:bg-gray-800 p-4 mt-4 rounded-2xl">
       <div className="grid grid-cols-2 lg:grid-cols-3 w-full gap-3 ">
         {shiftSchedule.map((item, index) => (
           <div
             key={index}
-            className="border-[1px] grid gap-2 border-neutral-200 rounded-xl p-3"
+            className="border-[1px] grid gap-2 border-neutral-200 dark:border-gray-700 rounded-xl p-3"
           >
-            <p className="text-lg font-semibold text-neutral-800">
+            <p className="text-lg font-semibold text-neutral-800 dark:text-neutral-100">
               {item.shiftType}
             </p>
-            <p className="flex justify-between">
+            <p className="flex justify-between text-neutral-700 dark:text-gray-300">
               {item.shift}
               <span>{item.time}</span>
             </p>
 
-            <hr className="w-[150px]" />
+            <hr className="w-[150px] dark:border-gray-600" />
             <div className="mt-2">
-              <p className="flex gap-2 font-semibold mb-2 text-neutral-800 items-center">
+              <p className="flex gap-2 font-semibold mb-2 text-neutral-800 dark:text-neutral-100 items-center">
                 <BsPerson size={28} />
                 Assigned Staff
               </p>
 
-              <div className="text-md text-neutral-800 grid gap-2">
+              <div className="text-md text-neutral-800 dark:text-gray-300 grid gap-2">
                 {item.assignedStaff.map((staff, i) => (
                   <p key={i}>{staff.name}</p>
                 ))}
               </div>
             </div>
 
-            <p>{item.lastMaintenance}</p>
+            <p className="text-neutral-600 dark:text-gray-400">{item.lastMaintenance}</p>
 
             <div
               className={`flex flex-col gap-3 mt-3`}
             >
-              <span className="flex gap-1 font-semibold">
+              <span className="flex gap-1 font-semibold text-neutral-800 dark:text-neutral-100">
                 <HiOutlineBriefcase size={26} />
                 <h1>Roles</h1>
               </span>
@@ -55,7 +55,7 @@ const ShiftManagement = () => {
                   ? "text-orange-400"
                   : item.roles === "Manager"
                   ? "text-blue-600"
-                  : "text-neutral-800"
+                  : "text-neutral-800 dark:text-gray-300"
               }`}>
                     {item.roles}
                 </p>

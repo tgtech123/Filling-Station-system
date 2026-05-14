@@ -183,6 +183,11 @@ html.dark .text-neutral-600 {
   color: #cbd5e1 !important;
 }
 
+html.dark .text-neutral-800,
+html.dark .text-neutral-700 {
+  color: #e2e8f0 !important;
+}
+
 html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5,
 html.dark .text-gray-900,
 html.dark .text-neutral-900 {

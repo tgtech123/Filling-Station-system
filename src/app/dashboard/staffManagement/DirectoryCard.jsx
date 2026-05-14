@@ -39,7 +39,7 @@ const DirectoryCard = ({searchQuery = ""}) => {
   if (loading.fetching) return <p>Loading staff...</p>
 
   return (
-    <div className='mt-5 bg-white p-8 rounded-2xl '>
+    <div className='mt-5 bg-white dark:bg-gray-800 p-8 rounded-2xl '>
       <div className='grid sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-5 items-center justify-center'>
         {filteredStaff.length === 0 ? (
           <p className="text-gray-500">
