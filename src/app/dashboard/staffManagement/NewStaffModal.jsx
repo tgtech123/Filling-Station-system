@@ -385,10 +385,11 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl bg-white"
                 >
                   <option value="">Select shift</option>
-                  <option value="morning">Morning</option>
-                  <option value="afternoon">Afternoon</option>
-                  <option value="night">Night</option>
-                  <option value="full-day">Full Day</option>
+                  <option value="One-Day-Morning">One-Day Morning (6AM – 2PM)</option>
+                  <option value="One-Day-Evening">One-Day Evening (2PM – 10PM)</option>
+                  <option value="Day-Off">Day-Off / Fulltime (6AM – 10PM)</option>
+                  <option value="24/7">24/7 (Round the Clock)</option>
+                  <option value="Full-Time">Full-Time (8AM – 6PM)</option>
                 </select>
               </span>
             </p>
