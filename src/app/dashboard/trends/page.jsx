@@ -7,138 +7,95 @@ import SalesProfitPage from "./SalesProfitPage";
 import PaymentCommissionPage from "./PaymentCommissionPage";
 import useTrendsStore from "@/store/useTrendsStore";
 
+const DURATIONS = [
+  { value: "today",        label: "Today"        },
+  { value: "thisweek",     label: "This Week"     },
+  { value: "thismonth",    label: "This Month"    },
+  { value: "thisquarter",  label: "This Quarter"  },
+  { value: "thisyear",     label: "This Year"     },
+];
+
 export default function Trends() {
-    const [trendsData, setTrendsData] = useState([]);
-    const [selectedDuration, setSelectedDuration] = useState('thismonth');
+  const [trendsData, setTrendsData] = useState([]);
+  const [selectedDuration, setSelectedDuration] = useState("thismonth");
 
-    const { 
-        kpis, 
-        loading, 
-        errors, 
-        fetchDashboard 
-    } = useTrendsStore();
+  const { kpis, loading, errors, fetchDashboard } = useTrendsStore();
 
-    useEffect(() => {
-        fetchDashboard(selectedDuration);
-    }, [fetchDashboard, selectedDuration]);
+  useEffect(() => {
+    fetchDashboard(selectedDuration);
+  }, [fetchDashboard, selectedDuration]);
 
-    useEffect(() => {
-        if (kpis) {
-            const transformedData = getTrendsData(kpis);
-            setTrendsData(transformedData);
-        } else {
-            const emptyData = getTrendsData(null);
-            setTrendsData(emptyData);
-        }
-    }, [kpis]);
+  useEffect(() => {
+    setTrendsData(getTrendsData(kpis ?? null));
+  }, [kpis]);
 
-    const handleDurationChange = (e) => {
-        setSelectedDuration(e.target.value);
-    };
-
-    return (
-        <DashboardLayout>
+  return (
+    <DashboardLayout>
+      <div className="space-y-3">
+        {/* Header card */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl w-full p-5 shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
             <div>
-                <div className="bg-white rounded-2xl w-full p-5">
-                    <div className="flex items-center justify-between mb-4">
-                        <span>
-                            <h1 className="text-[1.5rem] font-semibold mb-[0.75rem]">Trends</h1>
-                            <h1 className="text-[1.125rem]">Track sales trends, revenue, and operational metrics</h1>
-                        </span>
-
-                        <select
-                            value={selectedDuration}
-                            onChange={handleDurationChange}
-                            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="today">Today</option>
-                            <option value="thisweek">This Week</option>
-                            <option value="thismonth">This Month</option>
-                            <option value="thisquarter">This Quarter</option>
-                            <option value="thisyear">This Year</option>
-                        </select>
-                    </div>
-
-                    {loading.dashboard ? (
-                        <div className="grid lg:grid-cols-4 grid-cols-2 gap-5">
-                            {[1, 2, 3, 4].map((index) => (
-                                <div key={index} className="bg-white rounded-lg p-6 animate-pulse border">
-                                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                                    <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-                                    <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : errors.dashboard ? (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                            <p className="text-red-800">Error: {errors.dashboard}</p>
-                            <button
-                                onClick={() => fetchDashboard(selectedDuration)}
-                                className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                            >
-                                Retry
-                            </button>
-                        </div>
-                    ) : (
-                        <span className="grid lg:grid-cols-4 grid-cols-2 gap-5">
-                            {trendsData.map((item, i) =>
-                                <MyStatCard 
-                                    key={i} 
-                                    title={item.title} 
-                                    date={item.date} 
-                                    change={item.change} 
-                                    amount={item.amount} 
-                                    changeText={item.changeText} 
-                                    icon={item.icon} 
-                                    trend={item.trend} 
-                                />
-                            )}
-                        </span>
-                    )}
-                </div>
-                    
-                <div>
-                    <SalesProfitPage />
-                </div>
-                
-                <PaymentCommissionPage />
+              <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-100">
+                Trends
+              </h1>
+              <p className="text-sm text-neutral-500 dark:text-gray-400 mt-0.5">
+                Track sales trends, revenue, and operational metrics
+              </p>
             </div>
-        </DashboardLayout>
-    )
+
+            <select
+              value={selectedDuration}
+              onChange={(e) => setSelectedDuration(e.target.value)}
+              className="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {DURATIONS.map((d) => (
+                <option key={d.value} value={d.value}>{d.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {loading.dashboard ? (
+            <div className="grid lg:grid-cols-4 grid-cols-2 gap-5">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6 animate-pulse border border-gray-100 dark:border-gray-600">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-4" />
+                  <div className="h-8 bg-gray-200 dark:bg-gray-600 rounded w-1/2 mb-2" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-1/4" />
+                </div>
+              ))}
+            </div>
+          ) : errors.dashboard ? (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4">
+              <p className="text-red-700 dark:text-red-400 text-sm">{errors.dashboard}</p>
+              <button
+                onClick={() => fetchDashboard(selectedDuration)}
+                className="mt-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <div className="grid lg:grid-cols-4 grid-cols-2 gap-5">
+              {trendsData.map((item, i) => (
+                <MyStatCard
+                  key={i}
+                  title={item.title}
+                  date={item.date}
+                  change={item.change}
+                  amount={item.amount}
+                  changeText={item.changeText}
+                  icon={item.icon}
+                  trend={item.trend}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <SalesProfitPage />
+        <PaymentCommissionPage />
+      </div>
+    </DashboardLayout>
+  );
 }
-
-
-// import DashboardLayout from "@/components/Dashboard/DashboardLayout";
-// import { trendsData } from "./trendsData";
-// import MyStatCard from "@/components/MyStatCard";
-// import SalesProfitPage from "./SalesProfitPage";
-// import PaymentCommissionPage from "./PaymentCommissionPage";
-
-// export default function Trends() {
-//     return (
-//         <DashboardLayout>
-//             <div>
-//                 <div className="bg-white rounded-2xl w-full p-5  ">
-//                     <div>
-//                         <span>
-//                             <h1 className="text-[1.5rem] font-semibold mb-[0.75rem]">Trends</h1>
-//                             <h1 className="text-[1.125rem]">Track sales trends, revenue, and operational metrics</h1>
-//                         </span>
-//                     </div>
-//                     <span className="grid lg:grid-cols-4 grid-cols-2 gap-5">
-//                         {trendsData.map((item, i) =>
-//                             <MyStatCard key={i} title={item.title} date={item.date} change={item.change} amount={item.amount} changeText={item.changeText} icon={item.icon} trend={item.trend} />
-//                         )}
-//                     </span>
-//                 </div>
-                    
-//                 <div>
-//                     <SalesProfitPage />
-//                 </div>
-                
-//                     <PaymentCommissionPage />
-                
-//             </div>
-//         </DashboardLayout>
-//     )
-// }

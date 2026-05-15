@@ -344,7 +344,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   onClick={() => setShowVisible(!showVisible)}
                   className="absolute text-neutral-500 top-11 right-5 cursor-pointer"
                 >
-                  {showVisible ? <EyeOff /> : <Eye />}
+                  {showVisible ? <Eye /> : <EyeOff />}
                 </span>
               </span>
             </form>

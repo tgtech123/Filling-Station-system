@@ -6,7 +6,7 @@ const Table = ({
   data = [],
   renderActions,
   highlightedColumnIndex,
-  highlightedRowIndices = [], // now supports multiple rows
+  highlightedRowIndices = [],
 }) => {
   return (
     <div className="overflow-x-auto w-full rounded-lg border border-gray-200">
@@ -43,37 +43,22 @@ const Table = ({
                   }`}
                 >
                   {row.map((cell, cellIndex) => {
-                    // Special formatting for last column (Profit/Loss)
-                    if (cellIndex === row.length - 1) {
-                      const cellText = cell.toString().trim();
-                      const hasMinusSign = cellText.startsWith("-");
-                      const hasPlusSign = cellText.startsWith("+");
-                      
-                      let colorClass = "";
-                      if (hasMinusSign) {
-                        colorClass = "text-red-600";
-                      } else if (hasPlusSign) {
-                        colorClass = "text-green-600";
-                      }
-                      
-                      return (
-                        <td
-                          key={cellIndex}
-                          className={`px-4 py-5 whitespace-nowrap ${
-                            cellIndex === highlightedColumnIndex
-                              ? "text-red-500"
-                              : ""
-                          } ${colorClass}`}
-                        >
-                          {cell}
-                        </td>
-                      );
-                    }
+                    const cellText = String(cell).trim();
+
+                    // Apply sign-based colour to ANY cell, not just the last column.
+                    // "-₦50,000.00" starts with "-" → red
+                    // "+2.50%"       starts with "+" → green
+                    // "₦50,000.00"   no sign       → default
+                    let colorClass = "";
+                    if (cellText.startsWith("-")) colorClass = "text-red-600";
+                    else if (cellText.startsWith("+")) colorClass = "text-green-600";
 
                     return (
                       <td
                         key={cellIndex}
-                        className="px-4 py-5 whitespace-nowrap"
+                        className={`px-4 py-5 whitespace-nowrap ${
+                          cellIndex === highlightedColumnIndex ? "text-red-500" : ""
+                        } ${colorClass}`}
                       >
                         {cell}
                       </td>

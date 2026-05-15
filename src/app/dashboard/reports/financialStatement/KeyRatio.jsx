@@ -72,10 +72,12 @@ export default function KeyRatio() {
     const data = keyRatios?.liquidity || {};
     const columns = ["Liquidity Ratio", ""];
 
+    const fmtRatioOrNA = (v) => (v === null || v === undefined) ? "N/A" : formatRatio(v);
+
     const rows = [
-      ["Current Ratio", formatRatio(data.currentRatio || 0)],
-      ["Quick Ratio", formatRatio(data.quickRatio || 0)],
-      ["Cash Ratio", formatRatio(data.cashRatio || 0)],
+      ["Current Ratio", fmtRatioOrNA(data.currentRatio)],
+      ["Quick Ratio",   fmtRatioOrNA(data.quickRatio)],
+      ["Cash Ratio",    fmtRatioOrNA(data.cashRatio)],
       ["Working Capital", formatCurrency(data.workingCapital || 0)],
     ];
 
@@ -85,13 +87,14 @@ export default function KeyRatio() {
   // Prepare Efficiency Ratios data
   const getEfficiencyData = () => {
     const data = keyRatios?.efficiency || {};
-    const columns = ["Efficiency Ratio", ""];
+    const columns = ["Efficiency Ratio", "Value"];
+    const na = (v) => (v === null || v === undefined) ? "N/A *" : v;
 
     const rows = [
-      ["Inventory Turnover", `${formatRatio(data.inventoryTurnover || 0)}x`],
-      ["Asset Turnover", `${formatRatio(data.assetTurnover || 0)}x`],
-      ["Receivables Turnover", formatPercentage(data.receivablesTurnover || 0)],
-      ["Day Sales Outstanding", `${formatRatio(data.daySalesOutstanding || 0)} days`],
+      ["Inventory Turnover",   `${formatRatio(data.inventoryTurnover || 0)}x`],
+      ["Asset Turnover",       `${formatRatio(data.assetTurnover || 0)}x`],
+      ["Receivables Turnover", na(data.receivablesTurnover)],
+      ["Day Sales Outstanding",na(data.daySalesOutstanding)],
     ];
 
     return { rows, columns };
@@ -100,13 +103,14 @@ export default function KeyRatio() {
   // Prepare Leverage Ratios data
   const getLeverageData = () => {
     const data = keyRatios?.leverage || {};
-    const columns = ["Leverage Ratio", ""];
+    const columns = ["Leverage Ratio", "Value"];
+    const naRatio = (v) => (v === null || v === undefined) ? "N/A *" : `${formatRatio(v)}x`;
 
     const rows = [
-      ["Debt-to-Assets", formatPercentage(data.debtToAssets || 0)],
-      ["Debt-to-Equity", formatPercentage(data.debtToEquity || 0)],
-      ["Interest Coverage", `${formatRatio(data.interestCoverage || 0)}x`],
-      ["Equity Multiplier", `${formatRatio(data.equityMultiplier || 0)}x`],
+      ["Debt-to-Assets",    formatPercentage(data.debtToAssets  || 0)],
+      ["Debt-to-Equity",    formatPercentage(data.debtToEquity  || 0)],
+      ["Interest Coverage", naRatio(data.interestCoverage)],
+      ["Equity Multiplier", naRatio(data.equityMultiplier)],
     ];
 
     return { rows, columns };
@@ -152,29 +156,51 @@ export default function KeyRatio() {
     );
   }
 
+  // Check which ratios are N/A so we can show the right guidance notes
+  const hasNullLiquidity   = keyRatios?.liquidity?.currentRatio === null;
+  const hasNullEfficiency  = keyRatios?.efficiency?.receivablesTurnover === null;
+  const hasNullLeverage    = keyRatios?.leverage?.interestCoverage === null;
+
   return (
     <DisplayCard>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-        <KeyRatioCard
-          columns={profitabilityData.columns}
-          data={profitabilityData.rows}
-        />
-        <KeyRatioCard
-          columns={liquidityData.columns}
-          data={liquidityData.rows}
-        />
-        <KeyRatioCard
-          columns={efficiencyData.columns}
-          data={efficiencyData.rows}
-        />
-        <KeyRatioCard
-          columns={leverageData.columns}
-          data={leverageData.rows}
-        />
+        <KeyRatioCard columns={profitabilityData.columns} data={profitabilityData.rows} />
+        <KeyRatioCard columns={liquidityData.columns}    data={liquidityData.rows} />
+        <KeyRatioCard columns={efficiencyData.columns}   data={efficiencyData.rows} />
+        <KeyRatioCard columns={leverageData.columns}     data={leverageData.rows} />
       </div>
-      <div>
+
+      {/* N/A footnotes — only shown when relevant */}
+      {(hasNullLiquidity || hasNullEfficiency || hasNullLeverage) && (
+        <div className="mt-4 rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 space-y-1.5">
+          <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Why some ratios show N/A</p>
+          {hasNullLiquidity && (
+            <p className="text-xs text-blue-600">
+              <span className="font-semibold">Current / Quick / Cash Ratio</span> — No liabilities have been recorded yet.
+              Go to <span className="font-semibold">Liabilities &amp; Equity Register</span> and enter your Accrued Expenses,
+              Tax Payable, or mark unpaid supplier deliveries there. Once recorded, these ratios will calculate automatically.
+            </p>
+          )}
+          {hasNullEfficiency && (
+            <p className="text-xs text-blue-600">
+              <span className="font-semibold">Receivables Turnover &amp; Day Sales Outstanding</span> — This filling station
+              operates on cash / POS payments only. There are no credit sales outstanding, so these ratios do not apply.
+              This is actually a sign of healthy cash flow.
+            </p>
+          )}
+          {hasNullLeverage && (
+            <p className="text-xs text-blue-600">
+              <span className="font-semibold">Interest Coverage</span> — Interest expense is not recorded as a separate
+              expense category in this system. To compute this ratio, record interest payments as an expense with
+              description "Loan interest" in the Expense Manager.
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="mt-4">
         <h3 className="my-2 text-lg font-semibold">Report Summary</h3>
-        <textarea 
+        <textarea
           className="w-full hover:border-blue-600 hover:outline-none border-2 border-gray-200 p-2 h-auto rounded-[12px] min-h-[120px]"
           placeholder="Add notes or summary about the key ratios..."
           defaultValue={keyRatios?.summary || ""}

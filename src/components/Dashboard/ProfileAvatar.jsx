@@ -37,6 +37,19 @@ export default function ProfileAvatar({
     userId ? (state.userImages[userId] ?? null) : null
   );
   const uploadImage = useImageStore((state) => state.uploadImage);
+  const setImage    = useImageStore((state) => state.setImage);
+
+  // On mount: if no stored URL yet, seed the store from the image that was
+  // returned by the login response and saved in localStorage("user").image.
+  // This is what makes cross-device display work — once the backend persists
+  // the URL, every new login on every device will hydrate the store here.
+  useEffect(() => {
+    if (!userId || storedUrl) return;
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (user?.image) setImage(userId, user.image);
+    } catch {}
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When the stored URL changes (immediately after a successful upload),
   // clear any previous image-load error so the new photo can display.

@@ -178,7 +178,7 @@ const Login = () => {
                 Session expired due to inactivity
               </p>
               <p className="text-amber-600 text-xs mt-0.5">
-                You were logged out after 20 minutes of inactivity. Please log
+                You were logged out after 40 minutes of inactivity. Please log
                 in again.
               </p>
             </div>
@@ -336,7 +336,7 @@ const Login = () => {
       </div>
 
       {/* Right - Full Image Section (No Scroll) */}
-      <div className="hidden md:flex w-full h-full">
+      <div className="hidden lg:block w-full h-full">
         <LoginTwo />
       </div>
     </div>

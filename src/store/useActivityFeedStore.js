@@ -42,7 +42,7 @@ const useActivityFeedStore = create((set, get) => ({
         error.message ||
         'Failed to fetch recent activity';
       setError('activities', msg);
-      throw error;
+      return [];
     } finally {
       setLoading('activities', false);
     }
@@ -65,7 +65,7 @@ const useActivityFeedStore = create((set, get) => ({
         error.message ||
         'Failed to fetch product levels';
       setError('productLevels', msg);
-      throw error;
+      return [];
     } finally {
       setLoading('productLevels', false);
     }
