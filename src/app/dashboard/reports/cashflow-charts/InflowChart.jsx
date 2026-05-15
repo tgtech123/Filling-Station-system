@@ -37,7 +37,7 @@ export default function InflowChart({ duration = "today" }) {
     : [];
 
   // Calculate total inflow
-  const totalInflow = cashflow?.summary?.totalInflow || 0;
+  const totalInflow = cashflow?.totalInflow || 0;
 
   // Format currency
   const formatCurrency = (value) => {

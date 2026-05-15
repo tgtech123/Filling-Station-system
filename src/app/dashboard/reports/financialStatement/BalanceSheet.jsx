@@ -57,30 +57,28 @@ export default function BalanceSheet() {
 
     const rows = [
       ["Cash and Cash Equivalent", `₦${formatCurrency(data.cashAndCashEquivalent || 0)}`],
-      ["Inventory-Fuel", `₦${formatCurrency(data.inventoryFuel || 0)}`],
-      ["Inventory-Lubricant", `₦${formatCurrency(data.inventoryLubricant || 0)}`],
+      ["Inventory - Fuel", `₦${formatCurrency(data.inventoryFuel || 0)}`],
+      ["Inventory - Lubricant", `₦${formatCurrency(data.inventoryLubricant || 0)}`],
       ["Total Current Assets", `₦${formatCurrency(data.totalCurrentAssets || 0)}`],
     ];
 
     return { rows, columns };
   };
 
-  // Prepare Fixed Assets data - Use API data if available, else show 0
   const getFixedAssetsData = () => {
     const data = balanceSheet?.assets?.fixedAssets || {};
     const columns = ["Fixed Assets", ""];
 
     const rows = [
-      ["Land & building", `₦${formatCurrency(data.landAndBuilding || 0)}`],
+      ["Land & Building", `₦${formatCurrency(data.landAndBuilding || 0)}`],
       ["Fuel Dispenser", `₦${formatCurrency(data.fuelDispenser || 0)}`],
-      ["Other Equipments", `₦${formatCurrency(data.otherEquipment || 0)}`],
+      ["Other Equipment", `₦${formatCurrency(data.otherEquipment || 0)}`],
       ["Total Fixed Assets", `₦${formatCurrency(data.totalFixedAssets || 0)}`],
     ];
 
     return { rows, columns };
   };
 
-  // Prepare Current Liabilities data - Use API data if available, else show 0
   const getCurrentLiabilitiesData = () => {
     const data = balanceSheet?.liabilities?.currentLiabilities || {};
     const columns = ["Current Liabilities", ""];
@@ -95,14 +93,13 @@ export default function BalanceSheet() {
     return { rows, columns };
   };
 
-  // Prepare Long Term Liabilities data - Use API data if available, else show 0
   const getLongTermLiabilitiesData = () => {
     const data = balanceSheet?.liabilities?.longTermLiabilities || {};
     const columns = ["Long Term Liabilities", ""];
 
     const rows = [
-      ["Long-term loans", `₦${formatCurrency(data.longTermLoans || 0)}`],
-      ["Equipment financing", `₦${formatCurrency(data.equipmentFinancing || 0)}`],
+      ["Long-term Loans", `₦${formatCurrency(data.longTermLoans || 0)}`],
+      ["Equipment Financing", `₦${formatCurrency(data.equipmentFinancing || 0)}`],
       ["", ""],
       ["Total Long Term Liabilities", `₦${formatCurrency(data.totalLongTermLiabilities || 0)}`],
     ];
@@ -110,7 +107,6 @@ export default function BalanceSheet() {
     return { rows, columns };
   };
 
-  // Prepare Equity data - Use API data if available, else show 0
   const getEquityData = () => {
     const data = balanceSheet?.equity || {};
     const columns = ["Equity", ""];
@@ -125,12 +121,10 @@ export default function BalanceSheet() {
     return { rows, columns };
   };
 
-  // Get total liabilities
   const getTotalLiabilities = () => {
     return `₦${formatCurrency(balanceSheet?.liabilities?.totalLiabilities || 0)}`;
   };
 
-  // Get total liabilities and equity
   const getTotalLiabilitiesAndEquity = () => {
     return `₦${formatCurrency(balanceSheet?.totalLiabilitiesAndEquity || 0)}`;
   };

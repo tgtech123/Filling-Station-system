@@ -16,7 +16,7 @@ function DashboardLayout({ children }) {
   const [endsAt, setEndsAt] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
-  // Idle session timeout — logs out after 20 min of inactivity
+  // Idle session timeout — logs out after 40 min of inactivity
   useSessionTimeout();
 
   useEffect(() => {

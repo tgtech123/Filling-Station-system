@@ -1,16 +1,13 @@
 'use client'
-import React, { useEffect } from "react";
+import React from "react";
 import Table from "@/components/Table";
 import { fuelDataColumns, getFuelDataRows } from "./fuelData";
 import { lubricantDataColumns, getLubricantDataRows } from "./lubricantData";
 import useAccountantStore from "@/store/useAccountantStore";
 
-const FuelIncome = ({ duration = 'thismonth' }) => {
-  const { incomeReport, loading, errors, fetchIncomeReport } = useAccountantStore();
-
-  useEffect(() => {
-    fetchIncomeReport(duration);
-  }, [fetchIncomeReport, duration]);
+// Fetch is owned by the parent page — this component only reads from the store.
+const FuelIncome = () => {
+  const { incomeReport, loading, errors } = useAccountantStore();
 
   // Get current period
   const getCurrentPeriod = () => {

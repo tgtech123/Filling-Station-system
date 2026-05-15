@@ -1,15 +1,12 @@
 'use client'
-import React, { useEffect } from 'react'
+import React from 'react'
 import MyStatCard from '@/components/MyStatCard'
 import { getSalesData } from './SalesData'
 import useAccountantStore from '@/store/useAccountantStore';
 
-const IncomeCards = ({ duration = 'thismonth' }) => {
-  const { incomeReport, loading, errors, fetchIncomeReport } = useAccountantStore();
-
-  useEffect(() => {
-    fetchIncomeReport(duration);
-  }, [fetchIncomeReport, duration]);
+// Fetch is owned by the parent page — this component only reads from the store.
+const IncomeCards = () => {
+  const { incomeReport, loading, errors } = useAccountantStore();
 
   const salesData = getSalesData(incomeReport);
 

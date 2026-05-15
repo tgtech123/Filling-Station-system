@@ -46,10 +46,10 @@ const TextSlider = () => {
   const goToSlide = (index) => setCurrentSlide(index);
 
   return (
-    <div className="bg-transparent min-h-[400px]  relative overflow-hidden flex items-center justify-center">
+    <div className="bg-transparent relative flex items-center justify-center">
       <div className="w-full max-w-3xl mx-auto text-center">
         {/* Slide Content */}
-        <div className="text-white min-h-[200px] flex items-center justify-center mb-1">
+        <div className="text-white flex items-center justify-center mb-3">
           <div key={currentSlide} className="animate-fadeIn px-2">
             <h1 className="text-xl font-bold mb-2">{slides[currentSlide].title}</h1>
             <p className="text-sm text-blue-100">{slides[currentSlide].description}</p>

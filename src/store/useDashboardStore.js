@@ -1,93 +1,119 @@
 import { create } from "zustand";
 import { api } from "@/lib/config";
 
+// ─── Module-level cache (survives re-renders & component unmounts) ────────────
+const TTL = {
+  metrics:    2 * 60 * 1000,  // 2 min — live-ish dashboard data
+  tankStatus: 2 * 60 * 1000,  // 2 min
+};
+
+const _cache = {
+  metrics:    { data: null, ts: 0 },
+  tankStatus: { data: null, ts: 0 },
+};
+
+function isFresh(slot, ttlKey) {
+  return slot.data !== null && Date.now() - slot.ts < TTL[ttlKey];
+}
+
+function setCache(slot, data) {
+  slot.data = data;
+  slot.ts   = Date.now();
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const useDashboardStore = create((set, get) => ({
-  // State
-  metrics: null,
+  metrics:    null,
   tankStatus: null,
   loading: {
-    metrics: false,
+    metrics:    false,
     tankStatus: false,
   },
   errors: {
-    metrics: null,
+    metrics:    null,
     tankStatus: null,
   },
 
-  // Fetch Dashboard Metrics
+  // ── Fetch Dashboard Metrics ─────────────────────────────────────────────────
   fetchMetrics: async () => {
+    if (isFresh(_cache.metrics, 'metrics')) {
+      set((state) => ({ metrics: _cache.metrics.data, loading: { ...state.loading, metrics: false } }));
+      return _cache.metrics.data;
+    }
+
     set((state) => ({
       loading: { ...state.loading, metrics: true },
-      errors: { ...state.errors, metrics: null },
+      errors:  { ...state.errors,  metrics: null  },
     }));
 
     try {
       const response = await api.get("/api/dashboard/metric");
-
+      setCache(_cache.metrics, response.data);
       set((state) => ({
         metrics: response.data,
         loading: { ...state.loading, metrics: false },
       }));
-
       return response.data;
     } catch (error) {
       const errorMsg =
         error.response?.data?.message || error.message || "Failed to fetch metrics";
-
       set((state) => ({
         loading: { ...state.loading, metrics: false },
-        errors: { ...state.errors, metrics: errorMsg },
+        errors:  { ...state.errors,  metrics: errorMsg },
       }));
-
-      console.error("❌ Error fetching metrics:", errorMsg);
       return null;
     }
   },
 
-  // Fetch Tank Status
+  // ── Fetch Tank Status ───────────────────────────────────────────────────────
   fetchTankStatus: async () => {
+    if (isFresh(_cache.tankStatus, 'tankStatus')) {
+      set((state) => ({ tankStatus: _cache.tankStatus.data, loading: { ...state.loading, tankStatus: false } }));
+      return _cache.tankStatus.data;
+    }
+
     set((state) => ({
       loading: { ...state.loading, tankStatus: true },
-      errors: { ...state.errors, tankStatus: null },
+      errors:  { ...state.errors,  tankStatus: null  },
     }));
 
     try {
       const response = await api.get("/api/dashboard/tank-status");
-
+      setCache(_cache.tankStatus, response.data);
       set((state) => ({
         tankStatus: response.data,
         loading: { ...state.loading, tankStatus: false },
       }));
-
       return response.data;
     } catch (error) {
       const errorMsg =
         error.response?.data?.message || error.message || "Failed to fetch tank status";
-
       set((state) => ({
         loading: { ...state.loading, tankStatus: false },
-        errors: { ...state.errors, tankStatus: errorMsg },
+        errors:  { ...state.errors,  tankStatus: errorMsg },
       }));
-
-      console.error("❌ Error fetching tank status:", errorMsg);
       return null;
     }
   },
 
-  // Fetch all dashboard data at once
+  // ── Fetch both at once ──────────────────────────────────────────────────────
   fetchDashboardData: async () => {
-    const metrics = await get().fetchMetrics();
-    const tankStatus = await get().fetchTankStatus();
+    const [metrics, tankStatus] = await Promise.all([
+      get().fetchMetrics(),
+      get().fetchTankStatus(),
+    ]);
     return { metrics, tankStatus };
   },
 
-  // Clear dashboard data
+  // ── Clear (also busts caches) ───────────────────────────────────────────────
   clearDashboard: () => {
+    _cache.metrics.data    = null;
+    _cache.tankStatus.data = null;
     set({
-      metrics: null,
+      metrics:    null,
       tankStatus: null,
       loading: { metrics: false, tankStatus: false },
-      errors: { metrics: null, tankStatus: null },
+      errors:  { metrics: null,  tankStatus: null  },
     });
   },
 }));

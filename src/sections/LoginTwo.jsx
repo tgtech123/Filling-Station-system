@@ -4,23 +4,25 @@ import TextSlider from './login/TextSlider';
 
 const LoginTwo = () => {
   return (
-    <div className="h-screen w-full overflow-hidden relative">
+    <div className="h-full w-full overflow-hidden relative">
       {/* Background Image */}
-      <div className="relative h-full w-[720px]">
+      <div className="relative h-full w-full">
         <Image
           src="/Onboarding.png"
           alt="Onboarding"
           fill
-          className="object-cover"
+          className="object-cover object-center"
           priority
         />
 
-      <div className="absolute bottom-0 w-full px-4">
-        <TextSlider />
-      </div>
-      </div>
+        {/* Overlay for text readability */}
+        <div className="absolute inset-0 bg-black/30" />
 
-      {/* TextSlider Positioned at Bottom */}
+        {/* Slider pinned to bottom */}
+        <div className="absolute bottom-6 left-0 w-full px-4 z-10">
+          <TextSlider />
+        </div>
+      </div>
     </div>
   );
 };

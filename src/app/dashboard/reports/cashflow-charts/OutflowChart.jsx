@@ -35,7 +35,7 @@ export default function OutflowChart({ duration = "today" }) {
     : [];
 
   // Calculate total outflow
-  const totalOutflow = cashflow?.summary?.totalOutflow || 0;
+  const totalOutflow = cashflow?.totalOutflow || 0;
 
   // Format currency
   const formatCurrency = (value) => {

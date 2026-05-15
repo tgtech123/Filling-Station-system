@@ -22,6 +22,11 @@ import {
   Plus,
   BarChart2,
   Package,
+  Banknote,
+  ClipboardList,
+  ShieldCheck,
+  Building2,
+  BookOpen,
 } from "lucide-react";
 import { RiOilLine } from "react-icons/ri";
 import { PiToggleLeftFill, PiToggleRightFill } from "react-icons/pi";
@@ -172,6 +177,22 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       color: "bg-gray-500",
     };
   };
+
+  // Salary sub-links (accountant)
+  const salarySubLinks = [
+    {
+      id: "salary-structure",
+      name: "Salary Structure",
+      icon: <ClipboardList size={20} />,
+      link: "/dashboard/accountant/salaryStructure",
+    },
+    {
+      id: "salary-history",
+      name: "Salary History",
+      icon: <History size={20} />,
+      link: "/dashboard/accountant/salaryHistory",
+    },
+  ];
 
   // Accountant dropdowns
   const reportSubLinks = [
@@ -341,6 +362,28 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       subLinks: commissionsSubLinks,
     },
     {
+      id: "salary",
+      name: "Salary",
+      icon: <Banknote size={20} />,
+      roles: ["accountant"],
+      isDropdown: true,
+      subLinks: salarySubLinks,
+    },
+    {
+      id: "fixed-assets",
+      name: "Fixed Assets",
+      icon: <Building2 size={20} />,
+      roles: ["accountant"],
+      link: "/dashboard/accountant/fixedAssets",
+    },
+    {
+      id: "financial-entries",
+      name: "Liabilities & Equity",
+      icon: <BookOpen size={20} />,
+      roles: ["accountant"],
+      link: "/dashboard/accountant/financialEntries",
+    },
+    {
       id: "trends",
       name: "Trends",
       icon: <TfiBoltAlt size={20} />,
@@ -423,6 +466,13 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       name: "Procure Lubricants",
       icon: <Package size={20} />,
       link: "/dashboard/procurement",
+      roles: ["manager"],
+    },
+    {
+      id: "salary-validation",
+      name: "Salary Validation",
+      icon: <ShieldCheck size={20} />,
+      link: "/dashboard/manager/salaryValidation",
       roles: ["manager"],
     },
     //Admin links

@@ -39,6 +39,36 @@ const useImageStore = create(
             loading: false,
           }));
 
+          // Keep localStorage user object in sync so the current session
+          // and any future login-response seeding both see the latest URL.
+          try {
+            const raw = localStorage.getItem("user");
+            if (raw) {
+              const u = JSON.parse(raw);
+              u.image = transformedUrl;
+              localStorage.setItem("user", JSON.stringify(u));
+            }
+          } catch {}
+
+          // Persist the URL to the backend so other devices see it after login.
+          // Requires the backend endpoint: PATCH /api/auth/profile/image
+          try {
+            const token = localStorage.getItem("token");
+            if (token) {
+              await fetch(`${process.env.NEXT_PUBLIC_API || ""}/api/auth/profile/image`, {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ image: transformedUrl }),
+              });
+            }
+          } catch {
+            // Non-fatal — image already stored locally; backend will sync once
+            // the endpoint is deployed.
+          }
+
           return { url: transformedUrl, publicId: data.public_id };
         } catch (err) {
           set({ loading: false, error: err.message });
