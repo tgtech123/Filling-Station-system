@@ -71,15 +71,20 @@ const PricingPage = () => {
   useEffect(() => {
     const shouldRegister = searchParams.get("register");
     const paymentVerified = sessionStorage.getItem("paymentVerified");
-    if (shouldRegister === "true" && paymentVerified) {
-      try {
-        const paymentData = JSON.parse(paymentVerified);
-        if (paymentData.verified) {
-          setPayerInfo(paymentData.payer || null);
-          setShowRegisterModal(true);
-        }
-      } catch {}
-    }
+
+    if (!paymentVerified) return;
+
+    try {
+      const paymentData = JSON.parse(paymentVerified);
+      // Open the registration modal if:
+      //  a) ?register=true is in the URL (normal redirect from verify page), OR
+      //  b) paymentVerified exists and is valid but the query param is missing
+      //     (e.g. user refreshed the page or the redirect lost the query string)
+      if (paymentData.verified && (shouldRegister === "true" || !window.location.search.includes("register=false"))) {
+        setPayerInfo(paymentData.payer || null);
+        setShowRegisterModal(true);
+      }
+    } catch {}
   }, [searchParams]);
 
   const isYearly = billing === "yearly";
@@ -138,7 +143,6 @@ const PricingPage = () => {
   const handleAuthenticatedPayment = async (plan) => {
     try {
       setInitiatingPayment(true);
-      const token = localStorage.getItem("token");
       const response = await api.post(
         "/api/payments/initialize",
         { planSlug: plan.slug, billingCycle: billing }

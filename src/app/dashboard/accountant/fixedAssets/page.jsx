@@ -188,7 +188,7 @@ export default function FixedAssetsPage() {
           </div>
         )}
 
-        {/* Table */}
+        {/* Asset list — cards on mobile, table on md+ */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-48">
@@ -200,76 +200,130 @@ export default function FixedAssetsPage() {
               <p className="text-sm">No assets found. Add your first asset.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
-                  <tr>
-                    {['Asset Name', 'Category', 'Purchase Date', 'Cost (₦)', 'Useful Life', 'Acc. Dep. (₦)', 'Net Book Value (₦)', 'Actions'].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide whitespace-nowrap">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
-                  {displayed.map((asset) => {
-                    const Icon = CATEGORY_ICONS[asset.category] || Wrench;
-                    const badge = CATEGORY_COLORS[asset.category] || 'bg-gray-100 text-gray-600';
-                    return (
-                      <tr key={asset._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <Icon size={16} className="text-gray-400 shrink-0" />
-                            <div>
-                              <p className="font-medium text-gray-800 dark:text-gray-200">{asset.name}</p>
-                              {asset.notes && (
-                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 max-w-[200px] truncate">{asset.notes}</p>
-                              )}
+            <>
+              {/* ── Mobile card list (hidden on md+) ── */}
+              <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
+                {displayed.map((asset) => {
+                  const Icon = CATEGORY_ICONS[asset.category] || Wrench;
+                  const badge = CATEGORY_COLORS[asset.category] || 'bg-gray-100 text-gray-600';
+                  return (
+                    <div key={asset._id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Icon size={16} className="text-gray-400 shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">{asset.name}</p>
+                            <span className={`inline-block mt-0.5 px-2 py-0.5 rounded text-xs font-medium ${badge}`}>{asset.category}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <button onClick={() => openEdit(asset)}
+                            className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors">
+                            <Pencil size={14} />
+                          </button>
+                          <button onClick={() => setDeleteTarget(asset)}
+                            className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 transition-colors">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <p className="text-gray-400 uppercase tracking-wide text-[10px] font-semibold">Purchase Date</p>
+                          <p className="text-gray-700 dark:text-gray-300 mt-0.5">
+                            {new Date(asset.purchaseDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 uppercase tracking-wide text-[10px] font-semibold">Cost</p>
+                          <p className="text-gray-700 dark:text-gray-300 mt-0.5 font-medium">₦{fmt(asset.purchasePrice)}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 uppercase tracking-wide text-[10px] font-semibold">Acc. Depreciation</p>
+                          <p className="text-orange-600 mt-0.5 font-medium">₦{fmt(asset.accumulatedDepreciation)}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-400 uppercase tracking-wide text-[10px] font-semibold">Net Book Value</p>
+                          <p className="text-green-700 dark:text-green-400 mt-0.5 font-semibold">₦{fmt(asset.netBookValue)}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-gray-400 uppercase tracking-wide text-[10px] font-semibold">Useful Life / Method</p>
+                          <p className="text-gray-600 dark:text-gray-400 mt-0.5">
+                            {asset.usefulLifeYears} yrs · {asset.depreciationMethod === 'Straight-line' ? 'Straight-line' : 'Declining Balance'}
+                          </p>
+                        </div>
+                        {asset.notes && (
+                          <div className="col-span-2">
+                            <p className="text-gray-400 uppercase tracking-wide text-[10px] font-semibold">Notes</p>
+                            <p className="text-gray-500 dark:text-gray-400 mt-0.5 text-[11px]">{asset.notes}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* ── Desktop table (hidden on mobile) ── */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700">
+                    <tr>
+                      {['Asset Name', 'Category', 'Purchase Date', 'Cost (₦)', 'Useful Life', 'Acc. Dep. (₦)', 'Net Book Value (₦)', 'Actions'].map((h) => (
+                        <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide whitespace-nowrap">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
+                    {displayed.map((asset) => {
+                      const Icon = CATEGORY_ICONS[asset.category] || Wrench;
+                      const badge = CATEGORY_COLORS[asset.category] || 'bg-gray-100 text-gray-600';
+                      return (
+                        <tr key={asset._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <Icon size={16} className="text-gray-400 shrink-0" />
+                              <div>
+                                <p className="font-medium text-gray-800 dark:text-gray-200">{asset.name}</p>
+                                {asset.notes && (
+                                  <p className="text-xs text-gray-400 mt-0.5 max-w-[200px] truncate">{asset.notes}</p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded-md text-xs font-medium ${badge}`}>
-                            {asset.category}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                          {new Date(asset.purchaseDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                        </td>
-                        <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                          {fmt(asset.purchasePrice)}
-                        </td>
-                        <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                          {asset.usefulLifeYears} yrs · {asset.depreciationMethod === 'Straight-line' ? 'SL' : 'DB'}
-                        </td>
-                        <td className="px-4 py-3 text-orange-600 dark:text-orange-400 whitespace-nowrap">
-                          {fmt(asset.accumulatedDepreciation)}
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-green-700 dark:text-green-400 whitespace-nowrap">
-                          {fmt(asset.netBookValue)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => openEdit(asset)}
-                              className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 transition-colors"
-                            >
-                              <Pencil size={14} />
-                            </button>
-                            <button
-                              onClick={() => setDeleteTarget(asset)}
-                              className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 transition-colors"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 rounded-md text-xs font-medium ${badge}`}>{asset.category}</span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                            {new Date(asset.purchaseDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </td>
+                          <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">₦{fmt(asset.purchasePrice)}</td>
+                          <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                            {asset.usefulLifeYears} yrs · {asset.depreciationMethod === 'Straight-line' ? 'SL' : 'DB'}
+                          </td>
+                          <td className="px-4 py-3 text-orange-600 dark:text-orange-400 whitespace-nowrap">₦{fmt(asset.accumulatedDepreciation)}</td>
+                          <td className="px-4 py-3 font-semibold text-green-700 dark:text-green-400 whitespace-nowrap">₦{fmt(asset.netBookValue)}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => openEdit(asset)}
+                                className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 transition-colors">
+                                <Pencil size={14} />
+                              </button>
+                              <button onClick={() => setDeleteTarget(asset)}
+                                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 transition-colors">
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>

@@ -1,5 +1,10 @@
 // src/data/lubricantData.js
 
+const formatCurrency = (value) => {
+  if (!value && value !== 0) return "0";
+  return Number(value).toLocaleString('en-US');
+};
+
 export const lubricantDataColumns = [
   "Barcode",
   "Lubricant name",

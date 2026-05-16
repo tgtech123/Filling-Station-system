@@ -16,21 +16,26 @@ import { saveAs } from "file-saver";
 const fmt = (n) => `₦${Number(n || 0).toLocaleString()}`;
 const pct = (n) => `${Number(n || 0)}%`;
 
-const calcEntry = (e) => {
+const calcEntry = (e, pensionEnabled = true) => {
   const basic = Number(e.basicSalary) || 0;
   const ba = e.bonusAmounts || {};
   const mst = Number(ba.monthlySalesTarget) || 0;
   const zd  = Number(ba.zeroDiscrepancies)  || 0;
   const tp  = Number(ba.topPerformer)       || 0;
-  const totalBonus = mst + zd + tp;
-  const taxAmount  = Math.round(basic * (Number(e.taxPercentage) || 0) / 100);
-  const shortage   = Number(e.shortage) || 0;
+  const totalBonus      = mst + zd + tp;
+  const taxAmount       = Math.round(basic * (Number(e.taxPercentage) || 0) / 100);
+  const shortage        = Number(e.shortage) || 0;
+  const employeePension = pensionEnabled ? Math.round(basic * 0.08) : 0;
+  const employerPension = pensionEnabled ? Math.round(basic * 0.10) : 0;
   return {
     ...e,
     bonusAmounts: { monthlySalesTarget: mst, zeroDiscrepancies: zd, topPerformer: tp },
     totalBonus,
     taxAmount,
-    salaryToPay: Math.max(0, basic + totalBonus - taxAmount - shortage),
+    employeePension,
+    employerPension,
+    shortage,
+    salaryToPay: Math.max(0, basic + totalBonus - taxAmount - employeePension - shortage),
   };
 };
 
@@ -91,23 +96,25 @@ const EditCell = ({ value, onChange, type = "text", min = 0, className = "" }) =
 // ── Export helpers ────────────────────────────────────────────────────────────
 const buildRows = (entries) =>
   entries.map((e) => ({
-    "Staff ID":    e.staffCode,
-    "Name":        `${e.firstName} ${e.lastName}`,
-    "Role":        e.role,
-    "Basic Salary":e.basicSalary,
+    "Staff ID":           e.staffCode,
+    "Name":               `${e.firstName} ${e.lastName}`,
+    "Role":               e.role,
+    "Basic Salary":       e.basicSalary,
     "Shift":              e.shiftType || "-",
     "Pay Type":           e.payType || "Monthly",
     "Monthly Sales ₦":   e.bonusAmounts?.monthlySalesTarget ?? 0,
     "Zero Disc. ₦":      e.bonusAmounts?.zeroDiscrepancies ?? 0,
     "Top Performer ₦":   e.bonusAmounts?.topPerformer ?? 0,
-    "Total Bonus": e.totalBonus ?? 0,
-    "Tax %":       e.taxPercentage ?? 0,
-    "Tax Amt":     e.taxAmount ?? 0,
-    "Shortage":    e.shortage ?? 0,
-    "Salary to Pay": e.salaryToPay ?? 0,
-    "Acct No":     e.bankDetails?.acctNo || "",
-    "Acct Name":   e.bankDetails?.acctName || "",
-    "Bank":        e.bankDetails?.bankName || "",
+    "Total Bonus":        e.totalBonus ?? 0,
+    "Tax %":              e.taxPercentage ?? 0,
+    "Tax Amt":            e.taxAmount ?? 0,
+    "Employee Pension (8%)":  e.employeePension ?? 0,
+    "Employer Pension (10%)": e.employerPension ?? 0,
+    "Shortage":           e.shortage ?? 0,
+    "Salary to Pay":      e.salaryToPay ?? 0,
+    "Acct No":            e.bankDetails?.acctNo || "",
+    "Acct Name":          e.bankDetails?.acctName || "",
+    "Bank":               e.bankDetails?.bankName || "",
   }));
 
 const exportCSV = (entries, month) => {
@@ -127,7 +134,9 @@ const exportPDF = (entries, month) => {
     head: [[
       "Staff ID","Name","Role","Basic","Shift","Pay Type",
       "Monthly Sales ₦","Zero Disc. ₦","Top Performer ₦",
-      "Tax%","Tax₦","Shortage","Salary to Pay",
+      "Tax%","Tax₦",
+      "Employee Pension (8%)","Employer Pension (10%)",
+      "Shortage","Salary to Pay",
       "Acct No","Acct Name","Bank",
     ]],
     body: entries.map((e) => [
@@ -142,6 +151,8 @@ const exportPDF = (entries, month) => {
       fmt(e.bonusAmounts?.topPerformer),
       pct(e.taxPercentage),
       fmt(e.taxAmount),
+      fmt(e.employeePension),
+      fmt(e.employerPension),
       fmt(e.shortage),
       fmt(e.salaryToPay),
       e.bankDetails?.acctNo || "",
@@ -168,24 +179,40 @@ export default function SalaryStructurePage() {
   const [showFilter, setShowFilter] = useState(false);
   const [toast, setToast] = useState(null);
   const [dirty, setDirty] = useState(false);
+  const [pensionEnabled, setPensionEnabled] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const saved = localStorage.getItem("salaryPensionEnabled");
+    return saved === null ? true : saved === "true";
+  });
 
   const showToast = useCallback((msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   }, []);
 
+  // Persist pension toggle
+  useEffect(() => {
+    localStorage.setItem("salaryPensionEnabled", String(pensionEnabled));
+    setLocalEntries((prev) => prev.map((e) => calcEntry(e, pensionEnabled)));
+  }, [pensionEnabled]);
+
   // Load draft whenever month changes
   useEffect(() => {
     fetchDraft(month).catch(() => {});
   }, [month]);
 
-  // Sync localEntries from store
+  // Sync localEntries from store — also restore pensionEnabled from the draft
   useEffect(() => {
     if (draft?.entries) {
-      setLocalEntries(draft.entries.map(calcEntry));
+      // If the draft carries a stored pensionEnabled value, sync the local toggle to it
+      if (typeof draft.pensionEnabled === "boolean" && draft.pensionEnabled !== pensionEnabled) {
+        setPensionEnabled(draft.pensionEnabled);
+        localStorage.setItem("salaryPensionEnabled", String(draft.pensionEnabled));
+      }
+      setLocalEntries(draft.entries.map((e) => calcEntry(e, draft.pensionEnabled ?? pensionEnabled)));
       setDirty(false);
     }
-  }, [draft?._id, draft?.status]);
+  }, [draft?._id, draft?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isEditable = draft?.status === "draft";
 
@@ -205,11 +232,11 @@ export default function SalaryStructurePage() {
         entry[field] = value;
       }
 
-      next[idx] = calcEntry(entry);
+      next[idx] = calcEntry(entry, pensionEnabled);
       return next;
     });
     setDirty(true);
-  }, []);
+  }, [pensionEnabled]);
 
   // Unique roles for filter dropdown
   const roles = useMemo(
@@ -242,25 +269,10 @@ export default function SalaryStructurePage() {
     [localEntries]
   );
 
-  // Map filtered back to real indices in localEntries
-  const indexMap = useMemo(() => {
-    const map = new Map();
-    localEntries.forEach((e, i) => map.set(e.staffCode + i, i));
-    return map;
-  }, [localEntries]);
-
-  const getIndex = (staffCode, fIdx) => {
-    // find real index by staffCode
-    return localEntries.findIndex(
-      (e, i) => e.staffCode === staffCode && filtered[fIdx]?.staffCode === e.staffCode
-        && filtered.indexOf(filtered[fIdx]) === fIdx
-    );
-  };
-
   const handleSave = async () => {
     if (!draft) return;
     try {
-      await saveDraft(draft._id, localEntries);
+      await saveDraft(draft._id, localEntries, pensionEnabled);
       showToast("Draft saved successfully");
       setDirty(false);
     } catch {
@@ -366,6 +378,37 @@ export default function SalaryStructurePage() {
               <AlertCircle size={13} /> Unsaved changes
             </span>
           )}
+        </div>
+
+        {/* Pension toggle */}
+        <div className="flex items-center gap-3 mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+          <button
+            type="button"
+            onClick={() => setPensionEnabled((v) => !v)}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+              pensionEnabled ? "bg-indigo-600" : "bg-gray-300 dark:bg-gray-600"
+            }`}
+            role="switch"
+            aria-checked={pensionEnabled}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${
+                pensionEnabled ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
+          <div>
+            <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+              Pension Contribution (PenCom)
+            </span>
+            <span className={`ml-2 text-xs font-medium px-2 py-0.5 rounded-full ${
+              pensionEnabled
+                ? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+                : "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+            }`}>
+              {pensionEnabled ? "Enabled — 8% employee / 10% employer" : "Disabled — ₦0 recorded"}
+            </span>
+          </div>
         </div>
 
         {/* Action buttons */}
@@ -477,14 +520,15 @@ export default function SalaryStructurePage() {
           <table className="w-full text-xs">
             <thead>
               {/* Group headers */}
-              <tr className="bg-gray-700 dark:bg-gray-900 text-white">
+              <tr className="bg-gray-700 dark:bg-gray-900 text-white text-xs">
                 <th colSpan={6} className="px-3 py-2 text-left border-r border-gray-600">Staff Info</th>
-                <th colSpan={3} className="px-3 py-2 text-center border-r border-gray-600">Bonuses (from structure)</th>
-                <th colSpan={2} className="px-3 py-2 text-center border-r border-gray-600">Tax</th>
+                <th colSpan={3} className="px-3 py-2 text-center border-r border-gray-600">Bonuses</th>
+                <th colSpan={2} className="px-3 py-2 text-center border-r border-gray-600">PAYE Tax</th>
+                <th colSpan={2} className="px-3 py-2 text-center border-r border-gray-600 bg-indigo-700">Pension (PenCom)</th>
                 <th colSpan={2} className="px-3 py-2 text-center border-r border-gray-600">Deductions</th>
                 <th colSpan={3} className="px-3 py-2 text-center">Bank Details</th>
               </tr>
-              <tr className="bg-gray-50 dark:bg-gray-700/60 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600">
+              <tr className="bg-gray-50 dark:bg-gray-700/60 text-gray-600 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 text-xs">
                 <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Staff ID</th>
                 <th className="px-3 py-3 text-left font-semibold whitespace-nowrap min-w-[130px]">Name</th>
                 <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Role</th>
@@ -492,13 +536,20 @@ export default function SalaryStructurePage() {
                 <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Shift</th>
                 <th className="px-3 py-3 text-left font-semibold whitespace-nowrap border-r border-gray-200 dark:border-gray-600">Pay Type</th>
                 {/* Bonuses */}
-                <th className="px-3 py-3 text-center font-semibold whitespace-nowrap">Monthly Sales<br/><span className="text-gray-400 dark:text-gray-500 font-normal text-[10px]">₦ amount</span></th>
-                <th className="px-3 py-3 text-center font-semibold whitespace-nowrap">Zero Disc.<br/><span className="text-gray-400 dark:text-gray-500 font-normal text-[10px]">₦ amount</span></th>
-                <th className="px-3 py-3 text-center font-semibold whitespace-nowrap border-r border-gray-200 dark:border-gray-600">Top Performer<br/><span className="text-gray-400 dark:text-gray-500 font-normal text-[10px]">₦ amount</span></th>
-                {/* Tax */}
+                <th className="px-3 py-3 text-center font-semibold whitespace-nowrap">Monthly Sales<br/><span className="text-gray-400 font-normal text-[10px]">₦ amt</span></th>
+                <th className="px-3 py-3 text-center font-semibold whitespace-nowrap">Zero Disc.<br/><span className="text-gray-400 font-normal text-[10px]">₦ amt</span></th>
+                <th className="px-3 py-3 text-center font-semibold whitespace-nowrap border-r border-gray-200 dark:border-gray-600">Top Performer<br/><span className="text-gray-400 font-normal text-[10px]">₦ amt</span></th>
+                {/* PAYE Tax */}
                 <th className="px-3 py-3 text-center font-semibold whitespace-nowrap">Tax %</th>
                 <th className="px-3 py-3 text-center font-semibold whitespace-nowrap border-r border-gray-200 dark:border-gray-600">Tax ₦</th>
-                {/* Deductions */}
+                {/* Pension */}
+                <th className="px-3 py-3 text-center font-semibold whitespace-nowrap bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
+                  Employee<br/><span className="font-normal text-[10px]">8% of basic</span>
+                </th>
+                <th className="px-3 py-3 text-center font-semibold whitespace-nowrap border-r border-gray-200 dark:border-gray-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
+                  Employer<br/><span className="font-normal text-[10px]">10% of basic</span>
+                </th>
+                {/* Deductions + Net Pay */}
                 <th className="px-3 py-3 text-center font-semibold whitespace-nowrap">Shortage ₦</th>
                 <th className="px-3 py-3 text-center font-semibold whitespace-nowrap border-r border-gray-200 dark:border-gray-600 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300">Salary to Pay</th>
                 {/* Bank */}
@@ -510,7 +561,7 @@ export default function SalaryStructurePage() {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={16} className="text-center py-12 text-gray-400 dark:text-gray-500">
+                  <td colSpan={18} className="text-center py-12 text-gray-400 dark:text-gray-500">
                     {loading.draft ? "Loading…" : "No staff found"}
                   </td>
                 </tr>
@@ -615,6 +666,14 @@ export default function SalaryStructurePage() {
                         {fmt(entry.taxAmount)}
                       </td>
 
+                      {/* Pension — auto-computed, read-only */}
+                      <td className="px-3 py-2 text-center font-medium whitespace-nowrap bg-indigo-50/60 dark:bg-indigo-900/10 text-indigo-700 dark:text-indigo-300">
+                        {fmt(entry.employeePension)}
+                      </td>
+                      <td className="px-3 py-2 text-center font-medium whitespace-nowrap border-r border-gray-100 dark:border-gray-700 bg-indigo-50/60 dark:bg-indigo-900/10 text-indigo-700 dark:text-indigo-300">
+                        {fmt(entry.employerPension)}
+                      </td>
+
                       {/* Shortage */}
                       <td className="px-3 py-2 text-center">
                         {isEditable ? (
@@ -691,6 +750,13 @@ export default function SalaryStructurePage() {
                   <td className="px-3 py-3 text-center text-red-300 whitespace-nowrap border-r border-gray-600">
                     {fmt(filtered.reduce((s, e) => s + (e.taxAmount || 0), 0))}
                   </td>
+                  {/* Pension totals */}
+                  <td className="px-3 py-3 text-center text-indigo-300 whitespace-nowrap bg-indigo-900/30">
+                    {fmt(filtered.reduce((s, e) => s + (e.employeePension || 0), 0))}
+                  </td>
+                  <td className="px-3 py-3 text-center text-indigo-300 whitespace-nowrap border-r border-gray-600 bg-indigo-900/30">
+                    {fmt(filtered.reduce((s, e) => s + (e.employerPension || 0), 0))}
+                  </td>
                   <td className="px-3 py-3 text-center text-red-300 whitespace-nowrap border-r border-gray-600">
                     {fmt(filtered.reduce((s, e) => s + (e.shortage || 0), 0))}
                   </td>
@@ -709,9 +775,11 @@ export default function SalaryStructurePage() {
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800">
         <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-2">Calculation Formula</p>
         <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
-          <strong>Tax</strong> is calculated on Basic Salary (before bonuses). &nbsp;
-          <strong>Salary to Pay</strong> = Basic + (MST + ZD + TP bonuses) − Tax − Shortage.
-          &nbsp; MST = Monthly Sales Target &nbsp;|&nbsp; ZD = Zero Discrepancies &nbsp;|&nbsp; TP = Top Performer
+          <strong>Tax (PAYE)</strong> is calculated on Basic Salary (before bonuses). &nbsp;
+          <strong>Pension</strong> is optional — use the toggle above to enable or disable it for your company.
+          When enabled: Employee = 8% of Basic (deducted from staff pay, remitted to PenCom); Employer = 10% of Basic (business cost). &nbsp;
+          <strong>Salary to Pay</strong> = Basic + Bonuses − Tax − Employee Pension − Shortage. &nbsp;
+          MST = Monthly Sales Target &nbsp;|&nbsp; ZD = Zero Discrepancies &nbsp;|&nbsp; TP = Top Performer
         </p>
       </div>
     </div>

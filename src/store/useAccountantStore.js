@@ -14,6 +14,7 @@ const TTL = {
   profitLoss:      5  * 60 * 1000,  // 5 min
   incomeReport:    5  * 60 * 1000,  // 5 min
   shiftDetails:    10 * 60 * 1000,  // 10 min
+  taxReport:       5  * 60 * 1000,  // 5 min
 };
 
 const _cache = {
@@ -26,6 +27,7 @@ const _cache = {
   profitLoss:      { data: null, ts: 0, key: '' },
   incomeReport:    { data: null, ts: 0, key: '' },
   shiftDetails:    { data: null, ts: 0, key: '' },
+  taxReport:       { data: null, ts: 0, key: '' },
 };
 
 // In-flight deduplication — if a fetch is already in progress for a given key,
@@ -58,6 +60,7 @@ const useAccountantStore = create((set, get) => ({
   profitLoss: null,
   incomeReport: null,
   shiftDetails: null,
+  taxReport: null,
 
   // Pagination & Filters
   pagination: {
@@ -87,6 +90,7 @@ const useAccountantStore = create((set, get) => ({
     profitLoss: false,
     incomeReport: false,
     shiftDetails: false,
+    taxReport: false,
   },
 
   // Error states
@@ -100,6 +104,7 @@ const useAccountantStore = create((set, get) => ({
     profitLoss: null,
     incomeReport: null,
     shiftDetails: null,
+    taxReport: null,
   },
 
   // Helpers
@@ -317,7 +322,7 @@ const useAccountantStore = create((set, get) => ({
   },
 
   // ── Fetch Profit & Loss ─────────────────────────────────────────────────────
-  fetchProfitLoss: async (duration = 'lastquarter') => {
+  fetchProfitLoss: async (duration = 'last3months') => {
     const { setLoading, setError } = get();
 
     if (isFresh(_cache.profitLoss, 'profitLoss', duration)) {
@@ -407,6 +412,34 @@ const useAccountantStore = create((set, get) => ({
 
   clearShiftDetails: () => set({ shiftDetails: null }),
 
+  // ── Fetch Tax Report ────────────────────────────────────────────────────────
+  fetchTaxReport: async (startDate, endDate) => {
+    const { setLoading, setError } = get();
+    const cacheKey = `${startDate}-${endDate}`;
+
+    if (isFresh(_cache.taxReport, 'taxReport', cacheKey)) {
+      set({ taxReport: _cache.taxReport.data });
+      return _cache.taxReport.data;
+    }
+
+    setLoading('taxReport', true);
+    setError('taxReport', null);
+    try {
+      const response = await api.get(`${ACCOUNTANT_ENDPOINT}/tax-report`, {
+        params: { startDate, endDate },
+      });
+      const data = response.data.data;
+      setCache(_cache.taxReport, data, cacheKey);
+      set({ taxReport: data });
+      return data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch tax report';
+      setError('taxReport', errorMsg);
+    } finally {
+      setLoading('taxReport', false);
+    }
+  },
+
   // ── Pagination helpers ──────────────────────────────────────────────────────
   setPage: (page) =>
     set((state) => ({ pagination: { ...state.pagination, page } })),
@@ -445,6 +478,7 @@ const useAccountantStore = create((set, get) => ({
       profitLoss: null,
       incomeReport: null,
       shiftDetails: null,
+      taxReport: null,
       pagination: { page: 1, limit: 10, total: 0, pages: 0 },
       filters: {
         search: '', shiftType: '', status: '', startDate: null, endDate: null, attendantId: null,
@@ -452,12 +486,12 @@ const useAccountantStore = create((set, get) => ({
       loading: {
         dashboard: false, reconciledSales: false, incomeStatement: false,
         balanceSheet: false, cashflow: false, keyRatios: false,
-        profitLoss: false, incomeReport: false, shiftDetails: false,
+        profitLoss: false, incomeReport: false, shiftDetails: false, taxReport: false,
       },
       errors: {
         dashboard: null, reconciledSales: null, incomeStatement: null,
         balanceSheet: null, cashflow: null, keyRatios: null,
-        profitLoss: null, incomeReport: null, shiftDetails: null,
+        profitLoss: null, incomeReport: null, shiftDetails: null, taxReport: null,
       },
     });
   },

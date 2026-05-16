@@ -47,12 +47,12 @@ const useSalaryStore = create((set, get) => ({
   },
 
   // ── Accountant: save draft entries ────────────────────────────────────────
-  saveDraft: async (id, entries) => {
+  saveDraft: async (id, entries, pensionEnabled) => {
     const { setLoading } = get();
     setLoading("saving", true);
     set({ error: null });
     try {
-      const res = await api.put(`${ENDPOINT}/draft/${id}`, { entries });
+      const res = await api.put(`${ENDPOINT}/draft/${id}`, { entries, pensionEnabled });
       set({ draft: res.data.data });
       return res.data.data;
     } catch (err) {

@@ -2,8 +2,8 @@
 
 // Format currency
 const formatCurrency = (value) => {
-  if (!value && value !== 0) return "N0";
-  return `N${Number(value).toLocaleString()}`;
+  if (!value && value !== 0) return "₦0.00";
+  return `₦${Number(value).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 // Get payment data from API response

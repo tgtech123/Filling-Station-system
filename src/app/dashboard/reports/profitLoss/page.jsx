@@ -15,7 +15,7 @@ export default function ProfitLoss() {
     fetchProfitLoss,
   } = useAccountantStore();
 
-  const [duration, setDuration] = useState("lastquarter");
+  const [duration, setDuration] = useState("last3months");
 
   // Fetch initial data
   useEffect(() => {

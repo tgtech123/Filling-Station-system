@@ -6,6 +6,7 @@ import Link from "next/link";
 import { overviewCardData } from "./overviewCardData";
 import FlashCard from "@/components/Dashboard/FlashCard";
 import TabButtons from "./TabButtons";
+import TaxObligationsPanel from "./TaxObligationsPanel";
 import { useFinancialStore } from "@/store/useFinancialStore";
 
 const Page = () => {
@@ -110,6 +111,8 @@ const Page = () => {
           ))}
         </div>
       </div>
+
+      <TaxObligationsPanel />
 
       <TabButtons />
     </div>
