@@ -101,22 +101,20 @@ export default function CashFlow() {
   // Loading state
   if (loading.cashflow && !cashflow) {
     return (
-      <div>
-        <div className="grid lg:grid-cols-3 grid-cols-2 gap-4">
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[1, 2, 3].map((index) => (
-            <div key={index} className="bg-white rounded-lg p-6 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/4"></div>
+            <div key={index} className="bg-white rounded-xl p-5 animate-pulse border border-gray-100">
+              <div className="h-3 bg-gray-200 rounded w-3/4 mb-3" />
+              <div className="h-6 bg-gray-200 rounded w-1/2 mb-2" />
+              <div className="h-2 bg-gray-200 rounded w-1/4" />
             </div>
           ))}
         </div>
-        <div className="mt-6 bg-white rounded-lg p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              <p className="mt-2 text-sm text-gray-600">Loading cashflow data...</p>
-            </div>
+        <div className="flex items-center justify-center h-40">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600" />
+            <p className="mt-2 text-sm text-gray-500">Loading cashflow data…</p>
           </div>
         </div>
       </div>
@@ -126,27 +124,17 @@ export default function CashFlow() {
   // Error state
   if (errors.cashflow) {
     return (
-      <div>
-        <div className="grid lg:grid-cols-3 grid-cols-2 gap-4">
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {cashFlowCardData.map((item, index) => (
-            <MyStatCard
-              key={index}
-              title={item.title}
-              date={item.date}
-              amount={item.amount}
-              change={item.change}
-              changeText={item.changeText}
-              trend={item.trend}
-              icon={item.icon}
-            />
+            <MyStatCard key={index} title={item.title} date={item.date} amount={item.amount}
+              change={item.change} changeText={item.changeText} trend={item.trend} icon={item.icon} />
           ))}
         </div>
-        <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">Error loading cashflow: {errors.cashflow}</p>
-          <button
-            onClick={() => fetchCashflow(duration)}
-            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center justify-between gap-3">
+          <p className="text-sm text-red-700">{errors.cashflow}</p>
+          <button onClick={() => fetchCashflow(duration)}
+            className="shrink-0 px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">
             Retry
           </button>
         </div>
@@ -155,43 +143,30 @@ export default function CashFlow() {
   }
 
   return (
-    <div>
-      {/* Duration selector (optional) */}
-      <div className="mb-4 flex gap-2">
-        <button
-          onClick={() => setDuration("today")}
-          className={`px-4 py-2 rounded ${
-            duration === "today"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          Today
-        </button>
-        <button
-          onClick={() => setDuration("thisweek")}
-          className={`px-4 py-2 rounded ${
-            duration === "thisweek"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          This Week
-        </button>
-        <button
-          onClick={() => setDuration("thismonth")}
-          className={`px-4 py-2 rounded ${
-            duration === "thismonth"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          This Month
-        </button>
+    <div className="space-y-4">
+      {/* Duration selector */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { value: "today",     label: "Today"      },
+          { value: "thisweek",  label: "This Week"  },
+          { value: "thismonth", label: "This Month" },
+        ].map((d) => (
+          <button
+            key={d.value}
+            onClick={() => setDuration(d.value)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+              duration === d.value
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {d.label}
+          </button>
+        ))}
       </div>
 
-      {/* Cashflow cards */}
-      <div className="grid lg:grid-cols-3 grid-cols-2 gap-4">
+      {/* Cashflow cards — 1 col on mobile, 3 on sm+ */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {cashFlowCardData.map((item, index) => (
           <MyStatCard
             key={index}

@@ -9,19 +9,22 @@ export const useFinancialStore = create((set, get) => ({
   expenseBreakdown: [],
   revenueAnalysis: [],
   profitMargins: [],
+  taxSummary: null,
   loading: {
     overview: false,
     revenueBreakdown: false,
     expenseBreakdown: false,
     revenueAnalysis: false,
-    profitMargins: false
+    profitMargins: false,
+    taxSummary: false,
   },
   errors: {
     overview: null,
     revenueBreakdown: null,
     expenseBreakdown: null,
     revenueAnalysis: null,
-    profitMargins: null
+    profitMargins: null,
+    taxSummary: null,
   },
 
   // Fetch Financial Overview
@@ -151,6 +154,29 @@ export const useFinancialStore = create((set, get) => ({
         errors: { ...state.errors, profitMargins: errorMsg }
       }));
       throw error;
+    }
+  },
+
+  // Fetch Tax Summary (manager view of accountant-computed tax data)
+  fetchTaxSummary: async (startDate, endDate) => {
+    set((state) => ({
+      loading: { ...state.loading, taxSummary: true },
+      errors:  { ...state.errors,  taxSummary: null },
+    }));
+    try {
+      const response = await api.get('/api/manager/tax-report', { params: { startDate, endDate } });
+      const data = response.data.data;
+      set((state) => ({
+        taxSummary: data,
+        loading: { ...state.loading, taxSummary: false },
+      }));
+      return data;
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || error.message;
+      set((state) => ({
+        loading: { ...state.loading, taxSummary: false },
+        errors:  { ...state.errors,  taxSummary: errorMsg },
+      }));
     }
   },
 

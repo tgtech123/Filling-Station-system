@@ -1,80 +1,105 @@
-    'use client'
-import React, { useState } from 'react'
-import { HiChevronDown, HiChevronUp } from "react-icons/hi2";
-import { FiDownload } from "react-icons/fi";
+'use client';
+import { useState, useRef, useEffect } from 'react';
+import { ChevronDown, ChevronUp, Download } from 'lucide-react';
+import useAccountantStore from '@/store/useAccountantStore';
 
+const OPTIONS = [
+  { value: 'last3months',  label: 'Last 3 Months'  },
+  { value: 'lastquarter',  label: 'Last Quarter'    },
+  { value: 'thismonth',    label: 'This Month'      },
+  { value: 'thisquarter',  label: 'This Quarter'    },
+  { value: 'thisyear',     label: 'This Year'       },
+];
 
+export default function DurationBtn({ selectedDuration, onDurationChange }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const { profitLoss } = useAccountantStore();
 
-const DurationBtn = () => {
-    const [toggleIsChevron, setToggleIsChevron] = useState(false)
-
-    const handleToggleChevron = () =>{
-        setToggleIsChevron(!toggleIsChevron)
+  // Close on outside click
+  useEffect(() => {
+    function handler(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     }
-  return (
-    
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-           {/* Duration Dropdown */}
-            <div
-                   onClick={handleToggleChevron}
-                    className="relative flex justify-between items-center gap-3 px-4 py-2 text-neutral-600 font-bold border-2 border-neutral-300 rounded-xl cursor-pointer"
-                  >
-                    Duration
-                    {toggleIsChevron ? 
-                      <HiChevronUp className="text-neutral-600" size={24} />
-                     : 
-                      <HiChevronDown className="text-neutral-600" size={24} />
-                    }
-        
-                    {toggleIsChevron && (
-                      <div className="flex flex-col w-56 sm:w-64 bg-white absolute top-12 left-0 shadow-lg rounded-xl border border-neutral-200 z-20">
-                        {/* From & To */}
-                        <div className="flex flex-col sm:flex-row justify-between p-2 gap-3">
-                          <button className="flex-1 flex justify-between items-center px-4 py-2 border-[1.5px] rounded-lg font-medium">
-                            From
-                            <HiChevronDown className="text-neutral-600" size={20} />
-                          </button>
-                          <button className="flex-1 flex justify-between items-center px-4 py-2 border-[1.5px] rounded-lg font-medium">
-                            To
-                            <HiChevronDown className="text-neutral-600" size={20} />
-                          </button>
-                        </div>
-        
-                        <hr className="my-2 mx-2 border-t border-neutral-100" />
-        
-                        {/* Quick Select */}
-                        <div className="flex flex-col gap-2 font-light px-2 mb-3">
-                          {["Today", "This week", "This month", "This quarter"].map(
-                            (label) => (
-                              <span
-                                key={label}
-                                className="w-full text-left px-2 border border-neutral-200 hover:bg-blue-600 hover:text-white py-1 rounded-lg font-medium cursor-pointer"
-                              >
-                                {label}
-                              </span>
-                            )
-                          )}
-                        </div>
-        
-                        <hr className="my-2 mx-2 border-t border-neutral-100" />
-        
-                        <button onClick={() => setToggleIsChevron(false)} className="w-[90%] mx-auto py-2 bg-[#0080FF] hover:bg-blue-700 text-center text-white font-semibold mb-3 rounded-lg">
-                          Save
-                        </button>
-                      </div>
-                    )}
-            </div>
-        
-                  {/* Export Button */}
-            <button
-                    
-                    className="px-4 py-2 flex justify-center items-center gap-2 font-bold bg-[#0080FF] text-white rounded-lg hover:bg-blue-700"
-                  >
-                    Export <FiDownload size={20} />
-            </button>
-        </div>
-    
-  )
-}
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
-export default DurationBtn
+  function select(value) {
+    onDurationChange(value);
+    setOpen(false);
+  }
+
+  function handleExport() {
+    if (!profitLoss?.monthlyBreakdown?.length) return;
+
+    const rows = [
+      ['Date', 'Total Revenue (₦)', 'Total Expenses (₦)', 'Profit / Loss (₦)'],
+      ...profitLoss.monthlyBreakdown.map(m => [
+        m.date,
+        Number(m.totalRevenue  || 0).toFixed(2),
+        Number(m.totalExpenses || 0).toFixed(2),
+        Number(m.profitLoss    || 0).toFixed(2),
+      ]),
+      [],
+      ['Summary', '', '', ''],
+      ['Total Revenue',  '', '', Number(profitLoss.summary?.totalRevenueGenerated || 0).toFixed(2)],
+      ['Total Expenses', '', '', Number(profitLoss.summary?.totalExpenses         || 0).toFixed(2)],
+      ['Net Profit/Loss','', '', Number(profitLoss.summary?.profitLoss            || 0).toFixed(2)],
+    ];
+
+    const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `profit_loss_${selectedDuration}_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const currentLabel = OPTIONS.find(o => o.value === selectedDuration)?.label || 'Duration';
+
+  return (
+    <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+
+      {/* Duration dropdown */}
+      <div className="relative" ref={ref}>
+        <button
+          onClick={() => setOpen(v => !v)}
+          className="flex items-center gap-3 px-4 py-2 text-neutral-600 font-semibold border-2 border-neutral-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-gray-50 transition-colors min-w-[160px] justify-between"
+        >
+          {currentLabel}
+          {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </button>
+
+        {open && (
+          <div className="absolute top-full mt-1.5 left-0 w-48 bg-white rounded-xl shadow-xl border border-neutral-200 z-30 overflow-hidden">
+            {OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => select(opt.value)}
+                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors ${
+                  selectedDuration === opt.value
+                    ? 'bg-blue-600 text-white'
+                    : 'text-neutral-700 hover:bg-blue-50 hover:text-blue-700'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Export CSV */}
+      <button
+        onClick={handleExport}
+        disabled={!profitLoss?.monthlyBreakdown?.length}
+        className="px-4 py-2 flex justify-center items-center gap-2 font-bold bg-[#0080FF] text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        Export <Download size={18} />
+      </button>
+    </div>
+  );
+}

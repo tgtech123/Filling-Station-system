@@ -1,26 +1,17 @@
-// components/Table.js
-  'use client'
-import React, { useState } from "react";
+'use client'
+import React from "react";
+import { CheckCircle2 } from "lucide-react";
 
-const Table = ({ columns, data }) => {
-  const [rows, setRows] = useState(data);
-
-  // toggle isPaid value
-  const handleToggle = (index) => {
-    const updated = [...rows];
-    updated[index].isPaid = !updated[index].isPaid;
-    setRows(updated);
-  };
-
+const TableTwo = ({ columns, data, onMarkPaid, markingPaid }) => {
   return (
-    <div className="overflow-x-auto rounded-tl-xl mt-3">
+    <div className="overflow-x-auto rounded-xl mt-3">
       <table className="min-w-full border border-neutral-200 rounded-xl">
         <thead className="bg-neutral-100 text-left">
           <tr>
             {columns.map((col) => (
               <th
                 key={col.accessor}
-                className="px-4 py-4 text-sm font-semibold text-neutral-700 border-b"
+                className="px-4 py-3.5 text-xs font-semibold text-neutral-600 uppercase tracking-wide border-b"
               >
                 {col.header}
               </th>
@@ -29,30 +20,28 @@ const Table = ({ columns, data }) => {
         </thead>
 
         <tbody>
-          {rows.map((row, rowIndex) => (
-            <tr key={rowIndex} className="hover:bg-neutral-50">
+          {data.map((row, rowIndex) => (
+            <tr key={rowIndex} className="hover:bg-neutral-50 transition-colors">
               {columns.map((col) => (
                 <td
                   key={col.accessor}
-                  className="px-3 py-4 text-sm text-neutral-600 border-b-[1px] border-gray-100"
+                  className="px-4 py-3.5 text-sm text-neutral-600 border-b border-gray-100"
                 >
-                  {/* Special rendering for action column */}
                   {col.accessor === "isPaid" ? (
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={` mt-2 ${
-                          row.isPaid ? "text-neutral-600 font-medium text-md bottom-2 " : "text-neutral-600 font-medium text-md"
-                        }`}
-                      >
-                        {row.isPaid ? "Paid" : "Pay"}
-                        <input
-                          type="checkbox"
-                          checked={row.isPaid}
-                          onChange={() => handleToggle(rowIndex)}
-                          className="cursor-pointer ml-2 top-[-10px] w-4 h-4  "
-                        />
+                    row.isPaid ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 px-2.5 py-1 rounded-full border border-green-200">
+                        <CheckCircle2 size={12} />
+                        Paid
                       </span>
-                    </div>
+                    ) : (
+                      <button
+                        onClick={() => onMarkPaid && onMarkPaid(row._id, row.staffName)}
+                        disabled={markingPaid}
+                        className="text-xs font-semibold px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {markingPaid ? "Saving…" : "Mark as Paid"}
+                      </button>
+                    )
                   ) : (
                     row[col.accessor]
                   )}
@@ -66,4 +55,4 @@ const Table = ({ columns, data }) => {
   );
 };
 
-export default Table;
+export default TableTwo;

@@ -15,7 +15,7 @@ export default function Expenses() {
 
     return (
         <DashboardLayout>
-            <div>
+            <div className="w-full overflow-x-hidden">
                 <div className="mb-6">
                     <h1 className="text-xl sm:text-lg lg:text-xl text-neutral-700 font-bold mb-2">
                         Reports
@@ -28,19 +28,19 @@ export default function Expenses() {
                 </div>
 
                 <div className="bg-white rounded-xl p-5">
-                    <div className="flex justify-between">
-                        <span className="text-[#525252] flex flex-col gap-2">
+                    <div className="flex items-start justify-between gap-3 flex-wrap">
+                        <div className="text-[#525252] flex flex-col gap-1 min-w-0">
                             <h1 className="text-xl font-bold">Expenses</h1>
-                            <p>Approve, record and export all expense logs and report</p>
-                        </span>
+                            <p className="text-sm text-gray-500">Approve, record and export all expense logs and report</p>
+                        </div>
 
-                        <span >
-                            <button onClick={handleOpen} className="border-[1.5px] font-bold cursor-pointer text-neutral-800 border-neutral-300 rounded-xl px-4 py-2 flex gap-2 ">
-                               <span className="hidden lg:inline"> Add expense</span>
-                                <GoPlus size={27} />
+                        <div className="shrink-0">
+                            <button onClick={handleOpen} className="border-[1.5px] font-bold cursor-pointer text-neutral-800 border-neutral-300 rounded-xl px-4 py-2 flex items-center gap-2">
+                               <span className="hidden sm:inline">Add expense</span>
+                                <GoPlus size={24} />
                             </button>
                             <AddExpenseModal isOpen={isModalOpen} onClose={handleClose}/>
-                        </span>
+                        </div>
                     </div>
                     
                         {/* the cards section */}
