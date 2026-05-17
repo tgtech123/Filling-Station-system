@@ -56,7 +56,7 @@
 //         </div>
 //       </div>
 
-//       <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+//       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
 //         <div className="border-t-1 pt-4 border-[#e7e7e7]">
 //           <h4 className="font-medium mt-4 lg:mt-0">
 //             Quarter sales performance
@@ -163,8 +163,8 @@ export default function StaffPerformanceCard({
         </div>
       )}
 
-      <div className="1 flex flex-col lg:flex-row justify-between items-center">
-        <div className="flex flex-col lg:flex-row gap-2 items-center lg:items-start">
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 items-center sm:items-start">
           <img 
             src={imageError ? "/default-avatar.png" : imgName}
             alt={name}
@@ -172,27 +172,18 @@ export default function StaffPerformanceCard({
             onError={() => setImageError(true)}
           />
           <div>
-            <h4 className="font-medium text-lg text-center lg:text-left">
-              {name}
-            </h4>
-            <p className="text-[16px] text-gray-500 text-center lg:text-left">
-              {role}
-            </p>
-
-            <div className="mt-3">
-              <h5 className="text-sm text-gray-500 text-center lg:text-left">
-                Completed shifts
-              </h5>
-              <p className="font-semibold text-center lg:text-left">
-                {completedShifts}
-              </p>
+            <h4 className="font-medium text-lg text-center sm:text-left">{name}</h4>
+            <p className="text-sm text-gray-500 text-center sm:text-left">{role}</p>
+            <div className="mt-2">
+              <h5 className="text-xs text-gray-500 text-center sm:text-left">Completed shifts</h5>
+              <p className="font-semibold text-center sm:text-left">{completedShifts}</p>
             </div>
           </div>
         </div>
 
-        <div className="w-full lg:w-auto">
-          <p className="mt-3 lg:mt-0 text-xs font-medium">Sales target</p>
-          <div className="my-2 min-w-[200px] lg:min-w-[150px] w-full h-4 bg-gray-200 rounded-full relative overflow-hidden">
+        <div className="w-full sm:w-48 shrink-0">
+          <p className="text-xs font-medium text-gray-600">Sales target</p>
+          <div className="my-2 w-full h-3 bg-gray-200 rounded-full overflow-hidden">
             <div
               className={`h-4 bg-blue-500 rounded-full transition-all duration-500`}
               style={{ width: `${Math.min(parseFloat(targetTrend) || 0, 100)}%` }}
@@ -206,7 +197,7 @@ export default function StaffPerformanceCard({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="border-t-2 pt-4 border-[#e7e7e7]">
           <h4 className="font-medium mt-4 lg:mt-0">
             Quarter sales performance

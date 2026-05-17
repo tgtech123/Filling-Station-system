@@ -206,39 +206,73 @@ export default function ApprovedShiftsPage() {
   }
 
   return (
-    <div className="flex relative flex-col gap-4">
-      {/* 🔍 Search Bar */}
-      <SearchBar
-        searchTerm={searchTerm}
-        onSearch={setSearchTerm}
-        exportData={filteredData}
-        exportColumns={tableColumns}
-        exportVariant="outlined"
-      />
+    <div className="flex flex-col gap-4">
+      {/* Toolbar: search + duration + filter */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex-1 min-w-0">
+          <SearchBar
+            searchTerm={searchTerm}
+            onSearch={setSearchTerm}
+            exportData={filteredData}
+            exportColumns={tableColumns}
+            exportVariant="outlined"
+          />
+        </div>
 
-      <button 
-        onClick={() => setShowDuration(!showDuration)} 
-        className="border-[1.5px] flex font-semibold absolute right-58 gap-3 items-center border-neutral-300 w-fit px-4 py-2 rounded-xl"
-      >
-        {showDuration ? "12/08/2025" : "Duration"}
-        {showDuration ? <HiChevronUp size={22} /> : <HiChevronDown size={22} />}
-      </button>
+        <button
+          onClick={() => setShowDuration(!showDuration)}
+          className="flex items-center gap-2 border border-neutral-300 font-semibold px-3 py-2 rounded-xl text-sm shrink-0"
+        >
+          {showDuration ? "12/08/2025" : "Duration"}
+          {showDuration ? <HiChevronUp size={18} /> : <HiChevronDown size={18} />}
+        </button>
 
-      <div className="flex absolute top-0 right-30 flex-wrap">
         <button
           onClick={() => setIsFilterOpen(true)}
-          className="flex gap-3 items-center border-[1.5px] border-neutral-300 dark:border-gray-600 justify-center px-4 py-2 font-semibold bg-white dark:bg-gray-700 text-neutral-800 dark:text-gray-200 rounded-xl hover:bg-neutral-100 dark:hover:bg-gray-600"
+          className="flex items-center gap-2 border border-neutral-300 dark:border-gray-600 px-3 py-2 font-semibold bg-white dark:bg-gray-700 text-neutral-800 dark:text-gray-200 rounded-xl hover:bg-neutral-50 text-sm shrink-0"
         >
-          Filter <IoFilterOutline />
+          Filter <IoFilterOutline size={16} />
         </button>
       </div>
 
-      {/* 📊 Filtered Table */}
-      <Table
-        columns={tableColumns}
-        data={paginatedData}
-        highlightedColumnIndex={highlightedColumnIndex}
-      />
+      {/* Mobile card list (< sm) */}
+      <div className="sm:hidden space-y-3">
+        {paginatedData.map((row, i) => {
+          const discrepancyVal = getCellText(row[8]);
+          const hasDisc = discrepancyVal && discrepancyVal !== "₦0";
+          return (
+            <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 space-y-2 shadow-sm">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="font-semibold text-gray-800 text-sm">{getCellText(row[1])}</p>
+                  <p className="text-xs text-gray-400">{getCellText(row[0])} · {getCellText(row[2])}</p>
+                </div>
+                <div>{row[10]}</div>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600 pt-2 border-t border-gray-100">
+                <span><span className="text-gray-400">Pump</span> {getCellText(row[3])}</span>
+                <span><span className="text-gray-400">Litres</span> {getCellText(row[4])}</span>
+                <span><span className="text-gray-400">Txns</span> {getCellText(row[5])}</span>
+                <span><span className="text-gray-400">Total</span> <span className="font-semibold text-gray-800">{getCellText(row[6])}</span></span>
+                <span><span className="text-gray-400">Cash</span> {getCellText(row[7])}</span>
+                <span className={hasDisc ? "text-red-600 font-semibold" : ""}>
+                  <span className="text-gray-400 font-normal">Disc.</span> {getCellText(row[8])}
+                </span>
+              </div>
+              <p className="text-xs text-gray-400">Approved by: <span className="text-gray-600 font-medium">{getCellText(row[9])}</span></p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop table (sm+) */}
+      <div className="hidden sm:block">
+        <Table
+          columns={tableColumns}
+          data={paginatedData}
+          highlightedColumnIndex={highlightedColumnIndex}
+        />
+      </div>
 
       {/* 🔢 Pagination */}
       <Pagination

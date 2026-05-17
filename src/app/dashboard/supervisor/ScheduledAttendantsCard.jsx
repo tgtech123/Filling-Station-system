@@ -144,51 +144,48 @@ const ScheduledAttendantsCard = () => {
   })();
 
   return (
-    <div className="bg-white p-4 rounded-2xl w-full">
-      <div className="flex justify-between items-start">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-800">
+    <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl w-full">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        {/* Title block */}
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 leading-tight">
             Scheduled Attendants
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             View attendants meant to be on duty
           </p>
-
-          <div className="flex items-center gap-3 mt-2 text-xs">
-            <span className="flex items-center gap-1 text-green-600">
-              <span className="h-2.5 w-2.5 bg-green-500 rounded-full"></span> Active
+          <div className="flex items-center gap-3 mt-2 text-xs flex-wrap">
+            <span className="flex items-center gap-1.5 text-green-600">
+              <span className="h-2 w-2 bg-green-500 rounded-full shrink-0" /> Active
             </span>
-            <span className="flex items-center gap-1 text-gray-400">
-              <span className="h-2.5 w-2.5 bg-neutral-200 rounded-full"></span> Inactive
+            <span className="flex items-center gap-1.5 text-gray-400">
+              <span className="h-2 w-2 bg-neutral-300 rounded-full shrink-0" /> Inactive
             </span>
-            <span className="flex items-center gap-1 text-red-500">
-              <span className="h-2.5 w-2.5 bg-red-500 rounded-full"></span> Closed
+            <span className="flex items-center gap-1.5 text-red-500">
+              <span className="h-2 w-2 bg-red-500 rounded-full shrink-0" /> Closed
             </span>
           </div>
         </div>
 
-        {/* Tab buttons */}
-        <div className="flex gap-2 items-center justify-between bg-blue-600 rounded-sm p-1 max-w-[9.6875rem] h-[1.8125rem]">
+        {/* Tab toggle */}
+        <div className="flex items-center bg-blue-600 rounded-lg p-1 shrink-0 min-w-[9rem]">
           <button
-            id="tabOne"
-            className={`flex-1 text-[0.65rem] p-1.5 font-bold rounded-[3px] py-[2px] transition-all duration-200 whitespace-nowrap ${
-              activeTab === "tabOne"
-                ? "text-blue-600 bg-white"
-                : "text-white bg-transparent"
-            }`}
             onClick={() => setActiveTab("tabOne")}
+            className={`flex-1 text-xs font-bold px-3 py-1.5 rounded-md transition-all duration-200 whitespace-nowrap ${
+              activeTab === "tabOne"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-white"
+            }`}
           >
             One-Day
           </button>
-
           <button
-            id="tabTwo"
-            className={`flex-1 text-[0.65rem] font-bold p-1.5 rounded-[3px] py-[2px] transition-all duration-200 whitespace-nowrap ${
-              activeTab === "tabTwo"
-                ? "text-blue-600 bg-white"
-                : "text-white bg-transparent"
-            }`}
             onClick={() => setActiveTab("tabTwo")}
+            className={`flex-1 text-xs font-bold px-3 py-1.5 rounded-md transition-all duration-200 whitespace-nowrap ${
+              activeTab === "tabTwo"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-white"
+            }`}
           >
             Day-Off
           </button>

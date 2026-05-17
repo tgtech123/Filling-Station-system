@@ -413,43 +413,39 @@ export default function ScheduleShift() {
       </DisplayCard>
 
       {/* Mid Section */}
-      <div className="my-10 flex flex-col lg:flex-row w-full items-center lg:items-end gap-2">
-        <div className="bg-white w-full lg:w-4/6 flex flex-row gap-2 lg:gap-4 text-sm lg:text-medium py-2 px-4 rounded-[14px] shadow-xs border-2 border-[#e7e7e7]">
-          <div
+      <div className="my-6 flex flex-col sm:flex-row w-full items-stretch gap-3">
+        {/* Tab switcher */}
+        <div className="bg-white flex gap-1 text-sm py-1.5 px-2 rounded-[14px] border-2 border-[#e7e7e7] w-full sm:w-auto">
+          <button
             onClick={() => setActive("linkOne")}
-            id="linkOne"
-            className={`flex items-center px-4 lg:px-24 gap-2 py-2 ${
-              active === "linkOne"
-                ? "bg-[#d9edff] text-[#1a71f6]"
-                : "bg-white text-gray-400"
-            } font-semibold cursor-pointer rounded-[10px]`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-[10px] font-semibold transition-colors ${
+              active === "linkOne" ? "bg-[#d9edff] text-[#1a71f6]" : "text-gray-400 hover:bg-gray-50"
+            }`}
           >
-            <House />
-            Attendant Directory
-          </div>
-          <div
+            <House size={16} />
+            <span>Attendant Directory</span>
+          </button>
+          <button
             onClick={() => setActive("linkTwo")}
-            id="linkTwo"
-            className={`flex items-center rounded-[10px] cursor-pointer px-4 lg:px-24 gap-2 ${
-              active === "linkTwo"
-                ? "bg-[#d9edff] text-[#1a71f6]"
-                : "bg-white text-gray-400"
-            } font-semibold py-2`}
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-[10px] font-semibold transition-colors ${
+              active === "linkTwo" ? "bg-[#d9edff] text-[#1a71f6]" : "text-gray-400 hover:bg-gray-50"
+            }`}
           >
-            <House />
-            Scheduled Attendant
-          </div>
+            <House size={16} />
+            <span>Scheduled</span>
+          </button>
         </div>
 
-        <div className="relative w-full lg:w-2/6">
+        {/* Search */}
+        <div className="relative flex-1">
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search attendants…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="py-3 px-2 w-full rounded-[14px] border-2 border-[#cac8c8] text-gray-400"
+            className="py-2.5 pl-4 pr-10 w-full rounded-[14px] border-2 border-[#cac8c8] text-gray-600 text-sm focus:outline-none focus:border-blue-500"
           />
-          <Search className="text-gray-400 absolute top-3 right-3" />
+          <Search size={18} className="text-gray-400 absolute top-1/2 -translate-y-1/2 right-3" />
         </div>
       </div>
 
