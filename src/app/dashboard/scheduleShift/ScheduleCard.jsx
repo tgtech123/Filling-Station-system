@@ -15,41 +15,44 @@ export default function ScheduleCard({
   salesTarget,
 }) {
   return (
-    <div className="px-2 lg:px-3 py-4 rounded-[10px] bg-white  border-2 border-[#e7e7e7]">
-      {/* first */}
-      <div className="flex justify-between items-start pb-6 border-b-1 border-gray-200">
-        <div className="flex gap-2 items-center">
-          <img src={img} alt="" />
-          <div>
-            <h4 className="font-semibold text-lg">{name}</h4>
-            <p className="text-sm text-gray-500">{role}</p>
+    <div className="px-3 py-4 rounded-[10px] bg-white border-2 border-[#e7e7e7] min-w-0">
+      {/* Header */}
+      <div className="flex justify-between items-start pb-4 border-b border-gray-200 gap-2">
+        <div className="flex gap-2 items-center min-w-0">
+          <img
+            src={img}
+            alt={name}
+            className="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200"
+            onError={(e) => { e.target.src = "/default-avatar.png"; }}
+          />
+          <div className="min-w-0">
+            <h4 className="font-semibold text-base truncate">{name}</h4>
+            <p className="text-xs text-gray-500 truncate">{role}</p>
           </div>
         </div>
 
-        <button
-          className={`p-[6px] rounded-[10px] text-sm ${
-            onDuty
-              ? "bg-[#b2ffb4] text-[#04910c]"
-              : "text-gray-700 bg-[#c1bcbc]"
+        <span
+          className={`shrink-0 px-2 py-1 rounded-lg text-xs font-semibold ${
+            onDuty ? "bg-[#b2ffb4] text-[#04910c]" : "text-gray-600 bg-gray-200"
           }`}
         >
           {onDuty ? "On Duty" : "Off Duty"}
-        </button>
+        </span>
       </div>
 
-      {/* Second */}
-      <div className=" my-4 flex flex-col gap-3 text-sm text-gray-500 font-medium">
-        <div className="flex gap-2">
-          <CircleFadingArrowUp />
-          {shiftSchedule}
+      {/* Details */}
+      <div className="my-3 flex flex-col gap-2 text-sm text-gray-500 font-medium">
+        <div className="flex items-start gap-2 min-w-0">
+          <CircleFadingArrowUp size={16} className="shrink-0 mt-0.5" />
+          <span className="truncate">{shiftSchedule}</span>
         </div>
-        <div className="flex gap-2">
-          <Phone />
-          {phone}
+        <div className="flex items-center gap-2 min-w-0">
+          <Phone size={16} className="shrink-0" />
+          <span className="truncate">{phone}</span>
         </div>
-        <div className="flex gap-2">
-          <Mail />
-          {email}
+        <div className="flex items-center gap-2 min-w-0">
+          <Mail size={16} className="shrink-0" />
+          <span className="truncate text-xs">{email}</span>
         </div>
       </div>
 

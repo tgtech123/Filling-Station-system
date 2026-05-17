@@ -2,11 +2,12 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import { RxTriangleRight } from 'react-icons/rx';
+import Link from 'next/link';
 import {
   FileText, ChevronDown, ChevronUp, Info,
   AlertCircle, TrendingUp, Shield, Receipt,
   Printer, SlidersHorizontal, CheckCircle2, Calendar,
-  Database, Users,
+  Database, Users, ArrowLeft,
 } from 'lucide-react';
 import useAccountantStore from '@/store/useAccountantStore';
 
@@ -176,12 +177,21 @@ export default function TaxReport() {
       <div className="w-full max-w-full overflow-x-hidden px-4 sm:px-6 lg:px-2 pb-16">
 
         {/* Breadcrumb */}
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-neutral-700 mb-1">Reports</h1>
-          <div className="flex flex-wrap items-center gap-1 text-sm">
-            <p className="text-neutral-400 font-medium">Report</p>
-            <RxTriangleRight size={20} className="text-neutral-500" />
-            <p className="text-blue-600 font-semibold">Tax-Ready Report</p>
+        <div className="mb-6 flex items-center gap-3">
+          <Link
+            href="/dashboard/financial-overview"
+            className="flex items-center justify-center w-9 h-9 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-500 hover:text-gray-700 transition-colors shrink-0"
+            title="Back to Financial Overview"
+          >
+            <ArrowLeft size={18} />
+          </Link>
+          <div>
+            <h1 className="text-xl font-bold text-neutral-700 mb-1">Reports</h1>
+            <div className="flex flex-wrap items-center gap-1 text-sm">
+              <p className="text-neutral-400 font-medium">Report</p>
+              <RxTriangleRight size={20} className="text-neutral-500" />
+              <p className="text-blue-600 font-semibold">Tax-Ready Report</p>
+            </div>
           </div>
         </div>
 

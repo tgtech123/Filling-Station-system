@@ -152,7 +152,7 @@ export default function TankCard({
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4 mt-4">
-        <div className="flex w-full lg:w-3/6 flex-col lg:flex-row items-stretch lg:items-end gap-4 border-2 px-4 py-3 rounded-[12px] border-[#e7e7e7] relative">
+        <div className="flex w-full lg:w-3/6 flex-col sm:flex-row items-stretch sm:items-end gap-4 border-2 px-4 py-3 rounded-[12px] border-[#e7e7e7] relative">
           {/* System Reading */}
           <div className="flex-1">
             <p className="text-sm font-semibold mb-2">System Reading</p>
@@ -179,7 +179,7 @@ export default function TankCard({
           <button
             onClick={handleUpdate}
             disabled={isSubmitting || !manualReading}
-            className={`self-center w-full lg:w-fit lg:self-end py-3 px-5 text-white text-sm font-semibold rounded-[12px] transition-colors flex items-center justify-center gap-2 ${
+            className={`w-full sm:w-fit sm:self-end py-3 px-5 text-white text-sm font-semibold rounded-[12px] transition-colors flex items-center justify-center gap-2 ${
               isSubmitting || !manualReading
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-[#0080ff] hover:bg-[#004cff] cursor-pointer"
@@ -189,8 +189,8 @@ export default function TankCard({
             {isSubmitting ? "Submitting..." : "Update"}
           </button>
         </div>
-        {/* Arrow (only visible on large screens) */}
-        <div className="w-full lg:w-1/6 flex justify-center items-center">
+        {/* Arrow — hidden on mobile */}
+        <div className="hidden lg:flex w-1/6 justify-center items-center">
           <ArrowRightLeft />
         </div>
         {/* Comparison */}

@@ -63,19 +63,19 @@ const Dashboard = () => {
       <div>
         <h1 className="font-bold text-lg">Welcome, {fullName}</h1>
         <div className="bg-white rounded-2xl p-5 mt-[1.5rem]">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
             <div>
-              <h1 className="font-semibold text-[1.5rem] text-neutral-800 leading-[100%]">Dashboard</h1>
-              <p className="text-[1.125rem] mt-[0.75rem]">Real-time monitoring and quick statistics</p>
+              <h1 className="font-semibold text-xl sm:text-2xl text-neutral-800">Dashboard</h1>
+              <p className="text-sm sm:text-base text-gray-500 mt-1">Real-time monitoring and quick statistics</p>
             </div>
             <button
               onClick={() => fetchDashboard()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+              className="shrink-0 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 text-sm"
             >
               ↻ Retry
             </button>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {statCardsData.map((item, index) => (
               <MyStatCard key={index} title={item.title} date={item.date} amount={item.amount} change={item.change} changeText={item.changeText} icon={item.icon} />
             ))}
@@ -91,28 +91,22 @@ const Dashboard = () => {
       <h1 className="font-bold text-lg">Welcome, {fullName}</h1>
 
       <div className="bg-white rounded-2xl p-5 mt-[1.5rem]">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
           <div>
-            <h1 className="font-semibold text-[1.5rem] text-neutral-800 leading-[100%]">
-              Dashboard
-            </h1>
-            <p className="text-[1.125rem] mt-[0.75rem]">
-              Real-time monitoring and quick statistics
-            </p>
+            <h1 className="font-semibold text-xl sm:text-2xl text-neutral-800">Dashboard</h1>
+            <p className="text-sm sm:text-base text-gray-500 mt-1">Real-time monitoring and quick statistics</p>
           </div>
-          
-          {/* Refresh button */}
           <button
             onClick={() => fetchDashboard()}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="shrink-0 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
           >
             <span className={loading ? "animate-spin" : ""}>↻</span>
             Refresh
           </button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statCardsData.map((item, index) => (
             <MyStatCard
               key={index}

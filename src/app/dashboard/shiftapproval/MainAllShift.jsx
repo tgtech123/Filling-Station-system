@@ -89,7 +89,7 @@ export default function ShiftApprovalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 p-4">
+    <div className="bg-gray-100 dark:bg-gray-950">
       <ShiftApprovalHeader
         activeTab={activeTab}
         onTabChange={setActiveTab}
@@ -125,7 +125,7 @@ export default function ShiftApprovalPage() {
         </div>
       )}
 
-      <div className="mx-auto p-4 bg-white dark:bg-gray-800 rounded-xl">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4">
         {activeTab === "pending" ? (
           <>
             {/* Loading State */}
