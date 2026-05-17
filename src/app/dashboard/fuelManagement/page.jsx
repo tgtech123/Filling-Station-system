@@ -91,26 +91,63 @@ export default function FuelManagement() {
           ) : errors.fuelManagement ? (
             <p className="text-red-500">{errors.fuelManagement}</p>
           ) : (
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-              <FlashCard
-                name="Daily Consumption"
-                icon={<GiExpense />}
-                period="Across all fuel types"
-                number={`${fuelData?.dailyConsumption?.toLocaleString() || "0"} Litres`}
-              />
-              <FlashCard
-                name="Weekly Average Consumption"
-                icon={<TrendingUp />}
-                period="Across all fuel types"
-                number={`${fuelData?.weeklyAverageConsumption?.toLocaleString() || "0"} Litres`}
-              />
-              <FlashCard
-                name="Total Capacity Available"
-                icon={<GiFuelTank />}
-                period="In all tanks"
-                number={`${fuelData?.totalCapacityAvailable?.toLocaleString() || "0"} Litres`}
-              />
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-2">
+                <FlashCard
+                  name="Daily Consumption"
+                  icon={<GiExpense />}
+                  period="Across all fuel types"
+                  number={`${fuelData?.dailyConsumption?.toLocaleString() || "0"} Litres`}
+                />
+                <FlashCard
+                  name="Weekly Average Consumption"
+                  icon={<TrendingUp />}
+                  period="Across all fuel types"
+                  number={`${fuelData?.weeklyAverageConsumption?.toLocaleString() || "0"} Litres`}
+                />
+              </div>
+
+              {/* Per-fuel-type inventory breakdown */}
+              <div className="mt-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <GiFuelTank className="text-gray-500" size={20} />
+                  <h5 className="font-semibold text-gray-700">Current Inventory by Fuel Type</h5>
+                  <span className="text-xs text-gray-400 font-medium">
+                    — Total: {fuelData?.totalCapacityAvailable?.toLocaleString() || "0"} Litres
+                  </span>
+                </div>
+                {fuelData?.capacityByFuelType?.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {fuelData.capacityByFuelType.map(({ fuelType, currentQuantity }) => {
+                      const colors = {
+                        PMS:      { bg: "bg-purple-50",  border: "border-purple-200", text: "text-purple-700",  dot: "bg-purple-500"  },
+                        AGO:      { bg: "bg-blue-50",    border: "border-blue-200",   text: "text-blue-700",    dot: "bg-blue-500"    },
+                        Diesel:   { bg: "bg-orange-50",  border: "border-orange-200", text: "text-orange-700",  dot: "bg-orange-500"  },
+                        DPK:      { bg: "bg-green-50",   border: "border-green-200",  text: "text-green-700",   dot: "bg-green-500"   },
+                        Kerosene: { bg: "bg-green-50",   border: "border-green-200",  text: "text-green-700",   dot: "bg-green-500"   },
+                        LPG:      { bg: "bg-red-50",     border: "border-red-200",    text: "text-red-700",     dot: "bg-red-500"     },
+                        Gas:      { bg: "bg-red-50",     border: "border-red-200",    text: "text-red-700",     dot: "bg-red-500"     },
+                      };
+                      const c = colors[fuelType] || { bg: "bg-gray-50", border: "border-gray-200", text: "text-gray-700", dot: "bg-gray-500" };
+                      return (
+                        <div key={fuelType} className={`${c.bg} ${c.border} border rounded-2xl p-4`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${c.dot}`} />
+                            <p className={`text-xs font-bold uppercase tracking-wide ${c.text}`}>{fuelType}</p>
+                          </div>
+                          <p className="text-2xl font-bold text-gray-800">
+                            {currentQuantity?.toLocaleString() || "0"}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">Litres available</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400">No tank data available.</p>
+                )}
+              </div>
+            </>
           )}
         </DisplayCard>
       </div>
