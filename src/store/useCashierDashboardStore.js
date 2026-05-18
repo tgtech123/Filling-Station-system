@@ -3,6 +3,18 @@
 import { create } from 'zustand';
 import { api } from '@/lib/config';
 
+// Module-level cache — survives component re-mounts, prevents 429 / crash-overlay
+const _cache = {
+  dashboard:       { data: null, ts: 0 },
+  weeklyLubricant: { data: null, ts: 0 },
+  dailyLubricant:  { data: null, ts: 0 },
+  monthlyLubricant:{ data: null, ts: 0 },
+  lubricantTxns:   { data: null, ts: 0 },
+  dailySales:      { data: null, ts: 0, key: '' },
+};
+const TTL = { dashboard: 2 * 60_000, lubricant: 5 * 60_000, sales: 60_000 };
+const isFresh = (slot, ttl) => slot.data !== null && Date.now() - slot.ts < ttl;
+
 // Zustand store for Cashier Dashboard
 export const useCashierDashboardStore = create((set, get) => ({
   // State
@@ -34,168 +46,139 @@ export const useCashierDashboardStore = create((set, get) => ({
 
   // Fetch cashier dashboard data
   fetchDashboard: async ({ silent = false } = {}) => {
-    if (!silent) {
-      set({ isLoading: true, error: null });
+    if (isFresh(_cache.dashboard, TTL.dashboard)) {
+      set({ dashboardData: _cache.dashboard.data, isLoading: false });
+      return { success: true, data: _cache.dashboard.data };
     }
+    if (!silent) set({ isLoading: true, error: null });
 
     try {
       const response = await api.get('/api/cashier/dashboard');
-
-      set({
-        dashboardData: response.data.data,
-        isLoading: false,
-        error: null,
-      });
-
+      _cache.dashboard = { data: response.data.data, ts: Date.now() };
+      set({ dashboardData: response.data.data, isLoading: false, error: null });
       return { success: true, data: response.data.data };
     } catch (error) {
       const errorMessage = error.response?.data?.error ||
                           error.response?.data?.message ||
                           error.message ||
                           'Failed to fetch dashboard data';
-      set({
-        isLoading: false,
-        ...(silent ? {} : { error: errorMessage }),
-      });
-      console.error('Error fetching cashier dashboard:', error);
+      set({ isLoading: false, ...(silent ? {} : { error: errorMessage }) });
       return { success: false, error: errorMessage };
     }
   },
 
   // 🆕 NEW: Fetch weekly lubricant summary (calendar week: Mon-Sun)
   fetchWeeklyLubricantSummary: async () => {
+    if (isFresh(_cache.weeklyLubricant, TTL.lubricant)) {
+      set({ weeklyLubricantSummary: _cache.weeklyLubricant.data, isLoading: false });
+      return { success: true, data: _cache.weeklyLubricant.data };
+    }
     set({ isLoading: true, error: null });
-    
+
     try {
       const response = await api.get('/api/lubricant/weekly-summary');
-
-      set({
-        weeklyLubricantSummary: {
-          data: response.data.data || [],
-          topThree: response.data.topThree || [],
-          period: response.data.period,
-          totalLubricants: response.data.totalLubricants || 0,
-        },
-        isLoading: false,
-        error: null,
-      });
-
-      return { 
-        success: true, 
-        data: response.data 
+      const data = {
+        data: response.data.data || [],
+        topThree: response.data.topThree || [],
+        period: response.data.period,
+        totalLubricants: response.data.totalLubricants || 0,
       };
+      _cache.weeklyLubricant = { data, ts: Date.now() };
+      set({ weeklyLubricantSummary: data, isLoading: false, error: null });
+      return { success: true, data: response.data };
     } catch (error) {
-      console.error('❌ Error fetching weekly lubricant summary:', error);
-      
-      const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
-                          error.message || 
+      const errorMessage = error.response?.data?.error ||
+                          error.response?.data?.message ||
+                          error.message ||
                           'Failed to fetch weekly lubricant summary';
-      set({
-        isLoading: false,
-        error: errorMessage,
-      });
+      set({ isLoading: false, error: errorMessage });
       return { success: false, error: errorMessage };
     }
   },
 
   // 🆕 NEW: Fetch daily lubricant summary
   fetchDailyLubricantSummary: async () => {
+    if (isFresh(_cache.dailyLubricant, TTL.dashboard)) {
+      set({ dailyLubricantSummary: _cache.dailyLubricant.data, isLoading: false });
+      return { success: true, data: _cache.dailyLubricant.data };
+    }
     set({ isLoading: true, error: null });
-    
+
     try {
       const response = await api.get('/api/lubricant/daily-summary');
-
-
-      set({
-        dailyLubricantSummary: response.data.summary,
-        isLoading: false,
-        error: null,
-      });
-
+      _cache.dailyLubricant = { data: response.data.summary, ts: Date.now() };
+      set({ dailyLubricantSummary: response.data.summary, isLoading: false, error: null });
       return { success: true, data: response.data };
     } catch (error) {
-      const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
-                          error.message || 
+      const errorMessage = error.response?.data?.error ||
+                          error.response?.data?.message ||
+                          error.message ||
                           'Failed to fetch daily lubricant summary';
-      set({
-        isLoading: false,
-        error: errorMessage,
-      });
-      console.error('Error fetching daily lubricant summary:', error);
+      set({ isLoading: false, error: errorMessage });
       return { success: false, error: errorMessage };
     }
   },
 
   // 🆕 NEW: Fetch monthly lubricant summary
   fetchMonthlyLubricantSummary: async () => {
+    if (isFresh(_cache.monthlyLubricant, TTL.lubricant)) {
+      set({ monthlyLubricantSummary: _cache.monthlyLubricant.data, isLoading: false });
+      return { success: true, data: _cache.monthlyLubricant.data };
+    }
     set({ isLoading: true, error: null });
-    
+
     try {
       const response = await api.get('/api/lubricant/monthly-summary');
-
-
-      set({
-        monthlyLubricantSummary: {
-          data: response.data.data || [],
-          topThree: response.data.topThree || [],
-          period: response.data.period,
-          summary: response.data.summary,
-        },
-        isLoading: false,
-        error: null,
-      });
-
+      const data = {
+        data: response.data.data || [],
+        topThree: response.data.topThree || [],
+        period: response.data.period,
+        summary: response.data.summary,
+      };
+      _cache.monthlyLubricant = { data, ts: Date.now() };
+      set({ monthlyLubricantSummary: data, isLoading: false, error: null });
       return { success: true, data: response.data };
     } catch (error) {
-      const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
-                          error.message || 
+      const errorMessage = error.response?.data?.error ||
+                          error.response?.data?.message ||
+                          error.message ||
                           'Failed to fetch monthly lubricant summary';
-      set({
-        isLoading: false,
-        error: errorMessage,
-      });
-      console.error('Error fetching monthly lubricant summary:', error);
+      set({ isLoading: false, error: errorMessage });
       return { success: false, error: errorMessage };
     }
   },
 
   // 🆕 NEW: Fetch all lubricant transactions
   fetchLubricantTransactions: async () => {
+    if (isFresh(_cache.lubricantTxns, TTL.dashboard)) {
+      set({ lubricantTransactions: _cache.lubricantTxns.data, isLoading: false });
+      return { success: true, data: _cache.lubricantTxns.data };
+    }
     set({ isLoading: true, error: null });
-    
+
     try {
       const response = await api.get('/api/lubricant/transactions');
-
-      set({
-        lubricantTransactions: response.data.data || [],
-        isLoading: false,
-        error: null,
-      });
-
-      return { 
-        success: true, 
-        data: response.data.data,
-        total: response.data.total
-      };
+      const data = response.data.data || [];
+      _cache.lubricantTxns = { data, ts: Date.now() };
+      set({ lubricantTransactions: data, isLoading: false, error: null });
+      return { success: true, data, total: response.data.total };
     } catch (error) {
-      const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
-                          error.message || 
+      const errorMessage = error.response?.data?.error ||
+                          error.response?.data?.message ||
+                          error.message ||
                           'Failed to fetch lubricant transactions';
-      set({
-        isLoading: false,
-        error: errorMessage,
-      });
-      console.error('Error fetching lubricant transactions:', error);
+      set({ isLoading: false, error: errorMessage });
       return { success: false, error: errorMessage };
     }
   },
 
   // Fetch daily attendant sales for reconciliation
   fetchDailySales: async (filters = {}, { silent = false } = {}) => {
+    const cacheKey = JSON.stringify(filters);
+    if (isFresh(_cache.dailySales, TTL.sales) && _cache.dailySales.key === cacheKey) {
+      set({ dailySales: _cache.dailySales.data, isLoading: false, isBackgroundRefreshing: false });
+      return { success: true, data: _cache.dailySales.data };
+    }
     if (silent) {
       set({ isBackgroundRefreshing: true });
     } else {
@@ -213,31 +196,16 @@ export const useCashierDashboardStore = create((set, get) => ({
           status: filters.status,
         },
       });
-
-      set({
-        dailySales: response.data.data || [],
-        isLoading: false,
-        isBackgroundRefreshing: false,
-        error: null,
-      });
-
-      return {
-        success: true,
-        data: response.data.data,
-        pagination: response.data.pagination,
-      };
+      const data = response.data.data || [];
+      _cache.dailySales = { data, ts: Date.now(), key: cacheKey };
+      set({ dailySales: data, isLoading: false, isBackgroundRefreshing: false, error: null });
+      return { success: true, data, pagination: response.data.pagination };
     } catch (error) {
-      console.error('❌ API ERROR:', error);
-
       const errorMessage = error.response?.data?.error ||
                           error.response?.data?.message ||
                           error.message ||
                           'Failed to fetch daily sales';
-      set({
-        isLoading: false,
-        isBackgroundRefreshing: false,
-        ...(silent ? {} : { error: errorMessage }),
-      });
+      set({ isLoading: false, isBackgroundRefreshing: false, ...(silent ? {} : { error: errorMessage }) });
       return { success: false, error: errorMessage };
     }
   },
@@ -313,7 +281,7 @@ export const useCashierDashboardStore = create((set, get) => ({
   // Reconcile cash for a shift
   reconcileCash: async (shiftId, cashReceived, notes = '') => {
     set({ isLoading: true, error: null });
-    
+
     try {
       const response = await api.post('/api/reconcile', {
         shiftId,
@@ -321,6 +289,7 @@ export const useCashierDashboardStore = create((set, get) => ({
         notes,
       });
 
+      _cache.dailySales.ts = 0; // bust cache so refetch is fresh
       get().fetchDailySales();
       get().fetchReconciliationReport();
 
@@ -347,13 +316,14 @@ export const useCashierDashboardStore = create((set, get) => ({
   // Update existing reconciliation
   updateReconciliation: async (reconciliationId, cashReceived, notes = '') => {
     set({ isLoading: true, error: null });
-    
+
     try {
       const response = await api.put(`/api/reconcile/${reconciliationId}`, {
         cashReceived,
         notes,
       });
 
+      _cache.dailySales.ts = 0;
       get().fetchDailySales();
       get().fetchReconciliationReport();
 
@@ -380,10 +350,11 @@ export const useCashierDashboardStore = create((set, get) => ({
   // Delete reconciliation
   deleteReconciliation: async (reconciliationId) => {
     set({ isLoading: true, error: null });
-    
+
     try {
       await api.delete(`/api/reconcile/${reconciliationId}`);
 
+      _cache.dailySales.ts = 0;
       get().fetchDailySales();
       get().fetchReconciliationReport();
 

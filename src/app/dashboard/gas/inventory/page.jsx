@@ -1,0 +1,746 @@
+"use client";
+import { useState, useEffect } from "react";
+import DashboardLayout from "@/components/Dashboard/DashboardLayout";
+import {
+  Flame, Package, TrendingDown, TrendingUp, AlertTriangle, Loader2,
+  Plus, Pencil, X, Check, Zap, Database, ChevronDown, ChevronUp, Gift,
+} from "lucide-react";
+import useGasStore from "@/store/useGasStore";
+
+function fmt(n) {
+  return Number(n || 0).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function pct(current, capacity) {
+  if (!capacity || capacity <= 0) return 0;
+  return Math.min(100, Math.round((current / capacity) * 100));
+}
+
+function TankGauge({ tank, onEdit }) {
+  const level   = pct(tank.currentStockKg, tank.capacityKg);
+  const isLow   = level < 20;
+  const isCrit  = level < 10;
+  const isEmpty = tank.currentStockKg <= 0;
+
+  const barColor  = isCrit ? "bg-red-500" : isLow ? "bg-amber-500" : "bg-emerald-500";
+  const ringColor = isCrit ? "ring-red-200"   : isLow ? "ring-amber-200"  : "ring-emerald-100";
+  const badge     = isCrit ? { label: "Critical", cls: "bg-red-100 text-red-700 border-red-200" }
+                  : isLow  ? { label: "Low",      cls: "bg-amber-100 text-amber-700 border-amber-200" }
+                  : isEmpty? { label: "Empty",     cls: "bg-gray-100 text-gray-500 border-gray-200" }
+                  :          { label: "OK",        cls: "bg-emerald-100 text-emerald-700 border-emerald-200" };
+
+  return (
+    <div className={`bg-white rounded-2xl p-5 shadow-sm border ring-2 ${ringColor} ${!tank.isActive ? "opacity-50" : ""}`}>
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-bold text-gray-800 truncate">{tank.name}</h3>
+            {!tank.isActive && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200">Inactive</span>
+            )}
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${badge.cls}`}>{badge.label}</span>
+          </div>
+          <p className="text-xs text-gray-400 mt-0.5">Capacity: {tank.capacityKg.toLocaleString()} kg</p>
+        </div>
+        {onEdit && (
+          <button onClick={() => onEdit(tank)}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-orange-500 hover:bg-orange-50 transition-colors ml-2 shrink-0">
+            <Pencil size={14} />
+          </button>
+        )}
+      </div>
+
+      {/* Gauge bar */}
+      <div className="h-5 bg-gray-100 rounded-full overflow-hidden relative mb-3">
+        <div className={`h-full rounded-full transition-all duration-700 ${barColor}`} style={{ width: `${level}%` }} />
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-bold text-gray-600">{level}%</span>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="text-center">
+          <p className="text-[10px] text-gray-400 mb-0.5">Current</p>
+          <p className="font-bold text-gray-800 text-sm">{tank.currentStockKg.toFixed(1)} kg</p>
+        </div>
+        <div className="text-center border-x border-gray-100">
+          <p className="text-[10px] text-gray-400 mb-0.5">Procured</p>
+          <p className="font-bold text-blue-600 text-sm">{(tank.totalProcuredKg || 0).toFixed(1)} kg</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[10px] text-gray-400 mb-0.5">Sold</p>
+          <p className="font-bold text-orange-500 text-sm">{(tank.totalSoldKg || 0).toFixed(1)} kg</p>
+        </div>
+      </div>
+
+      {(isLow || isCrit) && (
+        <div className={`mt-3 flex gap-2 items-start p-2.5 rounded-xl border ${badge.cls}`}>
+          <AlertTriangle size={13} className="shrink-0 mt-0.5" />
+          <p className="text-[11px] font-medium">
+            {isCrit ? `CRITICAL: "${tank.name}" is nearly empty. Place a procurement order now.`
+                    : `Low stock in "${tank.name}". Consider ordering soon.`}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PumpCard({ pump, onEdit }) {
+  const tank = pump.tank;
+  const level = tank ? pct(tank.currentStockKg, tank.capacityKg) : 0;
+  const barColor = level < 10 ? "bg-red-400" : level < 20 ? "bg-amber-400" : "bg-emerald-400";
+
+  return (
+    <div className={`bg-white rounded-2xl p-4 shadow-sm border border-gray-100 ${!pump.isActive ? "opacity-50" : ""}`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
+            <Zap size={14} className="text-white" />
+          </div>
+          <div>
+            <p className="font-bold text-gray-800 text-sm">{pump.name}</p>
+            <p className="text-[10px] text-gray-400">
+              {!pump.isActive ? "Inactive" : "Active"}
+            </p>
+          </div>
+        </div>
+        {onEdit && (
+          <button onClick={() => onEdit(pump)}
+            className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors">
+            <Pencil size={13} />
+          </button>
+        )}
+      </div>
+
+      {tank ? (
+        <div className="bg-gray-50 rounded-xl p-2.5 mt-2">
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-[11px] font-semibold text-gray-600">{tank.name}</p>
+            <span className="text-[11px] font-bold text-gray-500">{level}%</span>
+          </div>
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${level}%` }} />
+          </div>
+          <p className="text-[10px] text-gray-400 mt-1">{tank.currentStockKg?.toFixed(1)} / {tank.capacityKg?.toLocaleString()} kg</p>
+        </div>
+      ) : (
+        <p className="text-xs text-gray-400 mt-2">No tank linked</p>
+      )}
+    </div>
+  );
+}
+
+function Modal({ title, onClose, children }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h3 className="font-bold text-gray-800">{title}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"><X size={16} /></button>
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+export default function GasInventoryPage() {
+  const {
+    inventory, tanks, pumps,
+    loyaltyConfig, loading, errors,
+    fetchInventory, fetchTanks, fetchPumps,
+    fetchLoyaltyConfig, updateLoyaltyConfig,
+    addTank, updateTank, addPump, updatePump,
+  } = useGasStore();
+
+  const [userRole,     setUserRole]     = useState("attendant");
+  const [activeTab,    setActiveTab]    = useState("tanks");
+  const [tankModal,    setTankModal]    = useState(null);   // null | "add" | tank object
+  const [pumpModal,    setPumpModal]    = useState(null);
+  const [tankForm,     setTankForm]     = useState({ name: "", capacityKg: "", notes: "", isActive: true });
+  const [pumpForm,     setPumpForm]     = useState({ name: "", tankId: "", notes: "", isActive: true });
+  const [saving,       setSaving]       = useState(false);
+  const [formError,    setFormError]    = useState(null);
+  const [showInactive, setShowInactive] = useState(false);
+  // Loyalty config editing
+  const [loyaltyForm,  setLoyaltyForm]  = useState({ pointsPerK: 10, minRedeem: 500, nairaPerPoint: 1 });
+  const [loyaltySaving,setLoyaltySaving]= useState(false);
+  const [loyaltyError, setLoyaltyError] = useState(null);
+  const [loyaltyOK,    setLoyaltyOK]    = useState(false);
+
+  useEffect(() => {
+    try { setUserRole(JSON.parse(localStorage.getItem("user") || "{}").role || "attendant"); } catch {}
+    fetchInventory();
+    fetchLoyaltyConfig();
+  }, []);
+
+  // Sync form when config loads
+  useEffect(() => {
+    if (loyaltyConfig) {
+      setLoyaltyForm({
+        pointsPerK:    loyaltyConfig.pointsPerK    ?? 10,
+        minRedeem:     loyaltyConfig.minRedeem     ?? 500,
+        nairaPerPoint: loyaltyConfig.nairaPerPoint ?? 1,
+      });
+    }
+  }, [loyaltyConfig]);
+
+  const isManager = ["manager", "admin"].includes(userRole);
+
+  const inv          = inventory || {};
+  const activeTanks  = tanks.filter(t => t.isActive);
+  const displayTanks = showInactive ? tanks : activeTanks;
+  const displayPumps = showInactive ? pumps : pumps.filter(p => p.isActive);
+  const allCritical  = activeTanks.filter(t => t.currentStockKg < t.capacityKg * 0.1).length;
+  const allLow       = activeTanks.filter(t => t.currentStockKg < t.capacityKg * 0.2).length;
+
+  // ─── Loyalty save ─────────────────────────────────────────────────────────
+
+  const saveLoyaltyConfig = async () => {
+    setLoyaltyError(null);
+    const pK  = Number(loyaltyForm.pointsPerK);
+    const mr  = Number(loyaltyForm.minRedeem);
+    const npp = Number(loyaltyForm.nairaPerPoint);
+    if (isNaN(pK)  || pK  < 1)    return setLoyaltyError("Points per ₦1,000 must be at least 1");
+    if (isNaN(mr)  || mr  < 1)    return setLoyaltyError("Minimum redeem points must be at least 1");
+    if (isNaN(npp) || npp < 0.01) return setLoyaltyError("₦ value per point must be at least 0.01");
+    setLoyaltySaving(true);
+    const result = await updateLoyaltyConfig({ pointsPerK: pK, minRedeem: mr, nairaPerPoint: npp });
+    setLoyaltySaving(false);
+    if (result.success) {
+      setLoyaltyOK(true);
+      setTimeout(() => setLoyaltyOK(false), 3000);
+    } else {
+      setLoyaltyError(result.error);
+    }
+  };
+
+  // ─── Tank modal ────────────────────────────────────────────────────────────
+
+  const openAddTank = () => {
+    setTankForm({ name: "", capacityKg: "", notes: "", isActive: true });
+    setFormError(null);
+    setTankModal("add");
+  };
+
+  const openEditTank = (tank) => {
+    setTankForm({ name: tank.name, capacityKg: tank.capacityKg, notes: tank.notes || "", isActive: tank.isActive });
+    setFormError(null);
+    setTankModal(tank);
+  };
+
+  const saveTank = async () => {
+    setFormError(null);
+    if (!tankForm.name.trim() || !tankForm.capacityKg || isNaN(Number(tankForm.capacityKg))) {
+      return setFormError("Tank name and capacity (kg) are required");
+    }
+    setSaving(true);
+    const payload = { name: tankForm.name.trim(), capacityKg: Number(tankForm.capacityKg), notes: tankForm.notes, isActive: tankForm.isActive };
+    const result  = tankModal === "add"
+      ? await addTank(payload)
+      : await updateTank(tankModal._id, payload);
+    setSaving(false);
+    if (result.success) { setTankModal(null); fetchInventory(); }
+    else setFormError(result.error);
+  };
+
+  // ─── Pump modal ────────────────────────────────────────────────────────────
+
+  const openAddPump = () => {
+    setPumpForm({ name: "", tankId: activeTanks[0]?._id || "", notes: "", isActive: true });
+    setFormError(null);
+    setPumpModal("add");
+  };
+
+  const openEditPump = (pump) => {
+    setPumpForm({ name: pump.name, tankId: pump.tank?._id || pump.tank || "", notes: pump.notes || "", isActive: pump.isActive });
+    setFormError(null);
+    setPumpModal(pump);
+  };
+
+  const savePump = async () => {
+    setFormError(null);
+    if (!pumpForm.name.trim() || !pumpForm.tankId) {
+      return setFormError("Pump name and tank selection are required");
+    }
+    setSaving(true);
+    const payload = { name: pumpForm.name.trim(), tankId: pumpForm.tankId, notes: pumpForm.notes, isActive: pumpForm.isActive };
+    const result  = pumpModal === "add"
+      ? await addPump(payload)
+      : await updatePump(pumpModal._id, payload);
+    setSaving(false);
+    if (result.success) { setPumpModal(null); fetchInventory(); }
+    else setFormError(result.error);
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="max-w-4xl mx-auto px-4 py-6">
+
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl flex items-center justify-center shadow-lg">
+              <Flame className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-800">Gas Inventory</h1>
+              <p className="text-sm text-gray-500">Tanks, pumps and stock levels</p>
+            </div>
+          </div>
+          <button onClick={fetchInventory} className="p-2 border border-gray-200 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-50">
+            <TrendingUp size={16} />
+          </button>
+        </div>
+
+        {/* Alert strip */}
+        {allCritical > 0 && (
+          <div className="mb-5 bg-red-50 border border-red-200 rounded-2xl p-4 flex gap-3 items-start">
+            <AlertTriangle size={18} className="text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-red-700 text-sm">{allCritical} tank{allCritical > 1 ? "s" : ""} critically low!</p>
+              <p className="text-xs text-red-600 mt-0.5">Immediate procurement required to avoid supply interruption.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Overall Summary */}
+        {loading.inventory ? (
+          <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 text-orange-500 animate-spin" /></div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+              {[
+                { label: "Total Stock",    value: `${(inv.totalStockKg    || 0).toFixed(1)} kg`, color: "text-orange-600", icon: <Package size={18} /> },
+                { label: "Total Capacity", value: `${(inv.totalCapacityKg || 0).toLocaleString()} kg`, color: "text-gray-700",   icon: <Database size={18} /> },
+                { label: "Total Procured", value: `${(inv.totalProcuredKg || 0).toFixed(1)} kg`, color: "text-blue-600",   icon: <TrendingUp size={18} /> },
+                { label: "Total Sold",     value: `${(inv.totalSoldKg     || 0).toFixed(1)} kg`, color: "text-red-500",    icon: <TrendingDown size={18} /> },
+              ].map(c => (
+                <div key={c.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                  <div className={`mb-2 ${c.color}`}>{c.icon}</div>
+                  <p className="text-xs text-gray-400">{c.label}</p>
+                  <p className={`font-bold text-lg ${c.color}`}>{c.value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Price card */}
+            {inv.pricePerKg > 0 && (
+              <div className="bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-5 text-white mb-6">
+                <p className="text-xs opacity-80 mb-1">Current Selling Price</p>
+                <p className="text-3xl font-bold">₦{fmt(inv.pricePerKg)}<span className="text-base font-normal opacity-80 ml-1">/kg</span></p>
+                <p className="text-xs opacity-70 mt-1">
+                  Stock value = {(inv.totalStockKg || 0).toFixed(1)} kg × ₦{fmt(inv.pricePerKg)} = ₦{fmt(inv.stockValue)}
+                </p>
+              </div>
+            )}
+
+            {/* Tabs: Tanks / Pumps / Loyalty */}
+            <div className="flex bg-gray-100 rounded-2xl p-1 mb-5 gap-1">
+              {[
+                { id: "tanks",   label: `Tanks (${activeTanks.length})`,                       icon: <Database size={13} /> },
+                { id: "pumps",   label: `Pumps (${pumps.filter(p=>p.isActive).length})`,        icon: <Zap size={13} />      },
+                { id: "loyalty", label: "Loyalty",                                               icon: <Gift size={13} />     },
+              ].map(t => (
+                <button key={t.id} onClick={() => setActiveTab(t.id)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                    activeTab === t.id ? "bg-white shadow text-orange-600" : "text-gray-500"
+                  }`}>
+                  {t.icon}{t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Inactive toggle + add button — only for tanks/pumps tabs */}
+            {activeTab !== "loyalty" && (
+              <div className="flex items-center justify-between mb-4">
+                <button onClick={() => setShowInactive(v => !v)}
+                  className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors">
+                  {showInactive ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  {showInactive ? "Hide inactive" : "Show inactive"}
+                </button>
+                {isManager && (
+                  <button
+                    onClick={activeTab === "tanks" ? openAddTank : openAddPump}
+                    className="flex items-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white font-semibold text-sm px-4 py-2 rounded-xl shadow-sm transition-colors">
+                    <Plus size={15} />
+                    {activeTab === "tanks" ? "Add Tank" : "Add Pump"}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Tanks tab */}
+            {activeTab === "tanks" && (
+              <>
+                {displayTanks.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-200">
+                    <Database className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                    <p className="text-gray-400 font-medium">No tanks set up yet</p>
+                    {isManager && (
+                      <p className="text-sm text-gray-400 mt-1">
+                        Add your first gas storage tank to start tracking inventory.
+                      </p>
+                    )}
+                    {isManager && (
+                      <button onClick={openAddTank}
+                        className="mt-4 inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+                        <Plus size={15} /> Add First Tank
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {displayTanks.map(tank => (
+                      <TankGauge key={tank._id} tank={tank} onEdit={isManager ? openEditTank : null} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Pumps tab */}
+            {activeTab === "pumps" && (
+              <>
+                {displayPumps.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-200">
+                    <Zap className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                    <p className="text-gray-400 font-medium">No pumps set up yet</p>
+                    {isManager && activeTanks.length === 0 && (
+                      <p className="text-sm text-amber-600 mt-1">Add a tank first, then add pumps connected to it.</p>
+                    )}
+                    {isManager && activeTanks.length > 0 && (
+                      <button onClick={openAddPump}
+                        className="mt-4 inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">
+                        <Plus size={15} /> Add First Pump
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {displayPumps.map(pump => (
+                      <PumpCard key={pump._id} pump={pump} onEdit={isManager ? openEditPump : null} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
+
+            {/* Loyalty tab */}
+            {activeTab === "loyalty" && (
+              <div className="space-y-5">
+
+                {/* Read-only summary for non-managers */}
+                {!isManager ? (
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Gift size={18} className="text-purple-500" />
+                      <h3 className="font-bold text-gray-700">Loyalty Programme Rules</h3>
+                    </div>
+                    {loading.loyalty ? (
+                      <div className="flex justify-center py-6"><Loader2 className="w-6 h-6 text-orange-400 animate-spin" /></div>
+                    ) : loyaltyConfig ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {[
+                          {
+                            label: "Points Earned",
+                            value: `${loyaltyConfig.pointsPerK} pts`,
+                            sub: "per ₦1,000 spent",
+                            color: "text-blue-600",
+                            bg: "bg-blue-50 border-blue-100",
+                          },
+                          {
+                            label: "Minimum to Redeem",
+                            value: `${loyaltyConfig.minRedeem.toLocaleString()} pts`,
+                            sub: "balance needed to unlock",
+                            color: "text-amber-600",
+                            bg: "bg-amber-50 border-amber-100",
+                          },
+                          {
+                            label: "Point Value",
+                            value: `₦${loyaltyConfig.nairaPerPoint}`,
+                            sub: "per point redeemed",
+                            color: "text-purple-600",
+                            bg: "bg-purple-50 border-purple-100",
+                          },
+                        ].map(c => (
+                          <div key={c.label} className={`rounded-2xl p-4 border ${c.bg}`}>
+                            <p className="text-xs text-gray-400 mb-1">{c.label}</p>
+                            <p className={`text-2xl font-bold ${c.color}`}>{c.value}</p>
+                            <p className="text-[11px] text-gray-400 mt-0.5">{c.sub}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400">Could not load loyalty settings.</p>
+                    )}
+                  </div>
+                ) : (
+                  /* Manager editable form */
+                  <div className="bg-white rounded-2xl p-6 shadow-sm border border-orange-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Gift size={18} className="text-purple-500" />
+                      <h3 className="font-bold text-gray-700">Loyalty Programme Configuration</h3>
+                    </div>
+                    <p className="text-xs text-gray-400 mb-5">
+                      Configure how customers earn and redeem loyalty points at this station.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+
+                      {/* Points per ₦1000 */}
+                      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 bg-blue-500 rounded-xl flex items-center justify-center">
+                            <TrendingUp size={14} className="text-white" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-blue-700">Points Earned</p>
+                            <p className="text-[10px] text-blue-500">per ₦1,000 purchase</p>
+                          </div>
+                        </div>
+                        <input
+                          type="number" min="1" step="1"
+                          value={loyaltyForm.pointsPerK}
+                          onChange={e => setLoyaltyForm(p => ({ ...p, pointsPerK: e.target.value }))}
+                          className="w-full border border-blue-200 rounded-xl px-3 py-2.5 text-lg font-bold text-center focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                        />
+                        <p className="text-[10px] text-blue-400 mt-1.5 text-center">
+                          e.g. ₦5,000 purchase = {Math.floor(5000 / 1000 * (Number(loyaltyForm.pointsPerK) || 10))} pts
+                        </p>
+                      </div>
+
+                      {/* Minimum to redeem */}
+                      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 bg-amber-500 rounded-xl flex items-center justify-center">
+                            <Gift size={14} className="text-white" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-amber-700">Min. Redeem Points</p>
+                            <p className="text-[10px] text-amber-500">balance to unlock redemption</p>
+                          </div>
+                        </div>
+                        <input
+                          type="number" min="1" step="100"
+                          value={loyaltyForm.minRedeem}
+                          onChange={e => setLoyaltyForm(p => ({ ...p, minRedeem: e.target.value }))}
+                          className="w-full border border-amber-200 rounded-xl px-3 py-2.5 text-lg font-bold text-center focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                        />
+                        <p className="text-[10px] text-amber-400 mt-1.5 text-center">
+                          Customer needs ≥ {Number(loyaltyForm.minRedeem).toLocaleString() || "—"} pts to redeem
+                        </p>
+                      </div>
+
+                      {/* ₦ value per point */}
+                      <div className="bg-purple-50 border border-purple-100 rounded-2xl p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 bg-purple-500 rounded-xl flex items-center justify-center">
+                            <Package size={14} className="text-white" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-purple-700">₦ Value per Point</p>
+                            <p className="text-[10px] text-purple-500">naira worth of each point</p>
+                          </div>
+                        </div>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-purple-400">₦</span>
+                          <input
+                            type="number" min="0.01" step="0.01"
+                            value={loyaltyForm.nairaPerPoint}
+                            onChange={e => setLoyaltyForm(p => ({ ...p, nairaPerPoint: e.target.value }))}
+                            className="w-full border border-purple-200 rounded-xl pl-7 pr-3 py-2.5 text-lg font-bold text-center focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
+                          />
+                        </div>
+                        <p className="text-[10px] text-purple-400 mt-1.5 text-center">
+                          {Number(loyaltyForm.minRedeem).toLocaleString() || "—"} pts = ₦{(Number(loyaltyForm.minRedeem) * Number(loyaltyForm.nairaPerPoint)).toLocaleString("en-NG", { minimumFractionDigits: 2 }) || "—"} discount
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Summary preview */}
+                    <div className="mt-5 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl p-4 text-white">
+                      <p className="text-xs font-bold opacity-80 mb-2 uppercase tracking-wide">Programme Preview</p>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="opacity-70 text-xs">Customer spends ₦10,000 →</p>
+                          <p className="font-bold">{Math.floor(10000 / 1000 * (Number(loyaltyForm.pointsPerK) || 10))} points earned</p>
+                        </div>
+                        <div>
+                          <p className="opacity-70 text-xs">{Number(loyaltyForm.minRedeem).toLocaleString()} pts redeems →</p>
+                          <p className="font-bold">₦{(Number(loyaltyForm.minRedeem) * Number(loyaltyForm.nairaPerPoint || 1)).toLocaleString("en-NG", { minimumFractionDigits: 2 })} discount</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {loyaltyError && (
+                      <div className="mt-4 bg-red-50 border border-red-200 rounded-xl p-3 flex gap-2 items-start">
+                        <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-sm text-red-700">{loyaltyError}</p>
+                      </div>
+                    )}
+                    {loyaltyOK && (
+                      <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-3 flex gap-2 items-center">
+                        <Check size={14} className="text-green-500" />
+                        <p className="text-sm text-green-700 font-medium">Loyalty settings saved successfully</p>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={saveLoyaltyConfig}
+                      disabled={loyaltySaving}
+                      className="mt-4 w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 disabled:opacity-60 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all"
+                    >
+                      {loyaltySaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                      Save Loyalty Configuration
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+        {/* ─── Add / Edit Tank Modal ─── */}
+        {tankModal !== null && (
+          <Modal title={tankModal === "add" ? "Add New Storage Tank" : `Edit: ${tankModal.name}`} onClose={() => setTankModal(null)}>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Tank Name *</label>
+                <input
+                  type="text"
+                  value={tankForm.name}
+                  onChange={e => setTankForm(p => ({ ...p, name: e.target.value }))}
+                  placeholder="e.g. Tank A, Main Tank, Left Tank"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Total Capacity (kg) *</label>
+                <input
+                  type="number"
+                  value={tankForm.capacityKg}
+                  onChange={e => setTankForm(p => ({ ...p, capacityKg: e.target.value }))}
+                  placeholder="e.g. 1000"
+                  min="1"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Notes (optional)</label>
+                <input
+                  type="text"
+                  value={tankForm.notes}
+                  onChange={e => setTankForm(p => ({ ...p, notes: e.target.value }))}
+                  placeholder="Any notes about this tank..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </div>
+              {tankModal !== "add" && (
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div
+                    onClick={() => setTankForm(p => ({ ...p, isActive: !p.isActive }))}
+                    className={`w-10 h-5.5 rounded-full flex items-center px-0.5 transition-colors ${tankForm.isActive ? "bg-emerald-500" : "bg-gray-300"}`}
+                    style={{ height: "22px" }}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${tankForm.isActive ? "translate-x-5" : "translate-x-0"}`} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">Active</span>
+                </label>
+              )}
+              {formError && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{formError}</p>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button onClick={saveTank} disabled={saving}
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm">
+                  {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                  {tankModal === "add" ? "Add Tank" : "Save Changes"}
+                </button>
+                <button onClick={() => setTankModal(null)}
+                  className="px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 text-sm font-semibold hover:bg-gray-50">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* ─── Add / Edit Pump Modal ─── */}
+        {pumpModal !== null && (
+          <Modal title={pumpModal === "add" ? "Add New Pump / Dispenser" : `Edit: ${pumpModal.name}`} onClose={() => setPumpModal(null)}>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Pump Name *</label>
+                <input
+                  type="text"
+                  value={pumpForm.name}
+                  onChange={e => setPumpForm(p => ({ ...p, name: e.target.value }))}
+                  placeholder="e.g. Pump 1, Left Dispenser"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Connected Tank *</label>
+                {activeTanks.length === 0 ? (
+                  <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                    No active tanks available. Add a tank first.
+                  </p>
+                ) : (
+                  <select
+                    value={pumpForm.tankId}
+                    onChange={e => setPumpForm(p => ({ ...p, tankId: e.target.value }))}
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  >
+                    <option value="">Select a tank…</option>
+                    {activeTanks.map(t => (
+                      <option key={t._id} value={t._id}>
+                        {t.name} ({t.currentStockKg.toFixed(1)} / {t.capacityKg.toLocaleString()} kg)
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Notes (optional)</label>
+                <input
+                  type="text"
+                  value={pumpForm.notes}
+                  onChange={e => setPumpForm(p => ({ ...p, notes: e.target.value }))}
+                  placeholder="Any notes about this pump..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              {pumpModal !== "add" && (
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div
+                    onClick={() => setPumpForm(p => ({ ...p, isActive: !p.isActive }))}
+                    className={`w-10 rounded-full flex items-center px-0.5 transition-colors ${pumpForm.isActive ? "bg-blue-500" : "bg-gray-300"}`}
+                    style={{ height: "22px" }}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full shadow transition-transform ${pumpForm.isActive ? "translate-x-5" : "translate-x-0"}`} />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">Active</span>
+                </label>
+              )}
+              {formError && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">{formError}</p>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button onClick={savePump} disabled={saving || activeTanks.length === 0}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm">
+                  {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                  {pumpModal === "add" ? "Add Pump" : "Save Changes"}
+                </button>
+                <button onClick={() => setPumpModal(null)}
+                  className="px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 text-sm font-semibold hover:bg-gray-50">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </Modal>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}

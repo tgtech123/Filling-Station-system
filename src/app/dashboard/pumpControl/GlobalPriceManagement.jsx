@@ -11,7 +11,6 @@ export default function GlobalPriceManagement() {
     PMS: "",
     Diesel: "",
     Kerosene: "",
-    Gas: "",
   });
 
   useEffect(() => {
@@ -73,7 +72,7 @@ export default function GlobalPriceManagement() {
 
       <form className="mt-6" onSubmit={handleUpdateAll}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-          {["PMS", "Diesel", "Kerosene", "Gas"].map((fuel) => (
+          {["PMS", "Diesel", "Kerosene"].map((fuel) => (
             <div key={fuel}>
               <p className="font-semibold text-sm mb-1">{fuel}</p>
               <input

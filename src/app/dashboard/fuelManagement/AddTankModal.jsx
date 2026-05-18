@@ -109,7 +109,6 @@ export default function AddTankModal({ onclose }) {
               <option value="PMS">PMS (Premium Motor Spirit)</option>
               <option value="AGO">AGO (Diesel)</option>
               <option value="Kerosene">Kerosene</option>
-              <option value="Gas">Gas (LPG)</option>
             </select>
           </div>
           <div>

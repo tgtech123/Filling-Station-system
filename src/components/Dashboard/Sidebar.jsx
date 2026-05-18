@@ -52,6 +52,7 @@ import { GiExpense, GiTakeMyMoney } from "react-icons/gi";
 import { useState, useEffect, useRef } from "react";
 import useThemePersistence from "@/hooks/useThemePersistence";
 import usePaymentStore from "@/store/usePaymentStore";
+import useGasStore from "@/store/useGasStore";
 import AddBranchModal from "../AddBranchModal";
 
 export default function Sidebar({ isVisible, toggleSidebar }) {
@@ -65,6 +66,8 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
 
   const { theme, setTheme } = useThemePersistence();
   const { currentPlan, fetchCurrentPlan } = usePaymentStore();
+  const { gasEnabled, toggleGasDepartment } = useGasStore();
+  const [gasToggling, setGasToggling] = useState(false);
   const isEnterprise = currentPlan?.plan?.startsWith("enterprise");
   const isSuperManager = userData?.isSuperManager === true;
   const [showAddBranch, setShowAddBranch] = useState(false);
@@ -475,6 +478,70 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       link: "/dashboard/manager/salaryValidation",
       roles: ["manager"],
     },
+    // ── Gas Department links (all gas-designated roles) ──────────────────────
+    {
+      id: "gas-divider",
+      isDivider: true,
+      label: "🔥 Gas Department",
+      roles: ["cashier", "attendant", "accountant", "manager", "admin"],
+    },
+    {
+      id: "gas-pos",
+      name: "Point of Sale",
+      icon: <FaFire size={18} className="text-orange-500" />,
+      link: "/dashboard/gas/cashier",
+      roles: ["cashier"],
+    },
+    {
+      id: "gas-shifts",
+      name: "Gas Shifts",
+      icon: <CircleFadingArrowUp size={20} className="text-orange-500" />,
+      link: "/dashboard/gas/shifts",
+      roles: ["attendant"],
+    },
+    {
+      id: "gas-analytics-acct",
+      name: "Gas Revenue",
+      icon: <TrendingUp size={20} className="text-orange-500" />,
+      link: "/dashboard/gas/analytics",
+      roles: ["accountant"],
+    },
+    {
+      id: "gas-reconciliation",
+      name: "Gas Reconciliation",
+      icon: <ShieldCheck size={20} className="text-orange-500" />,
+      link: "/dashboard/gas/reconciliation",
+      roles: ["accountant", "attendant", "cashier"],
+    },
+    {
+      id: "gas-analytics-mgr",
+      name: "Gas Analytics",
+      icon: <BarChart2 size={20} className="text-orange-500" />,
+      link: "/dashboard/gas/analytics",
+      roles: ["manager", "admin"],
+    },
+    {
+      id: "gas-procurement",
+      name: "Gas Procurement",
+      icon: <Package size={20} className="text-orange-500" />,
+      link: "/dashboard/gas/procurement",
+      roles: ["manager", "admin"],
+    },
+    {
+      id: "gas-inventory",
+      name: "Gas Inventory",
+      icon: <Banknote size={20} className="text-orange-500" />,
+      link: "/dashboard/gas/inventory",
+      roles: ["manager", "admin", "accountant"],
+    },
+    {
+      id: "gas-customers",
+      name: "Loyalty Customers",
+      icon: <MdOutlinePeopleAlt size={20} className="text-orange-500" />,
+      link: "/dashboard/gas/customers",
+      roles: ["manager", "admin", "cashier"],
+    },
+    // ── Admin links ──────────────────────────────────────────────────────────
     //Admin links
     {
       id: "Stations",
@@ -521,7 +588,13 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
 
   return links.filter((link) => {
     if (!Array.isArray(link.roles)) return false;
-    return link.roles.includes(normalizedRole);
+    if (!link.roles.includes(normalizedRole)) return false;
+    if (gasEnabled === false && link.id?.startsWith("gas-")) {
+      // Keep the divider visible for managers so they can use the toggle button
+      if (link.id === "gas-divider" && ["manager", "admin"].includes(normalizedRole)) return true;
+      return false;
+    }
+    return true;
   });
 };
 
@@ -617,7 +690,45 @@ const visibleLinks = getVisibleLinks(userRole);
             <div className="links text-sm space-y-1 mb-8">
               {visibleLinks.map((link) => (
                 <div key={link.id}>
-                  {link.isDropdown ? (
+                  {link.isDivider ? (
+                    <div className="pt-3 pb-1 px-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-orange-400">{link.label}</p>
+                        {/* Gas department toggle — manager/admin only */}
+                        {link.id === "gas-divider" && ["manager", "admin"].includes(userRole) && (
+                          <button
+                            onClick={async () => {
+                              setGasToggling(true);
+                              await toggleGasDepartment();
+                              setGasToggling(false);
+                            }}
+                            disabled={gasToggling}
+                            title={gasEnabled === false ? "Enable Gas Department" : "Disable Gas Department"}
+                            className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${
+                              gasEnabled === false
+                                ? "bg-orange-100 border-orange-300 text-orange-600 hover:bg-orange-200"
+                                : "bg-gray-100 border-gray-300 text-gray-500 hover:bg-red-50 hover:border-red-300 hover:text-red-500"
+                            } disabled:opacity-50`}
+                          >
+                            {gasToggling ? (
+                              <span className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin inline-block" />
+                            ) : gasEnabled === false ? (
+                              "Enable"
+                            ) : (
+                              "Disable"
+                            )}
+                          </button>
+                        )}
+                      </div>
+                      <div className="mt-1 h-px bg-orange-100" />
+                      {/* Disabled state indicator under the divider */}
+                      {link.id === "gas-divider" && gasEnabled === false && (
+                        <p className="text-[10px] text-red-400 font-semibold mt-1">
+                          ⊘ Gas department is currently OFF
+                        </p>
+                      )}
+                    </div>
+                  ) : link.isDropdown ? (
                     <>
                       <div
                         onClick={() => toggleDropdown(link.id)}
