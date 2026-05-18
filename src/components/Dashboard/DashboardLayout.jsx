@@ -3,18 +3,25 @@
 import Sidebar from "@/components/Dashboard/Sidebar";
 import Header from "@/components/Dashboard/Header";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { AlertTriangle, Flame, PowerOff, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
+import useGasStore from "@/store/useGasStore";
 
 function DashboardLayout({ children }) {
-  const router = useRouter();
+  const router   = useRouter();
+  const pathname = usePathname();
   const [showSidebar, setShowSidebar] = useState(false);
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [daysLeft, setDaysLeft] = useState(null);
   const [endsAt, setEndsAt] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+  const [toggling, setToggling] = useState(false);
+
+  const { gasEnabled, fetchGasStatus, toggleGasDepartment, loading: gasLoading } = useGasStore();
+  const isGasPath = pathname?.startsWith("/dashboard/gas");
 
   // Idle session timeout — logs out after 40 min of inactivity
   useSessionTimeout();
@@ -35,12 +42,24 @@ function DashboardLayout({ children }) {
         setDaysLeft(parsed.gracePeriodDaysLeft ?? null);
         setEndsAt(parsed.gracePeriodEndsAt ?? null);
       }
+      setUserRole(parsed.role || null);
     } catch {
       // ignore parse errors
     }
 
     setAuthChecked(true);
   }, [router]);
+
+  // Fetch gas status whenever we land on a gas path
+  useEffect(() => {
+    if (authChecked && isGasPath) fetchGasStatus();
+  }, [authChecked, isGasPath]);
+
+  const handleToggleGas = async () => {
+    setToggling(true);
+    await toggleGasDepartment();
+    setToggling(false);
+  };
 
   const formattedEndsAt = endsAt
     ? new Date(endsAt).toLocaleDateString("en-US", {
@@ -112,7 +131,44 @@ function DashboardLayout({ children }) {
         )}
 
         <main className="flex-1 pt-[50px] py-4 px-4 overflow-y-auto overflow-x-hidden">
-          {children}
+          {/* Gas department disabled screen */}
+          {isGasPath && gasEnabled === false ? (
+            <div className="min-h-[80vh] flex items-center justify-center">
+              <div className="max-w-md w-full mx-auto text-center px-6">
+                <div className="w-20 h-20 bg-orange-100 rounded-3xl flex items-center justify-center mx-auto mb-5">
+                  <PowerOff className="w-10 h-10 text-orange-400" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Gas Department Disabled</h2>
+                <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                  The Gas Department has been temporarily disabled for this station.
+                  All gas operations, sales, and procurement are frozen until it is re-enabled.
+                </p>
+                {["manager", "admin"].includes(userRole) ? (
+                  <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
+                    <p className="text-sm text-orange-700 font-medium">
+                      Use the <span className="font-bold">Enable</span> button in the sidebar next to "🔥 Gas Department" to re-activate it.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                    <p className="text-sm text-amber-700 font-medium">
+                      Contact your station manager to re-enable the Gas Department.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : isGasPath && gasEnabled === null && gasLoading.status ? (
+            /* Loading gas status */
+            <div className="min-h-[80vh] flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-gray-400 text-sm">Loading Gas Department…</p>
+              </div>
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>

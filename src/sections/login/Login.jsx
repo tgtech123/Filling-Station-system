@@ -16,6 +16,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState("");
 
@@ -73,9 +74,8 @@ const Login = () => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      if (res.status === 200) {
-        setMessage(data.message);
-      }
+      setMessage(data.message);
+      setSuccess(true);
       // navigate based on role
       if (data.user?.role === "admin") {
         router.push("/admin");
@@ -313,11 +313,11 @@ const Login = () => {
               {/* Sign In Button */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || success}
                 className="flex items-center justify-center gap-2 bg-blue-600 rounded-md font-semibold text-white h-[45px] hover:bg-blue-500 transition disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {loading && <ImSpinner3 className="animate-spin h-4 w-4" />}
-                {loading ? "Signing in..." : "Sign In"}
+                {(loading || success) && <ImSpinner3 className="animate-spin h-4 w-4" />}
+                {success ? "Redirecting..." : loading ? "Signing in..." : "Sign In"}
               </button>
 
               {/* Forgot Password */}
