@@ -45,32 +45,35 @@ export default function GasCustomerDetailPage() {
   const [customer,    setCustomer]    = useState(null);
   const [recentSales, setRecentSales] = useState([]);
   const [loading,     setLoading]     = useState(true);
+  const [fetchError,  setFetchError]  = useState(null);
   const [editing,     setEditing]     = useState(false);
   const [saving,      setSaving]      = useState(false);
   const [error,       setError]       = useState(null);
   const [success,     setSuccess]     = useState(null);
   const [editForm,    setEditForm]    = useState({});
 
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      const data = await fetchCustomer(id);
-      if (data) {
-        setCustomer(data.customer);
-        setRecentSales(data.recentSales || []);
-        setEditForm({
-          firstName:         data.customer.firstName,
-          lastName:          data.customer.lastName,
-          email:             data.customer.email || "",
-          address:           data.customer.address || "",
-          usualCylinderSize: data.customer.usualCylinderSize || "",
-        });
-      }
+  const load = async () => {
+    setLoading(true);
+    setFetchError(null);
+    const res = await fetchCustomer(id);
+    if (res?.ok) {
+      setCustomer(res.customer);
+      setRecentSales(res.recentSales || []);
+      setEditForm({
+        firstName:         res.customer.firstName,
+        lastName:          res.customer.lastName,
+        email:             res.customer.email || "",
+        address:           res.customer.address || "",
+        usualCylinderSize: res.customer.usualCylinderSize || "",
+      });
       await fetchLoyaltyTransactions(id);
-      setLoading(false);
-    };
-    load();
-  }, [id]);
+    } else {
+      setFetchError(res?.error || "Failed to load customer");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [id]);
 
   const handleSave = async () => {
     setError(null);
@@ -99,8 +102,20 @@ export default function GasCustomerDetailPage() {
     <DashboardLayout>
       <div className="max-w-2xl mx-auto px-4 py-10 text-center">
         <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-        <p className="font-semibold text-gray-700">Customer not found</p>
-        <button onClick={() => router.back()} className="mt-4 text-orange-500 hover:underline text-sm">← Go back</button>
+        <p className="font-semibold text-gray-700">
+          {fetchError || "Customer not found"}
+        </p>
+        {fetchError && (
+          <button
+            onClick={load}
+            className="mt-4 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors"
+          >
+            Retry
+          </button>
+        )}
+        <button onClick={() => router.back()} className="mt-3 block mx-auto text-orange-500 hover:underline text-sm">
+          ← Go back
+        </button>
       </div>
     </DashboardLayout>
   );

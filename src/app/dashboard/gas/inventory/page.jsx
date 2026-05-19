@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import {
   Flame, Package, TrendingDown, TrendingUp, AlertTriangle, Loader2,
   Plus, Pencil, X, Check, Zap, Database, ChevronDown, ChevronUp, Gift,
+  QrCode, Copy, Printer, ExternalLink, CheckCircle2, Settings,
 } from "lucide-react";
 import useGasStore from "@/store/useGasStore";
 
@@ -146,9 +147,9 @@ function Modal({ title, onClose, children }) {
 
 export default function GasInventoryPage() {
   const {
-    inventory, tanks, pumps,
-    loyaltyConfig, loading, errors,
-    fetchInventory, fetchTanks, fetchPumps,
+    inventory, tanks, pumps, settings,
+    loyaltyConfig, loading,
+    fetchInventory, fetchGasSettings, updateGasSettings,
     fetchLoyaltyConfig, updateLoyaltyConfig,
     addTank, updateTank, addPump, updatePump,
   } = useGasStore();
@@ -167,12 +168,34 @@ export default function GasInventoryPage() {
   const [loyaltySaving,setLoyaltySaving]= useState(false);
   const [loyaltyError, setLoyaltyError] = useState(null);
   const [loyaltyOK,    setLoyaltyOK]    = useState(false);
+  // QR / Settings tab
+  const [settingsForm,   setSettingsForm]   = useState({ gasStationCode: "", gasQREnabled: true, gasBankName: "", gasBankAccount: "", gasBankAccountName: "" });
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsError,  setSettingsError]  = useState(null);
+  const [settingsOK,     setSettingsOK]     = useState(false);
+  const [copied,         setCopied]         = useState(false);
+  const [appOrigin,      setAppOrigin]      = useState("");
 
   useEffect(() => {
     try { setUserRole(JSON.parse(localStorage.getItem("user") || "{}").role || "attendant"); } catch {}
+    setAppOrigin(window.location.origin);
     fetchInventory();
     fetchLoyaltyConfig();
+    fetchGasSettings();
   }, []);
+
+  // Sync settings form when data loads
+  useEffect(() => {
+    if (settings) {
+      setSettingsForm({
+        gasStationCode:      settings.gasStationCode      || "",
+        gasQREnabled:        settings.gasQREnabled        ?? true,
+        gasBankName:         settings.gasBankName         || "",
+        gasBankAccount:      settings.gasBankAccount      || "",
+        gasBankAccountName:  settings.gasBankAccountName  || "",
+      });
+    }
+  }, [settings]);
 
   // Sync form when config loads
   useEffect(() => {
@@ -192,7 +215,6 @@ export default function GasInventoryPage() {
   const displayTanks = showInactive ? tanks : activeTanks;
   const displayPumps = showInactive ? pumps : pumps.filter(p => p.isActive);
   const allCritical  = activeTanks.filter(t => t.currentStockKg < t.capacityKg * 0.1).length;
-  const allLow       = activeTanks.filter(t => t.currentStockKg < t.capacityKg * 0.2).length;
 
   // ─── Loyalty save ─────────────────────────────────────────────────────────
 
@@ -212,6 +234,66 @@ export default function GasInventoryPage() {
       setTimeout(() => setLoyaltyOK(false), 3000);
     } else {
       setLoyaltyError(result.error);
+    }
+  };
+
+  // ─── Settings (QR) save ────────────────────────────────────────────────────
+
+  const orderUrl = settingsForm.gasStationCode
+    ? `${appOrigin}/gas-order/${settingsForm.gasStationCode.toUpperCase()}`
+    : "";
+
+  const qrImageUrl = orderUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(orderUrl)}&bgcolor=ffffff&color=ea580c&margin=12&format=png`
+    : "";
+
+  const copyLink = () => {
+    if (!orderUrl) return;
+    navigator.clipboard.writeText(orderUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const printQR = () => {
+    const w = window.open("", "_blank");
+    w.document.write(`
+      <html><head><title>Gas Self-Order QR — ${settingsForm.gasStationCode}</title>
+      <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 40px; }
+        h2 { color: #ea580c; margin-bottom: 6px; }
+        p  { color: #666; font-size: 14px; margin: 4px 0; }
+        img { margin: 20px auto; display: block; }
+        .url { font-size: 12px; color: #888; word-break: break-all; margin-top: 12px; }
+      </style></head>
+      <body>
+        <h2>🔥 Scan to Order Gas</h2>
+        <p>${settings?.name || "Gas Station"}</p>
+        <img src="${qrImageUrl}" width="240" height="240" />
+        <p class="url">${orderUrl}</p>
+        <p style="margin-top:20px;font-size:11px;color:#aaa;">Powered by FuelDesk</p>
+      </body></html>`);
+    w.document.close();
+    w.print();
+  };
+
+  const saveSettings = async () => {
+    setSettingsError(null);
+    if (!settingsForm.gasStationCode.trim()) return setSettingsError("Station code is required to generate a QR code");
+    setSettingsSaving(true);
+    const result = await updateGasSettings({
+      gasStationCode:     settingsForm.gasStationCode.trim().toUpperCase(),
+      gasQREnabled:       settingsForm.gasQREnabled,
+      gasBankName:        settingsForm.gasBankName,
+      gasBankAccount:     settingsForm.gasBankAccount,
+      gasBankAccountName: settingsForm.gasBankAccountName,
+    });
+    setSettingsSaving(false);
+    if (result.success) {
+      setSettingsOK(true);
+      fetchGasSettings();
+      setTimeout(() => setSettingsOK(false), 3000);
+    } else {
+      setSettingsError(result.error);
     }
   };
 
@@ -335,12 +417,13 @@ export default function GasInventoryPage() {
               </div>
             )}
 
-            {/* Tabs: Tanks / Pumps / Loyalty */}
+            {/* Tabs: Tanks / Pumps / Loyalty / QR */}
             <div className="flex bg-gray-100 rounded-2xl p-1 mb-5 gap-1">
               {[
-                { id: "tanks",   label: `Tanks (${activeTanks.length})`,                       icon: <Database size={13} /> },
-                { id: "pumps",   label: `Pumps (${pumps.filter(p=>p.isActive).length})`,        icon: <Zap size={13} />      },
-                { id: "loyalty", label: "Loyalty",                                               icon: <Gift size={13} />     },
+                { id: "tanks",   label: `Tanks (${activeTanks.length})`,                icon: <Database size={13} /> },
+                { id: "pumps",   label: `Pumps (${pumps.filter(p=>p.isActive).length})`, icon: <Zap size={13} />      },
+                { id: "loyalty", label: "Loyalty",                                       icon: <Gift size={13} />     },
+                { id: "qr",      label: "QR Code",                                       icon: <QrCode size={13} />   },
               ].map(t => (
                 <button key={t.id} onClick={() => setActiveTab(t.id)}
                   className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
@@ -352,7 +435,7 @@ export default function GasInventoryPage() {
             </div>
 
             {/* Inactive toggle + add button — only for tanks/pumps tabs */}
-            {activeTab !== "loyalty" && (
+            {activeTab !== "loyalty" && activeTab !== "qr" && (
               <div className="flex items-center justify-between mb-4">
                 <button onClick={() => setShowInactive(v => !v)}
                   className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors">
@@ -595,6 +678,173 @@ export default function GasInventoryPage() {
                     >
                       {loyaltySaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                       Save Loyalty Configuration
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* QR Code tab */}
+            {activeTab === "qr" && (
+              <div className="space-y-5">
+
+                {/* QR display card */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                  <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <QrCode size={18} className="text-white" />
+                      <h3 className="font-bold text-white">Customer Self-Order QR Code</h3>
+                    </div>
+                    <p className="text-xs text-orange-100 mt-1">
+                      Print this and display at your counter — customers scan to order gas without queuing
+                    </p>
+                  </div>
+
+                  <div className="p-5">
+                    {!settingsForm.gasStationCode ? (
+                      <div className="flex flex-col items-center gap-3 py-8 text-center">
+                        <QrCode size={48} className="text-gray-200" />
+                        <p className="text-sm font-medium text-gray-500">No station code set yet</p>
+                        <p className="text-xs text-gray-400">Set a station code below to generate your QR code</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col sm:flex-row items-center gap-6">
+                        {/* QR image */}
+                        <div className="shrink-0 bg-white border-4 border-orange-100 rounded-2xl p-2 shadow-sm">
+                          <img
+                            src={qrImageUrl}
+                            alt="Self-order QR code"
+                            width={200}
+                            height={200}
+                            className="rounded-xl"
+                          />
+                        </div>
+                        {/* Info + actions */}
+                        <div className="flex-1 min-w-0 text-center sm:text-left">
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Self-Order URL</p>
+                          <p className="text-sm font-mono text-gray-700 break-all bg-gray-50 rounded-xl px-3 py-2 border border-gray-100 mb-4">
+                            {orderUrl}
+                          </p>
+                          <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                            <button
+                              onClick={copyLink}
+                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                            >
+                              {copied ? <CheckCircle2 size={14} className="text-green-500" /> : <Copy size={14} />}
+                              {copied ? "Copied!" : "Copy Link"}
+                            </button>
+                            <button
+                              onClick={printQR}
+                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
+                            >
+                              <Printer size={14} /> Print QR
+                            </button>
+                            <a
+                              href={orderUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-orange-200 text-orange-600 text-sm font-semibold hover:bg-orange-50 transition-colors"
+                            >
+                              <ExternalLink size={14} /> Preview Page
+                            </a>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-3">
+                            Customers open this link or scan the QR — no login needed
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Station code + settings form — manager only */}
+                {isManager && (
+                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-orange-100">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Settings size={16} className="text-orange-500" />
+                      <h3 className="font-bold text-gray-700">Gas Station Settings</h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                          Station Code * <span className="text-gray-400 font-normal">(used in QR link)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={settingsForm.gasStationCode}
+                          onChange={e => setSettingsForm(p => ({ ...p, gasStationCode: e.target.value.toUpperCase() }))}
+                          placeholder="e.g. TOTAL01"
+                          maxLength={12}
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-orange-400"
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1">Short unique code for your station — no spaces</p>
+                      </div>
+
+                      <div className="flex items-center gap-3 self-end pb-1">
+                        <label className="text-sm font-semibold text-gray-700">QR Self-Order Enabled</label>
+                        <div
+                          onClick={() => setSettingsForm(p => ({ ...p, gasQREnabled: !p.gasQREnabled }))}
+                          className={`w-11 h-6 rounded-full flex items-center px-0.5 cursor-pointer transition-colors ${settingsForm.gasQREnabled ? "bg-orange-500" : "bg-gray-300"}`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${settingsForm.gasQREnabled ? "translate-x-5" : "translate-x-0"}`} />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Bank Name</label>
+                        <input
+                          type="text"
+                          value={settingsForm.gasBankName}
+                          onChange={e => setSettingsForm(p => ({ ...p, gasBankName: e.target.value }))}
+                          placeholder="e.g. First Bank"
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Account Number</label>
+                        <input
+                          type="text"
+                          value={settingsForm.gasBankAccount}
+                          onChange={e => setSettingsForm(p => ({ ...p, gasBankAccount: e.target.value }))}
+                          placeholder="e.g. 0123456789"
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Account Name</label>
+                        <input
+                          type="text"
+                          value={settingsForm.gasBankAccountName}
+                          onChange={e => setSettingsForm(p => ({ ...p, gasBankAccountName: e.target.value }))}
+                          placeholder="e.g. Total Gas Nigeria Ltd"
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                        />
+                      </div>
+                    </div>
+
+                    {settingsError && (
+                      <div className="mt-4 bg-red-50 border border-red-200 rounded-xl p-3 flex gap-2 items-start">
+                        <AlertTriangle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                        <p className="text-sm text-red-700">{settingsError}</p>
+                      </div>
+                    )}
+                    {settingsOK && (
+                      <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-3 flex gap-2 items-center">
+                        <CheckCircle2 size={14} className="text-green-500" />
+                        <p className="text-sm text-green-700 font-medium">Settings saved — QR code updated</p>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={saveSettings}
+                      disabled={settingsSaving}
+                      className="mt-4 w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                    >
+                      {settingsSaving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+                      Save Settings & Update QR
                     </button>
                   </div>
                 )}

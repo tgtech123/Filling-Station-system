@@ -46,8 +46,11 @@ const useGasCustomerStore = create((set, get) => ({
     try {
       const { data } = await api.get(`/api/gas/customers/${id}`);
       set({ selectedCustomer: data.data?.customer });
-      return data.data;
-    } catch { return null; }
+      return { ok: true, ...data.data };
+    } catch (e) {
+      const msg = e.response?.data?.message || e.message || "Failed to load customer";
+      return { ok: false, error: msg };
+    }
   },
 
   fetchLoyaltyTransactions: async (id) => {

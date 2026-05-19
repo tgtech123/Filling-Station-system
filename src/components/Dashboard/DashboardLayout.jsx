@@ -4,7 +4,7 @@ import Sidebar from "@/components/Dashboard/Sidebar";
 import Header from "@/components/Dashboard/Header";
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { AlertTriangle, Flame, PowerOff, Loader2 } from "lucide-react";
+import { AlertTriangle, PowerOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import useGasStore from "@/store/useGasStore";
@@ -18,9 +18,7 @@ function DashboardLayout({ children }) {
   const [endsAt, setEndsAt] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [userRole, setUserRole] = useState(null);
-  const [toggling, setToggling] = useState(false);
-
-  const { gasEnabled, fetchGasStatus, toggleGasDepartment, loading: gasLoading } = useGasStore();
+  const { gasEnabled, fetchGasStatus, loading: gasLoading } = useGasStore();
   const isGasPath = pathname?.startsWith("/dashboard/gas");
 
   // Idle session timeout — logs out after 40 min of inactivity
@@ -54,12 +52,6 @@ function DashboardLayout({ children }) {
   useEffect(() => {
     if (authChecked && isGasPath) fetchGasStatus();
   }, [authChecked, isGasPath]);
-
-  const handleToggleGas = async () => {
-    setToggling(true);
-    await toggleGasDepartment();
-    setToggling(false);
-  };
 
   const formattedEndsAt = endsAt
     ? new Date(endsAt).toLocaleDateString("en-US", {

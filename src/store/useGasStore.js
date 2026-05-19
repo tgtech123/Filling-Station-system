@@ -249,6 +249,13 @@ const useGasStore = create((set, get) => ({
     }
   },
 
+  fetchGasSettings: async () => {
+    try {
+      const { data } = await api.get("/api/gas/settings");
+      set({ settings: data.data });
+    } catch {}
+  },
+
   updateGasSettings: async (payload) => {
     try {
       const { data } = await api.patch("/api/gas/settings", payload);
