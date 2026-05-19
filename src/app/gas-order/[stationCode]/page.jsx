@@ -90,25 +90,19 @@ export default function CustomerOrderPage() {
     load();
   }, [stationCode]);
 
-  // ─── Derived calculations ─────────────────────────────────────────────────
-  const kg = saleType === "kg"
-    ? parseFloat(inputKg) || 0
-    : pricePerKg > 0 ? parseFloat((parseFloat(inputAmount) || 0) / pricePerKg) : 0;
-
-  const amount = saleType === "amount"
-    ? parseFloat(inputAmount) || 0
-    : (parseFloat(inputKg) || 0) * pricePerKg;
+  const kg     = parseFloat(inputKg)     || 0;
+  const amount = parseFloat(inputAmount) || 0;
 
   const handlePresetKg = (v) => {
     setSaleType("kg");
     setInputKg(String(v));
-    setInputAmount("");
+    setInputAmount(pricePerKg > 0 ? (v * pricePerKg).toFixed(2) : "");
   };
 
   const handlePresetAmount = (v) => {
     setSaleType("amount");
     setInputAmount(String(v));
-    setInputKg("");
+    setInputKg(pricePerKg > 0 ? (v / pricePerKg).toFixed(3) : "");
   };
 
   // ─── Loyalty phone lookup ─────────────────────────────────────────────────
@@ -311,70 +305,86 @@ export default function CustomerOrderPage() {
             How Much Do You Want?
           </h2>
 
-          {/* Toggle */}
-          <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
-            {["kg", "amount"].map(t => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => { setSaleType(t); setInputKg(""); setInputAmount(""); }}
-                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  saleType === t ? "bg-white shadow text-orange-600" : "text-gray-500"
-                }`}
-              >
-                {t === "kg" ? "By KG" : "By Amount (₦)"}
-              </button>
-            ))}
-          </div>
-
-          {/* Presets */}
+          {/* Quick KG presets */}
           <div className="mb-3">
-            <p className="text-xs text-gray-400 mb-2 font-medium">Quick select:</p>
+            <p className="text-xs text-gray-400 mb-2 font-medium">Quick KG:</p>
             <div className="flex flex-wrap gap-2">
-              {saleType === "kg"
-                ? PRESETS_KG.map(v => (
-                  <button key={v} type="button" onClick={() => handlePresetKg(v)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                      inputKg === String(v) ? "bg-orange-500 border-orange-500 text-white" : "border-gray-200 text-gray-600 hover:border-orange-300"
-                    }`}>
-                    {v}kg
-                  </button>
-                ))
-                : PRESETS_AMOUNT.map(v => (
-                  <button key={v} type="button" onClick={() => handlePresetAmount(v)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                      inputAmount === String(v) ? "bg-orange-500 border-orange-500 text-white" : "border-gray-200 text-gray-600 hover:border-orange-300"
-                    }`}>
-                    ₦{v.toLocaleString()}
-                  </button>
-                ))
-              }
+              {PRESETS_KG.map(v => (
+                <button key={v} type="button" onClick={() => handlePresetKg(v)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    saleType === "kg" && inputKg === String(v)
+                      ? "bg-orange-500 border-orange-500 text-white"
+                      : "border-gray-200 text-gray-600 hover:border-orange-300"
+                  }`}>
+                  {v}kg
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* Input */}
+          {/* Quick Amount presets */}
+          <div className="mb-4">
+            <p className="text-xs text-gray-400 mb-2 font-medium">Quick Amount:</p>
+            <div className="flex flex-wrap gap-2">
+              {PRESETS_AMOUNT.map(v => (
+                <button key={v} type="button" onClick={() => handlePresetAmount(v)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    saleType === "amount" && inputAmount === String(v)
+                      ? "bg-orange-500 border-orange-500 text-white"
+                      : "border-gray-200 text-gray-600 hover:border-orange-300"
+                  }`}>
+                  ₦{v.toLocaleString()}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Both inputs — always visible, bidirectional sync */}
           <div className="flex gap-3 items-end">
             <div className="flex-1">
-              <label className="text-xs font-semibold text-gray-600 mb-1 block">
-                {saleType === "kg" ? "Enter KG" : "Enter Amount (₦)"}
-              </label>
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Gas Volume (kg)</label>
               <input
                 type="number"
                 step="0.1"
                 min="0"
-                value={saleType === "kg" ? inputKg : inputAmount}
-                onChange={e => saleType === "kg" ? setInputKg(e.target.value) : setInputAmount(e.target.value)}
-                placeholder={saleType === "kg" ? "e.g. 12.5" : "e.g. 15000"}
+                value={inputKg}
+                onChange={e => {
+                  const val = e.target.value;
+                  setInputKg(val);
+                  setSaleType("kg");
+                  setInputAmount(pricePerKg > 0 && val ? ((parseFloat(val) || 0) * pricePerKg).toFixed(2) : "");
+                }}
+                placeholder="e.g. 3"
                 className="w-full border-2 border-orange-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-medium"
               />
             </div>
-            <div className="flex-1 bg-orange-50 rounded-xl px-3 py-2.5 border border-orange-100">
-              <p className="text-xs text-gray-400 mb-0.5">{saleType === "kg" ? "Amount to Pay" : "You Get"}</p>
-              <p className="font-bold text-orange-600 text-sm">
-                {saleType === "kg" ? `₦${fmt(amount)}` : `${kg.toFixed(3)} kg`}
-              </p>
+            <div className="shrink-0 flex items-center pb-3 text-gray-300">
+              <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+                <path d="M1 4.5h16M13 1l4 3.5-4 3.5M17 9.5H1M5 6.5l-4 3 4 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <div className="flex-1">
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Amount to Pay (₦)</label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                value={inputAmount}
+                onChange={e => {
+                  const val = e.target.value;
+                  setInputAmount(val);
+                  setSaleType("amount");
+                  setInputKg(pricePerKg > 0 && val ? ((parseFloat(val) || 0) / pricePerKg).toFixed(3) : "");
+                }}
+                placeholder="e.g. 2550"
+                className="w-full border-2 border-orange-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent font-medium"
+              />
             </div>
           </div>
+
+          {pricePerKg > 0 && (
+            <p className="text-[10px] text-gray-400 mt-1.5 text-right">@ ₦{fmt(pricePerKg)}/kg</p>
+          )}
 
           {/* Summary */}
           {(kg > 0 || amount > 0) && (
