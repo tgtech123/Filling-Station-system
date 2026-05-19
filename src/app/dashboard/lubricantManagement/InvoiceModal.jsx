@@ -1,9 +1,24 @@
 import { Download, X } from "lucide-react";
-import Image from "next/image";
-import React from "react";
+import React, { useMemo } from "react";
 
 export default function InvoiceModal({ open = true, onClose, invoice = null }) {
   if (!open) return null;
+
+  // Read station info from localStorage user object
+  const stationInfo = useMemo(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      const s = u.station || u.fillingStation || u;
+      return {
+        name:    s.name    || s.stationName    || "Filling Station",
+        address: s.address || s.stationAddress || "",
+        city:    s.city    || s.stationCity    || "",
+        phone:   s.phone   || s.stationPhone   || "",
+      };
+    } catch {
+      return { name: "Filling Station", address: "", city: "", phone: "" };
+    }
+  }, []);
 
   // Fallback if no invoice passed
   const inv = invoice || {
@@ -104,12 +119,20 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
         </div>
 
         <div id="invoice-print-area">
-          {/* Header with Logo */}
+          {/* Header with station info */}
           <div className="flex items-center justify-center flex-col mb-6">
-            <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-2">
-              <span className="text-2xl font-bold text-blue-600">LOGO</span>
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+              <span className="text-xl font-bold text-blue-600 uppercase">
+                {stationInfo.name.slice(0, 2)}
+              </span>
             </div>
-            <h1 className="text-xl font-bold text-gray-800">Filling Station</h1>
+            <h1 className="text-xl font-bold text-gray-800 text-center">{stationInfo.name}</h1>
+            {stationInfo.address && (
+              <p className="text-sm text-gray-500 text-center mt-1">{stationInfo.address}{stationInfo.city ? `, ${stationInfo.city}` : ""}</p>
+            )}
+            {stationInfo.phone && (
+              <p className="text-xs text-gray-400 mt-0.5">{stationInfo.phone}</p>
+            )}
           </div>
 
           {/* Invoice Number and Date */}

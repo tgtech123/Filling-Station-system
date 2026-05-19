@@ -294,26 +294,53 @@ export default function GasCashierPage() {
 
             {/* Cylinder Size */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Cylinder Size</p>
-              <div className="flex flex-wrap gap-2">
-                {cylinderSizes.map(s => (
-                  <button
-                    key={s._id}
-                    onClick={() => setCylinderSize(s.label)}
-                    className={`px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
-                      cylinderSize === s.label
-                        ? "bg-orange-500 border-orange-500 text-white shadow-md"
-                        : "border-gray-200 text-gray-600 hover:border-orange-300"
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Cylinder Size</p>
+                {pricePerKg > 0 && (
+                  <span className="text-xs font-semibold text-orange-500 bg-orange-50 border border-orange-100 rounded-lg px-2 py-1">
+                    ₦{fmt(pricePerKg)}/kg
+                  </span>
+                )}
               </div>
+              <div className="flex flex-wrap gap-2">
+                {cylinderSizes.map(s => {
+                  const linePrice = pricePerKg > 0 ? s.weightKg * pricePerKg : 0;
+                  const isActive  = cylinderSize === s.label;
+                  return (
+                    <button
+                      key={s._id}
+                      onClick={() => setCylinderSize(s.label)}
+                      className={`flex flex-col items-center px-4 py-2.5 rounded-xl border-2 transition-all ${
+                        isActive
+                          ? "bg-orange-500 border-orange-500 text-white shadow-md"
+                          : "border-gray-200 text-gray-600 hover:border-orange-300 bg-white"
+                      }`}
+                    >
+                      <span className="text-sm font-bold">{s.label}</span>
+                      {pricePerKg > 0 && (
+                        <span className={`text-[10px] font-medium mt-0.5 ${isActive ? "text-orange-100" : "text-orange-500"}`}>
+                          ₦{linePrice.toLocaleString("en-NG", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {!pricePerKg && (
+                <p className="mt-3 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                  No price set — ask manager to configure the price per kg in Gas Inventory.
+                </p>
+              )}
             </div>
 
             {/* Quantity Entry */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Quantity</p>
+                {pricePerKg > 0 && (
+                  <span className="text-xs font-semibold text-orange-500">@ ₦{fmt(pricePerKg)}/kg</span>
+                )}
+              </div>
               <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
                 {["kg","amount"].map(t => (
                   <button key={t} onClick={() => { setSaleType(t); setInputKg(""); setInputAmount(""); }}

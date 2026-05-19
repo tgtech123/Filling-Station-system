@@ -47,6 +47,7 @@ export default function CustomerOrderPage() {
   const [cashierRef,    setCashierRef]     = useState("");
   const [transferRef,   setTransferRef]    = useState("");
   const [note,          setNote]           = useState("");
+  const [customKg,      setCustomKg]       = useState("");
 
   // Loyalty
   const [loyaltyCustomer, setLoyaltyCustomer] = useState(null);
@@ -79,7 +80,13 @@ export default function CustomerOrderPage() {
         setCylinderSizes(info.data.cylinderSizes || []);
         setCashiers(cash.data || []);
         if (info.data.cylinderSizes?.length > 0) {
-          setCylinderSize(info.data.cylinderSizes[0].label);
+          const first = info.data.cylinderSizes[0];
+          setCylinderSize(first.label);
+          setInputKg(String(first.weightKg));
+          setSaleType("kg");
+          if (info.data.pricePerKg > 0) {
+            setInputAmount((first.weightKg * info.data.pricePerKg).toFixed(2));
+          }
         }
       } catch (e) {
         setPageError(e.message);
@@ -133,8 +140,7 @@ export default function CustomerOrderPage() {
 
     if (!name.trim())      return setSubmitError("Please enter your name");
     if (!cylinderSize)     return setSubmitError("Please select a cylinder size");
-    if (saleType === "kg"     && (!inputKg     || parseFloat(inputKg)     <= 0)) return setSubmitError("Please enter a valid quantity");
-    if (saleType === "amount" && (!inputAmount || parseFloat(inputAmount) <= 0)) return setSubmitError("Please enter a valid amount");
+    if (!inputKg || parseFloat(inputKg) <= 0) return setSubmitError("Please enter a valid quantity");
     if (!cashierRef)       return setSubmitError("Please select a cashier");
 
     setSubmitting(true);
@@ -205,7 +211,7 @@ export default function CustomerOrderPage() {
           Track My Order
         </Link>
         <button
-          onClick={() => { setSubmitted(null); setName(""); setPhone(""); setInputKg(""); setInputAmount(""); setTransferRef(""); setNote(""); }}
+          onClick={() => { setSubmitted(null); setName(""); setPhone(""); setInputKg(""); setInputAmount(""); setCustomKg(""); setCylinderSize(""); setTransferRef(""); setNote(""); }}
           className="mt-3 text-sm text-gray-400 hover:text-gray-600 transition-colors"
         >
           Place another order
@@ -276,25 +282,99 @@ export default function CustomerOrderPage() {
 
         {/* Cylinder Size */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <h2 className="font-bold text-gray-700 text-sm mb-3 flex items-center gap-2">
+          <h2 className="font-bold text-gray-700 text-sm mb-1 flex items-center gap-2">
             <span className="w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">2</span>
             Cylinder Size
           </h2>
-          <div className="flex flex-wrap gap-2">
-            {cylinderSizes.map(s => (
-              <button
-                key={s._id}
-                type="button"
-                onClick={() => setCylinderSize(s.label)}
-                className={`px-4 py-2 rounded-xl text-sm font-semibold border-2 transition-all ${
-                  cylinderSize === s.label
-                    ? "bg-orange-500 border-orange-500 text-white shadow-md"
-                    : "border-gray-200 text-gray-600 hover:border-orange-300"
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
+          {pricePerKg > 0 && (
+            <p className="text-[10px] text-orange-500 font-semibold mb-3">
+              Tap a size to auto-fill quantity &amp; price · ₦{fmt(pricePerKg)}/kg
+            </p>
+          )}
+
+          {/* Preset sizes with auto-fill */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            {cylinderSizes.map(s => {
+              const linePrice = pricePerKg > 0 ? s.weightKg * pricePerKg : 0;
+              const isActive  = cylinderSize === s.label && !customKg;
+              return (
+                <button
+                  key={s._id}
+                  type="button"
+                  onClick={() => {
+                    setCylinderSize(s.label);
+                    setCustomKg("");
+                    setInputKg(String(s.weightKg));
+                    setSaleType("kg");
+                    setInputAmount(pricePerKg > 0 ? (s.weightKg * pricePerKg).toFixed(2) : "");
+                  }}
+                  className={`flex flex-col items-center px-4 py-2.5 rounded-xl border-2 transition-all ${
+                    isActive
+                      ? "bg-orange-500 border-orange-500 text-white shadow-md"
+                      : "border-gray-200 text-gray-600 hover:border-orange-300 bg-white"
+                  }`}
+                >
+                  <span className="text-sm font-bold">{s.label}</span>
+                  {pricePerKg > 0 && (
+                    <span className={`text-[10px] font-medium mt-0.5 ${isActive ? "text-orange-100" : "text-orange-500"}`}>
+                      ₦{linePrice.toLocaleString("en-NG", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Custom KG input */}
+          <div className="border-t border-gray-100 pt-3">
+            <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
+              My size isn&apos;t listed — enter kg manually:
+            </label>
+            <div className="flex items-center gap-3">
+              <div className="relative w-36">
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0.5"
+                  value={customKg}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setCustomKg(val);
+                    const n = parseFloat(val) || 0;
+                    if (n > 0) {
+                      setCylinderSize(`${n}kg`);
+                      setInputKg(val);
+                      setSaleType("kg");
+                      setInputAmount(pricePerKg > 0 ? (n * pricePerKg).toFixed(2) : "");
+                    } else {
+                      setCylinderSize("");
+                      setInputKg("");
+                      setInputAmount("");
+                    }
+                  }}
+                  placeholder="e.g. 7"
+                  className={`w-full border-2 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 font-semibold pr-9 ${
+                    customKg ? "border-orange-400 bg-orange-50 text-orange-700" : "border-gray-200"
+                  }`}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-400">kg</span>
+              </div>
+              {customKg && parseFloat(customKg) > 0 && pricePerKg > 0 && (
+                <div className="bg-orange-50 border border-orange-200 rounded-xl px-3 py-2">
+                  <p className="text-[10px] text-gray-400">Estimated</p>
+                  <p className="text-sm font-bold text-orange-600">₦{fmt((parseFloat(customKg) || 0) * pricePerKg)}</p>
+                </div>
+              )}
+              {customKg && (
+                <button
+                  type="button"
+                  onClick={() => { setCustomKg(""); setCylinderSize(""); setInputKg(""); setInputAmount(""); }}
+                  className="text-gray-400 hover:text-red-500 transition-colors text-xs font-semibold"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
