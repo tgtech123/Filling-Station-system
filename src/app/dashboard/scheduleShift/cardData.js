@@ -5,20 +5,20 @@ export const cardData = [
     {
         id: 1,
         name: "Total Staff",
-        number: 8,
+        number: 0,
         icon: <Users />
     },
     {
         id: 2,
         name: "On Duty",
         period: "Today",
-        number: "6/8",
+        number: "0/0",
         icon: <BriefcaseBusiness />
     },
     {
         id: 3,
         name: "Overall Staff Performance",
-        number: "98.8%",
+        number: "0%",
         icon: <TbTargetArrow />
     }
 ]
