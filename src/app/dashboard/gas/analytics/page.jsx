@@ -54,7 +54,7 @@ export default function GasAnalyticsPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="max-w-5xl mx-auto px-4 py-6 overflow-x-hidden">
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
@@ -70,7 +70,7 @@ export default function GasAnalyticsPage() {
         {/* Date Range Filter */}
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-6">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
-            <div className="grid grid-cols-2 gap-3 flex-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
               <div>
                 <label className="text-xs font-semibold text-gray-500 mb-1 block">From</label>
                 <input type="date" value={dateRange.start} onChange={e => setDateRange(p => ({...p, start: e.target.value}))}
@@ -212,10 +212,10 @@ export default function GasAnalyticsPage() {
 
             {/* Transaction log */}
             {ordersVsSales?.sales && (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-4 border-b border-gray-100"><h3 className="font-bold text-gray-700 text-sm">Today's Transaction Log</h3></div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
+                <div className="overflow-x-auto w-full">
+                  <table className="w-full text-xs min-w-[540px]">
                     <thead className="bg-gray-50 text-gray-500 uppercase">
                       <tr>
                         {["Receipt","Customer","Kg","Amount","Cashier","Attendant","Status"].map(h => (

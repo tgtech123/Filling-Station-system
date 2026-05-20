@@ -1,20 +1,24 @@
 "use client";
 
 import Image from "next/image";
-import img from "../assets/station-logo.png";
 import Link from "next/link";
 import { ArrowRight, AlignJustify, X, Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useThemePersistence from "@/hooks/useThemePersistence";
+import usePlatformStore from "@/store/usePlatformStore";
 
 export default function Navbar() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useThemePersistence();
+  const { settings, fetchPublicSettings } = usePlatformStore();
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    fetchPublicSettings();
+  }, []);
 
   function handleOpen() {
     setIsOpen(true);
@@ -26,7 +30,14 @@ export default function Navbar() {
 
   return (
     <div className="h-[90px] flex justify-between items-center px-6 lg:px-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
-      <Image src={img} className="w-[90px] lg:w-[130px]" alt="logo image" />
+      <Image
+        src={settings?.logoUrl || "/fueldesk-logo.png"}
+        className="w-[90px] lg:w-[130px] h-auto object-contain"
+        alt="logo"
+        width={130}
+        height={50}
+        unoptimized={!!(settings?.logoUrl)}
+      />
 
       {/* Desktop Menu */}
       <div className="hidden lg:flex gap-10 items-center">

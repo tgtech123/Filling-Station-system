@@ -94,7 +94,7 @@ function DashboardLayout({ children }) {
       <Sidebar isVisible={showSidebar} toggleSidebar={toggleSidebar} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col">
         <Header toggleSidebar={toggleSidebar} showSidebar={showSidebar} />
 
         {/* Grace period banner */}
