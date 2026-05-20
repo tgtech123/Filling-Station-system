@@ -1,14 +1,16 @@
 "use client"
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { BiSolidToggleLeft, BiSolidToggleRight } from "react-icons/bi";
-import { SquarePen } from "lucide-react";
+import { SquarePen, Upload, ImageIcon, Loader2, X } from "lucide-react";
 import toast from "react-hot-toast";
 import usePlatformStore from "@/store/usePlatformStore";
 
 const emptyForm = {
+  logoUrl: "",
   platformName: "",
   contactEmail: "",
   contactPhone: "",
+  contactAddress: "",
   currency: "",
   termsAndConditions: "",
   planStatus: true,
@@ -22,7 +24,7 @@ const emptyForm = {
 };
 
 const inputClass =
-  "w-full h-[3.25rem] pl-3 rounded-lg border-[2px] border-neutral-300 focus:border-[2px] focus:border-blue-600 outline-none";
+  "w-full h-[3.25rem] pl-3 rounded-lg border-[2px] border-neutral-300 focus:border-[2px] focus:border-blue-600 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100";
 const readonlyClass =
   "w-full h-[3.25rem] pl-3 flex items-center text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 rounded-lg border-[2px] border-neutral-200 dark:border-gray-600";
 
@@ -30,6 +32,8 @@ const PageSettings = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [saved, setSaved] = useState(emptyForm);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const { settings, loading, saving, fetchAdminSettings, updateSettings } =
     usePlatformStore();
@@ -41,17 +45,18 @@ const PageSettings = () => {
   useEffect(() => {
     if (settings) {
       const filled = {
+        logoUrl: settings.logoUrl ?? "",
         platformName: settings.platformName ?? "",
         contactEmail: settings.contactEmail ?? "",
         contactPhone: settings.contactPhone ?? "",
+        contactAddress: settings.contactAddress ?? "",
         currency: settings.currency ?? "",
         termsAndConditions: settings.termsAndConditions ?? "",
         planStatus: settings.planStatus ?? true,
         emailNotifications: settings.emailNotifications ?? true,
         inAppNotifications: settings.inAppNotifications ?? false,
         newStationRegistration: settings.newStationRegistration ?? true,
-        subscriptionPaymentReceived:
-          settings.subscriptionPaymentReceived ?? true,
+        subscriptionPaymentReceived: settings.subscriptionPaymentReceived ?? true,
         subscriptionExpired: settings.subscriptionExpired ?? true,
         stationSuspended: settings.stationSuspended ?? true,
         systemAlerts: settings.systemAlerts ?? true,
@@ -63,6 +68,29 @@ const PageSettings = () => {
 
   const setField = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target ? e.target.value : e }));
+
+  const handleLogoFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload/logo", { method: "POST", body: fd });
+      const data = await res.json();
+      if (data.success) {
+        setForm((f) => ({ ...f, logoUrl: data.secure_url }));
+        toast.success("Logo uploaded — click Save to apply");
+      } else {
+        toast.error(data.error || "Upload failed");
+      }
+    } catch {
+      toast.error("Upload failed — try again");
+    } finally {
+      setLogoUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const handleSave = async () => {
     const result = await updateSettings(form);
@@ -82,15 +110,13 @@ const PageSettings = () => {
 
   const SectionHeader = ({ title, subtitle }) => (
     <>
-      <div className="flex flex-col gap-3">
-        <span className="text-base sm:text-lg font-semibold leading-[100%] dark:text-gray-100">
+      <div className="flex flex-col gap-1.5">
+        <span className="text-base sm:text-lg font-semibold leading-tight dark:text-gray-100">
           {title}
         </span>
-        <span className="text-sm sm:text-base text-neutral-400 leading-[150%]">
-          {subtitle}
-        </span>
+        <span className="text-sm text-neutral-400 leading-snug">{subtitle}</span>
       </div>
-      <hr className="w-full mt-[1.375rem] dark:border-gray-600" />
+      <hr className="w-full mt-4 dark:border-gray-600" />
     </>
   );
 
@@ -115,28 +141,23 @@ const PageSettings = () => {
   const ToggleRow = ({ label, hint, valueKey }) => (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-[1.375rem] border-[2px] border-neutral-300 dark:border-gray-600 w-full min-h-[5.4375rem] rounded-lg p-4 gap-3 sm:gap-0">
       <div className="flex flex-col gap-2">
-        <h1 className="text-[1rem] font-semibold leading-[100%] dark:text-gray-100">
-          {label}
-        </h1>
-        <p className="text-[0.875rem] text-neutral-400 font-medium leading-[150%]">
-          {hint}
-        </p>
+        <h1 className="text-[1rem] font-semibold leading-none dark:text-gray-100">{label}</h1>
+        <p className="text-[0.875rem] text-neutral-400 font-medium leading-snug">{hint}</p>
       </div>
       <Toggle valueKey={valueKey} />
     </div>
   );
 
-  // Loading skeleton
+  const displayLogoUrl = form.logoUrl || saved.logoUrl;
+
   if (!settings && loading) {
     return (
       <div className="flex flex-col w-full pb-10 animate-pulse space-y-4">
         <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
         <div className="h-4 bg-gray-100 dark:bg-gray-600 rounded w-1/2" />
+        <div className="h-28 bg-gray-200 dark:bg-gray-700 rounded" />
         <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded" />
         <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded" />
-        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded" />
-        <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded" />
-        <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
     );
   }
@@ -145,13 +166,11 @@ const PageSettings = () => {
     <div className="flex flex-col w-full pb-10">
       {/* Header */}
       <div className="flex justify-between items-start">
-        <div className="flex flex-col gap-3">
-          <h1 className="text-2xl lg:text-[1.75rem] font-semibold leading-[100%] dark:text-gray-100">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-2xl lg:text-[1.75rem] font-semibold leading-none dark:text-gray-100">
             Platform Settings
           </h1>
-          <p className="text-base lg:text-[1.125rem] leading-[100%] text-neutral-500">
-            Configure platform settings and preferences
-          </p>
+          <p className="text-base text-neutral-500">Configure platform settings and preferences</p>
         </div>
         {!isEditing && (
           <button
@@ -164,105 +183,172 @@ const PageSettings = () => {
         )}
       </div>
 
-      {/* Platform Information */}
-      <div className="mt-[1.375rem] bg-white dark:bg-gray-800 w-full rounded-xl p-4 lg:p-5">
+      {/* ── Branding & Appearance ──────────────────────────────────── */}
+      <div className="mt-5 bg-white dark:bg-gray-800 w-full rounded-xl p-4 lg:p-5">
+        <SectionHeader
+          title="Branding & Appearance"
+          subtitle="Upload your logo and configure how your platform appears to users"
+        />
+
+        {/* Logo upload */}
+        <div className="mt-5">
+          <label className="text-sm font-bold dark:text-gray-200 block mb-3">
+            App Logo
+          </label>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            {/* Preview box */}
+            <div className="w-28 h-28 rounded-2xl border-2 border-dashed border-neutral-300 dark:border-gray-600 flex items-center justify-center bg-gray-50 dark:bg-gray-700 overflow-hidden shrink-0 relative group">
+              {displayLogoUrl ? (
+                <>
+                  <img
+                    src={displayLogoUrl}
+                    alt="Logo preview"
+                    className="w-full h-full object-contain p-2"
+                  />
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => setForm((f) => ({ ...f, logoUrl: "" }))}
+                      className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={10} className="text-white" />
+                    </button>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-col items-center gap-1 text-center px-2">
+                  <ImageIcon size={28} className="text-gray-300" />
+                  <span className="text-[10px] text-gray-400">No logo</span>
+                </div>
+              )}
+            </div>
+
+            {/* Upload controls */}
+            <div className="flex flex-col gap-2">
+              {isEditing ? (
+                <>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+                    className="hidden"
+                    onChange={handleLogoFileChange}
+                  />
+                  <button
+                    type="button"
+                    disabled={logoUploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-2.5 border-2 border-blue-500 text-blue-600 dark:text-blue-400 rounded-xl text-sm font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {logoUploading ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Upload size={16} />
+                    )}
+                    {logoUploading ? "Uploading…" : "Upload Logo"}
+                  </button>
+                  <p className="text-xs text-neutral-400">
+                    PNG, JPG, SVG or WebP · Shown on login page, footer &amp; invoices
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-neutral-400">
+                  {displayLogoUrl
+                    ? "Logo is configured. Click Edit to change it."
+                    : "No logo uploaded yet. Click Edit to add one."}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Platform Information ───────────────────────────────────── */}
+      <div className="mt-5 bg-white dark:bg-gray-800 w-full rounded-xl p-4 lg:p-5">
         <SectionHeader
           title="Platform Information"
           subtitle="Manage your platform identity and contact details"
         />
 
-        <div className="flex flex-col gap-2 mt-[1.375rem]">
-          <label className="text-[0.875rem] font-bold dark:text-gray-200">
-            Platform Name
-          </label>
+        {/* Platform Name */}
+        <div className="flex flex-col gap-2 mt-5">
+          <label className="text-sm font-bold dark:text-gray-200">Platform Name</label>
           {isEditing ? (
-            <input
-              type="text"
-              value={form.platformName}
-              onChange={setField("platformName")}
-              className={inputClass}
-            />
+            <input type="text" value={form.platformName} onChange={setField("platformName")} className={inputClass} />
           ) : (
             <div className={readonlyClass}>{saved.platformName}</div>
           )}
           <p className="text-sm text-neutral-400">Used in emails &amp; branding</p>
         </div>
 
-        <div className="flex flex-col gap-2 mt-[1.375rem]">
+        {/* Email + Phone */}
+        <div className="flex flex-col gap-2 mt-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full">
             <div className="flex flex-col gap-2">
-              <label className="text-[0.875rem] font-bold dark:text-gray-200">
-                Contact Email
-              </label>
+              <label className="text-sm font-bold dark:text-gray-200">Contact Email</label>
               {isEditing ? (
-                <input
-                  type="email"
-                  value={form.contactEmail}
-                  onChange={setField("contactEmail")}
-                  className={inputClass}
-                />
+                <input type="email" value={form.contactEmail} onChange={setField("contactEmail")} className={inputClass} />
               ) : (
                 <div className={readonlyClass}>{saved.contactEmail}</div>
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[0.875rem] font-bold dark:text-gray-200">
-                Contact Phone
-              </label>
+              <label className="text-sm font-bold dark:text-gray-200">Contact Phone</label>
               {isEditing ? (
-                <input
-                  type="tel"
-                  value={form.contactPhone}
-                  onChange={setField("contactPhone")}
-                  className={inputClass}
-                />
+                <input type="tel" value={form.contactPhone} onChange={setField("contactPhone")} className={inputClass} />
               ) : (
                 <div className={readonlyClass}>{saved.contactPhone}</div>
               )}
             </div>
           </div>
-          <p className="text-sm text-neutral-400">
-            Public contact for station owners
-          </p>
+          <p className="text-sm text-neutral-400">Public contact details shown in footer and contact page</p>
+        </div>
+
+        {/* Address */}
+        <div className="flex flex-col gap-2 mt-5">
+          <label className="text-sm font-bold dark:text-gray-200">Physical Address</label>
+          {isEditing ? (
+            <input
+              type="text"
+              value={form.contactAddress}
+              onChange={setField("contactAddress")}
+              placeholder="e.g. 12 Main Street, Lagos, Nigeria"
+              className={inputClass}
+            />
+          ) : (
+            <div className={readonlyClass}>
+              {saved.contactAddress || <span className="text-gray-400">Not set</span>}
+            </div>
+          )}
+          <p className="text-sm text-neutral-400">Displayed in the footer and contact section</p>
         </div>
       </div>
 
-      {/* Billing Settings */}
-      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
+      {/* ── Billing Settings ──────────────────────────────────────── */}
+      <div className="mt-5 p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
         <SectionHeader
           title="Billing Settings"
           subtitle="Configure billing and payment preferences"
         />
-        <div className="flex flex-col gap-2 mt-[1.375rem]">
-          <label className="text-[1rem] font-bold dark:text-gray-200">
-            Default Currency
-          </label>
+        <div className="flex flex-col gap-2 mt-5">
+          <label className="text-sm font-bold dark:text-gray-200">Default Currency</label>
           {isEditing ? (
-            <input
-              type="text"
-              value={form.currency}
-              onChange={setField("currency")}
-              className={inputClass}
-            />
+            <input type="text" value={form.currency} onChange={setField("currency")} className={inputClass} />
           ) : (
             <div className={readonlyClass}>{saved.currency}</div>
           )}
-          <p className="text-[0.875rem] text-neutral-400">
-            Used for all pricing and invoices
-          </p>
+          <p className="text-sm text-neutral-400">Used for all pricing and invoices</p>
         </div>
       </div>
 
-      {/* Legal */}
-      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
+      {/* ── Legal ─────────────────────────────────────────────────── */}
+      <div className="mt-5 p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
         <SectionHeader
           title="Legal"
           subtitle="Manage legal documents and policies"
         />
-        <div className="flex flex-col gap-2 mt-[1.375rem]">
-          <label className="text-[1rem] font-bold dark:text-gray-200">
-            Terms &amp; Conditions
-          </label>
+        <div className="flex flex-col gap-2 mt-5">
+          <label className="text-sm font-bold dark:text-gray-200">Terms &amp; Conditions</label>
           {isEditing ? (
             <textarea
               value={form.termsAndConditions}
@@ -274,14 +360,12 @@ const PageSettings = () => {
               {saved.termsAndConditions}
             </div>
           )}
-          <p className="text-[0.875rem] text-neutral-400">
-            Displayed to users during registration
-          </p>
+          <p className="text-sm text-neutral-400">Displayed to users during registration</p>
         </div>
       </div>
 
-      {/* Access Control */}
-      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
+      {/* ── Access Control ────────────────────────────────────────── */}
+      <div className="mt-5 p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
         <SectionHeader
           title="Access Control"
           subtitle="Control who can register on your platform"
@@ -293,58 +377,30 @@ const PageSettings = () => {
         />
       </div>
 
-      {/* Notification Channels */}
-      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
+      {/* ── Notification Channels ─────────────────────────────────── */}
+      <div className="mt-5 p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
         <SectionHeader
           title="Notification Channels"
           subtitle="Choose how you receive notifications"
         />
-        <ToggleRow
-          label="Email Notifications"
-          hint="Receive important updates via email"
-          valueKey="emailNotifications"
-        />
-        <ToggleRow
-          label="In-App Notifications"
-          hint="See alerts while logged into the dashboard"
-          valueKey="inAppNotifications"
-        />
+        <ToggleRow label="Email Notifications" hint="Receive important updates via email" valueKey="emailNotifications" />
+        <ToggleRow label="In-App Notifications" hint="See alerts while logged into the dashboard" valueKey="inAppNotifications" />
       </div>
 
-      {/* Notification Types */}
-      <div className="mt-[1.375rem] p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
+      {/* ── Notification Types ────────────────────────────────────── */}
+      <div className="mt-5 p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
         <SectionHeader
           title="Notification Types"
           subtitle="Choose which events you want to be notified about"
         />
-        <ToggleRow
-          label="New Station Registration"
-          hint="When a filling station registers on the platform"
-          valueKey="newStationRegistration"
-        />
-        <ToggleRow
-          label="Subscription Payment Received"
-          hint="When a subscription payment is successfully received"
-          valueKey="subscriptionPaymentReceived"
-        />
-        <ToggleRow
-          label="Subscription Expired or Overdue"
-          hint="When a subscription expires or payment is overdue"
-          valueKey="subscriptionExpired"
-        />
-        <ToggleRow
-          label="Station Suspended or Reactivated"
-          hint="When a station is suspended or reactivated"
-          valueKey="stationSuspended"
-        />
-        <ToggleRow
-          label="System Alerts (Critical Events)"
-          hint="Receive alerts for critical system events and issues"
-          valueKey="systemAlerts"
-        />
+        <ToggleRow label="New Station Registration" hint="When a filling station registers on the platform" valueKey="newStationRegistration" />
+        <ToggleRow label="Subscription Payment Received" hint="When a subscription payment is successfully received" valueKey="subscriptionPaymentReceived" />
+        <ToggleRow label="Subscription Expired or Overdue" hint="When a subscription expires or payment is overdue" valueKey="subscriptionExpired" />
+        <ToggleRow label="Station Suspended or Reactivated" hint="When a station is suspended or reactivated" valueKey="stationSuspended" />
+        <ToggleRow label="System Alerts (Critical Events)" hint="Receive alerts for critical system events and issues" valueKey="systemAlerts" />
       </div>
 
-      {/* Save / Cancel */}
+      {/* ── Save / Cancel ─────────────────────────────────────────── */}
       {isEditing && (
         <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
           <button
@@ -356,11 +412,11 @@ const PageSettings = () => {
           </button>
           <button
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || logoUploading}
             className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <SquarePen size={18} />
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? "Saving…" : "Save Changes"}
           </button>
         </div>
       )}

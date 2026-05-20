@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
-import logo from "../assets/station-logo.png";
+import Link from "next/link";
 import { useEffect } from "react";
+import { Mail, Phone, MapPin } from "lucide-react";
 import usePlatformStore from "@/store/usePlatformStore";
 
 export default function Footer() {
@@ -10,39 +11,113 @@ export default function Footer() {
   useEffect(() => {
     fetchPublicSettings();
   }, []);
-    return (
-        <div className="bg-[#132958] py-10 px-6 lg:px-40">
-            <div className="grid grid-cols-1 justify-items-center lg:justify-items-start lg:grid-cols-3 gap-10">
-                <div className="flex flex-col items-center lg:items-start">
-                    <Image src={logo} alt="logo image" width={100} />
-                    <p className="text-white text-center lg:text-left mt-4">
-                        Streamline operations. boost efficiency
-                        and maximize profits.
-                    </p>
-                </div>
 
-                <div className="text-white">
-                    <h4 className="text-xl font-semibold mb-8">Product</h4>
-                    <p className="mb-2">
-                        Features
-                    </p>
-                    <p>
-                        Support
-                    </p>
-                </div>
+  const logoSrc = settings?.logoUrl || "/fueldesk-logo.png";
+  const name = settings?.platformName || "FuelDesk";
 
-                <div className="text-white">
-                    <h4 className="text-xl text-center lg:text-left  font-semibold mb-8">Contact</h4>
-                    <p className="mb-2 text-center lg:text-left ">
-                        {settings?.contactEmail || "hello@flourishstation.com"}
-                    </p>
-                    <p className="text-center lg:text-left ">
-                        {settings?.contactPhone || "+234904503302"}
-                    </p>
-                </div>
+  return (
+    <footer className="relative bg-gradient-to-br from-[#0a1628] via-[#132958] to-[#0d1f45] overflow-hidden">
+      {/* Top gradient accent bar */}
+      <div className="h-[3px] w-full bg-gradient-to-r from-transparent via-blue-400 to-transparent opacity-50" />
+
+      {/* Background decorative blobs */}
+      <div className="absolute top-0 right-0 w-[28rem] h-[28rem] rounded-full bg-blue-600/5 -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-blue-400/5 translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] rounded-full bg-blue-900/10 pointer-events-none blur-3xl" />
+
+      <div className="relative z-10 max-w-6xl mx-auto px-6 lg:px-10 py-12 lg:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-16">
+
+          {/* Column 1 — Brand */}
+          <div className="flex flex-col items-center sm:items-start">
+            <div className="mb-5 p-2 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 inline-block">
+              <Image
+                src={logoSrc}
+                alt={`${name} logo`}
+                width={140}
+                height={56}
+                className="h-10 w-auto object-contain"
+                unoptimized={logoSrc.startsWith("http")}
+              />
             </div>
-            <p className="mt-8 text-white text-center">&copy; 2025 {settings?.platformName || "Flourish Station"}. All rights reserved</p>
+            <p className="text-blue-200/60 text-sm leading-relaxed text-center sm:text-left max-w-xs">
+              Streamline operations, boost efficiency and maximize profits across your filling station.
+            </p>
+          </div>
 
+          {/* Column 2 — Product links */}
+          <div className="flex flex-col items-center sm:items-start">
+            <h4 className="text-white/90 font-semibold text-xs uppercase tracking-widest mb-5">
+              Product
+            </h4>
+            <nav className="flex flex-col gap-3">
+              {["Features", "Pricing", "Support", "Documentation"].map((item) => (
+                <Link
+                  key={item}
+                  href="#"
+                  className="text-blue-200/60 text-sm hover:text-white transition-all duration-200 hover:translate-x-1 transform"
+                >
+                  {item}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Column 3 — Contact */}
+          <div className="flex flex-col items-center sm:items-start">
+            <h4 className="text-white/90 font-semibold text-xs uppercase tracking-widest mb-5">
+              Contact
+            </h4>
+            <div className="flex flex-col gap-3.5">
+              {settings?.contactEmail && (
+                <a
+                  href={`mailto:${settings.contactEmail}`}
+                  className="flex items-center gap-3 text-blue-200/60 text-sm hover:text-white transition-colors group"
+                >
+                  <span className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-colors">
+                    <Mail size={13} className="text-blue-400" />
+                  </span>
+                  {settings.contactEmail}
+                </a>
+              )}
+              {settings?.contactPhone && (
+                <a
+                  href={`tel:${settings.contactPhone}`}
+                  className="flex items-center gap-3 text-blue-200/60 text-sm hover:text-white transition-colors group"
+                >
+                  <span className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-colors">
+                    <Phone size={13} className="text-blue-400" />
+                  </span>
+                  {settings.contactPhone}
+                </a>
+              )}
+              {settings?.contactAddress && (
+                <div className="flex items-start gap-3 text-blue-200/60 text-sm">
+                  <span className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                    <MapPin size={13} className="text-blue-400" />
+                  </span>
+                  <span className="leading-relaxed">{settings.contactAddress}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-    )
+
+        {/* Bottom bar */}
+        <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-blue-200/40 text-xs text-center sm:text-left">
+            &copy; {new Date().getFullYear()} {name}. All rights reserved.
+          </p>
+          <div className="flex gap-5">
+            <Link href="#" className="text-blue-200/40 text-xs hover:text-blue-200/80 transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="#" className="text-blue-200/40 text-xs hover:text-blue-200/80 transition-colors">
+              Terms of Service
+            </Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
 }

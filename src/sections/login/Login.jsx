@@ -158,17 +158,18 @@ const Login = () => {
           </div>
 
           <Image
-            src="/fueldesk-logo.png"
+            src={settings?.logoUrl || "/fueldesk-logo.png"}
             alt="Logo"
             width={300}
             height={200}
             className="w-60 sm:w-50 lg:w-[18rem] mr-auto h-auto rounded-md"
+            unoptimized={!!(settings?.logoUrl)}
           />
 
           <h1 className="text-[1.875rem] sm:text-[2.5rem] lg:text-[2.875rem] font-bold text-[#323130] text-center mr-auto mt-2">
             Login to {settings?.platformName || "FuelDesk"}
           </h1>
-          <p className="text-[0.5rem] mr-auto sm:text-[0.875rem] text-gray-500 text-center mt-1">
+          <p className="text-[1rem] mr-auto sm:text-[1rem] text-gray-500 text-center mt-1">
             Login to access your customized station dashboard
           </p>
 

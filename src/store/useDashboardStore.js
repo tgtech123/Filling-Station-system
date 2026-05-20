@@ -3,8 +3,8 @@ import { api } from "@/lib/config";
 
 // ─── Module-level cache (survives re-renders & component unmounts) ────────────
 const TTL = {
-  metrics:    2 * 60 * 1000,  // 2 min — live-ish dashboard data
-  tankStatus: 2 * 60 * 1000,  // 2 min
+  metrics:    10 * 60 * 1000,  // 10 min — avoid loading screen on every visit
+  tankStatus: 10 * 60 * 1000,
 };
 
 const _cache = {
