@@ -2,8 +2,8 @@
 import { usePathname } from "next/navigation";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import WhatsAppWidget from "./WhatsAppWidget";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
-// import { RoleProvider } from "@/app/context/RoleContext";
 
 export default function ClientLayout({ children }) {
   useSessionTimeout();
@@ -21,6 +21,7 @@ export default function ClientLayout({ children }) {
       {!hideNavAndFooter && <Navbar />}
       {children}
       {!hideNavAndFooter && <Footer />}
+      {!hideNavAndFooter && <WhatsAppWidget />}
     </div>
   );
 }
