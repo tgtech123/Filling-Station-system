@@ -345,7 +345,7 @@ export default function CreateSubscriptionPlanModal({
       const url = planId ? `/api/admin/plans/${planId}` : `/api/admin/plans`
       const method = planId ? "PATCH" : "POST"
 
-      await axios({ method, url, data: payload, headers: { Authorization: `Bearer ${token}` } })
+      await api({ method, url, data: payload, headers: { Authorization: `Bearer ${token}` } })
       toast.success(planId ? "Plan updated!" : "Plan created!")
       onSuccess?.()
       onClose()
