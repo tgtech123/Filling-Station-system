@@ -1,13 +1,15 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   Package, ShoppingCart, Plus, Minus, Trash2, Send,
   RefreshCw, CheckCircle, AlertTriangle, XCircle,
   Eye, Edit3, Save, FileText, TruckIcon, BadgeCheck, Filter, ArrowLeft,
-  Search, ChevronDown,
+  Search, ChevronDown, Building2, Phone, AtSign, UserPlus, Check,
+  AlertCircle, Loader2, X,
 } from "lucide-react";
 import useProcurementStore from "@/store/useProcurementStore";
+import useSupplierStore from "@/store/useSupplierStore";
 import toast from "react-hot-toast";
 
 // ─── urgency config ──────────────────────────────────────────────────────────
@@ -45,7 +47,6 @@ function UrgencyBadge({ urgency }) {
 }
 
 function StockBar({ current, max }) {
-  // when no reorder threshold is set (max=0), treat stock as full
   const pct = max > 0 ? Math.min((current / max) * 100, 100) : (current > 0 ? 100 : 0);
   const color = pct === 0 ? "bg-red-500" : pct < 50 ? "bg-orange-400" : pct < 100 ? "bg-yellow-400" : "bg-green-400";
   return (
@@ -55,7 +56,293 @@ function StockBar({ current, max }) {
   );
 }
 
-// ─── Order card (orders tab) ─────────────────────────────────────────────────
+// ─── Supplier Selector ────────────────────────────────────────────────────────
+function SupplierSelector({ value, onChange, onRegisterNew, suppliers, loading, accentColor = "blue" }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef(null);
+
+  const accent = {
+    blue:   { ring: "focus:ring-blue-100", border: "border-blue-400", bg: "bg-blue-50", dot: "bg-blue-500", text: "text-blue-600", btn: "bg-blue-600 hover:bg-blue-700", icon: "text-blue-500" },
+  }[accentColor] || {};
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = suppliers.filter((s) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      s.name.toLowerCase().includes(q) ||
+      s.phone?.toLowerCase().includes(q) ||
+      s.email?.toLowerCase().includes(q)
+    );
+  });
+
+  const selected = suppliers.find((s) => s._id === value);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`w-full flex items-center justify-between gap-2 border rounded-xl px-3 py-2.5 text-sm transition-all bg-white dark:bg-gray-800 ${
+          open
+            ? `${accent.border} ring-2 ${accent.ring}`
+            : "border-gray-300 dark:border-gray-600 hover:border-blue-300"
+        }`}
+      >
+        {selected ? (
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`w-7 h-7 rounded-lg ${accent.bg} flex items-center justify-center shrink-0`}>
+              <Building2 size={13} className={accent.icon} />
+            </div>
+            <div className="min-w-0 text-left">
+              <p className="font-semibold text-gray-800 dark:text-white text-sm truncate">{selected.name}</p>
+              <p className="text-xs text-gray-400 truncate">{selected.phone}{selected.email ? ` · ${selected.email}` : ""}</p>
+            </div>
+          </div>
+        ) : (
+          <span className="text-gray-400 text-sm">
+            {loading ? "Loading suppliers…" : "Select a registered supplier…"}
+          </span>
+        )}
+        <ChevronDown size={15} className={`text-gray-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden">
+          {/* Search */}
+          <div className="p-2.5 border-b border-gray-100 dark:border-gray-700">
+            <div className="relative">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input
+                autoFocus
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search supplier name, phone or email…"
+                className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:border-blue-400 dark:bg-gray-800 dark:text-white"
+              />
+            </div>
+          </div>
+
+          {/* Supplier list */}
+          <div className="max-h-56 overflow-y-auto">
+            {loading ? (
+              <div className="flex items-center justify-center py-8 gap-2 text-gray-400 text-sm">
+                <Loader2 size={15} className="animate-spin" /> Loading…
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="py-6 text-center">
+                <Building2 size={24} className="text-gray-200 mx-auto mb-1.5" />
+                <p className="text-xs text-gray-400">
+                  {search ? "No suppliers match your search" : "No suppliers registered yet"}
+                </p>
+              </div>
+            ) : (
+              filtered.map((s) => (
+                <button
+                  key={s._id}
+                  type="button"
+                  onClick={() => { onChange(s); setOpen(false); setSearch(""); }}
+                  className={`w-full flex items-center gap-3 px-3.5 py-3 text-left transition-colors border-b border-gray-50 dark:border-gray-800 last:border-0 ${
+                    value === s._id ? `${accent.bg} dark:bg-blue-900/20` : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-xl ${accent.bg} flex items-center justify-center shrink-0`}>
+                    <Building2 size={14} className={accent.icon} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-800 dark:text-white text-sm truncate">{s.name}</p>
+                    <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                      {s.phone && (
+                        <span className="flex items-center gap-1 text-xs text-gray-500">
+                          <Phone size={10} className="text-gray-400" /> {s.phone}
+                        </span>
+                      )}
+                      {s.email && (
+                        <span className="flex items-center gap-1 text-xs text-gray-500 truncate">
+                          <AtSign size={10} className="text-gray-400" /> {s.email}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {value === s._id && <Check size={15} className={accent.icon} />}
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* Register new */}
+          <div className="p-2.5 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onRegisterNew(); }}
+              className={`w-full flex items-center justify-center gap-2 py-2.5 px-3 ${accent.btn} text-white rounded-xl text-xs font-bold transition-colors`}
+            >
+              <UserPlus size={13} /> Register New Supplier
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Register Supplier Modal ──────────────────────────────────────────────────
+function RegisterSupplierModal({ onClose, onSaved, type = "lubricant" }) {
+  const { createSupplier, saving } = useSupplierStore();
+  const [form, setForm] = useState({ name: "", phone: "", email: "", address: "", notes: "", type });
+  const [error, setError] = useState(null);
+
+  const handleSave = async () => {
+    setError(null);
+    if (!form.name.trim()) return setError("Supplier name is required");
+    if (!form.phone.trim()) return setError("Phone number is required");
+    const result = await createSupplier(form);
+    if (result.success) {
+      onSaved(result.data);
+      onClose();
+    } else {
+      setError(result.error);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-5 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+              <UserPlus size={15} className="text-white" />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-sm">Register New Supplier</h3>
+              <p className="text-blue-100 text-xs">Add to your supplier directory</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors">
+            <X size={14} className="text-white" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-3">
+          {/* Name */}
+          <div>
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Supplier / Company Name *</label>
+            <div className="relative">
+              <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input
+                autoFocus
+                value={form.name}
+                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                placeholder="e.g. ABC Lubricants Ltd"
+                className="w-full pl-9 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+              />
+            </div>
+          </div>
+
+          {/* Phone */}
+          <div>
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Phone Number *</label>
+            <div className="relative">
+              <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input
+                value={form.phone}
+                onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                placeholder="e.g. 08012345678"
+                type="tel"
+                className="w-full pl-9 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Email Address</label>
+            <div className="relative">
+              <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input
+                value={form.email}
+                onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+                placeholder="supplier@example.com"
+                type="email"
+                className="w-full pl-9 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+              />
+            </div>
+          </div>
+
+          {/* Type */}
+          <div>
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Supplier Type</label>
+            <select
+              value={form.type}
+              onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+            >
+              <option value="gas">Gas Supplier</option>
+              <option value="lubricant">Lubricant Supplier</option>
+              <option value="both">Gas & Lubricant</option>
+            </select>
+          </div>
+
+          {/* Address */}
+          <div>
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Address (optional)</label>
+            <input
+              value={form.address}
+              onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))}
+              placeholder="Supplier's business address"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Notes (optional)</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+              placeholder="Any additional info about this supplier…"
+              rows={2}
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white resize-none"
+            />
+          </div>
+
+          {error && (
+            <div className="flex gap-2 items-start bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-2.5">
+              <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+              <p className="text-xs text-red-700 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-1">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-colors text-sm"
+            >
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+              {saving ? "Saving…" : "Register Supplier"}
+            </button>
+            <button
+              onClick={onClose}
+              className="px-5 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-600 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Order card (orders tab) ──────────────────────────────────────────────────
 function OrderCard({ order, onView, onDelete }) {
   const isDraft = order.status === "draft";
   return (
@@ -70,7 +357,19 @@ function OrderCard({ order, onView, onDelete }) {
         <StatusBadge status={order.status} />
       </div>
       <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1.5 mb-4">
-        <p><span className="text-gray-400">Vendor:</span> {order.vendorName || <span className="italic text-gray-300">Not set</span>}</p>
+        <div className="flex items-center gap-1.5">
+          <Building2 size={11} className="text-gray-400 shrink-0" />
+          <span className="text-gray-400">Vendor:</span>
+          <span className="font-medium text-gray-700 dark:text-gray-300 truncate">
+            {order.vendorName || <span className="italic text-gray-300">Not set</span>}
+          </span>
+        </div>
+        {order.vendorPhone && (
+          <div className="flex items-center gap-1.5">
+            <Phone size={11} className="text-gray-400 shrink-0" />
+            <span className="text-gray-500">{order.vendorPhone}</span>
+          </div>
+        )}
         <p><span className="text-gray-400">Items:</span> {order.items?.length} product{order.items?.length !== 1 ? "s" : ""}</p>
         <p><span className="text-gray-400">By:</span> {order.procuredByName}</p>
       </div>
@@ -94,29 +393,37 @@ function OrderCard({ order, onView, onDelete }) {
   );
 }
 
-// ─── Order detail modal ──────────────────────────────────────────────────────
+// ─── Order detail modal ───────────────────────────────────────────────────────
 function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
   const [order, setOrder]               = useState(initialOrder);
   const [actioning, setActioning]       = useState(false);
   const [isEditing, setIsEditing]       = useState(false);
   const [saving, setSaving]             = useState(false);
-  const [editVendorName, setEditVendorName] = useState("");
+  const [editVendorId,    setEditVendorId]    = useState("");
+  const [editVendorName,  setEditVendorName]  = useState("");
   const [editVendorPhone, setEditVendorPhone] = useState("");
-  const [editNotes, setEditNotes]       = useState("");
-  const [editItems, setEditItems]       = useState([]);
-  const [productSearch, setProductSearch] = useState("");
+  const [editNotes,  setEditNotes]  = useState("");
+  const [editItems,  setEditItems]  = useState([]);
+  const [productSearch,   setProductSearch]   = useState("");
   const [showAddProducts, setShowAddProducts] = useState(false);
+  const [showRegister,    setShowRegister]    = useState(false);
 
   const { markOrdered, markReceived, updateProcurement, reorderItems, fetchReorderItems } = useProcurementStore();
+  const { suppliers, loading: suppLoading, fetchSuppliers } = useSupplierStore();
 
   const canEdit = (role === "manager" || role === "supervisor") &&
     (order.status === "draft" || order.status === "submitted");
 
+  useEffect(() => {
+    if (isEditing) fetchSuppliers("lubricant");
+  }, [isEditing]);
+
   const enterEdit = () => {
+    setEditVendorId("");
     setEditVendorName(order.vendorName || "");
     setEditVendorPhone(order.vendorPhone || "");
     setEditNotes(order.notes || "");
-    setEditItems((order.items || []).map(i => ({ ...i })));
+    setEditItems((order.items || []).map((i) => ({ ...i })));
     if (!reorderItems.length) fetchReorderItems();
     setIsEditing(true);
   };
@@ -127,20 +434,31 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
     setProductSearch("");
   };
 
+  const handleSelectSupplier = (supplier) => {
+    setEditVendorId(supplier._id);
+    setEditVendorName(supplier.name);
+    setEditVendorPhone(supplier.phone || "");
+  };
+
+  const handleNewSupplierSaved = (supplier) => {
+    handleSelectSupplier(supplier);
+    fetchSuppliers("lubricant");
+  };
+
   const updateEditQty = (lubricantId, qty) => {
     const n = Math.max(1, parseInt(qty) || 1);
-    setEditItems(prev => prev.map(i =>
+    setEditItems((prev) => prev.map((i) =>
       i.lubricantId?.toString() === lubricantId?.toString() ? { ...i, quantityToProcure: n } : i
     ));
   };
 
   const removeEditItem = (lubricantId) =>
-    setEditItems(prev => prev.filter(i => i.lubricantId?.toString() !== lubricantId?.toString()));
+    setEditItems((prev) => prev.filter((i) => i.lubricantId?.toString() !== lubricantId?.toString()));
 
   const addProduct = (product) => {
     const id = product._id.toString();
-    if (editItems.some(i => i.lubricantId?.toString() === id)) return;
-    setEditItems(prev => [...prev, {
+    if (editItems.some((i) => i.lubricantId?.toString() === id)) return;
+    setEditItems((prev) => [...prev, {
       lubricantId:       id,
       productName:       product.productName,
       productType:       product.productType || "",
@@ -184,331 +502,351 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
   const viewTotal = order.items?.reduce((s, i) => s + i.quantityToProcure * i.unitCost, 0) || 0;
   const editTotal = editItems.reduce((s, i) => s + i.quantityToProcure * (i.unitCost || 0), 0);
 
-  const availableProducts = reorderItems.filter(p => {
-    if (editItems.some(i => i.lubricantId?.toString() === p._id.toString())) return false;
+  const availableProducts = reorderItems.filter((p) => {
+    if (editItems.some((i) => i.lubricantId?.toString() === p._id.toString())) return false;
     if (!productSearch) return true;
     const q = productSearch.toLowerCase();
     return p.productName?.toLowerCase().includes(q) || p.brand?.toLowerCase().includes(q);
   });
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center sm:p-4"
-      onClick={isEditing ? undefined : onClose}
-    >
+    <>
       <div
-        className="bg-white dark:bg-gray-900 w-full sm:rounded-2xl sm:max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl rounded-t-2xl"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center sm:p-4"
+        onClick={isEditing ? undefined : onClose}
       >
-        {/* Drag handle */}
-        <div className="sm:hidden flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
-        </div>
+        <div
+          className="bg-white dark:bg-gray-900 w-full sm:rounded-2xl sm:max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl rounded-t-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Drag handle */}
+          <div className="sm:hidden flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" />
+          </div>
 
-        {/* ── Header ───────────────────────────────────────────────── */}
-        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 sm:px-6 py-4 flex items-start justify-between gap-3 z-10">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-bold text-gray-900 dark:text-white">{order.procurementNumber}</p>
-              {isEditing && (
-                <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-semibold">
-                  Editing
+          {/* Header */}
+          <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 sm:px-6 py-4 flex items-start justify-between gap-3 z-10">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-bold text-gray-900 dark:text-white">{order.procurementNumber}</p>
+                {isEditing && (
+                  <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-semibold">
+                    Editing
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <StatusBadge status={order.status} />
+                <span className="text-xs text-gray-400">
+                  {new Date(order.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
                 </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 mt-0.5">
+              {!isEditing && canEdit && (
+                <button onClick={enterEdit}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-semibold hover:bg-blue-100 transition-colors">
+                  <Edit3 size={13} /> Edit
+                </button>
               )}
-            </div>
-            <div className="flex flex-wrap items-center gap-2 mt-1">
-              <StatusBadge status={order.status} />
-              <span className="text-xs text-gray-400">
-                {new Date(order.createdAt).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0 mt-0.5">
-            {!isEditing && canEdit && (
-              <button
-                onClick={enterEdit}
-                className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-semibold hover:bg-blue-100 transition-colors"
-              >
-                <Edit3 size={13} /> Edit
+              {isEditing && (
+                <>
+                  <button onClick={handleSave} disabled={saving || !editItems.length}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold disabled:opacity-50 transition-colors">
+                    <Save size={13} /> {saving ? "Saving…" : "Save"}
+                  </button>
+                  <button onClick={cancelEdit}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-semibold hover:bg-gray-200 transition-colors">
+                    Cancel
+                  </button>
+                </>
+              )}
+              <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">
+                <XCircle size={20} className="text-gray-400" />
               </button>
-            )}
-            {isEditing && (
-              <>
-                <button
-                  onClick={handleSave}
-                  disabled={saving || !editItems.length}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold disabled:opacity-50 transition-colors"
-                >
-                  <Save size={13} /> {saving ? "Saving…" : "Save"}
-                </button>
-                <button
-                  onClick={cancelEdit}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl text-xs font-semibold hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-              </>
-            )}
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl">
-              <XCircle size={20} className="text-gray-400" />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-4 sm:p-6 space-y-4">
-
-          {/* ── Vendor / Procured By ─────────────────────────────────── */}
-          {isEditing ? (
-            <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-3">
-              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Vendor Details</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">Vendor / Supplier Name</label>
-                  <input
-                    value={editVendorName}
-                    onChange={(e) => setEditVendorName(e.target.value)}
-                    placeholder="e.g. ABC Lubricants Ltd"
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-500 block mb-1">Vendor Phone</label>
-                  <input
-                    value={editVendorPhone}
-                    onChange={(e) => setEditVendorPhone(e.target.value)}
-                    placeholder="e.g. 080 1234 5678"
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  />
-                </div>
-              </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-1">
-                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Vendor</p>
-                <p className="font-bold text-gray-900 dark:text-white">{order.vendorName || "—"}</p>
-                <p className="text-sm text-gray-500">{order.vendorPhone || "—"}</p>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-1">
-                <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Procured By</p>
-                <p className="font-bold text-gray-900 dark:text-white">{order.procuredByName}</p>
-                <p className="text-xs text-gray-400">{order.stationName}</p>
-              </div>
-            </div>
-          )}
-
-          {/* ── Items table ──────────────────────────────────────────── */}
-          <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700 -mx-4 sm:mx-0">
-            <table className="w-full text-sm min-w-[520px]">
-              <thead className="bg-gray-50 dark:bg-gray-800">
-                <tr>
-                  {(isEditing
-                    ? ["Product", "Stock / Lvl", "Qty", "Unit Cost", "Total", ""]
-                    : ["Product", "Brand", "In Stock", "Threshold", "Qty to Buy", "Unit Cost", "Total"]
-                  ).map((h) => (
-                    <th key={h} className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                {isEditing
-                  ? editItems.map((item) => (
-                    <tr key={item.lubricantId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="px-3 sm:px-4 py-3">
-                        <p className="font-medium text-gray-900 dark:text-white text-xs sm:text-sm whitespace-nowrap">{item.productName}</p>
-                        <p className="text-xs text-gray-400">{item.brand}</p>
-                      </td>
-                      <td className="px-3 sm:px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
-                        {item.currentStock} / {item.reOrderLevel || "—"}
-                      </td>
-                      <td className="px-3 sm:px-4 py-3">
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => updateEditQty(item.lubricantId, item.quantityToProcure - 1)}
-                            className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-blue-100 active:scale-95 transition-transform"
-                          ><Minus size={11} /></button>
-                          <input
-                            type="number" min={1}
-                            value={item.quantityToProcure}
-                            onChange={(e) => updateEditQty(item.lubricantId, e.target.value)}
-                            className="w-12 border border-gray-300 dark:border-gray-600 rounded-lg text-center text-sm py-1 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
-                          />
-                          <button
-                            onClick={() => updateEditQty(item.lubricantId, item.quantityToProcure + 1)}
-                            className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-blue-100 active:scale-95 transition-transform"
-                          ><Plus size={11} /></button>
-                        </div>
-                      </td>
-                      <td className="px-3 sm:px-4 py-3 text-xs text-gray-500 whitespace-nowrap">₦{item.unitCost?.toLocaleString() || 0}</td>
-                      <td className="px-3 sm:px-4 py-3 text-xs font-semibold whitespace-nowrap">
-                        ₦{(item.quantityToProcure * (item.unitCost || 0)).toLocaleString()}
-                      </td>
-                      <td className="px-3 sm:px-4 py-3">
-                        <button
-                          onClick={() => removeEditItem(item.lubricantId)}
-                          className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                        ><Trash2 size={13} /></button>
-                      </td>
-                    </tr>
-                  ))
-                  : order.items?.map((item, i) => (
-                    <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                      <td className="px-3 sm:px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">{item.productName}</td>
-                      <td className="px-3 sm:px-4 py-3 text-gray-500 whitespace-nowrap">{item.brand || "—"}</td>
-                      <td className="px-3 sm:px-4 py-3 text-gray-700 dark:text-gray-300">{item.currentStock}</td>
-                      <td className="px-3 sm:px-4 py-3 text-gray-500">{item.reOrderLevel || "—"}</td>
-                      <td className="px-3 sm:px-4 py-3 font-bold text-blue-600">{item.quantityToProcure}</td>
-                      <td className="px-3 sm:px-4 py-3 text-gray-500 whitespace-nowrap">₦{item.unitCost?.toLocaleString() || 0}</td>
-                      <td className="px-3 sm:px-4 py-3 font-semibold whitespace-nowrap">₦{(item.quantityToProcure * item.unitCost).toLocaleString()}</td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-              <tfoot>
-                <tr className="bg-blue-50 dark:bg-blue-900/10">
-                  <td colSpan={isEditing ? 4 : 6} className="px-3 sm:px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300 text-sm">
-                    Estimated Total
-                  </td>
-                  <td colSpan={isEditing ? 2 : 1} className="px-3 sm:px-4 py-3 font-bold text-blue-700 whitespace-nowrap">
-                    ₦{(isEditing ? editTotal : viewTotal).toLocaleString()}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
           </div>
 
-          {/* ── Add Products (edit mode) ──────────────────────────────── */}
-          {isEditing && (
-            <div className="border border-dashed border-blue-300 dark:border-blue-700 rounded-xl overflow-hidden">
-              <button
-                onClick={() => setShowAddProducts(!showAddProducts)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-blue-50/60 dark:bg-blue-900/10 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-sm font-semibold text-blue-700 dark:text-blue-400"
-              >
-                <span className="flex items-center gap-2"><Plus size={14} /> Add Products to Order</span>
-                <ChevronDown size={15} className={`transition-transform duration-200 ${showAddProducts ? "rotate-180" : ""}`} />
-              </button>
-              {showAddProducts && (
-                <div className="p-3 space-y-2 bg-white dark:bg-gray-900 border-t border-dashed border-blue-200 dark:border-blue-800">
-                  <div className="relative">
-                    <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <div className="p-4 sm:p-6 space-y-4">
+            {/* Vendor / Procured By */}
+            {isEditing ? (
+              <div className="bg-blue-50/60 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide flex items-center gap-1.5">
+                    <Building2 size={12} /> Vendor / Supplier
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowRegister(true)}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-white border border-blue-200 px-2.5 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    <UserPlus size={11} /> New Supplier
+                  </button>
+                </div>
+
+                <SupplierSelector
+                  value={editVendorId}
+                  onChange={handleSelectSupplier}
+                  onRegisterNew={() => setShowRegister(true)}
+                  suppliers={suppliers}
+                  loading={suppLoading}
+                  accentColor="blue"
+                />
+
+                {editVendorName && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                    <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl px-3 py-2 border border-blue-100">
+                      <Building2 size={12} className="text-blue-400 shrink-0" />
+                      <span className="text-xs text-gray-700 dark:text-gray-300 font-medium truncate">{editVendorName}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-xl px-3 py-2 border border-blue-100">
+                      <Phone size={12} className="text-blue-400 shrink-0" />
+                      <span className="text-xs text-gray-700 dark:text-gray-300 font-medium truncate">{editVendorPhone || "—"}</span>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[11px] text-gray-400">Or type vendor details manually:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">Vendor Name</label>
                     <input
-                      value={productSearch}
-                      onChange={(e) => setProductSearch(e.target.value)}
-                      placeholder="Search product name or brand…"
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-xl pl-8 pr-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                      value={editVendorName}
+                      onChange={(e) => setEditVendorName(e.target.value)}
+                      placeholder="e.g. ABC Lubricants Ltd"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     />
                   </div>
-                  <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
-                    {availableProducts.length === 0 ? (
-                      <p className="text-xs text-gray-400 text-center py-5">
-                        {reorderItems.length === 0 ? "Loading products…" : productSearch ? "No products match your search" : "All products already in this order"}
-                      </p>
-                    ) : availableProducts.map((p) => (
-                      <div key={p._id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.productName}</p>
-                          <p className="text-xs text-gray-400">{p.brand} · In stock: {p.qtyInStock}</p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <UrgencyBadge urgency={p.urgency} />
-                          <button
-                            onClick={() => addProduct(p)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors"
-                          >
-                            <Plus size={11} /> Add
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">Vendor Phone</label>
+                    <input
+                      value={editVendorPhone}
+                      onChange={(e) => setEditVendorPhone(e.target.value)}
+                      placeholder="e.g. 080 1234 5678"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    />
                   </div>
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Notes ───────────────────────────────────────────────── */}
-          {isEditing ? (
-            <div>
-              <label className="text-xs font-semibold text-gray-500 block mb-1">Notes</label>
-              <textarea
-                value={editNotes}
-                onChange={(e) => setEditNotes(e.target.value)}
-                placeholder="Additional notes (optional)…"
-                rows={2}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white resize-none"
-              />
-            </div>
-          ) : order.notes ? (
-            <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800 rounded-xl p-4">
-              <p className="text-xs font-semibold text-amber-600 uppercase mb-1">Notes</p>
-              <p className="text-sm text-gray-700 dark:text-gray-300">{order.notes}</p>
-            </div>
-          ) : null}
-
-          {/* ── Status actions (view mode) ───────────────────────────── */}
-          {!isEditing && (order.status === "submitted" || order.status === "ordered") && (
-            <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
-              {role !== "manager" && (
-                <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-2.5">
-                  <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
-                  <p className="text-xs text-amber-700 dark:text-amber-400">
-                    Marking as received <strong>will not update stock levels</strong>. Ask the manager to confirm receipt and update inventory.
-                  </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-1">
+                  <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Vendor</p>
+                  <div className="flex items-center gap-2">
+                    <Building2 size={14} className="text-blue-400 shrink-0" />
+                    <p className="font-bold text-gray-900 dark:text-white">{order.vendorName || "—"}</p>
+                  </div>
+                  {order.vendorPhone && (
+                    <div className="flex items-center gap-2">
+                      <Phone size={12} className="text-gray-400 shrink-0" />
+                      <p className="text-sm text-gray-500">{order.vendorPhone}</p>
+                    </div>
+                  )}
                 </div>
-              )}
-              <div className="flex flex-col sm:flex-row gap-3">
-                {order.status === "submitted" && (
-                  <button
-                    disabled={actioning}
-                    onClick={() => handleAction(markOrdered, "ordered")}
-                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto"
-                  >
-                    <TruckIcon size={14} /> Mark as Ordered
-                  </button>
-                )}
-                {["submitted", "ordered"].includes(order.status) && (
-                  <button
-                    disabled={actioning}
-                    onClick={() => handleAction(markReceived, "received")}
-                    className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto"
-                  >
-                    <BadgeCheck size={14} />
-                    <span>
-                      Mark Received
-                      {role === "manager" && <span className="hidden sm:inline"> — auto-updates stock</span>}
-                    </span>
-                  </button>
+                <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-1">
+                  <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide">Procured By</p>
+                  <p className="font-bold text-gray-900 dark:text-white">{order.procuredByName}</p>
+                  <p className="text-xs text-gray-400">{order.stationName}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Items table */}
+            <div className="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700 -mx-4 sm:mx-0">
+              <table className="w-full text-sm min-w-[520px]">
+                <thead className="bg-gray-50 dark:bg-gray-800">
+                  <tr>
+                    {(isEditing
+                      ? ["Product", "Stock / Lvl", "Qty", "Unit Cost", "Total", ""]
+                      : ["Product", "Brand", "In Stock", "Threshold", "Qty to Buy", "Unit Cost", "Total"]
+                    ).map((h) => (
+                      <th key={h} className="px-3 sm:px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+                  {isEditing
+                    ? editItems.map((item) => (
+                      <tr key={item.lubricantId} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="px-3 sm:px-4 py-3">
+                          <p className="font-medium text-gray-900 dark:text-white text-xs sm:text-sm whitespace-nowrap">{item.productName}</p>
+                          <p className="text-xs text-gray-400">{item.brand}</p>
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
+                          {item.currentStock} / {item.reOrderLevel || "—"}
+                        </td>
+                        <td className="px-3 sm:px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => updateEditQty(item.lubricantId, item.quantityToProcure - 1)}
+                              className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-blue-100 active:scale-95 transition-transform">
+                              <Minus size={11} />
+                            </button>
+                            <input type="number" min={1} value={item.quantityToProcure}
+                              onChange={(e) => updateEditQty(item.lubricantId, e.target.value)}
+                              className="w-12 border border-gray-300 dark:border-gray-600 rounded-lg text-center text-sm py-1 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                            />
+                            <button onClick={() => updateEditQty(item.lubricantId, item.quantityToProcure + 1)}
+                              className="w-7 h-7 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-blue-100 active:scale-95 transition-transform">
+                              <Plus size={11} />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 text-xs text-gray-500 whitespace-nowrap">₦{item.unitCost?.toLocaleString() || 0}</td>
+                        <td className="px-3 sm:px-4 py-3 text-xs font-semibold whitespace-nowrap">
+                          ₦{(item.quantityToProcure * (item.unitCost || 0)).toLocaleString()}
+                        </td>
+                        <td className="px-3 sm:px-4 py-3">
+                          <button onClick={() => removeEditItem(item.lubricantId)}
+                            className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
+                            <Trash2 size={13} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                    : order.items?.map((item, i) => (
+                      <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                        <td className="px-3 sm:px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">{item.productName}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-500 whitespace-nowrap">{item.brand || "—"}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-700 dark:text-gray-300">{item.currentStock}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-500">{item.reOrderLevel || "—"}</td>
+                        <td className="px-3 sm:px-4 py-3 font-bold text-blue-600">{item.quantityToProcure}</td>
+                        <td className="px-3 sm:px-4 py-3 text-gray-500 whitespace-nowrap">₦{item.unitCost?.toLocaleString() || 0}</td>
+                        <td className="px-3 sm:px-4 py-3 font-semibold whitespace-nowrap">₦{(item.quantityToProcure * item.unitCost).toLocaleString()}</td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+                <tfoot>
+                  <tr className="bg-blue-50 dark:bg-blue-900/10">
+                    <td colSpan={isEditing ? 4 : 6} className="px-3 sm:px-4 py-3 text-right font-bold text-gray-700 dark:text-gray-300 text-sm">Estimated Total</td>
+                    <td colSpan={isEditing ? 2 : 1} className="px-3 sm:px-4 py-3 font-bold text-blue-700 whitespace-nowrap">
+                      ₦{(isEditing ? editTotal : viewTotal).toLocaleString()}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            {/* Add Products (edit mode) */}
+            {isEditing && (
+              <div className="border border-dashed border-blue-300 dark:border-blue-700 rounded-xl overflow-hidden">
+                <button onClick={() => setShowAddProducts(!showAddProducts)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-blue-50/60 dark:bg-blue-900/10 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-sm font-semibold text-blue-700 dark:text-blue-400">
+                  <span className="flex items-center gap-2"><Plus size={14} /> Add Products to Order</span>
+                  <ChevronDown size={15} className={`transition-transform duration-200 ${showAddProducts ? "rotate-180" : ""}`} />
+                </button>
+                {showAddProducts && (
+                  <div className="p-3 space-y-2 bg-white dark:bg-gray-900 border-t border-dashed border-blue-200 dark:border-blue-800">
+                    <div className="relative">
+                      <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <input value={productSearch} onChange={(e) => setProductSearch(e.target.value)}
+                        placeholder="Search product name or brand…"
+                        className="w-full border border-gray-300 dark:border-gray-600 rounded-xl pl-8 pr-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
+                      />
+                    </div>
+                    <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
+                      {availableProducts.length === 0 ? (
+                        <p className="text-xs text-gray-400 text-center py-5">
+                          {reorderItems.length === 0 ? "Loading products…" : productSearch ? "No products match your search" : "All products already in this order"}
+                        </p>
+                      ) : availableProducts.map((p) => (
+                        <div key={p._id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{p.productName}</p>
+                            <p className="text-xs text-gray-400">{p.brand} · In stock: {p.qtyInStock}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <UrgencyBadge urgency={p.urgency} />
+                            <button onClick={() => addProduct(p)}
+                              className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors">
+                              <Plus size={11} /> Add
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* ── Edit mode — bottom save/cancel ───────────────────────── */}
-          {isEditing && (
-            <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
-              <button
-                onClick={cancelEdit}
-                className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:border-gray-400 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving || !editItems.length}
-                className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors shadow-sm active:scale-[0.98]"
-              >
-                <Save size={14} />
-                {saving ? "Saving changes…" : "Save Changes"}
-              </button>
-            </div>
-          )}
+            {/* Notes */}
+            {isEditing ? (
+              <div>
+                <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">Notes</label>
+                <textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)}
+                  placeholder="Additional notes (optional)…" rows={2}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white resize-none"
+                />
+              </div>
+            ) : order.notes ? (
+              <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800 rounded-xl p-4">
+                <p className="text-xs font-semibold text-amber-600 uppercase mb-1">Notes</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">{order.notes}</p>
+              </div>
+            ) : null}
+
+            {/* Status actions (view mode) */}
+            {!isEditing && (order.status === "submitted" || order.status === "ordered") && (
+              <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                {role !== "manager" && (
+                  <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-2.5">
+                    <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                      Marking as received <strong>will not update stock levels</strong>. Ask the manager to confirm receipt and update inventory.
+                    </p>
+                  </div>
+                )}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {order.status === "submitted" && (
+                    <button disabled={actioning} onClick={() => handleAction(markOrdered, "ordered")}
+                      className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto">
+                      <TruckIcon size={14} /> Mark as Ordered
+                    </button>
+                  )}
+                  {["submitted", "ordered"].includes(order.status) && (
+                    <button disabled={actioning} onClick={() => handleAction(markReceived, "received")}
+                      className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto">
+                      <BadgeCheck size={14} />
+                      <span>
+                        Mark Received{role === "manager" && <span className="hidden sm:inline"> — auto-updates stock</span>}
+                      </span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Edit mode — bottom save/cancel */}
+            {isEditing && (
+              <div className="flex flex-col sm:flex-row gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <button onClick={cancelEdit}
+                  className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:border-gray-400 transition-colors">
+                  Cancel
+                </button>
+                <button onClick={handleSave} disabled={saving || !editItems.length}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors shadow-sm active:scale-[0.98]">
+                  <Save size={14} />
+                  {saving ? "Saving changes…" : "Save Changes"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+
+      {showRegister && (
+        <RegisterSupplierModal
+          type="lubricant"
+          onClose={() => setShowRegister(false)}
+          onSaved={handleNewSupplierSaved}
+        />
+      )}
+    </>
   );
 }
 
-// ─── Main Page ───────────────────────────────────────────────────────────────
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ProcurementPage() {
   const {
     reorderItems, procurements, reorderLoading, loading,
@@ -516,37 +854,51 @@ export default function ProcurementPage() {
     createProcurement, submitProcurement, deleteProcurement,
   } = useProcurementStore();
 
-  const [activeTab, setActiveTab]         = useState("new");
-  const [selected, setSelected]           = useState(new Set());
-  const [draftItems, setDraftItems]       = useState([]);
-  const [vendorName, setVendorName]       = useState("");
-  const [vendorPhone, setVendorPhone]     = useState("");
-  const [notes, setNotes]                 = useState("");
-  const [savingDraft, setSavingDraft]     = useState(false);
-  const [submitting, setSubmitting]       = useState(false);
-  const [viewOrder, setViewOrder]         = useState(null);
-  const [urgencyFilter, setUrgencyFilter] = useState("all");
-  const [userData, setUserData]           = useState(null);
+  const { suppliers, loading: suppLoading, fetchSuppliers } = useSupplierStore();
+
+  const [activeTab,       setActiveTab]       = useState("new");
+  const [selected,        setSelected]        = useState(new Set());
+  const [draftItems,      setDraftItems]      = useState([]);
+  const [vendorId,        setVendorId]        = useState("");
+  const [vendorName,      setVendorName]      = useState("");
+  const [vendorPhone,     setVendorPhone]     = useState("");
+  const [notes,           setNotes]           = useState("");
+  const [savingDraft,     setSavingDraft]     = useState(false);
+  const [submitting,      setSubmitting]      = useState(false);
+  const [viewOrder,       setViewOrder]       = useState(null);
+  const [urgencyFilter,   setUrgencyFilter]   = useState("all");
+  const [userData,        setUserData]        = useState(null);
+  const [showRegister,    setShowRegister]    = useState(false);
 
   useEffect(() => {
     try { setUserData(JSON.parse(localStorage.getItem("user") || "{}")); } catch {}
     fetchReorderItems();
     fetchProcurements();
+    fetchSuppliers("lubricant");
   }, []);
 
-  const procuredBy    = userData ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "Manager" : "Manager";
-  const stationLogo   = userData?.station?.logoUrl || userData?.station?.logo || userData?.station?.image || "";
-  const stationName   = userData?.station?.name || "";
+  const procuredBy     = userData ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "Manager" : "Manager";
+  const stationLogo    = userData?.station?.logoUrl || userData?.station?.logo || userData?.station?.image || "";
+  const stationName    = userData?.station?.name || "";
   const stationAddress = userData?.station?.address || "";
 
-  const filteredItems = urgencyFilter === "all"
-    ? reorderItems
-    : reorderItems.filter((i) => i.urgency === urgencyFilter);
+  const filteredItems = urgencyFilter === "all" ? reorderItems : reorderItems.filter((i) => i.urgency === urgencyFilter);
 
   const needsAttentionCount = useMemo(
     () => reorderItems.filter((i) => i.urgency !== "healthy").length,
     [reorderItems]
   );
+
+  const handleSelectSupplier = (supplier) => {
+    setVendorId(supplier._id);
+    setVendorName(supplier.name);
+    setVendorPhone(supplier.phone || "");
+  };
+
+  const handleNewSupplierSaved = (supplier) => {
+    handleSelectSupplier(supplier);
+    fetchSuppliers("lubricant");
+  };
 
   const toggleSelect = (item) => {
     const id = item._id.toString();
@@ -588,7 +940,8 @@ export default function ProcurementPage() {
   );
 
   const resetForm = () => {
-    setDraftItems([]); setSelected(new Set()); setVendorName(""); setVendorPhone(""); setNotes("");
+    setDraftItems([]); setSelected(new Set());
+    setVendorId(""); setVendorName(""); setVendorPhone(""); setNotes("");
   };
 
   const handleSaveDraft = async () => {
@@ -601,8 +954,8 @@ export default function ProcurementPage() {
   };
 
   const handleSubmit = async () => {
-    if (!draftItems.length)    { toast.error("No items selected"); return; }
-    if (!vendorName.trim())    { toast.error("Vendor name is required"); return; }
+    if (!draftItems.length) { toast.error("No items selected"); return; }
+    if (!vendorName.trim()) { toast.error("Vendor name is required"); return; }
     setSubmitting(true);
     const cr = await createProcurement({ vendorName, vendorPhone, items: draftItems, notes });
     if (!cr.success) { setSubmitting(false); toast.error(cr.error || "Failed to create"); return; }
@@ -622,16 +975,14 @@ export default function ProcurementPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
 
-      {/* ── Page header ──────────────────────────────────────────────── */}
+      {/* Page header */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4 sm:py-5">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard"
+              <Link href="/dashboard"
                 className="flex items-center justify-center w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shrink-0"
-                title="Back to Dashboard"
-              >
+                title="Back to Dashboard">
                 <ArrowLeft size={17} />
               </Link>
               <div>
@@ -641,15 +992,12 @@ export default function ProcurementPage() {
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
               {["new", "orders"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setActiveTab(t)}
+                <button key={t} onClick={() => setActiveTab(t)}
                   className={`flex-1 sm:flex-none px-4 sm:px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                     activeTab === t
                       ? "bg-blue-600 text-white shadow-sm"
                       : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200"
-                  }`}
-                >
+                  }`}>
                   {t === "new" ? "New Order" : `My Orders${procurements.length ? ` (${procurements.length})` : ""}`}
                 </button>
               ))}
@@ -660,11 +1008,11 @@ export default function ProcurementPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
 
-        {/* ══ NEW ORDER TAB ═══════════════════════════════════════════ */}
+        {/* ── NEW ORDER TAB ── */}
         {activeTab === "new" && (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
 
-            {/* LEFT — All lubricants inventory list */}
+            {/* LEFT — Lubricant inventory list */}
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
@@ -672,9 +1020,7 @@ export default function ProcurementPage() {
                     <Package size={17} className="text-blue-500 shrink-0" />
                     Lubricant Inventory
                     {reorderItems.length > 0 && (
-                      <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">
-                        {reorderItems.length}
-                      </span>
+                      <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">{reorderItems.length}</span>
                     )}
                   </h2>
                   {needsAttentionCount > 0 && (
@@ -687,11 +1033,8 @@ export default function ProcurementPage() {
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-800">
                     <Filter size={12} className="text-gray-400 shrink-0" />
-                    <select
-                      value={urgencyFilter}
-                      onChange={(e) => setUrgencyFilter(e.target.value)}
-                      className="text-xs bg-transparent dark:text-white outline-none cursor-pointer"
-                    >
+                    <select value={urgencyFilter} onChange={(e) => setUrgencyFilter(e.target.value)}
+                      className="text-xs bg-transparent dark:text-white outline-none cursor-pointer">
                       <option value="all">All Products</option>
                       <option value="out_of_stock">Out of Stock</option>
                       <option value="critical">Critical</option>
@@ -699,11 +1042,8 @@ export default function ProcurementPage() {
                       <option value="healthy">Healthy</option>
                     </select>
                   </div>
-                  <button
-                    onClick={fetchReorderItems}
-                    title="Refresh inventory"
-                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                  >
+                  <button onClick={fetchReorderItems} title="Refresh inventory"
+                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
                     <RefreshCw size={14} className={reorderLoading ? "animate-spin" : ""} />
                   </button>
                 </div>
@@ -723,10 +1063,7 @@ export default function ProcurementPage() {
                 <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 text-center">
                   <CheckCircle size={28} className="text-green-400 mx-auto mb-2" />
                   <p className="font-semibold text-gray-700 dark:text-gray-300 text-sm">No products match this filter</p>
-                  <button
-                    onClick={() => setUrgencyFilter("all")}
-                    className="mt-2 text-xs text-blue-600 hover:underline"
-                  >
+                  <button onClick={() => setUrgencyFilter("all")} className="mt-2 text-xs text-blue-600 hover:underline">
                     Show all products
                   </button>
                 </div>
@@ -739,21 +1076,14 @@ export default function ProcurementPage() {
                       ? Math.round((item.qtyInStock / item.reOrderLevel) * 100)
                       : item.qtyInStock > 0 ? 100 : 0;
                     return (
-                      <label
-                        key={id}
+                      <label key={id}
                         className={`flex items-start gap-3 p-3.5 sm:p-4 bg-white dark:bg-gray-900 border-2 rounded-2xl cursor-pointer transition-all ${
                           isSelected
                             ? "border-blue-500 bg-blue-50 dark:bg-blue-900/10 shadow-sm"
                             : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
-                        }`}
-                      >
+                        }`}>
                         <div className="flex items-center justify-center w-5 h-5 mt-0.5 shrink-0">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSelect(item)}
-                            className="w-4 h-4 accent-blue-600"
-                          />
+                          <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(item)} className="w-4 h-4 accent-blue-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 flex-wrap">
@@ -800,26 +1130,58 @@ export default function ProcurementPage() {
                 </div>
               </div>
 
-              {/* Vendor details */}
+              {/* ── Supplier selector section ── */}
               <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 sm:p-5 space-y-3">
-                <h3 className="font-semibold text-gray-800 dark:text-white text-sm flex items-center gap-2">
-                  <ShoppingCart size={15} className="text-blue-500" /> Vendor Details
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-gray-800 dark:text-white text-sm flex items-center gap-2">
+                    <Building2 size={15} className="text-blue-500" /> Vendor / Supplier
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-semibold border border-blue-100">
+                      {suppliers.length} registered
+                    </span>
+                    <button type="button" onClick={() => setShowRegister(true)}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
+                      <UserPlus size={11} /> New
+                    </button>
+                  </div>
+                </div>
+
+                <SupplierSelector
+                  value={vendorId}
+                  onChange={handleSelectSupplier}
+                  onRegisterNew={() => setShowRegister(true)}
+                  suppliers={suppliers}
+                  loading={suppLoading}
+                  accentColor="blue"
+                />
+
+                {/* Selected supplier chips */}
+                {vendorName && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2 bg-blue-50/60 dark:bg-blue-900/10 rounded-xl px-3 py-2 border border-blue-100">
+                      <Building2 size={12} className="text-blue-400 shrink-0" />
+                      <span className="text-xs text-gray-700 dark:text-gray-300 font-medium truncate">{vendorName}</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-blue-50/60 dark:bg-blue-900/10 rounded-xl px-3 py-2 border border-blue-100">
+                      <Phone size={12} className="text-blue-400 shrink-0" />
+                      <span className="text-xs text-gray-700 dark:text-gray-300 font-medium truncate">{vendorPhone || "No phone"}</span>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-[11px] text-gray-400">Or type vendor details manually:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 block mb-1">Vendor / Supplier Name *</label>
-                    <input
-                      value={vendorName}
-                      onChange={(e) => setVendorName(e.target.value)}
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">Vendor Name *</label>
+                    <input value={vendorName} onChange={(e) => { setVendorName(e.target.value); setVendorId(""); }}
                       placeholder="e.g. ABC Lubricants Ltd"
                       className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-3 sm:py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-500 block mb-1">Vendor Phone</label>
-                    <input
-                      value={vendorPhone}
-                      onChange={(e) => setVendorPhone(e.target.value)}
+                    <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">Vendor Phone</label>
+                    <input value={vendorPhone} onChange={(e) => setVendorPhone(e.target.value)}
                       placeholder="e.g. 080 1234 5678"
                       className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-3 sm:py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                     />
@@ -833,9 +1195,7 @@ export default function ProcurementPage() {
                   <h3 className="font-semibold text-gray-800 dark:text-white text-sm">
                     Procurement List
                     {draftItems.length > 0 && (
-                      <span className="ml-2 bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">
-                        {draftItems.length}
-                      </span>
+                      <span className="ml-2 bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">{draftItems.length}</span>
                     )}
                   </h3>
                   {draftItems.length > 0 && (
@@ -875,23 +1235,16 @@ export default function ProcurementPage() {
                             </td>
                             <td className="px-3 sm:px-4 py-3">
                               <div className="flex items-center gap-1">
-                                <button
-                                  onClick={() => updateDraftQty(item.lubricantId, item.quantityToProcure - 1)}
-                                  className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-blue-100 active:scale-95 transition-transform"
-                                >
+                                <button onClick={() => updateDraftQty(item.lubricantId, item.quantityToProcure - 1)}
+                                  className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-blue-100 active:scale-95 transition-transform">
                                   <Minus size={11} />
                                 </button>
-                                <input
-                                  type="number"
-                                  min={1}
-                                  value={item.quantityToProcure}
+                                <input type="number" min={1} value={item.quantityToProcure}
                                   onChange={(e) => updateDraftQty(item.lubricantId, e.target.value)}
                                   className="w-12 sm:w-14 border border-gray-300 dark:border-gray-600 rounded-lg text-center text-sm py-1.5 outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
                                 />
-                                <button
-                                  onClick={() => updateDraftQty(item.lubricantId, item.quantityToProcure + 1)}
-                                  className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-blue-100 active:scale-95 transition-transform"
-                                >
+                                <button onClick={() => updateDraftQty(item.lubricantId, item.quantityToProcure + 1)}
+                                  className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-blue-100 active:scale-95 transition-transform">
                                   <Plus size={11} />
                                 </button>
                               </div>
@@ -904,10 +1257,8 @@ export default function ProcurementPage() {
                               </strong>
                             </td>
                             <td className="px-3 sm:px-4 py-3">
-                              <button
-                                onClick={() => removeDraftItem(item.lubricantId)}
-                                className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                              >
+                              <button onClick={() => removeDraftItem(item.lubricantId)}
+                                className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
                                 <Trash2 size={14} />
                               </button>
                             </td>
@@ -920,27 +1271,19 @@ export default function ProcurementPage() {
 
                 {/* Notes + action buttons */}
                 <div className="px-4 sm:px-5 pb-5 pt-4 space-y-3 border-t border-gray-50 dark:border-gray-800">
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
+                  <textarea value={notes} onChange={(e) => setNotes(e.target.value)}
                     placeholder="Additional notes (optional)..."
                     rows={2}
                     className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white resize-none"
                   />
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <button
-                      onClick={handleSaveDraft}
-                      disabled={savingDraft || !draftItems.length}
-                      className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 transition-colors"
-                    >
+                    <button onClick={handleSaveDraft} disabled={savingDraft || !draftItems.length}
+                      className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:border-blue-400 hover:text-blue-600 disabled:opacity-50 transition-colors">
                       <Save size={14} />
                       {savingDraft ? "Saving..." : "Save Draft"}
                     </button>
-                    <button
-                      onClick={handleSubmit}
-                      disabled={submitting || !draftItems.length}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors shadow-sm active:scale-[0.98]"
-                    >
+                    <button onClick={handleSubmit} disabled={submitting || !draftItems.length}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold disabled:opacity-50 transition-colors shadow-sm active:scale-[0.98]">
                       <Send size={14} />
                       {submitting ? "Submitting..." : "Submit Order"}
                     </button>
@@ -951,15 +1294,13 @@ export default function ProcurementPage() {
           </div>
         )}
 
-        {/* ══ ORDERS TAB ══════════════════════════════════════════════ */}
+        {/* ── ORDERS TAB ── */}
         {activeTab === "orders" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-3">
               <h2 className="font-bold text-gray-900 dark:text-white">Procurement Orders</h2>
-              <button
-                onClick={fetchProcurements}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors"
-              >
+              <button onClick={fetchProcurements}
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors">
                 <RefreshCw size={14} className={loading ? "animate-spin" : ""} /> Refresh
               </button>
             </div>
@@ -991,6 +1332,15 @@ export default function ProcurementPage() {
           onClose={() => setViewOrder(null)}
           onUpdate={(updated) => setViewOrder(updated)}
           role={userData?.role}
+        />
+      )}
+
+      {/* Register Supplier Modal (main page level) */}
+      {showRegister && (
+        <RegisterSupplierModal
+          type="lubricant"
+          onClose={() => setShowRegister(false)}
+          onSaved={handleNewSupplierSaved}
         />
       )}
     </div>

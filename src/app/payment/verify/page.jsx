@@ -57,37 +57,19 @@ function PaymentVerifyContent() {
 
         setStatus("success");
 
-        if (authenticatedUpgrade || (alreadyLoggedIn && !isGuestPayment)) {
-          // Logged-in manager upgraded — hard reload so all stores re-fetch with new plan data
+        if (alreadyLoggedIn || authenticatedUpgrade) {
+          // Logged-in user upgraded their plan — reload so all stores pick up the new plan
           setRedirectTarget("dashboard");
           setTimeout(() => { window.location.href = "/dashboard/manager"; }, 3000);
 
-        } else if (existingAccount && !isConfirmedNewUser) {
-          // Guest email matched an existing account AND we have no local proof this was a
-          // fresh registration (payerInfo absent — e.g. existing manager who somehow reached
-          // the verify page without going through our guest checkout UI).
-          // Plan is already upgraded on the backend; send them to login to access it.
-          if (alreadyLoggedIn) {
-            setRedirectTarget("dashboard");
-            setTimeout(() => { window.location.href = "/dashboard/manager"; }, 3000);
-          } else {
-            setRedirectTarget("login");
-            setTimeout(() => {
-              window.location.href = `/login?upgraded=true&plan=${encodeURIComponent(data.planName || "")}`;
-            }, 3000);
-          }
-
         } else {
-          // Brand-new user — either:
-          //   a) Backend confirmed isExistingUser: false, OR
-          //   b) payerInfo in sessionStorage overrides an incorrect isExistingUser: true
-          //      (can happen when a partial/stale backend record exists for the email)
+          // Guest payment, user is not logged in → always go to station setup.
+          // The RegisterManagerModal handles the case where the email already has a station
+          // by prompting the user to log in from within that flow.
           setRedirectTarget("setup");
           localStorage.removeItem("token");
           localStorage.removeItem("user");
 
-          // Preserve the selectedPlan written when the user clicked the plan card (it has
-          // the correct price). Only fall back to payment response data if it's missing.
           if (!sessionStorage.getItem("selectedPlan")) {
             sessionStorage.setItem(
               "selectedPlan",
@@ -111,8 +93,6 @@ function PaymentVerifyContent() {
             })
           );
 
-          // Hard navigation so the pricing page mounts fresh and its searchParams
-          // useEffect reliably picks up ?register=true on first render.
           setTimeout(() => {
             window.location.href = "/pricing?register=true";
           }, 2000);
