@@ -67,19 +67,28 @@ const useBranchStore = create((set, get) => ({
     }
   },
 
-  // ── Create a new branch station
+  // ── Create a new branch station (optionally with manager invite)
   createBranch: async (branchData) => {
     try {
       set({ loading: true });
       const response = await api.post(`/api/branches/create`, branchData);
       set({ loading: false });
-      // Refresh branches after creation
       await get().fetchBranches();
       return response.data;
     } catch (err) {
       set({ loading: false });
       throw err;
     }
+  },
+
+  // ── Send / resend invite to a branch manager
+  inviteManager: async (branchId, { firstName, lastName, email }) => {
+    const response = await api.post(`/api/branches/${branchId}/invite`, {
+      firstName,
+      lastName,
+      email,
+    });
+    return response.data;
   },
 }));
 

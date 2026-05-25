@@ -133,11 +133,12 @@ const useProcurementStore = create((set, get) => ({
     }
   },
 
-  markReceived: async (id) => {
+  markReceived: async (id, receivedItems = []) => {
     try {
       const res = await fetch(`${API_URL}/api/procurement/${id}/received`, {
         method: "PATCH",
         headers: authHeaders(),
+        body: JSON.stringify({ receivedItems }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -145,6 +146,25 @@ const useProcurementStore = create((set, get) => ({
         procurements: s.procurements.map((p) => (p._id === id ? data.data : p)),
       }));
       return { success: true, data: data.data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  recordPayment: async (id, payload) => {
+    try {
+      const res = await fetch(`${API_URL}/api/procurement/${id}/payment`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to record payment");
+      set((s) => ({
+        procurements: s.procurements.map((p) => (p._id === id ? data.data : p)),
+        activeProcurement: s.activeProcurement?._id === id ? data.data : s.activeProcurement,
+      }));
+      return { success: true, data: data.data, totalCost: data.totalCost, balance: data.balance };
     } catch (err) {
       return { success: false, error: err.message };
     }

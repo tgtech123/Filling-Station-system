@@ -1,4 +1,4 @@
-import { TrendingUp, TriangleAlert } from "lucide-react";
+import { TrendingUp, TriangleAlert, Banknote } from "lucide-react";
 import { GiExpense } from "react-icons/gi";
 import { TbCurrencyNaira } from "react-icons/tb";
 
@@ -67,10 +67,17 @@ export const getDashboardFlashCards = (dashboard) => {
         icon: <TrendingUp size={23} />,
         variable: "₦0"
       },
+      {
+        id: 5,
+        name: "Supplier Debt",
+        period: "Outstanding",
+        icon: <Banknote size={23} />,
+        variable: "₦0",
+      },
     ];
   }
 
-  const { revenueGenerated, expenses, discrepancies, totalStockValue } = dashboard.summary;
+  const { revenueGenerated, expenses, discrepancies, totalStockValue, accountsPayable } = dashboard.summary;
 
   return [
     {
@@ -79,7 +86,7 @@ export const getDashboardFlashCards = (dashboard) => {
       period: "Today",
       icon: <TbCurrencyNaira size={23} />,
       variable: `₦${revenueGenerated.toLocaleString()}`,
-      trend: "1.5" // You can calculate this based on previous data if needed
+      trend: "1.5"
     },
     {
       id: 2,
@@ -101,6 +108,14 @@ export const getDashboardFlashCards = (dashboard) => {
       period: "Today",
       icon: <TrendingUp size={23} />,
       variable: `₦${totalStockValue.toLocaleString()}`
+    },
+    {
+      id: 5,
+      name: "Supplier Debt",
+      period: "Outstanding",
+      icon: <Banknote size={23} />,
+      variable: `₦${(accountsPayable || 0).toLocaleString()}`,
+      highlight: (accountsPayable || 0) > 0,
     },
   ];
 };
