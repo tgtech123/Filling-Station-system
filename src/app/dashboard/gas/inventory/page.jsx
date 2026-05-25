@@ -230,16 +230,34 @@ function ProcurementDetailModal({ order, onClose }) {
             <div className="bg-purple-50 border border-purple-100 rounded-2xl p-3.5">
               <p className="text-[10px] text-purple-500 font-bold uppercase mb-1">Qty Delivered</p>
               <p className="text-xl font-bold text-gray-800">
-                {order.deliveredQuantityKg != null ? <>{order.deliveredQuantityKg.toLocaleString()} <span className="text-sm font-normal text-gray-400">kg</span></> : <span className="text-sm text-gray-400">Pending</span>}
+                {order.deliveredQuantityKg != null
+                  ? <>{order.deliveredQuantityKg.toLocaleString()} <span className="text-sm font-normal text-gray-400">kg</span></>
+                  : <span className="text-sm text-gray-400">Pending</span>}
               </p>
+              {order.deliveredQuantityKg != null && order.deliveredQuantityKg !== order.orderedQuantityKg && (
+                <p className={`text-[10px] font-bold mt-1 ${order.deliveredQuantityKg < order.orderedQuantityKg ? "text-red-500" : "text-emerald-600"}`}>
+                  {order.deliveredQuantityKg < order.orderedQuantityKg
+                    ? `⚠ ${(order.orderedQuantityKg - order.deliveredQuantityKg).toLocaleString()} kg short`
+                    : `+${(order.deliveredQuantityKg - order.orderedQuantityKg).toLocaleString()} kg extra`}
+                </p>
+              )}
             </div>
             <div className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5">
               <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Price / kg</p>
               <p className="text-lg font-bold text-gray-700">₦{fmtN(order.pricePerKg)}</p>
             </div>
-            <div className="bg-orange-50 border border-orange-200 rounded-2xl p-3.5">
-              <p className="text-[10px] text-orange-500 font-bold uppercase mb-1">Total Cost</p>
+            <div className={`rounded-2xl p-3.5 border ${
+              order.deliveredQuantityKg != null && order.deliveredQuantityKg !== order.orderedQuantityKg
+                ? "bg-amber-50 border-amber-200"
+                : "bg-orange-50 border-orange-200"
+            }`}>
+              <p className="text-[10px] text-orange-500 font-bold uppercase mb-1">Actual Cost</p>
               <p className="text-lg font-bold text-orange-600">₦{fmtN(order.totalCost)}</p>
+              {order.orderedCost && order.orderedCost !== order.totalCost && (
+                <p className="text-[10px] text-gray-400 mt-0.5 line-through">
+                  Quoted: ₦{fmtN(order.orderedCost)}
+                </p>
+              )}
             </div>
           </div>
 
@@ -883,9 +901,14 @@ export default function GasInventoryPage() {
                                   </div>
                                 </td>
                                 <td className="px-4 py-3.5 text-right">
-                                  <span className="font-bold text-gray-800 text-xs">
+                                  <span className="font-bold text-gray-800 text-xs block">
                                     ₦{Number(order.totalCost || 0).toLocaleString("en-NG", { minimumFractionDigits: 2 })}
                                   </span>
+                                  {order.orderedCost && order.orderedCost !== order.totalCost && (
+                                    <span className="text-[10px] text-gray-400 line-through block">
+                                      ₦{Number(order.orderedCost).toLocaleString("en-NG", { minimumFractionDigits: 2 })}
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="px-4 py-3.5 text-center">
                                   <ProcStatusBadge status={order.status} />
@@ -948,10 +971,15 @@ export default function GasInventoryPage() {
 
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="text-[10px] text-gray-400">Total Cost</p>
+                                <p className="text-[10px] text-gray-400">Actual Cost</p>
                                 <p className="font-bold text-orange-600">
                                   ₦{Number(order.totalCost || 0).toLocaleString("en-NG", { minimumFractionDigits: 2 })}
                                 </p>
+                                {order.orderedCost && order.orderedCost !== order.totalCost && (
+                                  <p className="text-[10px] text-gray-400 line-through">
+                                    ₦{Number(order.orderedCost).toLocaleString("en-NG", { minimumFractionDigits: 2 })}
+                                  </p>
+                                )}
                               </div>
                               <button
                                 onClick={() => setViewOrder(order)}
