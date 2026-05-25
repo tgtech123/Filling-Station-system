@@ -393,6 +393,13 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       roles: ["accountant"],
       link: "/dashboard/trends",
     },
+    {
+      id: "supplier-payments",
+      name: "Supplier Payments",
+      icon: <Banknote size={20} />,
+      roles: ["accountant"],
+      link: "/dashboard/procurement",
+    },
     // Manager links
     {
       id: "fuel-management",

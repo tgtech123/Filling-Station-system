@@ -61,7 +61,7 @@ export default function AccountantDashboard() {
               )}
             </div>
 
-            <div className="mt-10 grid grid-cols-1 lg:grid-cols-4 gap-4">
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {dashboardFlashCards.map((item) => (
                 <FlashCard key={item.id} {...item} />
               ))}
