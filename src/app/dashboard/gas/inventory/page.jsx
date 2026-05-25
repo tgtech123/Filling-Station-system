@@ -5,8 +5,11 @@ import {
   Flame, Package, TrendingDown, TrendingUp, AlertTriangle, Loader2,
   Plus, Pencil, X, Check, Zap, Database, ChevronDown, ChevronUp, Gift,
   QrCode, Copy, Printer, ExternalLink, CheckCircle2, Settings,
+  ClipboardList, Building2, Phone, AtSign, ShieldCheck, ClipboardCheck,
+  Mail, Eye, RefreshCw, Calendar, User,
 } from "lucide-react";
 import useGasStore from "@/store/useGasStore";
+import useGasProcurementStore from "@/store/useGasProcurementStore";
 
 function fmt(n) {
   return Number(n || 0).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -145,6 +148,167 @@ function Modal({ title, onClose, children }) {
   );
 }
 
+const PROC_STATUS = {
+  ordered:           { label: "Order Placed",       bg: "bg-blue-100",   text: "text-blue-700",   dot: "bg-blue-500"   },
+  awaiting_delivery: { label: "Awaiting Delivery",  bg: "bg-amber-100",  text: "text-amber-700",  dot: "bg-amber-500"  },
+  delivered:         { label: "Delivered",          bg: "bg-purple-100", text: "text-purple-700", dot: "bg-purple-500" },
+  validated:         { label: "Validated ✓",        bg: "bg-green-100",  text: "text-green-700",  dot: "bg-green-500"  },
+  cancelled:         { label: "Cancelled",          bg: "bg-gray-100",   text: "text-gray-500",   dot: "bg-gray-400"   },
+};
+
+function ProcStatusBadge({ status }) {
+  const s = PROC_STATUS[status] || PROC_STATUS.ordered;
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full ${s.bg} ${s.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+      {s.label}
+    </span>
+  );
+}
+
+function ProcurementDetailModal({ order, onClose }) {
+  const fmtN = (n) => Number(n || 0).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtD = (d) => d ? new Date(d).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" }) : "—";
+  const fmtDT = (d) => d ? new Date(d).toLocaleString("en-NG", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+  const name = (p) => p ? `${p.firstName || ""} ${p.lastName || ""}`.trim() : "—";
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+
+        {/* Header */}
+        <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+              <ClipboardList size={16} className="text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-white text-sm">{order.orderNumber}</p>
+              <p className="text-orange-100 text-xs">{fmtD(order.date)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <ProcStatusBadge status={order.status} />
+            <button onClick={onClose} className="w-7 h-7 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors">
+              <X size={14} className="text-white" />
+            </button>
+          </div>
+        </div>
+
+        {/* Body — scrollable */}
+        <div className="overflow-y-auto flex-1 p-5 space-y-4">
+
+          {/* Supplier */}
+          <div className="bg-orange-50 rounded-2xl p-4 border border-orange-100">
+            <p className="text-[10px] font-bold text-orange-500 uppercase tracking-wide mb-2.5">Supplier</p>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 bg-orange-100 rounded-xl flex items-center justify-center shrink-0">
+                <Building2 size={15} className="text-orange-600" />
+              </div>
+              <p className="font-bold text-gray-800">{order.supplierName}</p>
+            </div>
+            <div className="space-y-1.5 pl-1">
+              {order.supplierPhone && (
+                <p className="flex items-center gap-2 text-xs text-gray-600">
+                  <Phone size={12} className="text-gray-400" /> {order.supplierPhone}
+                </p>
+              )}
+              {order.supplierEmail && (
+                <p className="flex items-center gap-2 text-xs text-gray-600">
+                  <AtSign size={12} className="text-gray-400" /> {order.supplierEmail}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Order figures */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-3.5">
+              <p className="text-[10px] text-blue-500 font-bold uppercase mb-1">Qty Ordered</p>
+              <p className="text-xl font-bold text-gray-800">{(order.orderedQuantityKg || 0).toLocaleString()} <span className="text-sm font-normal text-gray-400">kg</span></p>
+            </div>
+            <div className="bg-purple-50 border border-purple-100 rounded-2xl p-3.5">
+              <p className="text-[10px] text-purple-500 font-bold uppercase mb-1">Qty Delivered</p>
+              <p className="text-xl font-bold text-gray-800">
+                {order.deliveredQuantityKg != null ? <>{order.deliveredQuantityKg.toLocaleString()} <span className="text-sm font-normal text-gray-400">kg</span></> : <span className="text-sm text-gray-400">Pending</span>}
+              </p>
+            </div>
+            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-3.5">
+              <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Price / kg</p>
+              <p className="text-lg font-bold text-gray-700">₦{fmtN(order.pricePerKg)}</p>
+            </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-2xl p-3.5">
+              <p className="text-[10px] text-orange-500 font-bold uppercase mb-1">Total Cost</p>
+              <p className="text-lg font-bold text-orange-600">₦{fmtN(order.totalCost)}</p>
+            </div>
+          </div>
+
+          {/* People & timeline */}
+          <div className="bg-white border border-gray-100 rounded-2xl divide-y divide-gray-50">
+            {[
+              { icon: <User size={13} className="text-blue-400" />,       label: "Placed by",           value: name(order.recordedBy),       sub: fmtDT(order.createdAt) },
+              { icon: <ShieldCheck size={13} className="text-amber-400" />, label: "Delivery confirmed by", value: name(order.confirmedBySuper), sub: order.superConfirmedAt ? fmtDT(order.superConfirmedAt) : null },
+              { icon: <ClipboardCheck size={13} className="text-green-400" />, label: "Validated by",      value: name(order.validatedBy),       sub: order.validatedAt ? fmtDT(order.validatedAt) : null },
+            ].map((row, i) => (
+              (row.label !== "Delivery confirmed by" && row.label !== "Validated by") || row.value !== "—" ? (
+                <div key={i} className="flex items-start gap-3 px-4 py-3">
+                  <div className="w-6 h-6 bg-gray-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">{row.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-gray-400 font-semibold uppercase">{row.label}</p>
+                    <p className="text-sm font-semibold text-gray-700">{row.value}</p>
+                    {row.sub && <p className="text-[10px] text-gray-400 mt-0.5">{row.sub}</p>}
+                  </div>
+                </div>
+              ) : null
+            ))}
+          </div>
+
+          {/* Tank & extras */}
+          <div className="space-y-2">
+            {order.targetTank && (
+              <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3.5 py-2.5">
+                <Database size={13} className="text-emerald-500 shrink-0" />
+                <span className="text-xs font-semibold text-gray-700">Tank: {order.targetTank.name || order.targetTank}</span>
+              </div>
+            )}
+            {order.invoiceNumber && (
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-2.5">
+                <ClipboardList size={13} className="text-gray-400 shrink-0" />
+                <span className="text-xs text-gray-600">Invoice: <span className="font-semibold">{order.invoiceNumber}</span></span>
+              </div>
+            )}
+            {order.emailSentAt && (
+              <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-2.5">
+                <Mail size={13} className="text-blue-500 shrink-0" />
+                <span className="text-xs text-blue-700">Email sent to {order.emailSentTo} · {fmtDT(order.emailSentAt)}</span>
+              </div>
+            )}
+            {order.notes && (
+              <div className="bg-amber-50 border border-amber-100 rounded-xl px-3.5 py-2.5">
+                <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Notes</p>
+                <p className="text-xs text-gray-700">{order.notes}</p>
+              </div>
+            )}
+            {order.superNotes && (
+              <div className="bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-2.5">
+                <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Supervisor Notes</p>
+                <p className="text-xs text-gray-700">{order.superNotes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-4 border-t border-gray-100 shrink-0">
+          <button onClick={onClose} className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm transition-colors">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function GasInventoryPage() {
   const {
     inventory, tanks, pumps, settings,
@@ -155,8 +319,12 @@ export default function GasInventoryPage() {
     addTank, updateTank, addPump, updatePump,
   } = useGasStore();
 
+  const { procurements, loading: procLoading, fetchProcurements } = useGasProcurementStore();
+
   const [userRole,     setUserRole]     = useState("attendant");
   const [activeTab,    setActiveTab]    = useState("tanks");
+  const [viewOrder,    setViewOrder]    = useState(null);
+  const [historyFilter, setHistoryFilter] = useState("");
   const [tankModal,    setTankModal]    = useState(null);   // null | "add" | tank object
   const [pumpModal,    setPumpModal]    = useState(null);
   const [tankForm,     setTankForm]     = useState({ name: "", capacityKg: "", notes: "", isActive: true });
@@ -190,6 +358,7 @@ export default function GasInventoryPage() {
     fetchPricing();
     fetchLoyaltyConfig();
     fetchGasSettings();
+    fetchProcurements();
   }, []);
 
   // Sync settings form when data loads
@@ -509,16 +678,17 @@ export default function GasInventoryPage() {
               )}
             </div>
 
-            {/* Tabs: Tanks / Pumps / Loyalty / QR */}
-            <div className="flex bg-gray-100 rounded-2xl p-1 mb-5 gap-1">
+            {/* Tabs: Tanks / Pumps / Loyalty / QR / History */}
+            <div className="flex bg-gray-100 rounded-2xl p-1 mb-5 gap-1 overflow-x-auto">
               {[
                 { id: "tanks",   label: `Tanks (${activeTanks.length})`,                icon: <Database size={13} /> },
                 { id: "pumps",   label: `Pumps (${pumps.filter(p=>p.isActive).length})`, icon: <Zap size={13} />      },
                 { id: "loyalty", label: "Loyalty",                                       icon: <Gift size={13} />     },
                 { id: "qr",      label: "QR Code",                                       icon: <QrCode size={13} />   },
+                { id: "history", label: "History",                                       icon: <ClipboardList size={13} /> },
               ].map(t => (
                 <button key={t.id} onClick={() => setActiveTab(t.id)}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 min-w-max py-2.5 px-2 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                     activeTab === t.id ? "bg-white shadow text-orange-600" : "text-gray-500"
                   }`}>
                   {t.icon}{t.label}
@@ -527,7 +697,7 @@ export default function GasInventoryPage() {
             </div>
 
             {/* Inactive toggle + add button — only for tanks/pumps tabs */}
-            {activeTab !== "loyalty" && activeTab !== "qr" && (
+            {activeTab !== "loyalty" && activeTab !== "qr" && activeTab !== "history" && (
               <div className="flex items-center justify-between mb-4">
                 <button onClick={() => setShowInactive(v => !v)}
                   className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors">
@@ -602,6 +772,202 @@ export default function GasInventoryPage() {
             )}
           </>
         )}
+
+            {/* ── History tab ─────────────────────────────────────────────── */}
+            {activeTab === "history" && (() => {
+              const filtered = historyFilter
+                ? procurements.filter(p => p.status === historyFilter)
+                : procurements;
+
+              return (
+                <div>
+                  {/* Filter row */}
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    {[
+                      { id: "",                  label: "All"         },
+                      { id: "ordered",           label: "Ordered"     },
+                      { id: "awaiting_delivery", label: "Awaiting"    },
+                      { id: "delivered",         label: "Delivered"   },
+                      { id: "validated",         label: "Validated"   },
+                      { id: "cancelled",         label: "Cancelled"   },
+                    ].map(f => (
+                      <button key={f.id} onClick={() => setHistoryFilter(f.id)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                          historyFilter === f.id
+                            ? "bg-orange-500 border-orange-500 text-white"
+                            : "border-gray-200 text-gray-500 hover:border-orange-300"
+                        }`}>
+                        {f.label}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => fetchProcurements()}
+                      className="ml-auto p-1.5 border border-gray-200 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      <RefreshCw size={14} />
+                    </button>
+                  </div>
+
+                  {procLoading ? (
+                    <div className="flex justify-center py-12">
+                      <Loader2 className="w-8 h-8 text-orange-400 animate-spin" />
+                    </div>
+                  ) : filtered.length === 0 ? (
+                    <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-200">
+                      <ClipboardList className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+                      <p className="text-gray-400 font-medium">No procurement records found</p>
+                      <p className="text-sm text-gray-400 mt-1">Orders placed from the Procurement page will appear here.</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Desktop table */}
+                      <div className="hidden sm:block bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-100">
+                              <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Date</th>
+                              <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Order #</th>
+                              <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Supplier</th>
+                              <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Placed By</th>
+                              <th className="text-left px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Validated By</th>
+                              <th className="text-right px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Total Cost</th>
+                              <th className="text-center px-4 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Status</th>
+                              <th className="px-4 py-3" />
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-50">
+                            {filtered.map(order => (
+                              <tr key={order._id} className="hover:bg-orange-50/40 transition-colors group">
+                                <td className="px-4 py-3.5">
+                                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                                    <Calendar size={11} className="text-gray-300" />
+                                    {new Date(order.date).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3.5">
+                                  <span className="font-mono text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                                    {order.orderNumber}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3.5">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-7 h-7 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
+                                      <Building2 size={11} className="text-orange-500" />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="font-semibold text-gray-800 text-xs truncate max-w-[130px]">{order.supplierName}</p>
+                                      {order.supplierPhone && (
+                                        <p className="text-[10px] text-gray-400 truncate max-w-[130px]">{order.supplierPhone}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <User size={11} className="text-gray-300 shrink-0" />
+                                    <span className="text-xs text-gray-600 truncate max-w-[100px]">
+                                      {order.recordedBy
+                                        ? `${order.recordedBy.firstName || ""} ${order.recordedBy.lastName || ""}`.trim()
+                                        : "—"}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3.5">
+                                  <div className="flex items-center gap-1.5">
+                                    <ClipboardCheck size={11} className="text-gray-300 shrink-0" />
+                                    <span className="text-xs text-gray-600 truncate max-w-[100px]">
+                                      {order.validatedBy
+                                        ? `${order.validatedBy.firstName || ""} ${order.validatedBy.lastName || ""}`.trim()
+                                        : <span className="text-gray-300">—</span>}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3.5 text-right">
+                                  <span className="font-bold text-gray-800 text-xs">
+                                    ₦{Number(order.totalCost || 0).toLocaleString("en-NG", { minimumFractionDigits: 2 })}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3.5 text-center">
+                                  <ProcStatusBadge status={order.status} />
+                                </td>
+                                <td className="px-4 py-3.5 text-center">
+                                  <button
+                                    onClick={() => setViewOrder(order)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 text-xs font-semibold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg"
+                                  >
+                                    <Eye size={12} /> View
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Mobile cards */}
+                      <div className="sm:hidden space-y-3">
+                        {filtered.map(order => (
+                          <div key={order._id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+                            <div className="flex items-start justify-between gap-2 mb-3">
+                              <div>
+                                <span className="font-mono text-xs font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                                  {order.orderNumber}
+                                </span>
+                                <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                  <Calendar size={10} />
+                                  {new Date(order.date).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
+                                </p>
+                              </div>
+                              <ProcStatusBadge status={order.status} />
+                            </div>
+
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-8 h-8 bg-orange-100 rounded-xl flex items-center justify-center shrink-0">
+                                <Building2 size={13} className="text-orange-500" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-bold text-gray-800 text-sm truncate">{order.supplierName}</p>
+                                {order.supplierPhone && <p className="text-xs text-gray-400">{order.supplierPhone}</p>}
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                              <div className="bg-gray-50 rounded-xl p-2.5">
+                                <p className="text-[10px] text-gray-400 mb-0.5">Placed by</p>
+                                <p className="font-semibold text-gray-700 truncate">
+                                  {order.recordedBy ? `${order.recordedBy.firstName || ""} ${order.recordedBy.lastName || ""}`.trim() : "—"}
+                                </p>
+                              </div>
+                              <div className="bg-gray-50 rounded-xl p-2.5">
+                                <p className="text-[10px] text-gray-400 mb-0.5">Validated by</p>
+                                <p className="font-semibold text-gray-700 truncate">
+                                  {order.validatedBy ? `${order.validatedBy.firstName || ""} ${order.validatedBy.lastName || ""}`.trim() : "—"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-[10px] text-gray-400">Total Cost</p>
+                                <p className="font-bold text-orange-600">
+                                  ₦{Number(order.totalCost || 0).toLocaleString("en-NG", { minimumFractionDigits: 2 })}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => setViewOrder(order)}
+                                className="flex items-center gap-1.5 text-xs font-bold text-white bg-orange-500 hover:bg-orange-600 px-4 py-2 rounded-xl transition-colors"
+                              >
+                                <Eye size={13} /> View Details
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Loyalty tab */}
             {activeTab === "loyalty" && (
@@ -942,6 +1308,11 @@ export default function GasInventoryPage() {
                 )}
               </div>
             )}
+
+        {/* ─── Procurement Detail Modal ─── */}
+        {viewOrder && (
+          <ProcurementDetailModal order={viewOrder} onClose={() => setViewOrder(null)} />
+        )}
 
         {/* ─── Add / Edit Tank Modal ─── */}
         {tankModal !== null && (
