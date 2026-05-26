@@ -14,8 +14,10 @@ const usePaymentStore = create((set, get) => ({
       set({ loading: true });
       const response = await api.get("/api/payments/current-plan");
       set({ currentPlan: response.data.data, loading: false });
+      return response.data.data;
     } catch (err) {
       set({ loading: false });
+      return null;
     }
   },
 
