@@ -16,12 +16,14 @@ export default function ClientLayout({ children }) {
     hideOnExactRoutes.includes(pathname) ||
     hideOnPrefixRoutes.some((route) => pathname.startsWith(route));
 
+  const isLoggedIn = pathname.startsWith("/dashboard");
+
   return (
     <div>
       {!hideNavAndFooter && <Navbar />}
       {children}
       {!hideNavAndFooter && <Footer />}
-      {!hideNavAndFooter && <WhatsAppWidget />}
+      {isLoggedIn && <WhatsAppWidget />}
     </div>
   );
 }
