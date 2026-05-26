@@ -286,7 +286,11 @@ export default function Header({ toggleSidebar, showSidebar }) {
       if (switcherRef.current && !switcherRef.current.contains(e.target)) setShowSwitcher(false);
     }
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("touchstart", handleClick);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("touchstart", handleClick);
+    };
   }, []);
 
   const handleMsgClick = useCallback((msg) => {
@@ -410,22 +414,22 @@ export default function Header({ toggleSidebar, showSidebar }) {
       {/* ── Right side ── */}
       <div className="flex items-center gap-3">
 
-      {/* ── Station Switcher (Enterprise super manager only, desktop) ── */}
+      {/* ── Station Switcher (Enterprise super manager only) ── */}
       {isEnterprise && isSuperManager && branches.length >= 1 && (
-        <div className="relative hidden lg:block" ref={switcherRef}>
+        <div className="relative" ref={switcherRef}>
           <button
             onClick={() => setShowSwitcher(!showSwitcher)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+            className="flex items-center gap-1.5 px-2 lg:px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
           >
-            <Building2 size={16} className="text-blue-600" />
-            <span className="font-medium text-gray-700 dark:text-gray-200 max-w-[8rem] truncate">
-              {branches.find((b) => b.isCurrent)?.name || "Current Station"}
+            <Building2 size={16} className="text-blue-600 flex-shrink-0" />
+            <span className="hidden sm:inline font-medium text-gray-700 dark:text-gray-200 max-w-[8rem] truncate">
+              {branches.find((b) => b.isCurrent)?.name || "Station"}
             </span>
-            <ChevronDown size={14} className="text-gray-400" />
+            <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
           </button>
 
           {showSwitcher && (
-            <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl z-50 overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-56 sm:w-64 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl z-50 overflow-hidden">
               <div className="p-3 border-b border-gray-100 dark:border-gray-700">
                 <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                   Switch Station

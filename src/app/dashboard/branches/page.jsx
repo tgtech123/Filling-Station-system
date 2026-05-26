@@ -116,12 +116,13 @@ function InviteManagerModal({ branch, onClose, onSent }) {
 export default function BranchesPage() {
   const router = useRouter();
   const { overview, loading, fetchOverview, switchStation, switching } = useBranchStore();
-  const { currentPlan, fetchCurrentPlan } = usePaymentStore();
+  const { fetchCurrentPlan } = usePaymentStore();
   const [showAddBranch, setShowAddBranch] = useState(false);
   const [pendingInvites, setPendingInvites] = useState({});
   const [upgradeDismissed, setUpgradeDismissed] = useState(false);
   const [upgradeData, setUpgradeData] = useState(null);
-  const [inviteTarget, setInviteTarget] = useState(null); // branch to invite manager for
+  const [inviteTarget, setInviteTarget] = useState(null);
+  const [planChecking, setPlanChecking] = useState(true);
 
   // Tab state
   const [activeTab, setActiveTab] = useState("overview");
@@ -132,17 +133,17 @@ export default function BranchesPage() {
   const [reportLoading, setReportLoading] = useState(false);
 
   useEffect(() => {
-    fetchCurrentPlan();
+    const init = async () => {
+      // Run plan check and overview fetch in parallel for speed
+      const [plan] = await Promise.all([fetchCurrentPlan(), fetchOverview()]);
+      if (!plan?.plan?.startsWith("enterprise")) {
+        router.push("/dashboard/manager");
+        return;
+      }
+      setPlanChecking(false);
+    };
+    init();
   }, []);
-
-  useEffect(() => {
-    if (currentPlan === null) return;
-    if (currentPlan?.plan !== "enterprise") {
-      router.push("/dashboard/manager");
-      return;
-    }
-    fetchOverview();
-  }, [currentPlan]);
 
   const refreshInvites = async (stations) => {
     (stations || overview?.stations || []).forEach(async (s) => {
@@ -176,6 +177,16 @@ export default function BranchesPage() {
       fetchReport(reportPeriod);
     }
   }, [activeTab, reportPeriod]);
+
+  if (planChecking) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center items-center py-20 text-blue-600 font-semibold">
+          Loading branch data...
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -221,15 +232,8 @@ export default function BranchesPage() {
           ))}
         </div>
 
-        {/* Loading */}
-        {loading && (
-          <div className="flex justify-center items-center py-20 text-blue-600 font-semibold">
-            Loading branch data...
-          </div>
-        )}
-
         {/* Overview Tab */}
-        {!loading && activeTab === "overview" && (
+        {activeTab === "overview" && (
           <>
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -271,8 +275,14 @@ export default function BranchesPage() {
                           <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
                             {station.name}
                           </h3>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {station.city} · {station.isParent ? "Main Station" : "Branch"}
+                          <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                            {station.city}
+                            {station.isParent && (
+                              <span className="ml-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded text-[10px] font-semibold">
+                                Main
+                              </span>
+                            )}
+                            {!station.isParent && <span>· Branch</span>}
                           </p>
                         </div>
                       </div>
@@ -311,16 +321,19 @@ export default function BranchesPage() {
 
                     {/* Switch Button */}
                     <button
-                      onClick={() => switchStation(station.id)}
+                      onClick={() => !station.isCurrent && switchStation(station.id)}
                       disabled={switching || station.isCurrent}
-                      className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         station.isCurrent
                           ? "bg-gray-100 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-blue-700 text-white"
+                          : "bg-blue-600 active:bg-blue-800 hover:bg-blue-700 text-white"
                       }`}
                     >
                       {station.isCurrent ? (
-                        "Currently Viewing"
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+                          Currently Viewing
+                        </span>
                       ) : switching ? (
                         <>
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
