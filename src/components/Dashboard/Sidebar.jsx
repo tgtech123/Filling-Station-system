@@ -635,16 +635,23 @@ const visibleLinks = getVisibleLinks(userRole);
 
       {/* Header */}
       <div className="flex-shrink-0 flex justify-between items-start pt-2 px-2">
-        {/* Logo on white pill — readable on both light and dark sidebar */}
-        <div className="bg-white rounded-lg px-2.5 py-1.5 border border-gray-100 shadow-sm flex items-center justify-center max-w-[140px]">
-          {userData?.station?.logoUrl || userData?.station?.logo ? (
-            <img
-              src={userData.station.logoUrl || userData.station.logo}
-              alt="station logo"
-              className="h-9 w-auto object-contain max-w-[120px]"
-            />
-          ) : (
-            <Image src={logo} width={120} height={36} alt="logo image" className="h-9 w-auto object-contain" />
+        {/* Logo + station name stacked */}
+        <div className="flex flex-col gap-1">
+          <div className="bg-white rounded-lg px-2.5 py-1.5 border border-gray-100 shadow-sm flex items-center justify-center max-w-[140px]">
+            {userData?.station?.logoUrl || userData?.station?.logo ? (
+              <img
+                src={userData.station.logoUrl || userData.station.logo}
+                alt="station logo"
+                className="h-9 w-auto object-contain max-w-[120px]"
+              />
+            ) : (
+              <Image src={logo} width={120} height={36} alt="logo image" className="h-9 w-auto object-contain" />
+            )}
+          </div>
+          {userData?.station?.name && (
+            <p className="text-[11px] font-semibold text-gray-600 dark:text-gray-300 truncate max-w-[140px] px-0.5">
+              {userData.station.name}
+            </p>
           )}
         </div>
         <div className="w-full flex justify-end px-4 pt-4 lg:hidden">

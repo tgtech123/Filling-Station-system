@@ -97,6 +97,13 @@ const useBranchStore = create((set, get) => ({
     await get().fetchOverview();
     return response.data;
   },
+
+  // ── Permanently delete a branch and all its data
+  deleteBranch: async (branchId) => {
+    const response = await api.delete(`/api/branches/${branchId}`);
+    await get().fetchOverview();
+    return response.data;
+  },
 }));
 
 export default useBranchStore;
