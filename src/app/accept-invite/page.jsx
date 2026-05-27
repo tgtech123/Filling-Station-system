@@ -25,12 +25,19 @@ function AcceptInviteContent() {
     }
     api.get(`/api/branches/invite-preview?token=${token}`)
       .then((res) => {
-        setStationName(res.data.stationName);
-        setInviteeName(res.data.firstName);
+        setStationName(res.data.stationName || "");
+        setInviteeName(res.data.firstName || "");
         setStep("setup");
       })
-      .catch(() => {
-        setStep("invalid");
+      .catch((err) => {
+        if (err.response?.status === 400) {
+          // Token is genuinely expired or already used
+          setStep("invalid");
+        } else {
+          // 404 (endpoint not yet deployed) or network error — show form anyway,
+          // real validation runs on submit
+          setStep("setup");
+        }
       });
   }, [token]);
 
