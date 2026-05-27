@@ -90,6 +90,13 @@ const useBranchStore = create((set, get) => ({
     });
     return response.data;
   },
+
+  // ── Remove a branch manager (so a new one can be invited)
+  removeManager: async (branchId) => {
+    const response = await api.delete(`/api/branches/${branchId}/manager`);
+    await get().fetchOverview();
+    return response.data;
+  },
 }));
 
 export default useBranchStore;

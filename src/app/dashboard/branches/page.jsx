@@ -8,7 +8,7 @@ import usePaymentStore from "@/store/usePaymentStore";
 import AddBranchModal from "@/components/AddBranchModal";
 import CrossBranchStaff from "@/components/CrossBranchStaff";
 import { useRouter } from "next/navigation";
-import { Building2, ArrowRight, Plus, Crown, Mail, X, Loader2, User } from "lucide-react";
+import { Building2, ArrowRight, Plus, Crown, Mail, X, Loader2, User, UserMinus } from "lucide-react";
 import toast from "react-hot-toast";
 
 // ── Invite Manager Modal ──────────────────────────────────────────────────────
@@ -115,7 +115,7 @@ function InviteManagerModal({ branch, onClose, onSent }) {
 
 export default function BranchesPage() {
   const router = useRouter();
-  const { overview, loading, fetchOverview, switchStation, switching } = useBranchStore();
+  const { overview, loading, fetchOverview, switchStation, switching, removeManager } = useBranchStore();
   const { fetchCurrentPlan } = usePaymentStore();
   const [showAddBranch, setShowAddBranch] = useState(false);
   const [pendingInvites, setPendingInvites] = useState({});
@@ -123,6 +123,8 @@ export default function BranchesPage() {
   const [upgradeData, setUpgradeData] = useState(null);
   const [inviteTarget, setInviteTarget] = useState(null);
   const [planChecking, setPlanChecking] = useState(true);
+  const [removingManager, setRemovingManager] = useState(null); // stationId being removed
+  const [confirmRemove, setConfirmRemove] = useState(null);    // station object to confirm
 
   // Tab state
   const [activeTab, setActiveTab] = useState("overview");
@@ -347,15 +349,34 @@ export default function BranchesPage() {
                       )}
                     </button>
 
-                    {/* Invite Manager section */}
+                    {/* Manager / Invite section */}
                     <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                      {pendingInvites[station.id]?.length > 0 ? (
+                      {station.manager ? (
+                        /* Branch already has a manager — show their info + remove option */
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+                              {station.manager.name}
+                            </p>
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">
+                              {station.manager.email}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => setConfirmRemove(station)}
+                            className="flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-200 dark:border-red-800 transition-colors"
+                          >
+                            <UserMinus size={11} /> Remove
+                          </button>
+                        </div>
+                      ) : pendingInvites[station.id]?.length > 0 ? (
+                        /* Pending invite sent, not yet accepted */
                         <div className="space-y-1.5">
                           <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-                            ⏳ {pendingInvites[station.id].length} pending invite(s)
+                            ⏳ Invite pending
                           </p>
                           {pendingInvites[station.id].map((inv) => (
-                            <p key={inv.id} className="text-xs text-gray-500 dark:text-gray-400">
+                            <p key={inv.id} className="text-xs text-gray-500 dark:text-gray-400 truncate">
                               {inv.name} — {inv.email}
                             </p>
                           ))}
@@ -363,22 +384,16 @@ export default function BranchesPage() {
                             onClick={() => setInviteTarget(station)}
                             className="mt-1 text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors"
                           >
-                            <Mail size={11} /> Resend / send to different email
+                            <Mail size={11} /> Resend / different email
                           </button>
                         </div>
-                      ) : station.staffCount === 0 ? (
+                      ) : (
+                        /* No manager, no pending invite — prompt to invite */
                         <button
                           onClick={() => setInviteTarget(station)}
                           className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-medium border-2 border-dashed border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
                         >
                           <Mail size={14} /> Invite Manager
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => setInviteTarget(station)}
-                          className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1 transition-colors"
-                        >
-                          <Mail size={11} /> Invite another manager
                         </button>
                       )}
                     </div>
@@ -580,6 +595,57 @@ export default function BranchesPage() {
           onClose={() => setInviteTarget(null)}
           onSent={() => refreshInvites()}
         />
+      )}
+
+      {/* Remove Manager confirmation dialog */}
+      {confirmRemove && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[110]">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-sm p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                <UserMinus size={18} className="text-red-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Remove Manager</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{confirmRemove.name}</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-5">
+              <span className="font-semibold">{confirmRemove.manager?.name}</span> will lose access immediately.
+              You can invite a new manager afterwards.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmRemove(null)}
+                className="flex-1 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={removingManager === confirmRemove.id}
+                onClick={async () => {
+                  setRemovingManager(confirmRemove.id);
+                  try {
+                    await removeManager(confirmRemove.id);
+                    toast.success(`${confirmRemove.manager?.name} removed`);
+                    setConfirmRemove(null);
+                  } catch (err) {
+                    toast.error(err.response?.data?.error || "Failed to remove manager");
+                  } finally {
+                    setRemovingManager(null);
+                  }
+                }}
+                className="flex-1 py-2 text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+              >
+                {removingManager === confirmRemove.id ? (
+                  <><Loader2 size={13} className="animate-spin" /> Removing…</>
+                ) : (
+                  <><UserMinus size={13} /> Yes, Remove</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </DashboardLayout>
   );
