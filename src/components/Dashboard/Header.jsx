@@ -443,7 +443,11 @@ export default function Header({ toggleSidebar, showSidebar }) {
                     onClick={async () => {
                       if (!station.isCurrent) {
                         setShowSwitcher(false);
-                        await switchStation(station.id);
+                        try {
+                          await switchStation(station.id);
+                        } catch (err) {
+                          console.error("Switch failed:", err?.response?.data?.error || err?.message);
+                        }
                       }
                     }}
                     disabled={switching || station.isCurrent}
