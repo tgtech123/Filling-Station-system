@@ -323,7 +323,14 @@ export default function BranchesPage() {
 
                     {/* Switch Button */}
                     <button
-                      onClick={() => !station.isCurrent && switchStation(station.id)}
+                      onClick={async () => {
+                        if (station.isCurrent) return;
+                        try {
+                          await switchStation(station.id);
+                        } catch (err) {
+                          toast.error(err?.response?.data?.error || "Failed to switch station");
+                        }
+                      }}
                       disabled={switching || station.isCurrent}
                       className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         station.isCurrent
