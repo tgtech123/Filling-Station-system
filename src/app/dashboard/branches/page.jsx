@@ -8,7 +8,7 @@ import usePaymentStore from "@/store/usePaymentStore";
 import AddBranchModal from "@/components/AddBranchModal";
 import CrossBranchStaff from "@/components/CrossBranchStaff";
 import { useRouter } from "next/navigation";
-import { Building2, ArrowRight, Plus, Crown, Mail, X, Loader2, User, UserMinus } from "lucide-react";
+import { Building2, ArrowRight, Plus, Crown, Mail, X, Loader2, User, UserMinus, Trash2, AlertTriangle } from "lucide-react";
 import toast from "react-hot-toast";
 
 // ── Invite Manager Modal ──────────────────────────────────────────────────────
@@ -113,9 +113,133 @@ function InviteManagerModal({ branch, onClose, onSent }) {
   );
 }
 
+// ── Delete Branch Modal ───────────────────────────────────────────────────────
+function DeleteBranchModal({ branch, onClose, onDeleted }) {
+  const { deleteBranch } = useBranchStore();
+  const [confirmName, setConfirmName] = useState("");
+  const [deleting, setDeleting]       = useState(false);
+  const [error, setError]             = useState("");
+
+  const nameMatches = confirmName === branch.name;
+
+  const handleDelete = async () => {
+    if (!nameMatches) return;
+    setError("");
+    try {
+      setDeleting(true);
+      await deleteBranch(branch.id);
+      toast.success(`${branch.name} has been deleted`);
+      onDeleted();
+      onClose();
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to delete branch — please try again");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[110]">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+
+        {/* Danger header */}
+        <div className="bg-red-600 px-6 py-5 flex items-start gap-3">
+          <div className="w-10 h-10 rounded-full bg-red-500/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Trash2 size={18} className="text-white" />
+          </div>
+          <div>
+            <h3 className="text-white font-bold text-base">Delete Branch</h3>
+            <p className="text-red-200 text-xs mt-0.5">This action is permanent and cannot be undone</p>
+          </div>
+          <button onClick={onClose} className="ml-auto text-red-200 hover:text-white transition-colors">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          {/* Warning box */}
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle size={15} className="text-red-500 flex-shrink-0" />
+              <p className="text-sm font-semibold text-red-700 dark:text-red-400">
+                Everything in <span className="underline">{branch.name}</span> will be permanently erased:
+              </p>
+            </div>
+            <ul className="text-xs text-red-600 dark:text-red-400 space-y-1 ml-5 list-disc">
+              <li>All staff accounts at this branch</li>
+              <li>All shifts, sales records and revenue history</li>
+              <li>All fuel, lubricant and gas data</li>
+              <li>All financial entries, expenses and reports</li>
+              <li>All activities and notifications</li>
+            </ul>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: "Staff", value: branch.staffCount ?? "—" },
+              { label: "Shifts Today", value: branch.todayShifts ?? "—" },
+              { label: "Status", value: branch.isActive ? "Active" : "Inactive" },
+            ].map((stat) => (
+              <div key={stat.label} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5 text-center">
+                <p className="text-sm font-bold text-gray-900 dark:text-white">{stat.value}</p>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Confirm input */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+              Type <span className="text-red-600 font-bold">{branch.name}</span> to confirm deletion
+            </label>
+            <input
+              type="text"
+              value={confirmName}
+              onChange={(e) => setConfirmName(e.target.value)}
+              placeholder={branch.name}
+              className="w-full border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-red-400 dark:focus:border-red-500 transition-colors"
+            />
+            {confirmName.length > 0 && !nameMatches && (
+              <p className="text-xs text-red-500 mt-1">Name does not match</p>
+            )}
+          </div>
+
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 rounded-lg p-2.5 text-xs text-red-600">
+              {error}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2.5 text-sm border border-gray-300 dark:border-gray-600 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={!nameMatches || deleting}
+              className="flex-1 py-2.5 text-sm bg-red-600 hover:bg-red-700 disabled:bg-red-300 dark:disabled:bg-red-800/50 text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-1.5"
+            >
+              {deleting ? (
+                <><Loader2 size={13} className="animate-spin" /> Deleting…</>
+              ) : (
+                <><Trash2 size={13} /> Delete Branch</>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BranchesPage() {
   const router = useRouter();
-  const { overview, loading, fetchOverview, switchStation, switching, removeManager } = useBranchStore();
+  const { overview, loading, fetchOverview, switchStation, switching, removeManager, deleteBranch } = useBranchStore();
   const { fetchCurrentPlan } = usePaymentStore();
   const [showAddBranch, setShowAddBranch] = useState(false);
   const [pendingInvites, setPendingInvites] = useState({});
@@ -125,6 +249,7 @@ export default function BranchesPage() {
   const [planChecking, setPlanChecking] = useState(true);
   const [removingManager, setRemovingManager] = useState(null); // stationId being removed
   const [confirmRemove, setConfirmRemove] = useState(null);    // station object to confirm
+  const [confirmDelete, setConfirmDelete] = useState(null);    // station object to delete
 
   // Tab state
   const [activeTab, setActiveTab] = useState("overview");
@@ -288,15 +413,27 @@ export default function BranchesPage() {
                           </p>
                         </div>
                       </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          station.isActive
-                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                            : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-                        }`}
-                      >
-                        {station.isActive ? "Active" : "Inactive"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            station.isActive
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                              : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                          }`}
+                        >
+                          {station.isActive ? "Active" : "Inactive"}
+                        </span>
+                        {/* Delete button — only on branch stations, not on main or currently active */}
+                        {!station.isParent && !station.isCurrent && (
+                          <button
+                            onClick={() => setConfirmDelete(station)}
+                            title="Delete this branch"
+                            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Stats */}
@@ -601,6 +738,15 @@ export default function BranchesPage() {
           branch={inviteTarget}
           onClose={() => setInviteTarget(null)}
           onSent={() => refreshInvites()}
+        />
+      )}
+
+      {/* Delete Branch modal */}
+      {confirmDelete && (
+        <DeleteBranchModal
+          branch={confirmDelete}
+          onClose={() => setConfirmDelete(null)}
+          onDeleted={() => fetchOverview()}
         />
       )}
 
