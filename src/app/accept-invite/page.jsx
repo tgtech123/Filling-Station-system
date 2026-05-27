@@ -16,13 +16,22 @@ function AcceptInviteContent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [stationName, setStationName] = useState("");
+  const [inviteeName, setInviteeName] = useState("");
 
   useEffect(() => {
     if (!token) {
       setStep("invalid");
       return;
     }
-    setStep("setup");
+    api.get(`/api/branches/invite-preview?token=${token}`)
+      .then((res) => {
+        setStationName(res.data.stationName);
+        setInviteeName(res.data.firstName);
+        setStep("setup");
+      })
+      .catch(() => {
+        setStep("invalid");
+      });
   }, [token]);
 
   const handleAccept = async () => {
@@ -50,7 +59,7 @@ function AcceptInviteContent() {
       localStorage.setItem("token", authToken);
       localStorage.setItem("user", JSON.stringify(user));
 
-      setStationName(station.name);
+      if (station?.name) setStationName(station.name);
       setStep("success");
 
       setTimeout(() => {
@@ -67,9 +76,11 @@ function AcceptInviteContent() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 max-w-md w-full">
 
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-blue-600">Flourish Station</h1>
-        </div>
+        {stationName && (
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-blue-600">{stationName}</h1>
+          </div>
+        )}
 
         {step === "loading" && (
           <div className="text-center py-8">
