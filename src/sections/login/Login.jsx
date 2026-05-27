@@ -169,7 +169,7 @@ const Login = () => {
           <h1 className="text-[1.875rem] sm:text-[2.5rem] lg:text-[2.875rem] font-bold text-[#323130] text-center mr-auto mt-2">
             Login to {settings?.platformName || "FuelDesk"}
           </h1>
-          <p className="text-[1rem] mr-auto sm:text-[1rem] text-gray-500 text-center mt-1">
+          <p className="text-[1rem] mr-auto sm:text-[0.78rem] text-gray-500 text-center mt-1">
             Login to access your customized station dashboard
           </p>
 
