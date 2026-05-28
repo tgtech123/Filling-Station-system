@@ -156,6 +156,43 @@ const useSalaryStore = create((set, get) => ({
 
   clearDetail: () => set({ historyDetail: null }),
   clearDraft: () => set({ draft: null }),
+
+  // Load current salary config for a staff member
+  fetchSalaryConfig: async (staffId) => {
+    try {
+      const res = await api.get(`${ENDPOINT}/staff/${staffId}/config`);
+      return res.data.data;
+    } catch (err) {
+      throw err;
+    }
+  },
+
+  // Manager (self) or super manager: save salary config for a staff member
+  configureSalary: async (staffId, payload) => {
+    set((s) => ({ loading: { ...s.loading, saving: true }, error: null }));
+    try {
+      const res = await api.patch(`${ENDPOINT}/staff/${staffId}/config`, payload);
+      set((s) => ({ loading: { ...s.loading, saving: false } }));
+      return res.data.data;
+    } catch (err) {
+      set((s) => ({ loading: { ...s.loading, saving: false }, error: err.response?.data?.message || "Failed to save salary config" }));
+      throw err;
+    }
+  },
+
+  // Super manager: consolidated payroll across all branches
+  fetchConsolidatedPayroll: async (month) => {
+    set((s) => ({ loading: { ...s.loading, consolidated: true }, error: null }));
+    try {
+      const params = month ? { month } : {};
+      const res = await api.get(`${ENDPOINT}/consolidated`, { params });
+      set((s) => ({ loading: { ...s.loading, consolidated: false } }));
+      return res.data.data;
+    } catch (err) {
+      set((s) => ({ loading: { ...s.loading, consolidated: false }, error: err.response?.data?.message || "Failed to load consolidated payroll" }));
+      throw err;
+    }
+  },
 }));
 
 export default useSalaryStore;

@@ -34,22 +34,24 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ProfilePage from './ProfilePage';
+import ManagerSalaryCard from './ManagerSalaryCard';
 
 export default function ProfilePageTwo() {
   const [profileData, setProfileData] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [isManager, setIsManager] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    // Get logged-in user data from localStorage
     try {
       const userString = localStorage.getItem("user");
-      
       if (userString) {
         const user = JSON.parse(userString);
-
-        // Map user data to profile format
+        const id = user.id || user._id;
+        setUserId(id);
+        setIsManager(user.role === "manager");
         const mappedProfile = {
-          id: user.id || user._id || user.employeeId,
+          id,
           fullName: `${user.firstName} ${user.lastName}`,
           position: user.role || "Attendant",
           currentSales: user.currentSales || "0",
@@ -58,7 +60,7 @@ export default function ProfilePageTwo() {
           lastName: user.lastName,
           email: user.email,
           phone: user.phone,
-          employeeId: user.employeeId || user.id,
+          employeeId: user.employeeId || id,
           startDate: user.startDate || "N/A",
           shiftType: user.shiftType || "N/A",
           responsibilities: user.responsibilities || "N/A",
@@ -67,18 +69,16 @@ export default function ProfilePageTwo() {
           monthlyTarget: user.monthlyTarget || "N/A",
           profileImage: user.profileImage || null,
         };
-        
         setProfileData(mappedProfile);
       } else {
         router.push("/login");
       }
     } catch (error) {
-      console.error("❌ Error loading user data:", error);
+      console.error("Error loading user data:", error);
       router.push("/login");
     }
   }, [router]);
 
-  // Show loading state while fetching user data
   if (!profileData) {
     return (
       <div className="min-h-screen p-4 bg-gray-100 flex items-center justify-center">
@@ -91,8 +91,9 @@ export default function ProfilePageTwo() {
   }
 
   return (
-    <div className="min-h-screen p-4 bg-gray-100">
+    <div className="min-h-screen p-4 bg-gray-100 space-y-4">
       <ProfilePage profileData={profileData} />
+      {isManager && userId && <ManagerSalaryCard staffId={userId} readOnly={false} />}
     </div>
   );
 }
