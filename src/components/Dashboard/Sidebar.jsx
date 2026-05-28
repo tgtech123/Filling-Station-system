@@ -813,6 +813,13 @@ const visibleLinks = getVisibleLinks(userRole);
                 Branch Overview
               </button>
               <button
+                onClick={() => router.push("/dashboard/consolidated-payroll")}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
+              >
+                <Banknote size={18} className="text-purple-600" />
+                Consolidated Payroll
+              </button>
+              <button
                 onClick={() => setShowAddBranch(true)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
               >
