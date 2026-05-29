@@ -111,7 +111,7 @@ function buildPrintHTML(order) {
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:Arial,sans-serif;color:#111;padding:0}
     @page{margin:15mm}
-    @media print{body{padding:0}}
+    @media print{body{padding:0;background:#fff!important}*{color:#000000!important;opacity:1!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}
   </style>
 </head>
 <body>

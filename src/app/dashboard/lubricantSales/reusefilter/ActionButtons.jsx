@@ -42,8 +42,8 @@ const ActionButtons = ({ transactionId }) => {
           cashier: txn.staff
             ? `${txn.staff.firstName || ""} ${txn.staff.lastName || ""}`.trim()
             : "N/A",
-          station: txn.fillingStationName || "Your Station Name",
-          address: txn.fillingStationAddress || "Station Address",
+          station: txn.fillingStation?.name || "Your Station Name",
+          address: txn.fillingStation?.address || "",
           date: new Date(txn.createdAt).toLocaleString(),
           paymentType: txn.paymentMethod || "N/A",
           items: txn.items.map((item, index) => ({

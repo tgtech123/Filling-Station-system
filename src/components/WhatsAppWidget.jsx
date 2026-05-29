@@ -1,20 +1,37 @@
 "use client";
-import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { X, GripVertical } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import usePlatformStore from "@/store/usePlatformStore";
+
+const WIDGET_W = 56; // button diameter in px (3.5rem)
+const PAD = 16;      // min distance from viewport edges
 
 export default function WhatsAppWidget() {
   const { settings, fetchPublicSettings } = usePlatformStore();
   const [bubbleVisible, setBubbleVisible] = useState(false);
   const [bubbleDismissed, setBubbleDismissed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [pos, setPos] = useState({ bottom: 24, right: 20 });
+
+  const posRef = useRef({ bottom: 24, right: 20 });
+  const dragData = useRef(null);
+  const lastTouch = useRef(0);
 
   useEffect(() => {
     fetchPublicSettings();
     setMounted(true);
 
-    // Show greeting bubble after 3 s — only if user hasn't dismissed it this session
+    try {
+      const saved = localStorage.getItem("wa_widget_pos");
+      if (saved) {
+        const p = JSON.parse(saved);
+        setPos(p);
+        posRef.current = p;
+      }
+    } catch {}
+
     const alreadyDismissed = sessionStorage.getItem("wa_bubble_dismissed");
     if (!alreadyDismissed) {
       const t = setTimeout(() => setBubbleVisible(true), 3000);
@@ -22,10 +39,7 @@ export default function WhatsAppWidget() {
     }
   }, []);
 
-  // Normalise number: strip everything except digits
   const phone = settings?.supportWhatsApp?.replace(/\D/g, "");
-
-  // Don't render anything until client-side hydration AND a number is configured
   if (!mounted || !phone) return null;
 
   const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(
@@ -44,11 +58,84 @@ export default function WhatsAppWidget() {
     sessionStorage.setItem("wa_bubble_dismissed", "1");
   };
 
+  const startDrag = (e) => {
+    const isTouch = e.type === "touchstart";
+
+    // Suppress synthetic mouse events that follow a touch tap
+    if (isTouch) lastTouch.current = Date.now();
+    if (!isTouch && Date.now() - lastTouch.current < 600) return;
+
+    const clientX = isTouch ? e.touches[0].clientX : e.clientX;
+    const clientY = isTouch ? e.touches[0].clientY : e.clientY;
+
+    dragData.current = {
+      startX: clientX,
+      startY: clientY,
+      startRight: posRef.current.right,
+      startBottom: posRef.current.bottom,
+      moved: false,
+    };
+
+    const onMove = (ev) => {
+      if (!dragData.current) return;
+      const cx = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      const cy = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      const dx = cx - dragData.current.startX;
+      const dy = cy - dragData.current.startY;
+
+      if (!dragData.current.moved && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+        dragData.current.moved = true;
+        setIsDragging(true);
+      }
+      if (!dragData.current.moved) return;
+
+      ev.preventDefault();
+
+      const newRight = Math.max(
+        PAD,
+        Math.min(window.innerWidth - WIDGET_W - PAD, dragData.current.startRight - dx)
+      );
+      const newBottom = Math.max(
+        PAD,
+        Math.min(window.innerHeight - WIDGET_W - PAD, dragData.current.startBottom + dy)
+      );
+
+      const newPos = { right: newRight, bottom: newBottom };
+      posRef.current = newPos;
+      setPos(newPos);
+    };
+
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchend", onUp);
+
+      if (!dragData.current?.moved) {
+        openChat();
+      } else {
+        try {
+          localStorage.setItem("wa_widget_pos", JSON.stringify(posRef.current));
+        } catch {}
+      }
+
+      dragData.current = null;
+      setIsDragging(false);
+    };
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchend", onUp);
+  };
+
   const showBubble = bubbleVisible && !bubbleDismissed;
 
   return (
-    <div className="fixed bottom-6 right-5 z-50 flex flex-col items-end gap-3 select-none">
-
+    <div
+      className="fixed z-50 flex flex-col items-end gap-3 select-none"
+      style={{ bottom: pos.bottom, right: pos.right }}
+    >
       {/* ── Greeting bubble ─────────────────────────────────── */}
       <div
         className={`relative bg-white rounded-2xl shadow-2xl border border-gray-100 w-[17rem] overflow-visible transition-all duration-300 ${
@@ -105,19 +192,29 @@ export default function WhatsAppWidget() {
 
       {/* ── Main floating button ─────────────────────────────── */}
       <button
-        onClick={openChat}
+        onMouseDown={startDrag}
+        onTouchStart={startDrag}
         aria-label="Chat with us on WhatsApp"
-        className="relative w-[3.5rem] h-[3.5rem] rounded-full bg-[#25D366] hover:bg-[#1ebe5d] active:bg-[#17a351] shadow-lg hover:shadow-xl text-white flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 group"
+        className={`relative w-[3.5rem] h-[3.5rem] rounded-full bg-[#25D366] shadow-lg text-white flex items-center justify-center transition-all duration-200 group ${
+          isDragging
+            ? "cursor-grabbing scale-95 shadow-2xl bg-[#1ebe5d]"
+            : "cursor-grab hover:bg-[#1ebe5d] hover:shadow-xl hover:scale-110"
+        }`}
       >
-        {/* Pulse ring — stops once the bubble has been shown */}
-        {!showBubble && (
+        {/* Pulse ring — only when idle */}
+        {!showBubble && !isDragging && (
           <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-20" />
         )}
 
         <FaWhatsapp size={26} />
 
-        {/* Tooltip — only visible when bubble is hidden */}
-        {!showBubble && (
+        {/* Drag-handle hint */}
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-sm opacity-70">
+          <GripVertical size={9} className="text-gray-400" />
+        </span>
+
+        {/* Tooltip — only when idle and bubble hidden */}
+        {!showBubble && !isDragging && (
           <span className="absolute right-full mr-3 whitespace-nowrap bg-gray-900/90 text-white text-xs font-medium px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-lg">
             Chat on WhatsApp
             <span className="absolute top-1/2 -right-[5px] -translate-y-1/2 border-4 border-transparent border-l-gray-900/90" />

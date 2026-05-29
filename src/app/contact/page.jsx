@@ -2,7 +2,7 @@
 import { Mail, MapPin, Phone, Send } from "lucide-react";
 import Image from "next/image";
 import fuelPumpImg from "../../../public/twemoji_fuel-pump.png";
-import { FaInstagram, FaLinkedin } from "react-icons/fa";
+import { FaInstagram, FaLinkedin, FaWhatsapp } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import toast from "react-hot-toast";
 import { useState, useEffect } from "react";
@@ -87,6 +87,8 @@ export default function Contact() {
       twitterLink: "https://twitter.com/d-sentiment-guy",
     },
   ];
+
+  const whatsappNumber = (settings?.contactPhone || "+234 7068690589").replace(/\D/g, "");
 
   return (
     <div className="bg-[#f8f8f8] dark:bg-gray-950 px-4 sm:px-6 lg:px-40">
@@ -268,6 +270,23 @@ export default function Contact() {
           ))}
         </div>
       </div>
+
+      {/* WhatsApp floating button */}
+      <a
+        href={`https://wa.me/${whatsappNumber}?text=Hello%2C%20I%20need%20help%20with%20your%20Filling%20Station%20Management%20System`}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat on WhatsApp"
+        className="fixed bottom-6 right-6 z-50 group"
+      >
+        <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-20" />
+        <div className="relative flex items-center justify-center w-14 h-14 bg-[#25D366] hover:bg-[#1ebe5d] text-white rounded-full shadow-xl transition-all group-hover:scale-110">
+          <FaWhatsapp size={28} />
+        </div>
+        <span className="absolute right-[calc(100%+10px)] bottom-3 bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          Chat on WhatsApp
+        </span>
+      </a>
     </div>
   );
 }
