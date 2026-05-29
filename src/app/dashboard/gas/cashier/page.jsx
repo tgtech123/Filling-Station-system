@@ -1,11 +1,13 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import { Flame, Search, X, CheckCircle2, AlertCircle, Loader2, Printer, Bell, Clock, User, ChevronRight } from "lucide-react";
 import useGasStore from "@/store/useGasStore";
 import useGasSaleStore from "@/store/useGasSaleStore";
 import useGasOrderStore from "@/store/useGasOrderStore";
 import useGasCustomerStore from "@/store/useGasCustomerStore";
+import { api } from "@/lib/config";
 
 const PRESETS_KG     = [0.5, 1, 1.5, 2, 3, 5];
 const PRESETS_AMOUNT = [500, 1000, 2000, 5000, 10000];
@@ -24,62 +26,123 @@ function TierBadge({ tier }) {
   return <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${map[tier] || ""}`}>{tier}</span>;
 }
 
-function ReceiptModal({ sale, onClose }) {
+function ReceiptModal({ sale, onClose, stationInfo = { name: "", address: "" } }) {
   const handlePrint = () => window.print();
   if (!sale) return null;
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full">
-        {/* Receipt */}
-        <div id="receipt-content" className="p-6 font-mono text-sm">
-          <div className="text-center mb-4">
-            <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Flame className="w-5 h-5 text-white" />
+  return createPortal(
+    <>
+      <style>{`
+        @page { size: 80mm auto; margin: 2mm 3mm; }
+        @media print {
+          body > *:not(#gas-receipt-print-root) { display: none !important; }
+          #gas-receipt-print-root {
+            display: block !important;
+            position: static !important;
+            width: 72mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: none !important;
+          }
+          #gas-receipt-card {
+            position: static !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            width: 72mm !important;
+            max-width: 72mm !important;
+            overflow: visible !important;
+          }
+          #receipt-content {
+            padding: 2mm 3mm !important;
+          }
+          #receipt-content,
+          #receipt-content * {
+            color: #000000 !important;
+            opacity: 1 !important;
+            font-family: 'Courier New', Courier, monospace !important;
+            font-size: 7pt !important;
+            background-color: transparent !important;
+            -webkit-print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          #gas-receipt-card {
+            background-color: #ffffff !important;
+          }
+          #receipt-content .gas-station-name {
+            font-size: 8.5pt !important;
+            font-weight: bold !important;
+          }
+          #receipt-content .gas-receipt-title {
+            font-size: 8pt !important;
+            font-weight: bold !important;
+          }
+          #receipt-content .gas-receipt-total {
+            font-size: 9pt !important;
+            font-weight: 900 !important;
+          }
+          #gas-receipt-actions { display: none !important; }
+        }
+      `}</style>
+      <div id="gas-receipt-print-root" className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div id="gas-receipt-card" className="bg-white rounded-2xl shadow-2xl max-w-sm w-full">
+          {/* Receipt */}
+          <div id="receipt-content" className="p-6 font-mono text-sm">
+            <div className="text-center mb-4">
+              <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                <Flame className="w-5 h-5 text-white" />
+              </div>
+              {stationInfo.name && (
+                <p className="gas-station-name font-bold text-gray-900 text-base leading-tight">{stationInfo.name}</p>
+              )}
+              {stationInfo.address && (
+                <p className="text-xs text-gray-500 mt-0.5">{stationInfo.address}</p>
+              )}
+              <h2 className="gas-receipt-title font-bold text-gray-800 text-base mt-1">GAS RECEIPT</h2>
+              <p className="text-xs text-gray-500 mt-0.5">{sale.receiptNumber}</p>
             </div>
-            <h2 className="font-bold text-gray-800 text-base">GAS RECEIPT</h2>
-            <p className="text-xs text-gray-500 mt-0.5">{sale.receiptNumber}</p>
-          </div>
-          <div className="border-t border-dashed border-gray-300 my-3" />
-          <div className="space-y-1.5 text-xs">
-            <div className="flex justify-between"><span className="text-gray-500">Date</span><span className="font-medium">{new Date(sale.date || sale.createdAt).toLocaleString("en-NG")}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Cashier</span><span className="font-medium">{sale.cashier?.firstName} {sale.cashier?.lastName}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Cylinder</span><span className="font-medium">{sale.cylinderSize}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Volume</span><span className="font-bold">{sale.quantityKg?.toFixed(3)} kg</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Price/kg</span><span>₦{fmt(sale.pricePerKg)}</span></div>
-            {sale.discountApplied > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-₦{fmt(sale.discountApplied)}</span></div>}
-            <div className="flex justify-between"><span className="text-gray-500">Payment</span><span className="capitalize">{sale.paymentMethod}</span></div>
-            {sale.customer ? (
-              <div className="flex justify-between"><span className="text-gray-500">Customer</span><span>{sale.customer?.firstName} {sale.customer?.lastName}</span></div>
-            ) : (
-              <div className="flex justify-between"><span className="text-gray-500">Customer</span><span>{sale.walkInName || "Walk-in"}</span></div>
+            <div className="border-t border-dashed border-gray-300 my-3" />
+            <div className="space-y-1.5 text-xs">
+              <div className="flex justify-between"><span className="text-gray-500">Date</span><span className="font-medium">{new Date(sale.date || sale.createdAt).toLocaleString("en-NG")}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Cashier</span><span className="font-medium">{sale.cashier?.firstName} {sale.cashier?.lastName}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Cylinder</span><span className="font-medium">{sale.cylinderSize}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Volume</span><span className="font-bold">{sale.quantityKg?.toFixed(3)} kg</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Price/kg</span><span>₦{fmt(sale.pricePerKg)}</span></div>
+              {sale.discountApplied > 0 && <div className="flex justify-between text-green-600"><span>Discount</span><span>-₦{fmt(sale.discountApplied)}</span></div>}
+              <div className="flex justify-between"><span className="text-gray-500">Payment</span><span className="capitalize">{sale.paymentMethod}</span></div>
+              {sale.customer ? (
+                <div className="flex justify-between"><span className="text-gray-500">Customer</span><span>{sale.customer?.firstName} {sale.customer?.lastName}</span></div>
+              ) : (
+                <div className="flex justify-between"><span className="text-gray-500">Customer</span><span>{sale.walkInName || "Walk-in"}</span></div>
+              )}
+            </div>
+            <div className="border-t border-dashed border-gray-300 my-3" />
+            <div className="flex justify-between items-center">
+              <span className="font-bold text-gray-700">TOTAL</span>
+              <span className="gas-receipt-total font-bold text-xl text-orange-600">₦{fmt(sale.amountPaid)}</span>
+            </div>
+            <div className="border-t border-dashed border-gray-300 my-3" />
+            <div className="text-center">
+              <div className="inline-block bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                <p className="text-xs font-bold text-amber-700">⏳ AWAITING ATTENDANT</p>
+                <p className="text-[10px] text-amber-600 mt-0.5">Take this receipt to the attendant</p>
+              </div>
+            </div>
+            {sale.pointsEarned > 0 && (
+              <p className="text-center text-xs text-green-600 mt-2 font-medium">+{sale.pointsEarned} loyalty points earned</p>
             )}
           </div>
-          <div className="border-t border-dashed border-gray-300 my-3" />
-          <div className="flex justify-between items-center">
-            <span className="font-bold text-gray-700">TOTAL</span>
-            <span className="font-bold text-xl text-orange-600">₦{fmt(sale.amountPaid)}</span>
+          <div id="gas-receipt-actions" className="px-6 pb-6 flex gap-2">
+            <button onClick={handlePrint} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
+              <Printer size={16} /> Print Receipt
+            </button>
+            <button onClick={onClose} className="flex-1 border border-gray-200 text-gray-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors">
+              Close
+            </button>
           </div>
-          <div className="border-t border-dashed border-gray-300 my-3" />
-          <div className="text-center">
-            <div className="inline-block bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              <p className="text-xs font-bold text-amber-700">⏳ AWAITING ATTENDANT</p>
-              <p className="text-[10px] text-amber-600 mt-0.5">Take this receipt to the attendant</p>
-            </div>
-          </div>
-          {sale.pointsEarned > 0 && (
-            <p className="text-center text-xs text-green-600 mt-2 font-medium">+{sale.pointsEarned} loyalty points earned</p>
-          )}
-        </div>
-        <div className="px-6 pb-6 flex gap-2">
-          <button onClick={handlePrint} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
-            <Printer size={16} /> Print Receipt
-          </button>
-          <button onClick={onClose} className="flex-1 border border-gray-200 text-gray-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors">
-            Close
-          </button>
         </div>
       </div>
-    </div>
+    </>,
+    document.body
   );
 }
 
@@ -167,6 +230,7 @@ export default function GasCashierPage() {
   // Order confirmation states
   const [confirming,   setConfirming]   = useState(null);
   const [inboxError,   setInboxError]   = useState(null);
+  const [stationInfo,  setStationInfo]  = useState({ name: "", address: "" });
 
   useEffect(() => {
     fetchPricing();
@@ -174,6 +238,19 @@ export default function GasCashierPage() {
     fetchLoyaltyConfig();
     fetchInbox();
     const interval = setInterval(fetchInbox, 30000);
+
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (user.station) {
+        api.get(`/api/filling-stations/${user.station}`)
+          .then(res => {
+            const d = res.data?.data || res.data;
+            if (d?.name) setStationInfo({ name: d.name, address: d.address || "" });
+          })
+          .catch(() => {});
+      }
+    } catch {}
+
     return () => clearInterval(interval);
   }, []);
 
@@ -549,7 +626,7 @@ export default function GasCashierPage() {
         )}
       </div>
 
-      {receipt && <ReceiptModal sale={receipt} onClose={() => setReceipt(null)} />}
+      {receipt && <ReceiptModal sale={receipt} onClose={() => setReceipt(null)} stationInfo={stationInfo} />}
     </DashboardLayout>
   );
 }

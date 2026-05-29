@@ -377,6 +377,8 @@ function buildPrintHTML(activeTab, data) {
   @media print {
     body { padding: 16px; }
     @page { margin: 12mm; size: A4; }
+    * { color: #000000 !important; opacity: 1 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { background: #fff !important; }
   }
 </style>
 </head>
