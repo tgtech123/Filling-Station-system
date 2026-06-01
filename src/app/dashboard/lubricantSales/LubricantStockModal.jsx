@@ -1,17 +1,154 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Calendar,
   Save,
   Search,
   X,
-  Edit2,
   Trash2,
   SquarePen,
   AlertCircle,
+  Building2,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { useLubricantStore } from "@/store/lubricantStore";
+import { api } from "@/lib/config";
 import NumericInput from "@/components/inputs/NumericInput";
+
+// ── Supplier Dropdown ─────────────────────────────────────────────────────────
+function SupplierDropdown({ value, onChange, suppliers, loadingSuppliers }) {
+  const [open, setOpen]     = useState(false);
+  const [search, setSearch] = useState("");
+  const [manual, setManual] = useState("");
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = suppliers.filter((s) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return s.name.toLowerCase().includes(q) || s.phone?.toLowerCase().includes(q);
+  });
+
+  const selectSupplier = (name) => {
+    onChange(name);
+    setOpen(false);
+    setSearch("");
+    setManual("");
+  };
+
+  const applyManual = () => {
+    if (manual.trim()) {
+      onChange(manual.trim());
+      setOpen(false);
+      setManual("");
+      setSearch("");
+    }
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      {/* Trigger button */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`border-2 w-full p-2 rounded-lg text-sm text-left flex items-center justify-between gap-2 focus:outline-none transition-colors ${
+          open
+            ? "border-blue-400"
+            : "border-gray-300 dark:border-gray-600 hover:border-blue-300"
+        } bg-white dark:bg-gray-700 dark:text-white`}
+      >
+        <span className={value ? "text-gray-800 dark:text-white font-medium" : "text-gray-400"}>
+          {value || (loadingSuppliers ? "Loading suppliers…" : "Select registered supplier…")}
+        </span>
+        <ChevronDown
+          size={15}
+          className={`text-gray-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute z-[60] top-full left-0 right-0 mt-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden">
+          {/* Search registered suppliers */}
+          <div className="p-2.5 border-b border-gray-100 dark:border-gray-700">
+            <div className="relative">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              <input
+                autoFocus
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search supplier name or phone…"
+                className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg outline-none focus:border-blue-400 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+          </div>
+
+          {/* Supplier list */}
+          <div className="max-h-52 overflow-y-auto">
+            {loadingSuppliers ? (
+              <p className="text-xs text-gray-400 text-center py-6">Loading suppliers…</p>
+            ) : filtered.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-6">
+                {search ? "No suppliers match your search" : "No lubricant suppliers registered yet"}
+              </p>
+            ) : (
+              filtered.map((s) => (
+                <button
+                  key={s._id}
+                  type="button"
+                  onClick={() => selectSupplier(s.name)}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 text-left text-sm border-b border-gray-50 dark:border-gray-700 last:border-0 transition-colors ${
+                    value === s.name
+                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200"
+                  }`}
+                >
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                    <Building2 size={13} className="text-blue-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold truncate">{s.name}</p>
+                    {s.phone && <p className="text-xs text-gray-400">{s.phone}</p>}
+                  </div>
+                  {value === s.name && <Check size={13} className="text-blue-500 shrink-0" />}
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* Manual entry fallback */}
+          <div className="p-2.5 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60">
+            <p className="text-[10px] text-gray-400 mb-1.5 uppercase tracking-wide font-medium">Or enter supplier manually</p>
+            <div className="flex gap-2">
+              <input
+                value={manual}
+                onChange={(e) => setManual(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && applyManual()}
+                placeholder="Type supplier name…"
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg outline-none focus:border-blue-400 dark:bg-gray-700 dark:text-white"
+              />
+              <button
+                type="button"
+                onClick={applyManual}
+                disabled={!manual.trim()}
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition-colors"
+              >
+                Use
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function LubricantStockModal({ onClose }) {
   const d = new Date();
@@ -26,6 +163,30 @@ export default function LubricantStockModal({ onClose }) {
     saveLubricantPurchase,
     loading,
   } = useLubricantStore();
+
+  // Local supplier state — isolated from the shared Zustand store so this
+  // modal's fetch never overwrites state other pages depend on.
+  const [lubricantSuppliers, setLubricantSuppliers] = useState([]);
+  const [suppLoading, setSuppLoading]               = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setSuppLoading(true);
+      try {
+        // Server returns type==="lubricant" AND type==="both" suppliers for ?type=lubricant
+        const { data } = await api.get("/api/suppliers", { params: { type: "lubricant" } });
+        if (!cancelled) setLubricantSuppliers(data.data || []);
+      } catch (err) {
+        console.error("[LubricantStockModal] Failed to fetch suppliers:", err?.response?.status, err?.message);
+        // User can still type supplier name manually via the dropdown's manual entry field
+      } finally {
+        if (!cancelled) setSuppLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
 
   const [rows, setRows] = useState([
     {
@@ -467,12 +628,11 @@ export default function LubricantStockModal({ onClose }) {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <p className="text-sm font-semibold mb-1">Supplier</p>
-                  <input
-                    type="text"
+                  <SupplierDropdown
                     value={supplier}
-                    onChange={(e) => setSupplier(e.target.value)}
-                    placeholder="Enter supplier name"
-                    className="border-2 w-full p-2 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white text-sm focus:border-blue-400 focus:outline-none"
+                    onChange={setSupplier}
+                    suppliers={lubricantSuppliers}
+                    loadingSuppliers={suppLoading}
                   />
                 </div>
                 <div>

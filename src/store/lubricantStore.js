@@ -261,6 +261,10 @@ export const useLubricantStore = create((set, get) => ({
         loading: false,
       }));
 
+      // Refresh lubricants so the search cache reflects the new unitPrices
+      // written by the purchase (fire-and-forget — modal closes after a 3s delay anyway)
+      get().fetchLubricants();
+
       return { success: true, data: data.data };
     } catch (error) {
       set({ error: error.message, loading: false });
