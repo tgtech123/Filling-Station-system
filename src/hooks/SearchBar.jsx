@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import { FiSearch } from "react-icons/fi";
 
 const SearchBar = ({ value, onChange, placeholder = "Search..." }) => {
@@ -14,7 +13,7 @@ const SearchBar = ({ value, onChange, placeholder = "Search..." }) => {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full pl-9 pr-4 py-2 text-sm text-gray-700 border-2 border-neutral-300 rounded-lg focus:border-blue-500 focus:outline-none bg-white"
+        className="w-full pl-9 pr-4 py-2 text-sm text-gray-700 Kborder-2 border-neutral-300 rounded-lg focus:border-blue-500 focus:outline-none bg-white"
       />
     </div>
   );
