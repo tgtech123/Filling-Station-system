@@ -32,120 +32,278 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
   if (!isOpen) return null;
 
   const {
-    cashier = "Unknown",
-    station = "Filling Station",
-    address = "",
-    logo = null,
-    date = new Date().toLocaleString(),
-    txnId = "N/A",
+    cashier    = "Unknown",
+    station    = "Filling Station",
+    address    = "",
+    logo       = null,
+    date       = new Date().toLocaleString(),
+    txnId      = "N/A",
     paymentType = "N/A",
-    items = [],
-    total = 0,
+    items      = [],
+    total      = 0,
   } = receiptData || {};
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    const afterPrint = () => {
+      window.removeEventListener("afterprint", afterPrint);
+      onClose();
+    };
+
+    // Wait for every image inside the thermal block to finish loading
+    // before opening the print dialog — avoids blank logo on slow/remote URLs.
+    const thermalBlock = document.querySelector(".receipt-thermal-print");
+    const images = thermalBlock ? Array.from(thermalBlock.querySelectorAll("img")) : [];
+    const imageReadyPromises = images.map(
+      (img) =>
+        new Promise((resolve) => {
+          if (img.complete && img.naturalWidth > 0) {
+            resolve();
+          } else {
+            img.onload  = resolve;
+            img.onerror = resolve; // still proceed even if img fails to load
+          }
+        })
+    );
+
+    Promise.all(imageReadyPromises).then(() => {
+      window.addEventListener("afterprint", afterPrint);
+      window.print();
+    });
+  };
 
   return createPortal(
     <>
       <style>{`
-        @page { size: 80mm auto; margin: 2mm 3mm; }
+        @page { size: 80mm auto; margin: 4mm 4mm; }
+
+        /* ── Screen: thermal block invisible ── */
+        #receipt-print-root .receipt-thermal-print { display: none; }
+
+        /* ══════════════════════════════════════════
+           PRINT STYLES
+           Strategy: hide the Tailwind screen card
+           entirely; show only the clean thermal block
+           so no Tailwind class bleeds through.
+        ══════════════════════════════════════════ */
         @media print {
-          /* Hide every sibling of the receipt root */
           body > *:not(#receipt-print-root) { display: none !important; }
 
-          /* Root: static so content flows naturally onto thermal roll */
+          /* Strip every screen-layout property from the root.
+             Tailwind fixed/inset-0/flex/items-center must all be cancelled
+             so the root shrinks to its content width and flows normally. */
           #receipt-print-root {
-            display: block !important;
-            position: static !important;
-            width: 72mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            display:          block   !important;
+            position:         static  !important;
+            inset:            auto    !important;
+            top:              auto    !important;
+            right:            auto    !important;
+            bottom:           auto    !important;
+            left:             auto    !important;
+            width:            76mm    !important;
+            max-width:        76mm    !important;
+            margin:           0 auto  !important;
+            padding:          0       !important;
+            background:       #ffffff !important;
+            z-index:          auto    !important;
+            flex-direction:   unset   !important;
+            align-items:      unset   !important;
+            justify-content:  unset   !important;
+            gap:              0       !important;
+            overflow:         visible !important;
           }
 
-          /* Hide overlay + action buttons */
-          #receipt-print-root .no-print { display: none !important; }
+          /* Hide overlay (the dark bg-black/60 div) and the screen card */
+          #receipt-print-root .no-print     { display: none !important; }
+          #receipt-print-root .receipt-card { display: none !important; }
 
-          /* Card: flat, static, no clipping */
-          #receipt-print-root .receipt-card {
-            position: static !important;
-            width: 72mm !important;
-            max-width: 72mm !important;
-            padding: 0 !important;
-            box-shadow: none !important;
-            border: none !important;
-            border-radius: 0 !important;
-            overflow: visible !important;
-          }
-
-          /* Inner content padding */
-          #receipt-print-root .receipt-inner {
-            padding: 2mm 3mm !important;
-          }
-
-          /* Nuclear black: every element in the card prints pure black */
-          #receipt-print-root .receipt-card,
-          #receipt-print-root .receipt-card * {
-            color: #000000 !important;
-            opacity: 1 !important;
-            font-family: 'Courier New', Courier, monospace !important;
-            font-size: 7pt !important;
-            background-color: transparent !important;
+          /* Show thermal block */
+          #receipt-print-root .receipt-thermal-print {
+            display:    block   !important;
+            width:      76mm    !important;
+            background: #ffffff !important;
             -webkit-print-color-adjust: exact !important;
-            color-adjust: exact !important;
-            print-color-adjust: exact !important;
+            print-color-adjust:         exact !important;
           }
 
-          /* Give the card an explicit white backing so text renders maximum contrast */
-          #receipt-print-root .receipt-card {
-            background-color: #ffffff !important;
+          /* Base: every element is pure black, heavy weight, Courier New */
+          #receipt-print-root .receipt-thermal-print,
+          #receipt-print-root .receipt-thermal-print * {
+            font-family: 'Courier New', Courier, monospace !important;
+            color:       #000000 !important;
+            background:  transparent !important;
+            font-size:   9.5pt  !important;
+            font-weight: 800    !important;
+            line-height: 1.5    !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust:         exact !important;
+            margin:  0 !important;
+            padding: 0 !important;
           }
 
-          /* Station name slightly bigger */
-          #receipt-print-root .receipt-station-name {
-            font-size: 8.5pt !important;
-            font-weight: bold !important;
+          /* Station headline */
+          .t-station-name {
+            font-size:      14pt  !important;
+            font-weight:    900   !important;
+            text-align:     center !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em  !important;
+            line-height:    1.3     !important;
+            display:        block   !important;
+            margin-bottom:  2pt     !important;
           }
 
-          /* Total amount: stand-out size */
-          #receipt-print-root .receipt-total-amount {
-            font-size: 9pt !important;
-            font-weight: 900 !important;
+          /* Address */
+          .t-address {
+            font-size:   8pt    !important;
+            font-weight: 700    !important;
+            text-align:  center !important;
+            line-height: 1.5    !important;
+            display:     block  !important;
           }
 
-          /* Fix item name: no truncation */
-          #receipt-print-root .receipt-item-name {
-            max-width: none !important;
-            white-space: normal !important;
-            overflow: visible !important;
-            text-overflow: unset !important;
+          /* Receipt type label */
+          .t-receipt-title {
+            font-size:      11pt   !important;
+            font-weight:    900    !important;
+            text-align:     center !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em    !important;
+            display:        block     !important;
+            padding:        3pt 0     !important;
           }
 
-          /* Dividers: solid black */
-          #receipt-print-root .receipt-card .border-t {
-            border-color: #000 !important;
-            border-top-width: 0.5pt !important;
+          /* Meta rows (date, cashier, etc.) */
+          .t-meta-row {
+            display:         flex          !important;
+            justify-content: space-between !important;
+            font-size:       8.5pt         !important;
+            font-weight:     700           !important;
+            line-height:     1.7           !important;
+          }
+          .t-meta-row span:first-child { font-weight: 700 !important; }
+          .t-meta-row span:last-child  { font-weight: 900 !important; }
+
+          /* Divider lines */
+          .t-line-solid {
+            border-top:    1.5pt solid #000 !important;
+            margin:        4pt 0            !important;
+            display:       block            !important;
+          }
+          .t-line-dashed {
+            border-top:    1pt dashed #000 !important;
+            margin:        4pt 0           !important;
+            display:       block           !important;
           }
 
-          /* Logo */
-          .receipt-logo-wrap {
-            width: 12mm !important;
-            height: 12mm !important;
+          /* Items table */
+          .t-table {
+            width:           100%     !important;
+            border-collapse: collapse !important;
+            display:         table    !important;
+          }
+          .t-table thead tr {
+            border-top:    1.5pt solid #000 !important;
+            border-bottom: 1.5pt solid #000 !important;
+            display:       table-row        !important;
+          }
+          .t-table th {
+            font-size:      8pt       !important;
+            font-weight:    900       !important;
+            text-transform: uppercase !important;
+            padding:        3pt 2pt   !important;
+            display:        table-cell !important;
+          }
+          .t-table td {
+            font-size:    9pt        !important;
+            font-weight:  700        !important;
+            padding:      3pt 2pt    !important;
+            border-bottom: 0.5pt dashed #000 !important;
+            vertical-align: top       !important;
+            display:      table-cell  !important;
           }
 
-          /* Hide decorative gradient bars */
-          .receipt-top-bar,
-          .receipt-bottom-bar { display: none !important; }
+          /* Total row */
+          .t-total-row {
+            display:         flex          !important;
+            justify-content: space-between !important;
+            align-items:     center        !important;
+            padding:         3pt 0         !important;
+          }
+          .t-total-label {
+            font-size:      12pt      !important;
+            font-weight:    900       !important;
+            text-transform: uppercase !important;
+          }
+          .t-total-amount {
+            font-size:   14pt !important;
+            font-weight: 900  !important;
+          }
+
+          /* Amount in words */
+          .t-words {
+            font-size:       8.5pt   !important;
+            font-weight:     700     !important;
+            text-align:      center  !important;
+            font-style:      italic  !important;
+            text-transform:  capitalize !important;
+            display:         block   !important;
+            padding:         2pt 0   !important;
+          }
+
+          /* Footer */
+          .t-footer-line {
+            font-size:   8pt    !important;
+            font-weight: 700    !important;
+            text-align:  center !important;
+            font-style:  italic !important;
+            line-height: 1.6    !important;
+            display:     block  !important;
+          }
+
+          /* Station logo — must be fully-qualified to beat the wildcard */
+          #receipt-print-root .receipt-thermal-print .t-logo-wrap {
+            display:         block     !important;
+            text-align:      center    !important;
+            margin-bottom:   4pt       !important;
+            padding:         0         !important;
+          }
+          #receipt-print-root .receipt-thermal-print .t-logo-wrap img {
+            display:        inline-block  !important;
+            width:          auto         !important;
+            height:         44pt         !important;
+            max-width:      64pt         !important;
+            object-fit:     contain      !important;
+            filter:         grayscale(100%) contrast(1.5) !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust:         exact !important;
+            margin:         0 auto       !important;
+            padding:        0            !important;
+          }
+
+          /* Powered-by branding */
+          .t-powered-by {
+            font-size:      6.5pt   !important;
+            font-weight:    800     !important;
+            text-align:     center  !important;
+            font-style:     normal  !important;
+            letter-spacing: 0.03em  !important;
+            line-height:    1.5     !important;
+            display:        block   !important;
+            margin-top:     4pt     !important;
+            color:          #000000 !important;
+          }
         }
       `}</style>
 
       <div id="receipt-print-root" className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* Overlay */}
+
+        {/* ── Overlay (screen only) ── */}
         <div className="no-print absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
-        {/* Receipt card */}
+        {/* ══════════════════════════════════════════
+            SCREEN CARD — unchanged, untouched
+        ══════════════════════════════════════════ */}
         <div className="receipt-card relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-50 overflow-hidden">
-
-          {/* Top accent bar */}
           <div className="receipt-top-bar h-1.5 w-full bg-gradient-to-r from-green-500 via-emerald-400 to-teal-500" />
 
           <div className="receipt-inner px-6 py-5">
@@ -167,14 +325,12 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
 
             <Divider />
 
-            {/* Receipt title */}
             <div className="text-center mb-3">
               <span className="inline-block bg-green-50 text-green-700 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full border border-green-200">
                 Lubricant Sales Receipt
               </span>
             </div>
 
-            {/* Transaction meta */}
             <div className="bg-gray-50 rounded-xl px-4 py-3 text-xs text-gray-600 space-y-1.5 mb-4">
               <div className="flex justify-between">
                 <span className="text-gray-400 font-medium">Transaction ID</span>
@@ -194,7 +350,6 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
               </div>
             </div>
 
-            {/* Items table */}
             <div className="overflow-x-auto">
               <table className="w-full text-xs mb-1">
                 <thead>
@@ -228,7 +383,6 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
 
             <Divider dashed />
 
-            {/* Total */}
             <div className="flex items-end justify-between mb-1">
               <span className="text-sm font-bold text-gray-800 uppercase tracking-wide">Total</span>
               <div className="text-right">
@@ -245,7 +399,6 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
 
             <Divider />
 
-            {/* Quote */}
             <div className="text-center px-2 mb-4">
               <p className="text-[11px] italic text-gray-400 leading-relaxed">"{quote}"</p>
               <p className="text-[10px] text-gray-300 mt-2 font-medium tracking-wide uppercase">
@@ -253,7 +406,6 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
               </p>
             </div>
 
-            {/* Bottom accent bar */}
             <div className="receipt-bottom-bar h-1 w-full bg-gradient-to-r from-green-500 via-emerald-400 to-teal-500 rounded-full mb-4" />
 
             {/* Action buttons */}
@@ -271,8 +423,103 @@ const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
                 <BsPrinter size={16} /> Print
               </button>
             </div>
+
           </div>
         </div>
+
+        {/* ══════════════════════════════════════════
+            THERMAL PRINT BLOCK
+            Hidden on screen. On print, this is the
+            ONLY thing rendered — no Tailwind class
+            pollution, no specificity wars, pure
+            black bold Courier New on white paper.
+        ══════════════════════════════════════════ */}
+        <div className="receipt-thermal-print">
+
+          {/* Station logo — always render; fall back to the public default */}
+          <div className="t-logo-wrap">
+            <img src={logo || "/station-logo.png"} alt="Station logo" />
+          </div>
+
+          {/* Station name */}
+          <div className="t-station-name">{station}</div>
+          {address && <div className="t-address">{address}</div>}
+
+          <div className="t-line-solid" />
+
+          {/* Receipt type */}
+          <div className="t-receipt-title">Lubricant Sales Receipt</div>
+
+          <div className="t-line-dashed" />
+
+          {/* Transaction meta */}
+          <div className="t-meta-row"><span>Ref</span><span>{txnId}</span></div>
+          <div className="t-meta-row"><span>Date</span><span>{date}</span></div>
+          <div className="t-meta-row"><span>Cashier</span><span>{cashier}</span></div>
+          <div className="t-meta-row"><span>Payment</span><span>{paymentType}</span></div>
+
+          <div className="t-line-solid" />
+
+          {/* Items table */}
+          <table className="t-table">
+            <thead>
+              <tr>
+                <th style={{ textAlign: "left",  width: "6%" }}>#</th>
+                <th style={{ textAlign: "left",  width: "40%" }}>Item</th>
+                <th style={{ textAlign: "center",width: "12%" }}>Qty</th>
+                <th style={{ textAlign: "right", width: "20%" }}>Unit (₦)</th>
+                <th style={{ textAlign: "right", width: "22%" }}>Amt (₦)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.length > 0 ? (
+                items.map((item, i) => (
+                  <tr key={i}>
+                    <td style={{ textAlign: "left"   }}>{i + 1}</td>
+                    <td style={{ textAlign: "left", wordBreak: "break-word" }}>{item.name}</td>
+                    <td style={{ textAlign: "center" }}>{item.quantity}</td>
+                    <td style={{ textAlign: "right"  }}>{Number(item.unitPrice).toLocaleString()}</td>
+                    <td style={{ textAlign: "right"  }}>
+                      {(Number(item.unitPrice) * Number(item.quantity)).toLocaleString()}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: "center" }}>No items</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div className="t-line-solid" />
+
+          {/* Total */}
+          <div className="t-total-row">
+            <span className="t-total-label">TOTAL</span>
+            <span className="t-total-amount">₦{Number(total).toLocaleString()}</span>
+          </div>
+
+          <div className="t-line-dashed" />
+
+          {/* Amount in words */}
+          {total > 0 && (
+            <div className="t-words">{toWords(total)} naira only</div>
+          )}
+
+          <div className="t-line-solid" />
+
+          {/* Footer */}
+          <div className="t-footer-line">"{quote}"</div>
+          <div className="t-footer-line">— Thank you for your business —</div>
+
+          <div className="t-line-dashed" />
+
+          {/* Branding */}
+          <div className="t-powered-by">Powered by FuelDesk Tech Ltd | +234 7068690589</div>
+
+        </div>
+
       </div>
     </>,
     document.body

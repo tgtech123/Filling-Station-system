@@ -2,6 +2,25 @@
 import { useEffect, useState } from "react";
 import usePumpStore from "@/store/pumpStore";
 
+// Display label → canonical API key sent to the server.
+// The server stores diesel as "AGO" (Automotive Gas Oil); keep the UI label
+// human-readable while the payload uses the canonical term.
+const FUEL_FIELDS = [
+  { key: "PMS",      label: "PMS (Petrol)"    },
+  { key: "AGO",      label: "AGO / Diesel"    },
+  { key: "Kerosene", label: "Kerosene / DPK"  },
+];
+
+// Normalise any synonym a pump might carry to the canonical field key.
+const FUEL_KEY_MAP = {
+  diesel:   "AGO",
+  ago:      "AGO",
+  pms:      "PMS",
+  petrol:   "PMS",
+  kerosene: "Kerosene",
+  dpk:      "Kerosene",
+};
+
 export default function GlobalPriceManagement() {
   const { pumps, getPumps, updatePriceByFuel } = usePumpStore();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -9,7 +28,7 @@ export default function GlobalPriceManagement() {
 
   const [prices, setPrices] = useState({
     PMS: "",
-    Diesel: "",
+    AGO: "",
     Kerosene: "",
   });
 
@@ -17,12 +36,14 @@ export default function GlobalPriceManagement() {
     getPumps();
   }, [getPumps]);
 
-  // Auto-fill from existing pump data
+  // Auto-fill from existing pump data — normalise fuelType synonyms to canonical keys
   useEffect(() => {
     if (pumps.length > 0) {
       const map = {};
       pumps.forEach((pump) => {
-        if (pump.fuelType && pump.pricePerLtr) map[pump.fuelType] = pump.pricePerLtr;
+        if (!pump.fuelType || !pump.pricePerLtr) return;
+        const canonical = FUEL_KEY_MAP[pump.fuelType.toLowerCase()];
+        if (canonical) map[canonical] = pump.pricePerLtr;
       });
       setPrices((prev) => ({ ...prev, ...map }));
     }
@@ -72,16 +93,16 @@ export default function GlobalPriceManagement() {
 
       <form className="mt-6" onSubmit={handleUpdateAll}>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
-          {["PMS", "Diesel", "Kerosene"].map((fuel) => (
-            <div key={fuel}>
-              <p className="font-semibold text-sm mb-1">{fuel}</p>
+          {FUEL_FIELDS.map(({ key, label }) => (
+            <div key={key}>
+              <p className="font-semibold text-sm mb-1">{label}</p>
               <input
                 type="text"
-                name={fuel}
-                value={prices[fuel] || ""}
+                name={key}
+                value={prices[key] || ""}
                 onChange={handleChange}
                 className="border-2 border-gray-400 focus:border-[#0080ff] focus:outline-none p-2 rounded-[8px] w-full text-sm"
-                placeholder={`Enter ${fuel} price`}
+                placeholder={`Enter ${label} price`}
               />
             </div>
           ))}

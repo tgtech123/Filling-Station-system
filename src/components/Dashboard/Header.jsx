@@ -362,57 +362,60 @@ export default function Header({ toggleSidebar, showSidebar }) {
         </div>
       </div>
 
-      {/* ── Center: notifications — visible on all screen sizes ── */}
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 z-10">
-
-        {/* Messages */}
-        <div ref={msgRef} className="relative">
-          <button
-            onClick={() => { setMsgOpen((v) => !v); setAlertOpen(false); }}
-            className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
-            aria-label="Messages"
-          >
-            <Bell size={19} className={messageUnreadCount > 0 ? "text-[#1a71f6]" : "text-gray-600 dark:text-gray-300"} />
-            <UnreadBadge count={messageUnreadCount} />
-          </button>
-
-          {msgOpen && (
-            <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[min(320px,92vw)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
-              <MessagesDropdown
-                messages={messages}
-                onMarkAll={() => { markAllMessagesRead(); }}
-                onItemClick={handleMsgClick}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Alerts */}
-        <div ref={alertRef} className="relative">
-          <button
-            onClick={() => { setAlertOpen((v) => !v); setMsgOpen(false); }}
-            className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
-            aria-label="Alerts"
-          >
-            <Mail size={19} className={alertUnreadCount > 0 ? "text-amber-500" : "text-gray-600 dark:text-gray-300"} />
-            <UnreadBadge count={alertUnreadCount} />
-          </button>
-
-          {alertOpen && (
-            <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[min(320px,92vw)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
-              <AlertsDropdown
-                alerts={alerts}
-                onMarkAll={() => { markAllAlertsRead(); }}
-                onItemClick={handleAlertClick}
-              />
-            </div>
-          )}
-        </div>
-
-      </div>
-
       {/* ── Right side ── */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 ml-auto">
+
+        {/* ── Notification icons — always visible, never overlap ── */}
+        <div className="flex items-center gap-1">
+
+          {/* Messages */}
+          <div ref={msgRef} className="relative">
+            <button
+              onClick={() => { setMsgOpen((v) => !v); setAlertOpen(false); }}
+              className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
+              aria-label="Messages"
+            >
+              <Bell size={19} className={messageUnreadCount > 0 ? "text-[#1a71f6]" : "text-gray-600 dark:text-gray-300"} />
+              <UnreadBadge count={messageUnreadCount} />
+            </button>
+
+            {msgOpen && (
+              <div className="absolute top-[calc(100%+8px)] right-0 w-[min(320px,92vw)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
+                <MessagesDropdown
+                  messages={messages}
+                  onMarkAll={() => { markAllMessagesRead(); }}
+                  onItemClick={handleMsgClick}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Alerts */}
+          <div ref={alertRef} className="relative">
+            <button
+              onClick={() => { setAlertOpen((v) => !v); setMsgOpen(false); }}
+              className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
+              aria-label="Alerts"
+            >
+              <Mail size={19} className={alertUnreadCount > 0 ? "text-amber-500" : "text-gray-600 dark:text-gray-300"} />
+              <UnreadBadge count={alertUnreadCount} />
+            </button>
+
+            {alertOpen && (
+              <div className="absolute top-[calc(100%+8px)] right-0 w-[min(320px,92vw)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
+                <AlertsDropdown
+                  alerts={alerts}
+                  onMarkAll={() => { markAllAlertsRead(); }}
+                  onItemClick={handleAlertClick}
+                />
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* Divider between notifications and station switcher / profile area */}
+        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
 
       {/* ── Station Switcher (Enterprise super manager only) ── */}
       {isEnterprise && isSuperManager && branches.length >= 1 && (
@@ -585,6 +588,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
       </div>
 
       </div>{/* end right side */}
+
 
       {/* ── Modals ── */}
       {selectedMsg && (

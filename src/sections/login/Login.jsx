@@ -141,7 +141,7 @@ const Login = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen lg:h-screen lg:overflow-hidden">
       {/* Left - Form Section */}
-      <div className="w-full flex items-center justify-center bg-white dark:bg-gray-900 px-4 py-10 lg:py-0 lg:h-screen lg:overflow-y-auto">
+      <div className="w-full flex items-center justify-center bg-white dark:bg-gray-900 px-4 py-10 lg:py-0 lg:h-screen lg:overflow-y-auto border-2 border-neutral-500 shadow-md">
         <div className="w-full max-w-md flex flex-col items-center">
           <div className="flex gap-5 mb-6 lg:mb-16 self-start">
             <Link
@@ -269,7 +269,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="username123@gmail.com"
-                  className="pl-4 border-[1.6px] rounded-md h-[43px] w-full focus:border-blue-600 outline-none"
+                  className="pl-4 border-2 rounded-md h-[43px] w-full focus:border-blue-600 outline-none"
                   required
                 />
               </div>
@@ -284,7 +284,7 @@ const Login = () => {
                   value={password}
                   placeholder="Enter password"
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-4 border-[1.6px] rounded-md w-full h-[43px] outline-none focus:border-blue-600"
+                  className="pl-4 border-2 rounded-md w-full h-[43px] outline-none focus:border-blue-600"
                   required
                 />
                 <div
