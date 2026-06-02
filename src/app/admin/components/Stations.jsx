@@ -4,7 +4,8 @@ import StatGrid from "./StatGrid";
 import SearchBarButtons from "./SearchBarButtons";
 import DataTable from "./DataTable";
 import { stationsTableData } from "./stationsTableData";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import useAdminStore from "@/store/useAdminStore";
 import { Gauge, CreditCard, XCircle, PauseCircle } from "lucide-react";
 
@@ -139,18 +140,19 @@ const Stations = ({ onViewStation }) => {
     ];
   }, [stationsStats]);
 
-  const handleExport = () => {
-    const data = rows.map((row) => {
-      const obj = {};
-      TABLE_HEADERS.forEach((h) => {
-        if (h.key !== "action" && h.key !== "_raw") obj[h.label] = row[h.key];
-      });
-      return obj;
-    });
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Stations");
-    XLSX.writeFile(workbook, "stations.xlsx");
+  const handleExport = async () => {
+    const headers = TABLE_HEADERS.filter((h) => h.key !== "action" && h.key !== "_raw").map((h) => h.label);
+    const data = rows.map((row) =>
+      TABLE_HEADERS.filter((h) => h.key !== "action" && h.key !== "_raw").map((h) => row[h.key])
+    );
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Stations");
+    worksheet.addRow(headers);
+    data.forEach((row) => worksheet.addRow(row));
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), "stations.xlsx");
   };
 
   return (
