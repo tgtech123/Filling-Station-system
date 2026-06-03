@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import ToggleSwitch from "@/components/ToggleSwtich";
-import { Edit, Mail, MapPin, Phone, X, Save, Loader2 } from "lucide-react";
+import { Edit, Mail, MapPin, Phone, X, Save, Loader2, Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import LocationSelector from "@/components/LocationSelector";
 import { api } from "@/lib/config";
@@ -16,6 +16,20 @@ export default function ManagerProfileModal({ onclose }) {
   const [saveError, setSaveError] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [userId, setUserId] = useState(null);
+
+  // Security tab state
+  const [securitySaving, setSecuritySaving] = useState(false);
+  const [securityError, setSecurityError] = useState("");
+  const [securitySuccess, setSecuritySuccess] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [securityData, setSecurityData] = useState({
+    currentPassword: "",
+    newEmail: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   const { uploadImage, getUserImage, setUserImage } = useImageStore();
   const [originalData, setOriginalData] = useState(null);
@@ -37,14 +51,12 @@ export default function ManagerProfileModal({ onclose }) {
     src: null,
   });
 
-  // Pre-fill from localStorage on mount
   useEffect(() => {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       const st = user.station || {};
       setUserId(user._id || user.id);
       const prefilled = {
-        // Personal
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         email: user.email || "",
@@ -56,11 +68,9 @@ export default function ManagerProfileModal({ onclose }) {
         zipCode: user.zipCode || "",
         emergencyContact: user.emergencyContact || "",
         src: getUserImage(user._id || user.id) || user.image || null,
-        // Employment
         employeeID: (user._id || user.id) ? String(user._id || user.id).slice(-6).toUpperCase() : "",
         position: user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "Manager",
         startDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-GB") : "",
-        // Station
         stationName: st.name || "",
         stationID: st._id ? String(st._id).slice(-6).toUpperCase() : "",
         stationEmailAddress: st.email || "",
@@ -72,7 +82,6 @@ export default function ManagerProfileModal({ onclose }) {
         licenseNo: st.licenseNumber || "",
         taxID: st.taxId || "",
         establishedDate: st.establishmentDate ? new Date(st.establishmentDate).toLocaleDateString("en-GB") : "",
-        // Business
         businessType: st.businessType || "",
         noOfPumps: st.numberOfPumps != null ? String(st.numberOfPumps) : "",
         operatingHours: st.operationHours || "",
@@ -95,23 +104,18 @@ export default function ManagerProfileModal({ onclose }) {
     try {
       setSaving(true);
       setSaveError("");
-      const token = localStorage.getItem("token");
-      await api.post(
-        `/api/auth/update-staff/${userId}`,
-        {
-          firstName: managerData.firstName,
-          lastName: managerData.lastName,
-          phone: managerData.phone,
-          address: managerData.address,
-          city: managerData.city,
-          state: managerData.state,
-          country: managerData.country,
-          zipCode: managerData.zipCode,
-          emergencyContact: managerData.emergencyContact,
-          ...(managerData.src && { image: managerData.src }),
-        }
-      );
-      // Sync localStorage so header/sidebar update immediately
+      await api.post(`/api/auth/update-staff/${userId}`, {
+        firstName: managerData.firstName,
+        lastName: managerData.lastName,
+        phone: managerData.phone,
+        address: managerData.address,
+        city: managerData.city,
+        state: managerData.state,
+        country: managerData.country,
+        zipCode: managerData.zipCode,
+        emergencyContact: managerData.emergencyContact,
+        ...(managerData.src && { image: managerData.src }),
+      });
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       localStorage.setItem("user", JSON.stringify({
         ...user,
@@ -126,7 +130,6 @@ export default function ManagerProfileModal({ onclose }) {
         emergencyContact: managerData.emergencyContact,
         ...(managerData.src && { image: managerData.src }),
       }));
-      // Sync image store so Header and Sidebar re-render immediately
       if (managerData.src) setUserImage(userId, managerData.src);
       setOriginalData({ ...managerData });
       setSaveSuccess(true);
@@ -153,13 +156,61 @@ export default function ManagerProfileModal({ onclose }) {
       setSaveError("");
       const result = await uploadImage(file, userId);
       handleInputChange("src", result.url);
-      // Sync localStorage so the image persists across refreshes
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       localStorage.setItem("user", JSON.stringify({ ...user, image: result.url }));
     } catch {
       setSaveError("Image upload failed. Please try again.");
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  const handleSecurityChange = (field, value) => {
+    setSecurityData(prev => ({ ...prev, [field]: value }));
+    if (securityError) setSecurityError("");
+  };
+
+  const handleSecuritySave = async () => {
+    const { currentPassword, newEmail, newPassword, confirmPassword } = securityData;
+
+    if (!currentPassword) {
+      setSecurityError("Current password is required to make any changes.");
+      return;
+    }
+    if (!newEmail && !newPassword) {
+      setSecurityError("Enter a new email or a new password to save.");
+      return;
+    }
+    if (newPassword && newPassword.length < 8) {
+      setSecurityError("New password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword && newPassword !== confirmPassword) {
+      setSecurityError("New passwords do not match.");
+      return;
+    }
+
+    try {
+      setSecuritySaving(true);
+      setSecurityError("");
+      await api.post(`/api/auth/change-credentials`, {
+        currentPassword,
+        ...(newEmail && { email: newEmail }),
+        ...(newPassword && { password: newPassword }),
+      });
+
+      if (newEmail) {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        localStorage.setItem("user", JSON.stringify({ ...user, email: newEmail }));
+        setManagerData(prev => ({ ...prev, email: newEmail }));
+      }
+      setSecurityData({ currentPassword: "", newEmail: "", newPassword: "", confirmPassword: "" });
+      setSecuritySuccess("Credentials updated successfully!");
+      setTimeout(() => setSecuritySuccess(""), 4000);
+    } catch (err) {
+      setSecurityError(err.response?.data?.message || "Failed to update credentials. Check your current password.");
+    } finally {
+      setSecuritySaving(false);
     }
   };
 
@@ -170,10 +221,11 @@ export default function ManagerProfileModal({ onclose }) {
       : `${base} bg-[#e7e7e7] dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed`;
   };
 
-  // Matches inputCls() but for <select> elements inside LocationSelector
   const locSelectCls = isEditMode
     ? "w-full p-3 rounded-[8px] text-sm dark:text-gray-100 bg-white dark:bg-gray-700 border-2 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200"
     : "w-full p-3 rounded-[8px] text-sm dark:text-gray-100 bg-[#e7e7e7] dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 cursor-not-allowed transition-all duration-200";
+
+  const secInputCls = "w-full p-3 rounded-[8px] text-sm bg-white dark:bg-gray-700 dark:text-gray-100 border-2 border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200";
 
   const tabs = [
     { key: "personalInfo", label: "Personal" },
@@ -181,401 +233,499 @@ export default function ManagerProfileModal({ onclose }) {
     { key: "employment", label: "Employment" },
     { key: "business", label: "Business" },
     { key: "preferences", label: "Preferences" },
+    { key: "security", label: "Security" },
   ];
 
   return (
     <div className="fixed px-4 lg:px-0 inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white dark:bg-gray-800 border-2 dark:border-gray-700 rounded-lg w-full max-w-[400px] lg:max-w-[700px] p-4 max-h-[85vh] scrollbar-hide overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 border-2 dark:border-gray-700 rounded-lg w-full max-w-[400px] lg:max-w-[700px] flex flex-col max-h-[90vh]">
 
-        {/* Header */}
-        <header className="flex justify-between items-start">
-          <div>
-            <h3 className="text-[22px] font-semibold dark:text-white">Manager Profile</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Personal and employment information</p>
-          </div>
-          <button onClick={onclose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors mt-1">
-            <X size={20} />
-          </button>
-        </header>
+        {/* ── Fixed header (never scrolls) ── */}
+        <div className="flex-shrink-0 p-4 pb-0">
 
-        {/* Save success */}
-        {saveSuccess && (
-          <div className="mt-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg px-3 py-2 text-green-700 dark:text-green-400 text-sm font-medium">
-            Profile updated successfully!
-          </div>
-        )}
-
-        {/* Save error */}
-        {saveError && (
-          <div className="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg px-3 py-2 text-red-700 dark:text-red-400 text-sm">
-            {saveError}
-          </div>
-        )}
-
-        {/* Avatar + name + action buttons */}
-        <section className="mt-6 flex flex-col gap-2 lg:flex-row justify-between items-center">
-          <div className="flex gap-4 items-center">
-            <div className="relative flex-shrink-0">
-              {managerData.src ? (
-                <img src={managerData.src} alt="profile" className="rounded-full h-[60px] w-[60px] object-cover" />
-              ) : (
-                <div className="bg-blue-600 flex justify-center items-center rounded-full h-[60px] w-[60px] text-white text-xl font-bold">
-                  {(managerData.firstName?.[0] || "") + (managerData.lastName?.[0] || "")}
-                </div>
-              )}
-              {isEditMode && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer hover:bg-black/70 transition-opacity">
-                  {!uploadingImage && <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />}
-                  {uploadingImage
-                    ? <Loader2 className="text-white animate-spin" size={16} />
-                    : <Edit className="text-white" size={16} />
-                  }
-                </div>
-              )}
-            </div>
+          {/* Title row */}
+          <header className="flex justify-between items-start">
             <div>
-              <h4 className="text-[20px] font-semibold dark:text-white">
-                {`${managerData.firstName} ${managerData.lastName}`.trim() || "Manager"}
-              </h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Station Manager{managerData.stationName ? ` · ${managerData.stationName}` : ""}
-              </p>
+              <h3 className="text-[22px] font-semibold dark:text-white">Manager Profile</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Personal and employment information</p>
             </div>
-          </div>
+            <button onClick={onclose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors mt-1">
+              <X size={20} />
+            </button>
+          </header>
 
-          <div className="flex gap-2">
-            {!isEditMode ? (
-              <button
-                onClick={() => setIsEditMode(true)}
-                className="flex gap-1 items-center bg-[#0080ff] text-white px-3 py-2 rounded-[10px] text-sm hover:bg-[#0066cc] transition-colors"
-              >
-                <Edit size={15} /> Edit Profile
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex gap-1 items-center bg-green-600 text-white px-3 py-2 rounded-[10px] text-sm hover:bg-green-700 transition-colors disabled:opacity-60"
-                >
-                  {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-                  {saving ? "Saving..." : "Save"}
-                </button>
-                <button
-                  onClick={handleCancel}
-                  disabled={saving}
-                  className="flex gap-1 items-center bg-gray-500 text-white px-3 py-2 rounded-[10px] text-sm hover:bg-gray-600 transition-colors"
-                >
-                  <X size={15} /> Cancel
-                </button>
-              </>
+          {/* Alerts (success / error) */}
+          {saveSuccess && (
+            <div className="mt-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg px-3 py-2 text-green-700 dark:text-green-400 text-sm font-medium">
+              Profile updated successfully!
+            </div>
+          )}
+          {saveError && (
+            <div className="mt-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg px-3 py-2 text-red-700 dark:text-red-400 text-sm">
+              {saveError}
+            </div>
+          )}
+
+          {/* Avatar + name + action buttons */}
+          <section className="mt-4 flex flex-col gap-2 lg:flex-row justify-between items-center">
+            <div className="flex gap-4 items-center">
+              <div className="relative flex-shrink-0">
+                {managerData.src ? (
+                  <img src={managerData.src} alt="profile" className="rounded-full h-[60px] w-[60px] object-cover" />
+                ) : (
+                  <div className="bg-blue-600 flex justify-center items-center rounded-full h-[60px] w-[60px] text-white text-xl font-bold">
+                    {(managerData.firstName?.[0] || "") + (managerData.lastName?.[0] || "")}
+                  </div>
+                )}
+                {isEditMode && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer hover:bg-black/70 transition-opacity">
+                    {!uploadingImage && <input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 opacity-0 cursor-pointer" />}
+                    {uploadingImage
+                      ? <Loader2 className="text-white animate-spin" size={16} />
+                      : <Edit className="text-white" size={16} />
+                    }
+                  </div>
+                )}
+              </div>
+              <div>
+                <h4 className="text-[20px] font-semibold dark:text-white">
+                  {`${managerData.firstName} ${managerData.lastName}`.trim() || "Manager"}
+                </h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Station Manager{managerData.stationName ? ` · ${managerData.stationName}` : ""}
+                </p>
+              </div>
+            </div>
+
+            {active !== "security" && (
+              <div className="flex gap-2">
+                {!isEditMode ? (
+                  <button
+                    onClick={() => setIsEditMode(true)}
+                    className="flex gap-1 items-center bg-[#0080ff] text-white px-3 py-2 rounded-[10px] text-sm hover:bg-[#0066cc] transition-colors"
+                  >
+                    <Edit size={15} /> Edit Profile
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="flex gap-1 items-center bg-green-600 text-white px-3 py-2 rounded-[10px] text-sm hover:bg-green-700 transition-colors disabled:opacity-60"
+                    >
+                      {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                      {saving ? "Saving..." : "Save"}
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      disabled={saving}
+                      className="flex gap-1 items-center bg-gray-500 text-white px-3 py-2 rounded-[10px] text-sm hover:bg-gray-600 transition-colors"
+                    >
+                      <X size={15} /> Cancel
+                    </button>
+                  </>
+                )}
+              </div>
             )}
-          </div>
-        </section>
+          </section>
 
-        {/* Tab nav */}
-        <section className="mt-6">
-          <div className="border-2 dark:border-gray-700 text-sm flex flex-wrap gap-2 justify-start lg:justify-between items-center p-2 rounded-[10px] border-gray-200">
-            {tabs.map(t => (
-              <button
-                key={t.key}
-                onClick={() => setActive(t.key)}
-                className={`px-4 py-2 rounded-[8px] font-medium transition-colors ${
-                  active === t.key
-                    ? "text-[#0080ff] bg-[#d9edff] dark:bg-blue-900/30"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Personal Info ── */}
-        {active === "personalInfo" && (
-          <section className="mt-8">
-            <h5 className="font-semibold text-base dark:text-white">Personal Information</h5>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Your personal details and contact information</p>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">First name</p>
-                <input type="text" disabled={!isEditMode} value={managerData.firstName}
-                  onChange={e => handleInputChange("firstName", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Last name</p>
-                <input type="text" disabled={!isEditMode} value={managerData.lastName}
-                  onChange={e => handleInputChange("lastName", e.target.value)} className={inputCls()} />
-              </div>
-              <div className="relative">
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Email Address <span className="text-xs text-gray-400 font-normal">(read-only)</span></p>
-                <input type="email" disabled value={managerData.email}
-                  className={`w-full p-3 pl-10 rounded-[8px] text-sm bg-[#e7e7e7] dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-500 cursor-not-allowed`} />
-                <Mail size={15} className="absolute top-9 left-3 text-gray-400" />
-              </div>
-              <div className="relative">
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Phone number</p>
-                <NumericInput variant="tel" maxLength={11} disabled={!isEditMode} value={managerData.phone}
-                  onChange={e => handleInputChange("phone", e.target.value)} className={inputCls(true)} />
-                <Phone size={15} className="absolute top-9 left-3 text-gray-400" />
-              </div>
-              <div className="relative col-span-1 lg:col-span-2">
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Address</p>
-                <input type="text" disabled={!isEditMode} value={managerData.address}
-                  onChange={e => handleInputChange("address", e.target.value)} className={inputCls(true)} />
-                <MapPin size={15} className="absolute top-9 left-3 text-gray-400" />
-              </div>
-              <LocationSelector
-                country={managerData.country}
-                state={managerData.state}
-                city={managerData.city}
-                onCountryChange={(v) => {
-                  handleInputChange("country", v);
-                  handleInputChange("state", "");
-                  handleInputChange("city", "");
-                }}
-                onStateChange={(v) => {
-                  handleInputChange("state", v);
-                  handleInputChange("city", "");
-                }}
-                onCityChange={(v) => handleInputChange("city", v)}
-                disabled={!isEditMode}
-                selectCls={locSelectCls}
-                labelCls="font-semibold text-sm mb-1 dark:text-gray-300"
-                wrapperCls=""
-              />
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Zip Code</p>
-                <input type="text" disabled={!isEditMode} value={managerData.zipCode}
-                  onChange={e => handleInputChange("zipCode", e.target.value)} className={inputCls()} />
-              </div>
-              <div className="relative">
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Emergency contact</p>
-                <NumericInput variant="tel" maxLength={11} disabled={!isEditMode} value={managerData.emergencyContact}
-                  onChange={e => handleInputChange("emergencyContact", e.target.value)} className={inputCls(true)} />
-                <Phone size={15} className="absolute top-9 left-3 text-gray-400" />
-              </div>
+          {/* Tab nav */}
+          <section className="mt-4">
+            <div className="border-2 dark:border-gray-700 text-sm flex flex-wrap gap-1 justify-start items-center p-1.5 rounded-[10px] border-gray-200">
+              {tabs.map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setActive(t.key)}
+                  className={`px-3 py-1.5 rounded-[8px] font-medium transition-colors text-xs lg:text-sm ${
+                    active === t.key
+                      ? "text-[#0080ff] bg-[#d9edff] dark:bg-blue-900/30"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {t.key === "security" ? (
+                    <span className="flex items-center gap-1"><ShieldCheck size={13} />{t.label}</span>
+                  ) : t.label}
+                </button>
+              ))}
             </div>
           </section>
-        )}
+        </div>
 
-        {/* ── Station Info ── */}
-        {active === "station" && (
-          <section className="mt-8">
-            <h5 className="font-semibold text-base dark:text-white">Station Information</h5>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Details about your station</p>
+        {/* ── Scrollable body ── */}
+        <div className="flex-1 overflow-y-auto p-4 scrollbar-hide">
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station name</p>
-                <input type="text" disabled={!isEditMode} value={managerData.stationName}
-                  onChange={e => handleInputChange("stationName", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station ID</p>
-                <input type="text" disabled={!isEditMode} value={managerData.stationID}
-                  onChange={e => handleInputChange("stationID", e.target.value)} className={inputCls()} />
-              </div>
-              <div className="relative">
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station email</p>
-                <input type="email" disabled={!isEditMode} value={managerData.stationEmailAddress}
-                  onChange={e => handleInputChange("stationEmailAddress", e.target.value)} className={inputCls(true)} />
-                <Mail size={15} className="absolute top-9 left-3 text-gray-400" />
-              </div>
-              <div className="relative">
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station phone</p>
-                <NumericInput variant="tel" maxLength={11} disabled={!isEditMode} value={managerData.stationPhone}
-                  onChange={e => handleInputChange("stationPhone", e.target.value)} className={inputCls(true)} />
-                <Phone size={15} className="absolute top-9 left-3 text-gray-400" />
-              </div>
-              <div className="relative col-span-1 lg:col-span-2">
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station address</p>
-                <input type="text" disabled={!isEditMode} value={managerData.stationAddress}
-                  onChange={e => handleInputChange("stationAddress", e.target.value)} className={inputCls(true)} />
-                <MapPin size={15} className="absolute top-9 left-3 text-gray-400" />
-              </div>
-              <LocationSelector
-                country={managerData.stationCountry}
-                state={managerData.stationState}
-                city={managerData.stationCity}
-                onCountryChange={(v) => {
-                  handleInputChange("stationCountry", v);
-                  handleInputChange("stationState", "");
-                  handleInputChange("stationCity", "");
-                }}
-                onStateChange={(v) => {
-                  handleInputChange("stationState", v);
-                  handleInputChange("stationCity", "");
-                }}
-                onCityChange={(v) => handleInputChange("stationCity", v)}
-                disabled={!isEditMode}
-                labels={{ country: "Station Country", state: "Station State", city: "Station City" }}
-                selectCls={locSelectCls}
-                labelCls="font-semibold text-sm mb-1 dark:text-gray-300"
-                wrapperCls=""
-              />
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">License number</p>
-                <input type="text" disabled={!isEditMode} value={managerData.licenseNo}
-                  onChange={e => handleInputChange("licenseNo", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Tax ID</p>
-                <input type="text" disabled={!isEditMode} value={managerData.taxID}
-                  onChange={e => handleInputChange("taxID", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Established date</p>
-                <input type="text" disabled={!isEditMode} value={managerData.establishedDate}
-                  onChange={e => handleInputChange("establishedDate", e.target.value)} className={inputCls()} />
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ── Employment ── */}
-        {active === "employment" && (
-          <section className="mt-8">
-            <h5 className="font-semibold text-base dark:text-white">Employment Details</h5>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Your employment information</p>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Employee ID</p>
-                <input type="text" disabled value={managerData.employeeID} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Position</p>
-                <input type="text" disabled value={managerData.position} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Department</p>
-                <input type="text" disabled={!isEditMode} value={managerData.department}
-                  onChange={e => handleInputChange("department", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Employment type</p>
-                <input type="text" disabled={!isEditMode} value={managerData.employmentType}
-                  onChange={e => handleInputChange("employmentType", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Start date</p>
-                <input type="text" disabled value={managerData.startDate} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Work schedule</p>
-                <input type="text" disabled={!isEditMode} value={managerData.workSchedule}
-                  onChange={e => handleInputChange("workSchedule", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Annual wages</p>
-                <input type="text" disabled={!isEditMode} value={managerData.annualWages}
-                  onChange={e => handleInputChange("annualWages", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Pay frequency</p>
-                <input type="text" disabled={!isEditMode} value={managerData.payFrequency}
-                  onChange={e => handleInputChange("payFrequency", e.target.value)} className={inputCls()} />
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ── Business ── */}
-        {active === "business" && (
-          <section className="mt-8">
-            <h5 className="font-semibold text-base dark:text-white">Business Information</h5>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Operational parameters of your station</p>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Business type</p>
-                <input type="text" disabled={!isEditMode} value={managerData.businessType}
-                  onChange={e => handleInputChange("businessType", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Operating hours</p>
-                <input type="text" disabled={!isEditMode} value={managerData.operatingHours}
-                  onChange={e => handleInputChange("operatingHours", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Number of pumps</p>
-                <input type="text" disabled={!isEditMode} value={managerData.noOfPumps}
-                  onChange={e => handleInputChange("noOfPumps", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Staff members</p>
-                <input type="text" disabled={!isEditMode} value={managerData.staffMembers}
-                  onChange={e => handleInputChange("staffMembers", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Tank capacity</p>
-                <input type="text" disabled={!isEditMode} value={managerData.tankCapacity}
-                  onChange={e => handleInputChange("tankCapacity", e.target.value)} className={inputCls()} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm mb-1 dark:text-gray-300">Average monthly revenue</p>
-                <input type="text" disabled={!isEditMode} value={managerData.avMonthlyRevenue}
-                  onChange={e => handleInputChange("avMonthlyRevenue", e.target.value)} className={inputCls()} />
-              </div>
-            </div>
-
-            {managerData.fuelTypesOffered?.length > 0 && (
-              <div className="mt-6">
-                <h4 className="font-semibold text-sm dark:text-gray-300 mb-2">Fuel types offered</h4>
-                <div className="flex flex-wrap gap-2">
-                  {managerData.fuelTypesOffered.map((f, i) => (
-                    <span key={i} className="bg-[#d9edff] text-[#0080ff] text-sm px-3 py-1 rounded-xl font-semibold">{f}</span>
-                  ))}
+          {/* ── Personal Info ── */}
+          {active === "personalInfo" && (
+            <section>
+              <h5 className="font-semibold text-base dark:text-white">Personal Information</h5>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Your personal details and contact information</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">First name</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.firstName}
+                    onChange={e => handleInputChange("firstName", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Last name</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.lastName}
+                    onChange={e => handleInputChange("lastName", e.target.value)} className={inputCls()} />
+                </div>
+                <div className="relative">
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Email Address <span className="text-xs text-gray-400 font-normal">(change in Security tab)</span></p>
+                  <input type="email" disabled value={managerData.email}
+                    className="w-full p-3 pl-10 rounded-[8px] text-sm bg-[#e7e7e7] dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-500 cursor-not-allowed" />
+                  <Mail size={15} className="absolute top-9 left-3 text-gray-400" />
+                </div>
+                <div className="relative">
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Phone number</p>
+                  <NumericInput variant="tel" maxLength={11} disabled={!isEditMode} value={managerData.phone}
+                    onChange={e => handleInputChange("phone", e.target.value)} className={inputCls(true)} />
+                  <Phone size={15} className="absolute top-9 left-3 text-gray-400" />
+                </div>
+                <div className="relative col-span-1 lg:col-span-2">
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Address</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.address}
+                    onChange={e => handleInputChange("address", e.target.value)} className={inputCls(true)} />
+                  <MapPin size={15} className="absolute top-9 left-3 text-gray-400" />
+                </div>
+                <LocationSelector
+                  country={managerData.country} state={managerData.state} city={managerData.city}
+                  onCountryChange={(v) => { handleInputChange("country", v); handleInputChange("state", ""); handleInputChange("city", ""); }}
+                  onStateChange={(v) => { handleInputChange("state", v); handleInputChange("city", ""); }}
+                  onCityChange={(v) => handleInputChange("city", v)}
+                  disabled={!isEditMode} selectCls={locSelectCls}
+                  labelCls="font-semibold text-sm mb-1 dark:text-gray-300" wrapperCls="" />
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Zip Code</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.zipCode}
+                    onChange={e => handleInputChange("zipCode", e.target.value)} className={inputCls()} />
+                </div>
+                <div className="relative">
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Emergency contact</p>
+                  <NumericInput variant="tel" maxLength={11} disabled={!isEditMode} value={managerData.emergencyContact}
+                    onChange={e => handleInputChange("emergencyContact", e.target.value)} className={inputCls(true)} />
+                  <Phone size={15} className="absolute top-9 left-3 text-gray-400" />
                 </div>
               </div>
-            )}
-          </section>
-        )}
+            </section>
+          )}
 
-        {/* ── Preferences ── */}
-        {active === "preferences" && (
-          <section className="mt-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-4">
-              <div className="border-2 dark:border-gray-700 border-gray-200 p-5 rounded-xl">
-                <h5 className="font-semibold dark:text-white mb-1">Notification preferences</h5>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Configure how you receive notifications</p>
-                <div className="flex flex-col gap-3 text-sm dark:text-gray-300">
-                  {["Email", "SMS", "Push", "Low stock", "Sales", "Staffs"].map(label => (
-                    <div key={label} className="flex justify-between items-center">
-                      <p>{label}</p>
+          {/* ── Station Info ── */}
+          {active === "station" && (
+            <section>
+              <h5 className="font-semibold text-base dark:text-white">Station Information</h5>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Details about your station</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station name</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.stationName}
+                    onChange={e => handleInputChange("stationName", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station ID</p>
+                  <input type="text" disabled value={managerData.stationID} className={inputCls()} />
+                </div>
+                <div className="relative">
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station email</p>
+                  <input type="email" disabled={!isEditMode} value={managerData.stationEmailAddress}
+                    onChange={e => handleInputChange("stationEmailAddress", e.target.value)} className={inputCls(true)} />
+                  <Mail size={15} className="absolute top-9 left-3 text-gray-400" />
+                </div>
+                <div className="relative">
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station phone</p>
+                  <NumericInput variant="tel" maxLength={11} disabled={!isEditMode} value={managerData.stationPhone}
+                    onChange={e => handleInputChange("stationPhone", e.target.value)} className={inputCls(true)} />
+                  <Phone size={15} className="absolute top-9 left-3 text-gray-400" />
+                </div>
+                <div className="relative col-span-1 lg:col-span-2">
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Station address</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.stationAddress}
+                    onChange={e => handleInputChange("stationAddress", e.target.value)} className={inputCls(true)} />
+                  <MapPin size={15} className="absolute top-9 left-3 text-gray-400" />
+                </div>
+                <LocationSelector
+                  country={managerData.stationCountry} state={managerData.stationState} city={managerData.stationCity}
+                  onCountryChange={(v) => { handleInputChange("stationCountry", v); handleInputChange("stationState", ""); handleInputChange("stationCity", ""); }}
+                  onStateChange={(v) => { handleInputChange("stationState", v); handleInputChange("stationCity", ""); }}
+                  onCityChange={(v) => handleInputChange("stationCity", v)}
+                  disabled={!isEditMode}
+                  labels={{ country: "Station Country", state: "Station State", city: "Station City" }}
+                  selectCls={locSelectCls} labelCls="font-semibold text-sm mb-1 dark:text-gray-300" wrapperCls="" />
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">License number</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.licenseNo}
+                    onChange={e => handleInputChange("licenseNo", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Tax ID</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.taxID}
+                    onChange={e => handleInputChange("taxID", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Established date</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.establishedDate}
+                    onChange={e => handleInputChange("establishedDate", e.target.value)} className={inputCls()} />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ── Employment ── */}
+          {active === "employment" && (
+            <section>
+              <h5 className="font-semibold text-base dark:text-white">Employment Details</h5>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Your employment information</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Employee ID</p>
+                  <input type="text" disabled value={managerData.employeeID} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Position</p>
+                  <input type="text" disabled value={managerData.position} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Department</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.department}
+                    onChange={e => handleInputChange("department", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Employment type</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.employmentType}
+                    onChange={e => handleInputChange("employmentType", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Start date</p>
+                  <input type="text" disabled value={managerData.startDate} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Work schedule</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.workSchedule}
+                    onChange={e => handleInputChange("workSchedule", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Annual wages</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.annualWages}
+                    onChange={e => handleInputChange("annualWages", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Pay frequency</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.payFrequency}
+                    onChange={e => handleInputChange("payFrequency", e.target.value)} className={inputCls()} />
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* ── Business ── */}
+          {active === "business" && (
+            <section>
+              <h5 className="font-semibold text-base dark:text-white">Business Information</h5>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Operational parameters of your station</p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Business type</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.businessType}
+                    onChange={e => handleInputChange("businessType", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Operating hours</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.operatingHours}
+                    onChange={e => handleInputChange("operatingHours", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Number of pumps</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.noOfPumps}
+                    onChange={e => handleInputChange("noOfPumps", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Staff members</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.staffMembers}
+                    onChange={e => handleInputChange("staffMembers", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Tank capacity</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.tankCapacity}
+                    onChange={e => handleInputChange("tankCapacity", e.target.value)} className={inputCls()} />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">Average monthly revenue</p>
+                  <input type="text" disabled={!isEditMode} value={managerData.avMonthlyRevenue}
+                    onChange={e => handleInputChange("avMonthlyRevenue", e.target.value)} className={inputCls()} />
+                </div>
+              </div>
+              {managerData.fuelTypesOffered?.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-semibold text-sm dark:text-gray-300 mb-2">Fuel types offered</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {managerData.fuelTypesOffered.map((f, i) => (
+                      <span key={i} className="bg-[#d9edff] text-[#0080ff] text-sm px-3 py-1 rounded-xl font-semibold">{f}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* ── Preferences ── */}
+          {active === "preferences" && (
+            <section>
+              <div className="grid grid-cols-1 lg:grid-cols-2 items-start gap-4">
+                <div className="border-2 dark:border-gray-700 border-gray-200 p-5 rounded-xl">
+                  <h5 className="font-semibold dark:text-white mb-1">Notification preferences</h5>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Configure how you receive notifications</p>
+                  <div className="flex flex-col gap-3 text-sm dark:text-gray-300">
+                    {["Email", "SMS", "Push", "Low stock", "Sales", "Staffs"].map(label => (
+                      <div key={label} className="flex justify-between items-center">
+                        <p>{label}</p>
+                        <ToggleSwitch />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="border-2 dark:border-gray-700 border-gray-200 rounded-xl p-5">
+                  <h5 className="font-semibold dark:text-white mb-1">Dashboard preferences</h5>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Customize your dashboard experience</p>
+                  <div className="flex flex-col gap-3">
+                    {[
+                      { label: "Theme", key: "theme" },
+                      { label: "Language", key: "language" },
+                      { label: "Timezone", key: "timezone" },
+                    ].map(({ label, key }) => (
+                      <div key={key}>
+                        <p className="font-semibold text-sm mb-1 dark:text-gray-300">{label}</p>
+                        <input type="text" disabled={!isEditMode} value={managerData[key] ?? ""}
+                          onChange={e => handleInputChange(key, e.target.value)} className={inputCls()} />
+                      </div>
+                    ))}
+                    <div className="mt-2 flex text-sm justify-between items-center dark:text-gray-300">
+                      Auto refresh dashboard
                       <ToggleSwitch />
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="border-2 dark:border-gray-700 border-gray-200 rounded-xl p-5">
-                <h5 className="font-semibold dark:text-white mb-1">Dashboard preferences</h5>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Customize your dashboard experience</p>
-                <div className="flex flex-col gap-3">
-                  {[
-                    { label: "Theme", key: "theme" },
-                    { label: "Language", key: "language" },
-                    { label: "Timezone", key: "timezone" },
-                  ].map(({ label, key }) => (
-                    <div key={key}>
-                      <p className="font-semibold text-sm mb-1 dark:text-gray-300">{label}</p>
-                      <input type="text" disabled={!isEditMode} value={managerData[key] ?? ""}
-                        onChange={e => handleInputChange(key, e.target.value)} className={inputCls()} />
-                    </div>
-                  ))}
-                  <div className="mt-2 flex text-sm justify-between items-center dark:text-gray-300">
-                    Auto refresh dashboard
-                    <ToggleSwitch />
                   </div>
                 </div>
               </div>
-            </div>
-          </section>
-        )}
+            </section>
+          )}
+
+          {/* ── Security ── */}
+          {active === "security" && (
+            <section>
+              <div className="flex items-center gap-2 mb-1">
+                <ShieldCheck size={18} className="text-[#0080ff]" />
+                <h5 className="font-semibold text-base dark:text-white">Account Security</h5>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                Change your login email or password. Your current password is required for any changes.
+              </p>
+
+              {securitySuccess && (
+                <div className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg px-3 py-2 text-green-700 dark:text-green-400 text-sm font-medium">
+                  {securitySuccess}
+                </div>
+              )}
+              {securityError && (
+                <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg px-3 py-2 text-red-700 dark:text-red-400 text-sm">
+                  {securityError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-5 max-w-lg">
+
+                {/* Current Password */}
+                <div>
+                  <p className="font-semibold text-sm mb-1 dark:text-gray-300">
+                    Current password <span className="text-red-500">*</span>
+                  </p>
+                  <div className="relative">
+                    <Lock size={15} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
+                    <input
+                      type={showCurrent ? "text" : "password"}
+                      placeholder="Enter current password"
+                      value={securityData.currentPassword}
+                      onChange={e => handleSecurityChange("currentPassword", e.target.value)}
+                      className={`${secInputCls} pl-10 pr-10`}
+                    />
+                    <button type="button" onClick={() => setShowCurrent(v => !v)}
+                      className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 hover:text-gray-600">
+                      {showCurrent ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wide mb-4">Change Email (Username)</p>
+                  <div className="relative">
+                    <Mail size={15} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
+                    <input
+                      type="email"
+                      placeholder={`Current: ${managerData.email}`}
+                      value={securityData.newEmail}
+                      onChange={e => handleSecurityChange("newEmail", e.target.value)}
+                      className={`${secInputCls} pl-10`}
+                    />
+                  </div>
+                </div>
+
+                {/* New Password */}
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 font-medium uppercase tracking-wide mb-4">Change Password</p>
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <p className="font-semibold text-sm mb-1 dark:text-gray-300">New password</p>
+                      <div className="relative">
+                        <Lock size={15} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
+                        <input
+                          type={showNew ? "text" : "password"}
+                          placeholder="Min. 8 characters"
+                          value={securityData.newPassword}
+                          onChange={e => handleSecurityChange("newPassword", e.target.value)}
+                          className={`${secInputCls} pl-10 pr-10`}
+                        />
+                        <button type="button" onClick={() => setShowNew(v => !v)}
+                          className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 hover:text-gray-600">
+                          {showNew ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm mb-1 dark:text-gray-300">Confirm new password</p>
+                      <div className="relative">
+                        <Lock size={15} className="absolute top-1/2 -translate-y-1/2 left-3 text-gray-400" />
+                        <input
+                          type={showConfirm ? "text" : "password"}
+                          placeholder="Re-enter new password"
+                          value={securityData.confirmPassword}
+                          onChange={e => handleSecurityChange("confirmPassword", e.target.value)}
+                          className={`${secInputCls} pl-10 pr-10`}
+                        />
+                        <button type="button" onClick={() => setShowConfirm(v => !v)}
+                          className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-400 hover:text-gray-600">
+                          {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                      </div>
+                      {securityData.newPassword && securityData.confirmPassword && securityData.newPassword !== securityData.confirmPassword && (
+                        <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save button */}
+                <button
+                  onClick={handleSecuritySave}
+                  disabled={securitySaving || !securityData.currentPassword}
+                  className="flex items-center justify-center gap-2 bg-[#0080ff] hover:bg-[#0066cc] disabled:opacity-50 text-white px-4 py-2.5 rounded-[10px] text-sm font-semibold transition-colors"
+                >
+                  {securitySaving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                  {securitySaving ? "Saving..." : "Update Credentials"}
+                </button>
+              </div>
+            </section>
+          )}
+
+        </div>{/* end scrollable body */}
       </div>
     </div>
   );
