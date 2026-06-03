@@ -13,6 +13,7 @@ import LogoutButton from "./LogoutButton";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import useNotificationStore from "@/store/useNotificationStore";
+import useAdminNotificationStore from "@/store/useAdminNotificationStore";
 import useBranchStore from "@/store/useBranchStore";
 import usePaymentStore from "@/store/usePaymentStore";
 import AddBranchModal from "../AddBranchModal";
@@ -214,15 +215,28 @@ export default function Header({ toggleSidebar, showSidebar }) {
   const [userData, setUserData] = useState(null);
   const router = useRouter();
 
-  // notification store
-  const {
-    messages, alerts,
-    messageUnreadCount, alertUnreadCount,
-    fetchMessages, fetchAlerts,
-    markMessageRead, markAlertRead,
-    markAllMessagesRead, markAllAlertsRead,
-    startPolling, stopPolling,
-  } = useNotificationStore();
+  // Station notification store (for all non-admin roles)
+  const stationNotif = useNotificationStore();
+
+  // Admin notification store (platform-level, for role=admin)
+  const adminNotif = useAdminNotificationStore();
+
+  // Derive which store to use after userData loads; default to station store
+  const isAdmin = userData?.role === "admin";
+
+  const messages        = isAdmin ? adminNotif.notifications : stationNotif.messages;
+  const alerts          = isAdmin ? [] : stationNotif.alerts;
+  const messageUnreadCount = isAdmin ? adminNotif.unreadCount : stationNotif.messageUnreadCount;
+  const alertUnreadCount   = isAdmin ? 0 : stationNotif.alertUnreadCount;
+
+  const fetchMessages       = isAdmin ? adminNotif.fetchNotifications : stationNotif.fetchMessages;
+  const fetchAlerts         = isAdmin ? (() => {}) : stationNotif.fetchAlerts;
+  const markMessageRead     = isAdmin ? adminNotif.markRead : stationNotif.markMessageRead;
+  const markAlertRead       = isAdmin ? (() => {}) : stationNotif.markAlertRead;
+  const markAllMessagesRead = isAdmin ? adminNotif.markAllRead : stationNotif.markAllMessagesRead;
+  const markAllAlertsRead   = isAdmin ? (() => {}) : stationNotif.markAllAlertsRead;
+  const startPolling        = isAdmin ? adminNotif.startPolling : stationNotif.startPolling;
+  const stopPolling         = isAdmin ? adminNotif.stopPolling : stationNotif.stopPolling;
 
   const { branches, switching, switchStation, fetchBranches } = useBranchStore();
   const { currentPlan } = usePaymentStore();
