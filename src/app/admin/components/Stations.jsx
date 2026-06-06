@@ -55,8 +55,9 @@ const Stations = ({ onViewStation }) => {
     return stations.map((s, i) => ({
       id: s._id || s.id || `ST-${String(i + 1).padStart(3, "0")}`,
       stationName: s.name || s.stationName || "—",
-      // backend returns ownerName (flat) and manager.name (nested) — prefer flat field
-      owner: s.ownerName || s.manager?.name || "—",
+      owner: s.isBranch
+        ? `${s.ownerName || s.manager?.name || "—"} (Branch)`
+        : s.ownerName || s.manager?.name || "—",
       // backend returns plan as slug (e.g. "pro-max") or defaults to "free"
       plan: formatPlan(s.plan || "free"),
       // backend always sets planExpiryDate (free=30d, trial=7d, paid=payment date +1m/+1y)

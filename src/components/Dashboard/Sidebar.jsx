@@ -485,6 +485,27 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       link: "/dashboard/manager/salaryValidation",
       roles: ["manager"],
     },
+    // ── Fuel Loyalty links ────────────────────────────────────────────────────
+    {
+      id: "fuel-loyalty-divider",
+      isDivider: true,
+      label: "Fuel Loyalty",
+      roles: ["cashier", "attendant", "manager", "admin"],
+    },
+    {
+      id: "fuel-loyalty",
+      name: "Loyalty Program",
+      icon: <BsFillFuelPumpFill size={18} className="text-blue-500" />,
+      link: "/dashboard/loyalty",
+      roles: ["manager", "admin"],
+    },
+    {
+      id: "fuel-loyalty-customers",
+      name: "Loyalty Customers",
+      icon: <MdOutlinePeopleAlt size={18} className="text-blue-500" />,
+      link: "/dashboard/loyalty/customers",
+      roles: ["cashier", "attendant"],
+    },
     // ── Gas Department links (all gas-designated roles) ──────────────────────
     {
       id: "gas-divider",

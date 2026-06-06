@@ -38,7 +38,14 @@ const NOTIF_KEYS = [
   { key: "unauthorizedAccessAlerts", label: "Unauthorized Access Alerts", desc: "Get notified of failed login attempts and suspicious activity", backendField: "push"  },
 ];
 
-const PLAN_PRICE = { free: "Free", pro: "₦14,900 / month", max: "₦29,900 / month" };
+const PLAN_SLUGS = {
+  free: "Free",
+  pro: "Pro Plan",
+  "pro-max": "Pro Max Plan",
+  enterprise: "Enterprise Plan",
+  "enterprise-pro": "Enterprise Pro Plan",
+  "enterprise-max": "Enterprise Max Plan",
+};
 const PRO_FEATURES = ["Up to 5 staff accounts", "Fuel & lubricant tracking", "Sales & cash reports", "Export reports (PDF/CSV)", "Activity logs", "Email support"];
 const MAX_FEATURES = ["Unlimited staff accounts", "Everything in Pro", "AI-powered insights", "Custom report builder", "Priority 24/7 support", "Multi-branch support", "API access"];
 
@@ -425,14 +432,32 @@ export default function SettingsPage() {
 
   async function fetchPlan() {
     setPlanLoading(true);
+    setBillingLoading(true);
     try {
-      const res = await fetch(`${API}/api/payments/current-plan`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
+      const headers = { Authorization: `Bearer ${getToken()}` };
+      const [planRes, histRes] = await Promise.all([
+        fetch(`${API}/api/payments/current-plan`, { headers }),
+        fetch(`${API}/api/payments/history`, { headers }),
+      ]);
+      if (planRes.ok) {
+        const data = await planRes.json();
         setPlanData(data.data);
         if (data.data?.planStatus === "cancelled") setPlanCancelled(true);
+      }
+      if (histRes.ok) {
+        const histData = await histRes.json();
+        setBillingHistory(
+          (histData.data || []).map((p) => ({
+            id: p.id,
+            date: p.date
+              ? new Date(p.date).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })
+              : "—",
+            amount: `₦${(p.amount || 0).toLocaleString()}`,
+            status: "Paid",
+            planName: p.planName || "—",
+            billingCycle: p.billingCycle || "monthly",
+          }))
+        );
       }
     } catch {}
     finally { setPlanLoading(false); setBillingLoading(false); }
@@ -529,14 +554,32 @@ export default function SettingsPage() {
 
   // ── Plan display values ─────────────────────────────────────────
   const planSlug    = planData?.plan || "free";
-  const planName    = planData?.planName || (planSlug === "free" ? "Free Plan" : planSlug === "pro" ? "Pro Plan" : "Max Plan");
+  const planName    = planData?.planName || PLAN_SLUGS[planSlug] || "Free Plan";
   const planStatus  = planData?.planStatus || "active";
-  const planPrice   = PLAN_PRICE[planSlug] || "Free";
-  const planExpiry  = planData?.planExpiryDate
-    ? new Date(planData.planExpiryDate).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })
+  const billingCycle = planData?.billingCycle || null;
+
+  // Build price string from API prices, falling back gracefully
+  const buildPriceLabel = () => {
+    if (planSlug === "free") return "Free";
+    if (!planData?.monthlyPrice && !planData?.yearlyPrice) return planName;
+    if (billingCycle === "yearly" && planData?.yearlyPrice) {
+      return `₦${planData.yearlyPrice.toLocaleString()} / year`;
+    }
+    if (planData?.monthlyPrice) {
+      return `₦${planData.monthlyPrice.toLocaleString()} / month`;
+    }
+    return planName;
+  };
+  const planPrice = buildPriceLabel();
+
+  const fmtDate = (raw) => raw
+    ? new Date(raw).toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })
     : null;
-  const daysLeft    = planData?.daysRemaining ?? null;
-  const isFree      = planSlug === "free";
+
+  const planStart  = fmtDate(planData?.planStartDate);
+  const planExpiry = fmtDate(planData?.planExpiryDate);
+  const daysLeft   = planData?.daysRemaining ?? null;
+  const isFree     = planSlug === "free";
 
   return (
     <DashboardLayout>
@@ -701,9 +744,14 @@ export default function SettingsPage() {
                     </div>
                     <h3 className="text-2xl font-bold mb-1">{planName}</h3>
                     <p className={`text-sm ${isFree ? "text-gray-300" : "text-blue-200"}`}>{planPrice}</p>
-                    {planExpiry && !isFree && (
-                      <p className={`text-xs mt-1 ${daysLeft !== null && daysLeft <= 7 ? "text-red-300 font-semibold" : "text-blue-300"}`}>
-                        Next renewal: {planExpiry}{daysLeft !== null && daysLeft <= 7 ? ` (${daysLeft} days left)` : ""}
+                    {!isFree && planStart && (
+                      <p className="text-xs mt-1 text-blue-200/70">
+                        Started: {planStart}
+                      </p>
+                    )}
+                    {!isFree && planExpiry && (
+                      <p className={`text-xs mt-0.5 ${daysLeft !== null && daysLeft <= 7 ? "text-red-300 font-semibold" : "text-blue-300"}`}>
+                        Expires: {planExpiry}{daysLeft !== null && daysLeft <= 7 ? ` — ${daysLeft} day${daysLeft === 1 ? "" : "s"} left` : ""}
                       </p>
                     )}
                     {isFree && (
@@ -763,7 +811,9 @@ export default function SettingsPage() {
                     <span className="text-gray-700 font-medium text-xs sm:text-sm">{row.date}</span>
                     <span className="font-semibold text-gray-800 text-xs sm:text-sm">{row.amount}</span>
                     <span><span className="text-[10px] sm:text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">{row.status}</span></span>
-                    <span className="hidden sm:block text-right text-xs text-gray-500">{row.planName}</span>
+                    <span className="hidden sm:block text-right text-xs text-gray-500">
+                      {row.planName}{row.billingCycle ? ` · ${row.billingCycle === "yearly" ? "Annual" : "Monthly"}` : ""}
+                    </span>
                   </div>
                 ))}
               </div>
