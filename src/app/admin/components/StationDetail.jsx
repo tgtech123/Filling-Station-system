@@ -342,27 +342,37 @@ const StationDetail = ({ stationId, onBack }) => {
               </span>
             </div>
             <div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Status</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Plan Status</p>
               <span
                 className={`px-2 py-1 rounded-md text-xs font-semibold ${
-                  subscription.status?.toLowerCase() === "active"
+                  subscription.planStatus === "active"
                     ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                    : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                    : subscription.planStatus === "trial"
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                    : subscription.planStatus === "expired"
+                    ? "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                    : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
                 }`}
               >
-                {subscription.status || "—"}
+                {subscription.planStatus
+                  ? subscription.planStatus.charAt(0).toUpperCase() + subscription.planStatus.slice(1)
+                  : subscription.status || "—"}
               </span>
             </div>
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Start Date</p>
               <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
-                {fmtDate(subscription.startDate)}
+                {subscription.startDate || "—"}
               </p>
             </div>
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Expiry Date</p>
-              <p className="font-semibold text-sm text-gray-800 dark:text-gray-200">
-                {fmtDate(subscription.expiryDate)}
+              <p className={`font-semibold text-sm ${
+                subscription.rawExpiryDate && new Date(subscription.rawExpiryDate) < new Date()
+                  ? "text-red-500"
+                  : "text-gray-800 dark:text-gray-200"
+              }`}>
+                {subscription.expiryDate || "—"}
               </p>
             </div>
           </div>
