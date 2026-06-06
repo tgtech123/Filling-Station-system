@@ -28,6 +28,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
     email: "",
     phone: "",
     role: "",
+    department: "fuel",
     shiftType: "",
     responsibility: "",
     payType: "",
@@ -62,6 +63,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
         email: staffData.email || "",
         phone: staffData.phone || "",
         role: staffData.role || "",
+        department: staffData.department || "fuel",
         shiftType: staffData.shiftType || staffData.shift || "",
         responsibility: Array.isArray(staffData.responsibility)
           ? staffData.responsibility.join(", ")
@@ -223,6 +225,21 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   )}
                 </span>
               </span>
+              {(formData.role === "attendant" || formData.role === "cashier") && (
+                <span className="flex flex-col gap-2">
+                  <label className="font-bold text-[0.875rem]">Department</label>
+                  <select
+                    name="department"
+                    value={formData.department}
+                    onChange={handleChange}
+                    className="text-neutral-800 dark:text-gray-100 bg-white dark:bg-gray-700 border-[2px] pl-3 border-neutral-200 dark:border-gray-600 outline-none focus:border-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
+                  >
+                    <option value="fuel">Fuel Department Only</option>
+                    <option value="gas">Gas Department Only</option>
+                    <option value="both">Both Departments</option>
+                  </select>
+                </span>
+              )}
               <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Shift type</label>
                 <select

@@ -118,7 +118,7 @@ export default function Filter({
         <div className="flex gap-4">
           {showReset !== false && (
               <button
-                onClick={handleReset}
+                onClick={resetFilters}
                 className="px-4 py-1.5 border border-neutral-300 rounded-lg text-neutral-600 hover:bg-neutral-100"
               >
                 Reset

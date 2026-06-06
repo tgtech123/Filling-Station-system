@@ -65,7 +65,7 @@ const useSupervisorStore = create((set, get) => ({
   fetchApprovedShifts: async (params = {}) => {
     try {
       set({ loading: true, error: null });
-      const response = await api.get('/api/supervisor/shift-approval/approved', params );
+      const response = await api.get('/api/supervisor/shift-approval/approved', { params });
       set({
         approvedShifts: response.data.data.shifts,
         pagination: response.data.data.pagination,

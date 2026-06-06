@@ -1,210 +1,59 @@
-// import React, { useState } from "react";
-// import { GoChevronDown, GoChevronUp } from "react-icons/go";
-
-// const shiftOptions = [
-//   { value: "", label: "Select your shift" },
-//   { value: "morning", label: "One-Day-Morning (6AM–3PM)" },
-//   { value: "evening", label: "One-Day-Evening (3PM–10PM)" },
-//   { value: "dayoff", label: "Day-Off" },
-//   { value: "fulltime", label: "Full-Time (6AM–10PM)" },
-// ];
-
-// const pumpOptions = [
-//   { value: "", label: "Select pump" },
-//   { value: "1", label: "Pump 1" },
-//   { value: "2", label: "Pump 2" },
-//   { value: "3", label: "Pump 3" },
-//   { value: "4", label: "Pump 4" },
-// ];
-
-// const StartShiftCard = ({ onClose, onStart }) => {
-//   const [isShiftTypeOpen, setIsShiftTypeOpen] = useState(false);
-//   const [selectedShift, setSelectedShift] = useState(shiftOptions[0]);
-//   const [isPumpOpen, setIsPumpOpen] = useState(false);
-//   const [selectedPump, setSelectedPump] = useState(pumpOptions[0]);
-//   const [openingReading, setOpeningReading] = useState("");
-
-//   return (
-//     <div className="fixed top-28 right-4 w-[94vw] sm:w-[32rem] max-w-[90vw] md:max-w-md bg-white rounded-xl shadow-2xl border border-gray-200 z-50 p-4 sm:p-6 overflow-y-auto max-h-[90vh]">
-//       {/* Header */}
-//       <div className="flex justify-between items-start mb-5">
-//         <div>
-//           <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-//             Start Shift
-//           </h2>
-//           <p className="text-xs sm:text-sm text-gray-500">
-//             Enter meter reading to start shift
-//           </p>
-//         </div>
-//         <button
-//           onClick={onClose}
-//           className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
-//         >
-//           ×
-//         </button>
-//       </div>
-
-//       {/* Form */}
-//       <form className="space-y-4">
-//         {/* Custom Shift Type */}
-//         <div className="relative">
-//           <label className="block text-sm font-medium text-gray-700 mb-1">
-//             Shift type
-//           </label>
-//           <button
-//             type="button"
-//             onClick={() => setIsShiftTypeOpen(!isShiftTypeOpen)}
-//             className="w-full border rounded-md px-3 py-2 text-sm text-gray-700 flex justify-between items-center focus:outline-none focus:ring focus:ring-blue-600"
-//           >
-//             {selectedShift.label}
-//             {isShiftTypeOpen ? <GoChevronUp /> : <GoChevronDown />}
-//           </button>
-//           {isShiftTypeOpen && (
-//             <ul className="absolute z-10 mt-1 w-full bg-white  border-[1px] border-blue-600 rounded-md shadow-md max-h-60 overflow-auto">
-//               {shiftOptions.map((option) => (
-//                 <li
-//                   key={option.value}
-//                   onClick={() => {
-//                     setSelectedShift(option);
-//                     setIsShiftTypeOpen(false);
-//                   }}
-//                   className="px-3 py-2 text-sm text-gray-700 hover:bg-blue-700 hover:text-white hover:rounded-sm hover:mx-1 cursor-pointer"
-//                 >
-//                   {option.label}
-//                 </li>
-//               ))}
-//             </ul>
-//           )}
-//         </div>
-
-//         {/* Custom Pump No */}
-//         <div className="relative">
-//           <label className="block text-sm font-medium text-gray-700 mb-1">
-//             Pump No
-//           </label>
-//           <button
-//             type="button"
-//             onClick={() => setIsPumpOpen(!isPumpOpen)}
-//             className="w-full border rounded-md px-3 py-2 text-sm text-gray-700 flex justify-between items-center focus:outline-none focus:ring focus:ring-blue-200"
-//           >
-//             {selectedPump.label}
-//             {isPumpOpen ? <GoChevronUp  /> : <GoChevronDown />}
-//           </button>
-//           {isPumpOpen && (
-//             <ul className="absolute z-10 mt-1 w-full bg-white border-[1px] border-blue-600 rounded-md shadow-md max-h-60 overflow-hidden">
-//               {pumpOptions.map((option) => (
-//                 <li
-//                   key={option.value}
-//                   onClick={() => {
-//                     setSelectedPump(option);
-//                     setIsPumpOpen(false);
-//                   }}
-//                   className="px-3 py-2 text-sm text-gray-700 hover:bg-blue-700 hover:text-white hover:mx-1 hover:rounded-sm hover:shadow-2xl cursor-pointer"
-//                 >
-//                   {option.label}
-//                 </li>
-//               ))}
-//             </ul>
-//           )}
-//         </div>
-
-//         {/* Opening Meter Reading */}
-//         <div>
-//           <label className="block text-sm font-medium text-gray-700 mb-1">
-//             Opening meter reading
-//           </label>
-//           <input
-//             type="number"
-//             inputMode="numeric"
-//             value={openingReading}
-//             onChange={(e) => setOpeningReading(e.target.value)}
-//             placeholder="Input meter reading"
-//             className="w-full border rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring focus:ring-blue-200"
-//           />
-//         </div>
-
-//         {/* Start Button */}
-//         <button
-//           type="button"
-//           className="w-full bg-blue-600 hover:bg-blue-300 transition-all duration-200 text-white text-sm py-2 rounded-lg font-medium"
-//           onClick={onStart}
-//         >
-//           Start Shift
-//         </button>
-//       </form>
-//     </div>
-//   );
-// };
-
-// export default StartShiftCard;
-
-
-
+"use client";
 import React, { useState, useEffect } from "react";
-import { GoChevronDown, GoChevronUp } from "react-icons/go";
+import { BsFillFuelPumpFill } from "react-icons/bs";
+import { AlertCircle, CheckCircle2, Loader2, Info } from "lucide-react";
 import useShiftStore from "@/store/useShiftStore";
 
-const shiftOptions = [
-  { value: "", label: "Select your shift" },
-  { value: "One-Day-Morning", label: "One-Day-Morning (6AM–3PM)" },
-  { value: "One-Day-Evening", label: "One-Day-Evening (3PM–10PM)" },
-  { value: "Day-Off", label: "Day-Off" },
-  { value: "Full-Time", label: "Full-Time (6AM–10PM)" },
-];
+const SHIFT_LABELS = {
+  "One-Day-Morning": "Morning (6AM – 3PM)",
+  "One-Day-Evening": "Evening (3PM – 10PM)",
+  "Day-Off":         "Day-Off",
+  "Full-Time":       "Full-Time (6AM – 10PM)",
+};
 
 const StartShiftCard = ({ onClose, onStart }) => {
-  const { availablePumps, startShift, loading, fetchActiveShiftsAndPumps } = useShiftStore();
-  
-  const [isShiftTypeOpen, setIsShiftTypeOpen] = useState(false);
-  const [selectedShift, setSelectedShift] = useState(shiftOptions[0]);
-  const [isPumpOpen, setIsPumpOpen] = useState(false);
-  const [selectedPump, setSelectedPump] = useState({ value: "", label: "Select pump" });
+  const { fetchTodaySchedule, startShift, loading } = useShiftStore();
+
+  const [schedule, setSchedule]   = useState(null);   // today's scheduled shift data
+  const [fetching, setFetching]   = useState(true);
   const [openingReading, setOpeningReading] = useState("");
+  const [prefilled, setPrefilled] = useState(false);
+  const [error, setError]         = useState(null);
 
-  // Fetch available pumps on mount
   useEffect(() => {
-    fetchActiveShiftsAndPumps();
-  }, [fetchActiveShiftsAndPumps]);
-
-  // Convert available pumps to dropdown format
-  const pumpOptions = [
-    { value: "", label: "Select pump" },
-    ...availablePumps.map(pump => ({
-      value: pump._id,
-      label: `${pump.title} - ${pump.fuelType} (₦${pump.pricePerLtr}/L)`,
-      pump: pump
-    }))
-  ];
+    (async () => {
+      setFetching(true);
+      const result = await fetchTodaySchedule();
+      setFetching(false);
+      if (result.success && result.data) {
+        setSchedule(result.data);
+        // Prefill opening meter from last completed shift on this pump
+        if (result.data.lastClosingMeterReading !== null && result.data.lastClosingMeterReading !== undefined) {
+          setOpeningReading(String(result.data.lastClosingMeterReading));
+          setPrefilled(true);
+        }
+      }
+    })();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
 
-    // Validation
-    if (!selectedShift.value) {
-      alert("Please select a shift type");
-      return;
-    }
-    if (!selectedPump.value) {
-      alert("Please select a pump");
-      return;
-    }
     if (!openingReading || parseFloat(openingReading) < 0) {
-      alert("Please enter a valid opening meter reading");
+      setError("Please enter a valid opening meter reading");
       return;
     }
 
     const result = await startShift({
-      pumpId: selectedPump.value,
-      shiftType: selectedShift.value,
       openingMeterReading: parseFloat(openingReading),
     });
 
     if (result.success) {
-      alert("Shift started successfully!");
       onStart();
       onClose();
     } else {
-      alert(result.error || "Failed to start shift");
+      setError(result.error || "Failed to start shift");
     }
   };
 
@@ -213,122 +62,111 @@ const StartShiftCard = ({ onClose, onStart }) => {
       {/* Header */}
       <div className="flex justify-between items-start mb-5">
         <div>
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
-            Start Shift
-          </h2>
-          <p className="text-xs sm:text-sm text-gray-500">
-            Enter meter reading to start shift
-          </p>
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-800">Start Shift</h2>
+          <p className="text-xs sm:text-sm text-gray-500">Confirm your meter reading to begin</p>
         </div>
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 text-3xl leading-none"
-        >
-          ×
-        </button>
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-3xl leading-none">×</button>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Custom Shift Type */}
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Shift type
-          </label>
-          <button
-            type="button"
-            onClick={() => setIsShiftTypeOpen(!isShiftTypeOpen)}
-            className="w-full border rounded-md px-3 py-2 text-sm text-gray-700 flex justify-between items-center focus:outline-none focus:ring focus:ring-blue-600"
-          >
-            {selectedShift.label}
-            {isShiftTypeOpen ? <GoChevronUp /> : <GoChevronDown />}
+      {/* Loading scheduled shift */}
+      {fetching && (
+        <div className="flex items-center justify-center py-8 gap-2 text-gray-500">
+          <Loader2 size={20} className="animate-spin" />
+          <span className="text-sm">Checking today's schedule...</span>
+        </div>
+      )}
+
+      {/* No schedule */}
+      {!fetching && !schedule && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle size={20} className="text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-red-700 text-sm">No shift scheduled for today</p>
+              <p className="text-xs text-red-500 mt-1">
+                Your supervisor has not scheduled you for a shift today. Contact them to have your shift assigned before you can start.
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="mt-4 w-full border border-gray-300 rounded-xl py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+            Close
           </button>
-          {isShiftTypeOpen && (
-            <ul className="absolute z-10 mt-1 w-full bg-white border-[1px] border-blue-600 rounded-md shadow-md max-h-60 overflow-auto">
-              {shiftOptions.map((option) => (
-                <li
-                  key={option.value}
-                  onClick={() => {
-                    setSelectedShift(option);
-                    setIsShiftTypeOpen(false);
-                  }}
-                  className="px-3 py-2 text-sm text-gray-700 hover:bg-blue-700 hover:text-white hover:rounded-sm hover:mx-1 cursor-pointer"
-                >
-                  {option.label}
-                </li>
-              ))}
-            </ul>
-          )}
         </div>
+      )}
 
-        {/* Custom Pump No */}
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Pump No
-          </label>
+      {/* Shift found — show details + form */}
+      {!fetching && schedule && (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Shift details card (read-only from supervisor's schedule) */}
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-2">
+            <p className="text-xs font-bold text-blue-500 uppercase tracking-wide">Today's Scheduled Shift</p>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
+                <BsFillFuelPumpFill size={16} className="text-white" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-800">{schedule.scheduledShift.pumpTitle}</p>
+                <p className="text-xs text-gray-500">{schedule.scheduledShift.product} · ₦{schedule.scheduledShift.pricePerLtr?.toLocaleString()}/L</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold bg-white border border-blue-200 text-blue-700 px-2 py-0.5 rounded-full">
+                {SHIFT_LABELS[schedule.scheduledShift.shiftType] || schedule.scheduledShift.shiftType}
+              </span>
+            </div>
+          </div>
+
+          {/* Opening Meter Reading */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Opening Meter Reading
+            </label>
+            <input
+              type="number"
+              inputMode="numeric"
+              value={openingReading}
+              onChange={(e) => { setOpeningReading(e.target.value); setPrefilled(false); }}
+              placeholder="Enter current meter reading"
+              step="0.01"
+              min="0"
+              className="w-full border-2 border-gray-200 rounded-xl px-3 py-3 text-sm text-gray-700 focus:outline-none focus:border-blue-500 transition-colors"
+              required
+            />
+            {prefilled && schedule.lastClosingMeterReading !== null && (
+              <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-2">
+                <Info size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700">
+                  Pre-filled from last closing reading on {schedule.scheduledShift.pumpTitle}
+                  {schedule.lastShiftEndTime && (
+                    <span className="text-amber-500 ml-1">
+                      ({new Date(schedule.lastShiftEndTime).toLocaleDateString("en-NG", { day: "numeric", month: "short" })})
+                    </span>
+                  )}. Verify this matches the pump before starting.
+                </p>
+              </div>
+            )}
+            {!prefilled && schedule.lastClosingMeterReading === null && (
+              <p className="text-xs text-gray-400 mt-1">No previous reading on this pump — enter the current meter display.</p>
+            )}
+          </div>
+
+          {error && (
+            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3">
+              <AlertCircle size={15} className="text-red-500 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
           <button
-            type="button"
-            onClick={() => setIsPumpOpen(!isPumpOpen)}
-            className="w-full border rounded-md px-3 py-2 text-sm text-gray-700 flex justify-between items-center focus:outline-none focus:ring focus:ring-blue-200"
+            type="submit"
+            disabled={loading || !openingReading}
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl text-sm transition-colors"
           >
-            {selectedPump.label}
-            {isPumpOpen ? <GoChevronUp /> : <GoChevronDown />}
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+            {loading ? "Starting..." : "Start Shift"}
           </button>
-          {isPumpOpen && (
-            <ul className="absolute z-10 mt-1 w-full bg-white border-[1px] border-blue-600 rounded-md shadow-md max-h-60 overflow-hidden">
-              {pumpOptions.length === 1 ? (
-                <li className="px-3 py-2 text-sm text-gray-500 text-center">
-                  No available pumps
-                </li>
-              ) : (
-                pumpOptions.map((option) => (
-                  <li
-                    key={option.value}
-                    onClick={() => {
-                      setSelectedPump(option);
-                      setIsPumpOpen(false);
-                    }}
-                    className="px-3 py-2 text-sm text-gray-700 hover:bg-blue-700 hover:text-white hover:mx-1 hover:rounded-sm hover:shadow-2xl cursor-pointer"
-                  >
-                    {option.label}
-                  </li>
-                ))
-              )}
-            </ul>
-          )}
-        </div>
-
-        {/* Opening Meter Reading */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Opening meter reading
-          </label>
-          <input
-            type="number"
-            inputMode="numeric"
-            value={openingReading}
-            onChange={(e) => setOpeningReading(e.target.value)}
-            placeholder="Input meter reading"
-            step="0.01"
-            min="0"
-            className="w-full border rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring focus:ring-blue-200"
-            required
-          />
-        </div>
-
-        {/* Start Button */}
-        <button
-          type="submit"
-          disabled={loading}
-          className={`w-full text-white text-sm py-2 rounded-lg font-medium transition-all duration-200 ${
-            loading 
-              ? "bg-gray-400 cursor-not-allowed" 
-              : "bg-blue-600 hover:bg-blue-300"
-          }`}
-        >
-          {loading ? "Starting..." : "Start Shift"}
-        </button>
-      </form>
+        </form>
+      )}
     </div>
   );
 };

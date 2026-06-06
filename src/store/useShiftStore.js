@@ -227,7 +227,26 @@ const useShiftStore = create((set, get) => ({
     };
   },
 
-  // Start a new shift
+  // Today's supervisor-scheduled shift + last closing meter prefill
+  todaySchedule: null,
+  fetchTodaySchedule: async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/shifts/today-schedule`, {
+        method: "GET",
+        headers: get().getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        set({ todaySchedule: data.data }); // null if nothing scheduled
+        return { success: true, data: data.data };
+      }
+      return { success: false, error: data.error };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  // Start a shift (only requires openingMeterReading — pump/type come from scheduled shift)
   startShift: async (shiftData) => {
     set({ loading: true, error: null });
     try {

@@ -41,6 +41,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
     phone: "",
     image: "",
     role: "",
+    department: "fuel",
     password: "",
     confirmPassword: "",
     shiftType: "",
@@ -128,6 +129,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
         phone: formData.phone,
         image:  "",
         role: formData.role,
+        department: (formData.role === "attendant" || formData.role === "cashier") ? (formData.department || "fuel") : undefined,
         password: formData.password.trim(),
         shiftType: formData.shiftType,
         responsibility: formData.responsibility
@@ -170,6 +172,7 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
         phone: "",
         image: "",
         role: "",
+        department: "fuel",
         password: "",
         confirmPassword: "",
         shiftType: "",
@@ -376,6 +379,21 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   {isSuperManager && <option value="manager">Branch Manager</option>}
                 </select>
               </span>
+              {(formData.role === "attendant" || formData.role === "cashier") && (
+                <span className="flex flex-col gap-2">
+                  <label className="font-bold text-[0.875rem]">Department</label>
+                  <select
+                    name="department"
+                    value={formData.department}
+                    onChange={handleInputChange}
+                    className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl bg-white"
+                  >
+                    <option value="fuel">Fuel Department Only</option>
+                    <option value="gas">Gas Department Only</option>
+                    <option value="both">Both Departments</option>
+                  </select>
+                </span>
+              )}
               <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Shift type</label>
                 <select
