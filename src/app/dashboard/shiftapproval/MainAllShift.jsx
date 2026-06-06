@@ -45,6 +45,7 @@ export default function ShiftApprovalPage() {
   // Transform API data to match ShiftCard props
   const transformedShifts = pendingShifts.map((shift) => ({
     id: shift._id,
+    attendantId: shift.attendant?._id,
     name: shift.attendant?.name || "Unknown",
     email: shift.attendant?.email,
     phone: shift.attendant?.phone,

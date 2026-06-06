@@ -382,9 +382,11 @@ export default function GasInventoryPage() {
   // Sync settings form when data loads
   useEffect(() => {
     if (settings) {
+      // If no station code has ever been set, default QR to enabled so new setups work out of the box
+      const isFirstSetup = !settings.gasStationCode;
       setSettingsForm({
         gasStationCode:      settings.gasStationCode      || "",
-        gasQREnabled:        settings.gasQREnabled        ?? true,
+        gasQREnabled:        isFirstSetup ? true : (settings.gasQREnabled ?? true),
         gasBankName:         settings.gasBankName         || "",
         gasBankAccount:      settings.gasBankAccount      || "",
         gasBankAccountName:  settings.gasBankAccountName  || "",
@@ -1194,51 +1196,76 @@ export default function GasInventoryPage() {
                         <p className="text-xs text-gray-400">Set a station code below to generate your QR code</p>
                       </div>
                     ) : (
-                      <div className="flex flex-col sm:flex-row items-center gap-6">
-                        {/* QR image */}
-                        <div className="shrink-0 bg-white border-4 border-orange-100 rounded-2xl p-2 shadow-sm">
-                          <img
-                            src={qrImageUrl}
-                            alt="Self-order QR code"
-                            width={200}
-                            height={200}
-                            className="rounded-xl"
-                          />
-                        </div>
-                        {/* Info + actions */}
-                        <div className="flex-1 min-w-0 text-center sm:text-left">
-                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Self-Order URL</p>
-                          <p className="text-sm font-mono text-gray-700 break-all bg-gray-50 rounded-xl px-3 py-2 border border-gray-100 mb-4">
-                            {orderUrl}
-                          </p>
-                          <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
-                            <button
-                              onClick={copyLink}
-                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
-                            >
-                              {copied ? <CheckCircle2 size={14} className="text-green-500" /> : <Copy size={14} />}
-                              {copied ? "Copied!" : "Copy Link"}
-                            </button>
-                            <button
-                              onClick={printQR}
-                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
-                            >
-                              <Printer size={14} /> Print QR
-                            </button>
-                            <a
-                              href={orderUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-orange-200 text-orange-600 text-sm font-semibold hover:bg-orange-50 transition-colors"
-                            >
-                              <ExternalLink size={14} /> Preview Page
-                            </a>
+                      <>
+                        {/* Warning banner when QR ordering is disabled */}
+                        {!settingsForm.gasQREnabled && (
+                          <div className="mb-4 flex items-start gap-3 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3">
+                            <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                            <div>
+                              <p className="text-sm font-bold text-amber-800">QR Self-Order is disabled</p>
+                              <p className="text-xs text-amber-700 mt-0.5">
+                                Customers who scan this code will see a "Not Available" error. Enable the <strong>QR Self-Order Enabled</strong> toggle in the settings below and click <strong>Save Settings</strong> to activate it.
+                              </p>
+                            </div>
                           </div>
-                          <p className="text-xs text-gray-400 mt-3">
-                            Customers open this link or scan the QR — no login needed
-                          </p>
+                        )}
+
+                        <div className={`flex flex-col sm:flex-row items-center gap-6 ${!settingsForm.gasQREnabled ? "opacity-60" : ""}`}>
+                          {/* QR image */}
+                          <div className="shrink-0 bg-white border-4 border-orange-100 rounded-2xl p-2 shadow-sm relative">
+                            <img
+                              src={qrImageUrl}
+                              alt="Self-order QR code"
+                              width={200}
+                              height={200}
+                              className="rounded-xl"
+                            />
+                            {!settingsForm.gasQREnabled && (
+                              <div className="absolute inset-2 rounded-xl bg-gray-900/60 flex items-center justify-center">
+                                <div className="text-center px-2">
+                                  <AlertTriangle size={22} className="text-amber-400 mx-auto mb-1" />
+                                  <p className="text-white text-[11px] font-bold leading-tight">Disabled</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          {/* Info + actions */}
+                          <div className="flex-1 min-w-0 text-center sm:text-left">
+                            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Self-Order URL</p>
+                            <p className="text-sm font-mono text-gray-700 break-all bg-gray-50 rounded-xl px-3 py-2 border border-gray-100 mb-4">
+                              {orderUrl}
+                            </p>
+                            <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                              <button
+                                onClick={copyLink}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                              >
+                                {copied ? <CheckCircle2 size={14} className="text-green-500" /> : <Copy size={14} />}
+                                {copied ? "Copied!" : "Copy Link"}
+                              </button>
+                              <button
+                                onClick={printQR}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
+                              >
+                                <Printer size={14} /> Print QR
+                              </button>
+                              <a
+                                href={orderUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-orange-200 text-orange-600 text-sm font-semibold hover:bg-orange-50 transition-colors"
+                              >
+                                <ExternalLink size={14} /> Preview Page
+                              </a>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-3">
+                              {settingsForm.gasQREnabled
+                                ? "Customers open this link or scan the QR — no login needed"
+                                : "Enable QR Self-Order below to allow customers to use this link"}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1267,11 +1294,16 @@ export default function GasInventoryPage() {
                         <p className="text-[10px] text-gray-400 mt-1">Short unique code for your station — no spaces</p>
                       </div>
 
-                      <div className="flex items-center gap-3 self-end pb-1">
-                        <label className="text-sm font-semibold text-gray-700">QR Self-Order Enabled</label>
+                      <div className={`flex items-center gap-3 self-end pb-1 rounded-xl px-3 py-2 border ${settingsForm.gasQREnabled ? "bg-orange-50 border-orange-200" : "bg-red-50 border-red-200"}`}>
+                        <div className="flex-1 min-w-0">
+                          <label className="text-sm font-semibold text-gray-700 block">QR Self-Order Enabled</label>
+                          <p className={`text-[10px] font-medium mt-0.5 ${settingsForm.gasQREnabled ? "text-orange-500" : "text-red-500"}`}>
+                            {settingsForm.gasQREnabled ? "ON — customers can scan and order" : "OFF — scanning shows 'Not Available'"}
+                          </p>
+                        </div>
                         <div
                           onClick={() => setSettingsForm(p => ({ ...p, gasQREnabled: !p.gasQREnabled }))}
-                          className={`w-11 h-6 rounded-full flex items-center px-0.5 cursor-pointer transition-colors ${settingsForm.gasQREnabled ? "bg-orange-500" : "bg-gray-300"}`}
+                          className={`w-11 h-6 rounded-full flex items-center px-0.5 cursor-pointer transition-colors shrink-0 ${settingsForm.gasQREnabled ? "bg-orange-500" : "bg-red-400"}`}
                         >
                           <div className={`w-5 h-5 bg-white rounded-full shadow transition-transform ${settingsForm.gasQREnabled ? "translate-x-5" : "translate-x-0"}`} />
                         </div>

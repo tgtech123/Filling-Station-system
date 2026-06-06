@@ -613,10 +613,17 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
 
   const normalizedRole = role.toLowerCase().trim();
   const links = allLinks(normalizedRole);
+  const dept = (userData?.department || "fuel").toLowerCase();
 
   return links.filter((link) => {
     if (!Array.isArray(link.roles)) return false;
     if (!link.roles.includes(normalizedRole)) return false;
+
+    // Attendants and cashiers only see gas links if their department includes gas
+    if (["attendant", "cashier"].includes(normalizedRole) && link.id?.startsWith("gas-")) {
+      if (dept === "fuel") return false;
+    }
+
     if (gasEnabled === false && link.id?.startsWith("gas-")) {
       // Keep the divider visible for managers so they can use the toggle button
       if (link.id === "gas-divider" && ["manager", "admin"].includes(normalizedRole)) return true;

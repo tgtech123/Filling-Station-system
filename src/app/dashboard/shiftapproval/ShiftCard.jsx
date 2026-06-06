@@ -59,6 +59,7 @@
 import Image from "next/image";
 import { User } from "lucide-react";
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { useImageStore } from "@/store/useImageStore";
 import useSupervisorStore from "@/store/useSupervisorStore";
 
@@ -80,12 +81,12 @@ export default function ShiftCard({ data }) {
 
     try {
       await approveShift(data.shiftId, { comment });
-      alert("Shift approved successfully!");
+      toast.success("Shift approved successfully!");
       setShowCommentBox(false);
       setComment("");
     } catch (error) {
       console.error("Approval error:", error);
-      alert("Failed to approve shift. Please try again.");
+      toast.error(error?.message || "Failed to approve shift. Please try again.");
     }
   };
 
