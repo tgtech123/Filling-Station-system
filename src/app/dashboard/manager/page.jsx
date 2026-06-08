@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import useDashboardStore from "@/store/useDashboardStore";
 import useActivityFeedStore from "@/store/useActivityFeedStore";
 import usePaymentStore from "@/store/usePaymentStore";
+import { useSocket } from "@/hooks/useSocket";
 import { reportType } from "./managerData";
 
 function getActivityStyle(item) {
@@ -199,18 +200,23 @@ export default function ManagerDashboard() {
     if (token) {
       fetchCurrentPlan();
       fetchDashboardData(token);
-      const dashboardInterval = setInterval(() => {
-        fetchDashboardData(token);
-      }, 600000);
+      // Activity feed: initial load + 5-min safety poll (socket handles fast path)
       fetchActivity().then(() => startPolling());
-      return () => {
-        clearInterval(dashboardInterval);
-        stopPolling();
-      };
+      return () => stopPolling();
     }
 
     return () => stopPolling();
   }, [fetchDashboardData, fetchActivity, startPolling, stopPolling]);
+
+  // Socket: live data events specific to this page
+  useSocket({
+    "dashboard:refresh": () => {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      if (token) fetchDashboardData(token);
+    },
+    "shift:ended":   () => useActivityFeedStore.getState().invalidate(),
+    "shift:started": () => useActivityFeedStore.getState().invalidate(),
+  });
 
   const fullName =
     userData?.firstName && userData?.lastName

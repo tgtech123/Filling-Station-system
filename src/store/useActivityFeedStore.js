@@ -83,12 +83,17 @@ const useActivityFeedStore = create((set, get) => ({
     };
   },
 
-  // ─── 4. Polling ───────────────────────────────────────────────────────────────
+  // ─── Socket-triggered invalidation ───────────────────────────────────────────
+  invalidate: () => {
+    get().fetchActivity();
+  },
+
+  // ─── 4. Safety polling (5 min fallback — socket handles the fast path) ───────
   startPolling: () => {
     if (_pollingInterval) return;
     _pollingInterval = setInterval(() => {
       get().fetchActivity();
-    }, 30000);
+    }, 5 * 60 * 1000);
   },
 
   stopPolling: () => {

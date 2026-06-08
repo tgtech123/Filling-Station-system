@@ -105,6 +105,13 @@ const useDashboardStore = create((set, get) => ({
     return { metrics, tankStatus };
   },
 
+  // ── Socket-triggered invalidation — bust cache and silently refetch ────────
+  invalidate: () => {
+    _cache.metrics.ts    = 0;
+    _cache.tankStatus.ts = 0;
+    get().fetchDashboardData();
+  },
+
   // ── Clear (also busts caches) ───────────────────────────────────────────────
   clearDashboard: () => {
     _cache.metrics.data    = null;

@@ -378,11 +378,31 @@ export const useCashierDashboardStore = create((set, get) => ({
     }
   },
 
+  // Socket-triggered invalidation — bust relevant caches and refetch silently
+  invalidateDashboard: () => {
+    _cache.dashboard.ts = 0;
+    get().fetchDashboard({ silent: true });
+  },
+
+  invalidateSales: () => {
+    _cache.dailySales.ts = 0;
+    get().fetchDailySales({ limit: 100 }, { silent: true });
+  },
+
+  invalidateLubricant: () => {
+    _cache.weeklyLubricant.ts  = 0;
+    _cache.dailyLubricant.ts   = 0;
+    _cache.monthlyLubricant.ts = 0;
+    _cache.lubricantTxns.ts    = 0;
+    get().fetchDailyLubricantSummary();
+  },
+
   startPolling: () => {
     if (get()._pollInterval) return;
+    // Safety fallback at 5 min — socket is the primary fast path
     const interval = setInterval(() => {
       get().fetchDailySales({ limit: 100 }, { silent: true });
-    }, 5000);
+    }, 5 * 60 * 1000);
     set({ _pollInterval: interval });
   },
 

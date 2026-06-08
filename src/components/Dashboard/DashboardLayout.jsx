@@ -8,6 +8,10 @@ import { AlertTriangle, PowerOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
 import useGasStore from "@/store/useGasStore";
+import { useSocket, useSocketConnect } from "@/hooks/useSocket";
+import useDashboardStore from "@/store/useDashboardStore";
+import useActivityFeedStore from "@/store/useActivityFeedStore";
+import useNotificationStore from "@/store/useNotificationStore";
 
 function DashboardLayout({ children }) {
   const router   = useRouter();
@@ -47,6 +51,34 @@ function DashboardLayout({ children }) {
 
     setAuthChecked(true);
   }, [router]);
+
+  // ── Socket: connect once for the entire dashboard session ──────────────────
+  useSocketConnect(authChecked);
+
+  // ── Socket: global event handlers shared by every dashboard page ───────────
+  useSocket(
+    {
+      // Any meaningful write signals a dashboard metrics refresh
+      "dashboard:refresh": () => {
+        useDashboardStore.getState().invalidate();
+      },
+      // Activity feed — refresh on any shift event
+      "shift:started": () => {
+        useActivityFeedStore.getState().invalidate();
+      },
+      "shift:ended": () => {
+        useActivityFeedStore.getState().invalidate();
+      },
+      "shift:approved": () => {
+        useActivityFeedStore.getState().invalidate();
+      },
+      // Bell badge — refresh for every user when a notification is created
+      "notification:new": () => {
+        useNotificationStore.getState().invalidate();
+      },
+    },
+    authChecked
+  );
 
   // Fetch gas status whenever we land on a gas path
   useEffect(() => {
