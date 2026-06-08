@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import MyStatCard from "@/components/MyStatCard";
 import LiveSalesAndSchedulePage from "./LiveSalesAndSchedulePage";
 import useSupervisorStore from "@/store/useSupervisorStore";
+import { useSocket } from "@/hooks/useSocket";
 import { supervisorData } from "./supervisorData";
 
 const Dashboard = () => {
@@ -36,6 +37,14 @@ const Dashboard = () => {
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
+
+  // Socket: refresh supervisor dashboard when shifts change
+  useSocket({
+    "shift:started":  () => fetchDashboard(),
+    "shift:ended":    () => fetchDashboard(),
+    "shift:approved": () => fetchDashboard(),
+    "dashboard:refresh": () => fetchDashboard(),
+  });
 
   const fullName =
     userData?.firstName && userData?.lastName

@@ -7,10 +7,11 @@ import { useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import DailyAttendantSales from "./DailyAttendantSales";
 import cashierCards from "./cashierData";
-import { useCashierDashboard } from "@/store/useCashierDashboardStore";
+import { useCashierDashboard, useCashierDashboardStore } from "@/store/useCashierDashboardStore";
 import TargetCelebrationModal from "@/components/TargetCelebrationModal";
 import SalesTargetCard from "@/components/Dashboard/SalesTargetCard";
 import useSalesTargetStore from "@/store/useSalesTargetStore";
+import { useSocket } from "@/hooks/useSocket";
 
 export default function CashierDashboard() {
     const [userData, setUserData] = useState(null);
@@ -40,13 +41,7 @@ export default function CashierDashboard() {
     useEffect(() => {
         fetchDashboard();
 
-        // ✅ Auto-refresh every 30 seconds to get latest data
-        const interval = setInterval(() => {
-            console.log('🔄 Auto-refreshing dashboard data...');
-            fetchDashboard();
-        }, 30000); // 30 seconds
-
-        return () => clearInterval(interval);
+            return () => {};
     }, [fetchDashboard]);
 
     useEffect(() => {
@@ -76,6 +71,21 @@ export default function CashierDashboard() {
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
         }
     }, [dashboardData]);
+
+    // Socket: live refresh when reconciliation or lubricant sale happens
+    useSocket({
+        "reconciliation:done": () => {
+            useCashierDashboardStore.getState().invalidateDashboard();
+            useCashierDashboardStore.getState().invalidateSales();
+        },
+        "lubricant:sold": () => {
+            useCashierDashboardStore.getState().invalidateDashboard();
+            useCashierDashboardStore.getState().invalidateLubricant();
+        },
+        "shift:ended": () => {
+            useCashierDashboardStore.getState().invalidateSales();
+        },
+    });
 
     const fullName =
         userData?.firstName && userData?.lastName

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
-import { Users, Plus, Search, Fuel, CheckCircle2, AlertCircle, Loader2, ChevronRight, X } from "lucide-react";
+import { Users, Plus, Search, Fuel, CheckCircle2, AlertCircle, Loader2, ChevronRight, X, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import useFuelLoyaltyStore from "@/store/useFuelLoyaltyStore";
 
@@ -61,6 +61,9 @@ export default function LoyaltyCustomersPage() {
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
+          <Link href="/dashboard/loyalty" className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors shrink-0">
+            <ArrowLeft size={18} />
+          </Link>
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
             <Users className="w-5 h-5 text-white" />
           </div>

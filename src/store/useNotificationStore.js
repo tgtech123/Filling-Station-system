@@ -124,13 +124,19 @@ const useNotificationStore = create((set, get) => ({
     }));
   },
 
-  // ── Polling ────────────────────────────────────────────────────────────────
+  // ── Socket-triggered invalidation ─────────────────────────────────────────
+  invalidate: () => {
+    get().fetchMessages();
+    get().fetchAlerts();
+  },
+
+  // ── Safety polling fallback (socket is primary) ───────────────────────────
   startPolling: () => {
     if (_pollingInterval) return;
     _pollingInterval = setInterval(() => {
       get().fetchMessages();
       get().fetchAlerts();
-    }, 30000);
+    }, 5 * 60 * 1000);
   },
 
   stopPolling: () => {

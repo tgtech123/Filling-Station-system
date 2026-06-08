@@ -5,6 +5,7 @@ import ShiftCard from "./ShiftCard";
 import ApprovedShiftsPage from "./ApprovedShiftsPage";
 import useSupervisorStore from "@/store/useSupervisorStore";
 import toast from "react-hot-toast";
+import { useSocket } from "@/hooks/useSocket";
 
 export default function ShiftApprovalPage() {
   const [activeTab, setActiveTab] = useState("pending");
@@ -41,6 +42,17 @@ export default function ShiftApprovalPage() {
       fetchApprovedShifts({ page: 1, limit: 100 });
     }
   }, [activeTab, fetchPendingShifts, fetchApprovedShifts, clearPendingShifts]);
+
+  // Socket: instantly refresh pending queue when a shift ends
+  useSocket({
+    "shift:ended": () => {
+      if (activeTab === "pending") fetchPendingShifts({ page: 1, limit: 20 });
+    },
+    "shift:approved": () => {
+      if (activeTab === "pending") fetchPendingShifts({ page: 1, limit: 20 });
+      else fetchApprovedShifts({ page: 1, limit: 100 });
+    },
+  });
 
   // Transform API data to match ShiftCard props
   const transformedShifts = pendingShifts.map((shift) => ({

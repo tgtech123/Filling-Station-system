@@ -5,6 +5,7 @@ import MainContainer from "@/components/Dashboard/MainContainer";
 import TargetCelebrationModal from "@/components/TargetCelebrationModal";
 import useNotificationStore from "@/store/useNotificationStore";
 import useSalesTargetStore from "@/store/useSalesTargetStore";
+import { useSocket } from "@/hooks/useSocket";
 
 export default function AttendantDashboard() {
     const { fetchAlerts, startPolling, stopPolling } = useNotificationStore();
@@ -12,10 +13,16 @@ export default function AttendantDashboard() {
 
     useEffect(() => {
         fetchAlerts();
+        // 5-min safety poll — socket handles the fast path
         startPolling();
-        console.log("Attendant notifications loaded: alerts fetched, polling started");
         return () => stopPolling();
     }, [fetchAlerts, startPolling, stopPolling]);
+
+    // Socket: refresh alerts & messages when a new notification arrives
+    useSocket({
+        "notification:new": () => useNotificationStore.getState().invalidate(),
+        "shift:approved":   () => useNotificationStore.getState().invalidate(),
+    });
 
     useEffect(() => {
         fetchMyTarget();

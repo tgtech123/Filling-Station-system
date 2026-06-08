@@ -2,9 +2,11 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
-import { ArrowLeft, Fuel, Plus, RotateCcw, AlertCircle, CheckCircle2, Loader2, Droplets } from "lucide-react";
+import { ArrowLeft, Fuel, Plus, RotateCcw, AlertCircle, CheckCircle2, Loader2, Droplets, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import useFuelLoyaltyStore from "@/store/useFuelLoyaltyStore";
+import { API_URL } from "@/lib/config";
 
 function TierBadge({ tier }) {
   const map = { Bronze:"bg-orange-100 text-orange-700", Silver:"bg-gray-100 text-gray-600", Gold:"bg-yellow-100 text-yellow-700", Platinum:"bg-purple-100 text-purple-700" };
@@ -17,6 +19,7 @@ const EMPTY_EARN = { product: "PMS", litres: "", amountSpent: "", pricePerLitre:
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
+  const router = useRouter();
   const { selectedCustomer: customer, transactions, redemptions, settings, fetchCustomer, fetchSettings, recordEarn, requestRedemption, loading } = useFuelLoyaltyStore();
 
   const [showEarn, setShowEarn]           = useState(false);
@@ -26,6 +29,8 @@ export default function CustomerDetailPage() {
   const [saving, setSaving]               = useState(false);
   const [error, setError]                 = useState(null);
   const [success, setSuccess]             = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting]           = useState(false);
 
   useEffect(() => {
     fetchCustomer(id);
@@ -73,6 +78,25 @@ export default function CustomerDetailPage() {
       setTimeout(() => setSuccess(null), 4000);
     } else {
       setError(result.error);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/fuel-loyalty/staff/customers/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to remove customer");
+      router.push("/dashboard/loyalty/customers");
+    } catch (e) {
+      setError(e.message);
+      setDeleting(false);
+      setConfirmDelete(false);
     }
   };
 
@@ -187,7 +211,30 @@ export default function CustomerDetailPage() {
               className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
               <RotateCcw size={16} /> Redeem Points
             </button>
+            <button onClick={() => setConfirmDelete(true)}
+              className="w-10 flex items-center justify-center bg-red-50 hover:bg-red-100 border border-red-200 text-red-500 rounded-xl transition-colors shrink-0">
+              <Trash2 size={16} />
+            </button>
           </div>
+
+          {/* Delete confirm */}
+          {confirmDelete && (
+            <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-4">
+              <p className="text-sm font-semibold text-red-700 mb-1">Remove this customer?</p>
+              <p className="text-xs text-red-500 mb-3">They will be removed from the loyalty program. Transaction history is preserved.</p>
+              <div className="flex gap-2">
+                <button onClick={handleDelete} disabled={deleting}
+                  className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white font-semibold py-2 rounded-xl text-sm transition-colors">
+                  {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                  Yes, Remove
+                </button>
+                <button onClick={() => setConfirmDelete(false)}
+                  className="flex-1 border border-gray-200 rounded-xl text-gray-500 text-sm hover:bg-gray-50 py-2">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Log Sale Form */}

@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
 import useThemePersistence from "@/hooks/useThemePersistence";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import {
   Palette, Shield, Bell, Receipt, Sun, Moon, Smartphone,
   Monitor, LogOut, X, CheckCircle, XCircle, CreditCard,
-  Zap, Loader2,
+  Zap, Loader2, ChevronDown, AlertTriangle, Clock, ArrowDownCircle,
+  CheckCircle2, Users, Ban,
 } from "lucide-react";
 import useActivityFeedStore from "@/store/useActivityFeedStore";
 
@@ -46,8 +48,6 @@ const PLAN_SLUGS = {
   "enterprise-pro": "Enterprise Pro Plan",
   "enterprise-max": "Enterprise Max Plan",
 };
-const PRO_FEATURES = ["Up to 5 staff accounts", "Fuel & lubricant tracking", "Sales & cash reports", "Export reports (PDF/CSV)", "Activity logs", "Email support"];
-const MAX_FEATURES = ["Unlimited staff accounts", "Everything in Pro", "AI-powered insights", "Custom report builder", "Priority 24/7 support", "Multi-branch support", "API access"];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -210,38 +210,32 @@ function TwoFADisableModal({ onConfirm, onClose, saving }) {
 
 // ── Billing Modals ────────────────────────────────────────────────────────────
 
-const PLAN_MONTHLY = { pro: 14900, max: 29900 };
-const PLAN_YEARLY  = { pro: 149000, max: 299000 };
-
-function UpgradeModal({ onClose, currentPlanSlug, onUpgrade }) {
+// renewMode = true when already on the highest plan — only option is to renew same plan
+function UpgradeModal({ onClose, currentPlanSlug, availablePlans, renewMode, onUpgrade }) {
   const [billingCycle, setBillingCycle] = useState("monthly");
-  const [selectedPlan, setSelectedPlan] = useState(
-    currentPlanSlug === "max" ? "max" : "pro"
+  const [selectedSlug, setSelectedSlug] = useState(
+    renewMode ? currentPlanSlug : (availablePlans[0]?.slug || currentPlanSlug)
   );
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(null);
 
-  const plans = [
-    { slug: "pro", name: "Pro Plan", features: PRO_FEATURES, color: "neutral", price: billingCycle === "yearly" ? PLAN_YEARLY.pro : PLAN_MONTHLY.pro },
-    { slug: "max", name: "Max Plan", features: MAX_FEATURES, color: "blue",    price: billingCycle === "yearly" ? PLAN_YEARLY.max : PLAN_MONTHLY.max },
-  ];
+  const selected = availablePlans.find(p => p.slug === selectedSlug) || availablePlans[0];
+  const price = selected
+    ? `₦${((billingCycle === "yearly" ? selected.yearlyPrice : selected.monthlyPrice) || 0).toLocaleString()} / ${billingCycle === "yearly" ? "yr" : "mo"}`
+    : "";
 
   async function handlePay() {
-    if (selectedPlan === currentPlanSlug) return;
     setBusy(true);
     setErr(null);
     try {
-      await onUpgrade(selectedPlan, billingCycle);
+      await onUpgrade(selectedSlug, billingCycle);
     } catch (e) {
       setErr(e?.message || "Failed to initialise payment. Please try again.");
       setBusy(false);
     }
   }
 
-  const upgradeTarget = plans.find((p) => p.slug === selectedPlan);
-  const price = upgradeTarget
-    ? `₦${(upgradeTarget.price).toLocaleString()} / ${billingCycle === "yearly" ? "yr" : "mo"}`
-    : "";
+  const cols = availablePlans.length === 1 ? "grid-cols-1 max-w-sm mx-auto" : availablePlans.length === 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
   return (
     <ModalBackdrop onClose={onClose}>
@@ -250,10 +244,16 @@ function UpgradeModal({ onClose, currentPlanSlug, onUpgrade }) {
         <div className="flex justify-between items-center px-6 py-4 border-b border-neutral-200 dark:border-gray-700 shrink-0">
           <div className="flex items-center gap-2">
             <Zap size={18} className="text-[#1a71f6]" />
-            <h3 className="text-base font-semibold">Upgrade Plan</h3>
+            <h3 className="text-base font-semibold">{renewMode ? "Renew Plan" : "Upgrade Plan"}</h3>
           </div>
           <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"><X size={18} /></button>
         </div>
+
+        {renewMode && (
+          <div className="mx-6 mt-4 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-sm text-blue-700 shrink-0">
+            You are on the <strong>highest available plan</strong>. You can renew it for another billing period below.
+          </div>
+        )}
 
         {/* Billing cycle toggle */}
         <div className="flex justify-center px-6 pt-4 shrink-0">
@@ -263,9 +263,7 @@ function UpgradeModal({ onClose, currentPlanSlug, onUpgrade }) {
                 key={cycle}
                 onClick={() => setBillingCycle(cycle)}
                 className={`px-4 py-1.5 text-sm font-semibold rounded-lg transition-colors capitalize ${
-                  billingCycle === cycle
-                    ? "bg-white text-gray-800 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
+                  billingCycle === cycle ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
                 }`}
               >
                 {cycle}
@@ -276,41 +274,40 @@ function UpgradeModal({ onClose, currentPlanSlug, onUpgrade }) {
         </div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6 overflow-y-auto">
-          {plans.map((plan) => {
-            const isCurrent  = plan.slug === currentPlanSlug;
-            const isSelected = plan.slug === selectedPlan;
-            const isBlue     = plan.color === "blue";
+        <div className={`grid ${cols} gap-4 p-6 overflow-y-auto w-full`}>
+          {availablePlans.map((plan, idx) => {
+            const isSelected = plan.slug === selectedSlug;
+            const planPrice  = billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
+            const isHighlighted = idx === availablePlans.length - 1 && !renewMode;
             return (
               <button
                 key={plan.slug}
-                onClick={() => !isCurrent && setSelectedPlan(plan.slug)}
-                disabled={isCurrent}
+                onClick={() => setSelectedSlug(plan.slug)}
                 className={`rounded-2xl border-[2px] p-5 text-left transition-all w-full ${
-                  isCurrent
-                    ? "border-neutral-200 opacity-60 cursor-not-allowed"
-                    : isSelected
-                    ? isBlue ? "border-[#1a71f6] bg-blue-50" : "border-gray-700 bg-gray-50"
+                  isSelected
+                    ? isHighlighted ? "border-[#1a71f6] bg-blue-50" : "border-gray-700 bg-gray-50"
                     : "border-neutral-200 hover:border-gray-400"
                 }`}
               >
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="font-semibold text-gray-800">{plan.name}</h4>
-                  {isCurrent
-                    ? <span className="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">Current</span>
-                    : isSelected
-                    ? <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isBlue ? "bg-[#1a71f6] text-white" : "bg-gray-700 text-white"}`}>Selected</span>
-                    : null
-                  }
+                <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                  <h4 className="font-semibold text-gray-800 text-sm">{plan.name}</h4>
+                  {isSelected && (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isHighlighted ? "bg-[#1a71f6] text-white" : "bg-gray-700 text-white"}`}>
+                      {renewMode ? "Renewing" : "Selected"}
+                    </span>
+                  )}
+                  {isHighlighted && !isSelected && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Popular</span>
+                  )}
                 </div>
-                <p className={`text-2xl font-bold mb-3 ${isBlue && !isCurrent ? "text-[#1a71f6]" : "text-gray-900"}`}>
-                  ₦{plan.price.toLocaleString()}
+                <p className={`text-2xl font-bold mb-3 ${isHighlighted ? "text-[#1a71f6]" : "text-gray-900"}`}>
+                  ₦{(planPrice || 0).toLocaleString()}
                   <span className="text-sm font-normal text-neutral-400">/{billingCycle === "yearly" ? "yr" : "mo"}</span>
                 </p>
                 <ul className="space-y-1.5">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-xs text-gray-600">
-                      <CheckCircle size={12} className={isBlue && !isCurrent ? "text-[#1a71f6] shrink-0" : "text-green-500 shrink-0"} />{f}
+                  {(plan.features || []).slice(0, 6).map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-xs text-gray-600">
+                      <CheckCircle size={12} className={`${isHighlighted ? "text-[#1a71f6]" : "text-green-500"} shrink-0 mt-0.5`} />{f}
                     </li>
                   ))}
                 </ul>
@@ -324,15 +321,281 @@ function UpgradeModal({ onClose, currentPlanSlug, onUpgrade }) {
           {err && <p className="text-xs text-red-500 mb-2 text-center">{err}</p>}
           <button
             onClick={handlePay}
-            disabled={busy || selectedPlan === currentPlanSlug}
+            disabled={busy}
             className="w-full py-3 rounded-xl bg-[#1a71f6] text-white font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {busy ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
-            {busy ? "Redirecting to payment..." : `Pay ${price} — Upgrade Now`}
+            {busy ? "Redirecting to payment..." : renewMode ? `Renew — Pay ${price}` : `Pay ${price} — Upgrade Now`}
           </button>
           <p className="text-center text-[11px] text-neutral-400 mt-2">You will be redirected to Paystack to complete payment securely.</p>
         </div>
       </div>
+    </ModalBackdrop>
+  );
+}
+
+// ── Downgrade Modal (multi-step wizard) ───────────────────────────────────────
+const ROLE_LABELS = {
+  attendant: "Attendants", cashier: "Cashiers",
+  accountant: "Accountants", supervisor: "Supervisors", manager: "Managers",
+};
+
+function DowngradeModal({ onClose, currentPlanSlug, downgradablePlans, onScheduled }) {
+  const [step, setStep]               = useState("select");   // select | checking | conflict | confirm | success
+  const [selectedSlug, setSelectedSlug] = useState(downgradablePlans[0]?.slug || "");
+  const [checkResult, setCheckResult] = useState(null);
+  const [scheduling, setScheduling]   = useState(false);
+  const [err, setErr]                 = useState(null);
+
+  const selectedPlan = downgradablePlans.find(p => p.slug === selectedSlug);
+
+  async function handleCheck() {
+    setStep("checking");
+    setErr(null);
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      const res   = await fetch(`${API}/api/payments/downgrade/check?targetPlan=${selectedSlug}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data  = await res.json();
+      if (!res.ok) throw new Error(data.error || "Check failed");
+      setCheckResult(data.data);
+      setStep(data.data.canDowngrade ? "confirm" : "conflict");
+    } catch (e) {
+      setErr(e.message);
+      setStep("select");
+    }
+  }
+
+  async function handleSchedule() {
+    setScheduling(true);
+    setErr(null);
+    try {
+      const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      const res   = await fetch(`${API}/api/payments/downgrade/schedule`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body:    JSON.stringify({ targetPlan: selectedSlug }),
+      });
+      const data  = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to schedule");
+      setStep("success");
+      onScheduled(data.data);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setScheduling(false);
+    }
+  }
+
+  const slideVariants = {
+    enter:  { x: 40, opacity: 0 },
+    center: { x: 0,  opacity: 1 },
+    exit:   { x: -40, opacity: 0 },
+  };
+
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }) : "—";
+
+  return (
+    <ModalBackdrop onClose={onClose}>
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1,    opacity: 1 }}
+        exit={{    scale: 0.95, opacity: 0 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100">
+          <div className="flex items-center gap-2">
+            <ChevronDown size={18} className="text-amber-500" />
+            <h3 className="text-base font-semibold text-gray-800">
+              {step === "success" ? "Downgrade Scheduled" : "Downgrade Plan"}
+            </h3>
+          </div>
+          {step !== "checking" && (
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+              <X size={18} />
+            </button>
+          )}
+        </div>
+
+        {/* Step indicator */}
+        {step !== "success" && (
+          <div className="px-6 pt-4 flex items-center gap-1.5">
+            {["select", "checking", step === "conflict" ? "conflict" : "confirm"].map((s, i) => {
+              const active = (step === "checking" && i <= 1) || (["confirm","conflict"].includes(step) && i <= 2) || (step === "select" && i === 0);
+              return (
+                <div key={i} className={`h-1 rounded-full flex-1 transition-all duration-500 ${active ? "bg-amber-400" : "bg-gray-100"}`} />
+              );
+            })}
+          </div>
+        )}
+
+        {/* Body — animated step content */}
+        <div className="overflow-hidden min-h-[280px]">
+          <AnimatePresence mode="wait">
+
+            {/* STEP: Select plan */}
+            {step === "select" && (
+              <motion.div key="select" variants={slideVariants} initial="enter" animate="center" exit="exit"
+                transition={{ duration: 0.25, ease: "easeInOut" }} className="p-6 flex flex-col gap-4">
+                <p className="text-sm text-gray-500">Select a plan to move down to. Your current features remain active until the end of your billing period.</p>
+                {err && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-2.5 text-sm text-red-600">{err}</div>
+                )}
+                <div className="flex flex-col gap-2">
+                  {downgradablePlans.map(plan => (
+                    <button key={plan.slug} onClick={() => setSelectedSlug(plan.slug)}
+                      className={`flex items-center justify-between px-4 py-3.5 rounded-xl border-2 transition-all text-left ${
+                        selectedSlug === plan.slug
+                          ? "border-amber-400 bg-amber-50"
+                          : "border-gray-100 hover:border-gray-300 bg-white"
+                      }`}>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">{plan.name}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">₦{(plan.monthlyPrice || 0).toLocaleString()}/mo · ₦{(plan.yearlyPrice || 0).toLocaleString()}/yr</p>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                        selectedSlug === plan.slug ? "border-amber-400 bg-amber-400" : "border-gray-300"
+                      }`}>
+                        {selectedSlug === plan.slug && <div className="w-2 h-2 bg-white rounded-full" />}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <button onClick={handleCheck} disabled={!selectedSlug}
+                  className="mt-1 w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2">
+                  Check Compatibility →
+                </button>
+              </motion.div>
+            )}
+
+            {/* STEP: Checking */}
+            {step === "checking" && (
+              <motion.div key="checking" variants={slideVariants} initial="enter" animate="center" exit="exit"
+                transition={{ duration: 0.25 }} className="p-6 flex flex-col items-center justify-center gap-4 min-h-[280px]">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full border-4 border-amber-100 border-t-amber-400 animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <ArrowDownCircle size={22} className="text-amber-400" />
+                  </div>
+                </div>
+                <p className="text-sm font-semibold text-gray-700">Checking your current usage…</p>
+                <p className="text-xs text-gray-400 text-center">Comparing staff counts and limits against {selectedPlan?.name}</p>
+              </motion.div>
+            )}
+
+            {/* STEP: Conflict */}
+            {step === "conflict" && checkResult && (
+              <motion.div key="conflict" variants={slideVariants} initial="enter" animate="center" exit="exit"
+                transition={{ duration: 0.25 }} className="p-6 flex flex-col gap-4">
+                <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                  <AlertTriangle size={18} className="text-red-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-red-700">Cannot downgrade yet</p>
+                    <p className="text-xs text-red-500 mt-0.5">Resolve the issues below before switching to {checkResult.targetPlan?.name}.</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  {checkResult.conflicts.map((c, i) => (
+                    <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.08 }}
+                      className="flex items-center justify-between bg-white border border-red-100 rounded-xl px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-red-50 rounded-lg flex items-center justify-center shrink-0">
+                          <Users size={14} className="text-red-500" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-700">{ROLE_LABELS[c.role] || c.role}</p>
+                          <p className="text-xs text-gray-400">{c.current} active · {c.allowed} allowed</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded-lg">
+                        Remove {c.excess}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="flex gap-2 mt-1">
+                  <button onClick={() => setStep("select")}
+                    className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+                    ← Change Plan
+                  </button>
+                  <button onClick={onClose}
+                    className="flex-1 py-2.5 rounded-xl bg-gray-800 text-white text-sm font-semibold hover:bg-gray-900 transition-colors">
+                    Resolve & Come Back
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP: Confirm */}
+            {step === "confirm" && checkResult && (
+              <motion.div key="confirm" variants={slideVariants} initial="enter" animate="center" exit="exit"
+                transition={{ duration: 0.25 }} className="p-6 flex flex-col gap-4">
+                <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+                  <CheckCircle2 size={18} className="text-green-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-green-700">Good to go!</p>
+                    <p className="text-xs text-green-600 mt-0.5">Your usage fits within {checkResult.targetPlan?.name} limits.</p>
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded-xl divide-y divide-gray-100 border border-gray-100 overflow-hidden">
+                  {[
+                    ["Downgrading to",    checkResult.targetPlan?.name],
+                    ["Effective date",    fmtDate(checkResult.effectiveDate)],
+                    ["Current features", "Remain active until then"],
+                    ["Refund",           "No refund — unused days applied as credit"],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex items-center justify-between px-4 py-3">
+                      <p className="text-xs text-gray-500">{label}</p>
+                      <p className="text-xs font-semibold text-gray-700">{value}</p>
+                    </div>
+                  ))}
+                </div>
+                {err && <p className="text-xs text-red-500 text-center">{err}</p>}
+                <div className="flex gap-2">
+                  <button onClick={() => setStep("select")}
+                    className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+                    ← Change Plan
+                  </button>
+                  <button onClick={handleSchedule} disabled={scheduling}
+                    className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2">
+                    {scheduling ? <Loader2 size={14} className="animate-spin" /> : <Clock size={14} />}
+                    {scheduling ? "Scheduling…" : "Confirm Downgrade"}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* STEP: Success */}
+            {step === "success" && checkResult && (
+              <motion.div key="success" variants={slideVariants} initial="enter" animate="center" exit="exit"
+                transition={{ duration: 0.25 }} className="p-6 flex flex-col items-center gap-5 py-10">
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                  className="w-20 h-20 rounded-full bg-green-50 border-4 border-green-200 flex items-center justify-center">
+                  <CheckCircle2 size={36} className="text-green-500" />
+                </motion.div>
+                <div className="text-center">
+                  <p className="text-lg font-bold text-gray-800 mb-1">Downgrade Scheduled</p>
+                  <p className="text-sm text-gray-500">
+                    Your plan will change to <strong>{checkResult.targetPlan?.name}</strong> on{" "}
+                    <strong>{fmtDate(checkResult.effectiveDate)}</strong>.
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">Your current plan remains fully active until then.</p>
+                </div>
+                <button onClick={onClose}
+                  className="px-8 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-900 text-white text-sm font-semibold transition-colors">
+                  Done
+                </button>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        </div>
+      </motion.div>
     </ModalBackdrop>
   );
 }
@@ -379,8 +642,9 @@ export default function SettingsPage() {
   const isDark = mounted && theme === "dark";
 
   // Plan
-  const [planData, setPlanData] = useState(null);
+  const [planData, setPlanData]   = useState(null);
   const [planLoading, setPlanLoading] = useState(true);
+  const [allPlans, setAllPlans]   = useState([]);
 
   // 2FA
   const [twoFAEnabled, setTwoFAEnabled] = useState(false);
@@ -409,9 +673,10 @@ export default function SettingsPage() {
   // Billing
   const [billingHistory, setBillingHistory] = useState([]);
   const [billingLoading, setBillingLoading] = useState(true);
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [planCancelled, setPlanCancelled] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal]     = useState(false);
+  const [showDowngradeModal, setShowDowngradeModal] = useState(false);
+  const [showCancelModal, setShowCancelModal]       = useState(false);
+  const [planCancelled, setPlanCancelled]           = useState(false);
 
   const { activities, fetchActivity } = useActivityFeedStore();
 
@@ -435,10 +700,16 @@ export default function SettingsPage() {
     setBillingLoading(true);
     try {
       const headers = { Authorization: `Bearer ${getToken()}` };
-      const [planRes, histRes] = await Promise.all([
+      const [planRes, histRes, plansRes] = await Promise.all([
         fetch(`${API}/api/payments/current-plan`, { headers }),
         fetch(`${API}/api/payments/history`, { headers }),
+        fetch(`${API}/api/public/plans`),
       ]);
+
+      if (plansRes.ok) {
+        const plansData = await plansRes.json();
+        setAllPlans(plansData.plans || []);
+      }
       if (planRes.ok) {
         const data = await planRes.json();
         setPlanData(data.data);
@@ -553,10 +824,41 @@ export default function SettingsPage() {
   }
 
   // ── Plan display values ─────────────────────────────────────────
-  const planSlug    = planData?.plan || "free";
-  const planName    = planData?.planName || PLAN_SLUGS[planSlug] || "Free Plan";
-  const planStatus  = planData?.planStatus || "active";
+  const planSlug     = planData?.plan || "free";
+  const planName     = planData?.planName || PLAN_SLUGS[planSlug] || "Free Plan";
+  const planStatus   = planData?.planStatus || "active";
   const billingCycle = planData?.billingCycle || null;
+
+  // Plans ranked above current (by order field from DB); exclude free plan
+  const paidPlans      = allPlans.filter(p => p.slug !== "free");
+  const currentOrder   = allPlans.find(p => p.slug === planSlug)?.order ?? -1;
+  const upgradablePlans = paidPlans.filter(p => p.order > currentOrder);
+  const isHighestPlan  = paidPlans.length > 0 && upgradablePlans.length === 0 && planSlug !== "free";
+  // In renew mode show only the current plan; in upgrade mode show plans above current
+  const modalPlans      = isHighestPlan
+    ? allPlans.filter(p => p.slug === planSlug)
+    : upgradablePlans;
+  const downgradablePlans = paidPlans.filter(p => p.order < currentOrder);
+
+  // Pending downgrade state from API
+  const hasPendingDowngrade  = planData?.pendingDowngrade    || false;
+  const pendingDowngradeTo   = planData?.pendingDowngradeTo  || null;
+  const downgradeAt          = planData?.downgradeAt         || null;
+  const pendingPlanName      = allPlans.find(p => p.slug === pendingDowngradeTo)?.name || pendingDowngradeTo;
+
+  async function handleCancelDowngrade() {
+    try {
+      const res = await fetch(`${API}/api/payments/downgrade/cancel`, {
+        method:  "POST",
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!res.ok) throw new Error("Failed");
+      toast.success("Pending downgrade cancelled");
+      fetchPlan();
+    } catch {
+      toast.error("Could not cancel downgrade. Try again.");
+    }
+  }
 
   // Build price string from API prices, falling back gracefully
   const buildPriceLabel = () => {
@@ -775,15 +1077,48 @@ export default function SettingsPage() {
               </div>
             )}
 
+            {/* Pending downgrade banner */}
+            <AnimatePresence>
+              {hasPendingDowngrade && (
+                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                  className="mt-3 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                  <Clock size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-amber-800">
+                      Downgrade to <span className="font-bold">{pendingPlanName}</span> scheduled
+                    </p>
+                    <p className="text-xs text-amber-600 mt-0.5">
+                      Effective {downgradeAt ? new Date(downgradeAt).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" }) : "—"}
+                    </p>
+                  </div>
+                  <button onClick={handleCancelDowngrade}
+                    className="shrink-0 text-xs font-semibold text-amber-700 hover:text-red-600 border border-amber-300 hover:border-red-300 px-2.5 py-1 rounded-lg transition-colors">
+                    Cancel
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="flex flex-col sm:flex-row gap-2 mt-3">
-              <button onClick={() => setShowUpgradeModal(true)} className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#1a71f6] text-white text-sm font-semibold hover:bg-blue-700 transition-colors">
+              <button
+                onClick={() => setShowUpgradeModal(true)}
+                disabled={modalPlans.length === 0}
+                className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#1a71f6] text-white text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Zap size={15} />
-                {isFree ? "Upgrade Plan" : "Upgrade to Max Plan"}
+                {isFree ? "Upgrade Plan" : isHighestPlan ? "Renew Plan" : "Upgrade Plan"}
               </button>
+              {!isFree && !hasPendingDowngrade && downgradablePlans.length > 0 && (
+                <button onClick={() => setShowDowngradeModal(true)}
+                  className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-[2px] border-amber-300 text-amber-600 text-sm font-semibold hover:bg-amber-50 transition-colors">
+                  <ChevronDown size={15} />
+                  Downgrade Plan
+                </button>
+              )}
               {!planCancelled && !isFree && (
                 <button onClick={() => setShowCancelModal(true)} className="cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-[2px] border-red-300 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors">
                   <X size={15} />
-                  Cancel Subscription
+                  Cancel
                 </button>
               )}
             </div>
@@ -837,11 +1172,21 @@ export default function SettingsPage() {
           onClose={() => setShowDisableModal(false)}
         />
       )}
-      {showUpgradeModal && (
+      {showUpgradeModal && modalPlans.length > 0 && (
         <UpgradeModal
           currentPlanSlug={planSlug}
+          availablePlans={modalPlans}
+          renewMode={isHighestPlan}
           onClose={() => setShowUpgradeModal(false)}
           onUpgrade={handleUpgrade}
+        />
+      )}
+      {showDowngradeModal && downgradablePlans.length > 0 && (
+        <DowngradeModal
+          currentPlanSlug={planSlug}
+          downgradablePlans={downgradablePlans}
+          onClose={() => setShowDowngradeModal(false)}
+          onScheduled={() => { setShowDowngradeModal(false); fetchPlan(); }}
         />
       )}
       {showCancelModal && (

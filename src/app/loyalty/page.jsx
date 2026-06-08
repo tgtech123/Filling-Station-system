@@ -115,18 +115,32 @@ function PortalContent() {
     const progressPct = tier === "Platinum" ? 100
       : Math.min(100, ((c.lifetimePoints - tierStart) / (tierEnd - tierStart)) * 100);
 
+    const st = c.station;
+    const stationLocation = st ? [st.city, st.state].filter(Boolean).join(", ") : "";
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 pb-12">
         {/* Top bar */}
         <div className="bg-white border-b border-gray-100 shadow-sm">
-          <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
-                <Fuel size={16} className="text-white" />
+          <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              {st?.image ? (
+                <img src={st.image} alt={st.name} className="w-9 h-9 rounded-lg object-cover border border-gray-100 shrink-0" />
+              ) : (
+                <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shrink-0">
+                  <Fuel size={16} className="text-white" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="font-bold text-gray-800 text-sm leading-tight truncate">
+                  {st?.name ? `${st.name} Loyalty` : "Loyalty"}
+                </p>
+                {stationLocation && (
+                  <p className="text-[11px] text-gray-400 truncate">{stationLocation}</p>
+                )}
               </div>
-              <span className="font-bold text-gray-800">FuelDesk Loyalty</span>
             </div>
-            <button onClick={handleLogout} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors">
+            <button onClick={handleLogout} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors shrink-0">
               <LogOut size={14} /> Sign out
             </button>
           </div>
@@ -248,6 +262,16 @@ function PortalContent() {
               )}
             </div>
           )}
+
+          {/* Powered by footer */}
+          <p className="text-center text-[11px] text-gray-400 pb-2">
+            Powered by{" "}
+            <span className="font-semibold text-blue-500">FuelDesk</span>
+            {" · "}
+            <a href="mailto:support@fueldesk.app" className="underline hover:text-blue-500 transition-colors">
+              Contact us
+            </a>
+          </p>
         </div>
       </div>
     );
@@ -263,8 +287,9 @@ function PortalContent() {
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl flex items-center justify-center mx-auto shadow-xl mb-3">
             <Fuel size={28} className="text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">FuelDesk Loyalty</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Loyalty Portal</h1>
           <p className="text-sm text-gray-400 mt-1">Check your points & rewards</p>
+          <p className="text-[11px] text-gray-300 mt-2">Powered by FuelDesk</p>
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl p-6">
