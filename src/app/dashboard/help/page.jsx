@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, MessageSquare, Phone, Send, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageSquare, Send, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 import usePaymentStore from "@/store/usePaymentStore";
 import useSupportStore from "@/store/useSupportStore";
@@ -124,6 +124,11 @@ export default function HelpPage() {
   const [faqCategory, setFaqCategory] = useState("All");
   const [form, setForm] = useState({ title: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [waFloatEnabled, setWaFloatEnabled] = useState(false);
+
+  useEffect(() => {
+    setWaFloatEnabled(localStorage.getItem("wa_float_enabled") === "1");
+  }, []);
 
   const plan = currentPlan?.plan || "free";
   const hasFaq      = FAQ_PLANS.includes(plan);
@@ -156,6 +161,13 @@ export default function HelpPage() {
     } else {
       toast.error(result.error || "Failed to submit ticket");
     }
+  };
+
+  const toggleWaFloat = () => {
+    const next = !waFloatEnabled;
+    setWaFloatEnabled(next);
+    localStorage.setItem("wa_float_enabled", next ? "1" : "0");
+    window.dispatchEvent(new Event("wa-float-toggle"));
   };
 
   const whatsappNumber = settings?.supportWhatsApp?.replace(/\D/g, "") || "";
@@ -193,20 +205,50 @@ export default function HelpPage() {
         </p>
       </div>
 
-      {/* WhatsApp banner */}
+      {/* WhatsApp banner + float toggle */}
       {hasWhatsApp && whatsappUrl && (
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-4 bg-green-500 hover:bg-green-600 transition-colors text-white rounded-xl px-5 py-4"
-        >
-          <FaWhatsapp size={28} />
-          <div>
-            <p className="font-semibold text-sm">Chat with us on WhatsApp</p>
-            <p className="text-xs text-green-100">Tap to open a conversation — we typically reply within minutes</p>
+        <div className="space-y-3">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 bg-green-500 hover:bg-green-600 transition-colors text-white rounded-xl px-5 py-4"
+          >
+            <FaWhatsapp size={28} />
+            <div>
+              <p className="font-semibold text-sm">Chat with us on WhatsApp</p>
+              <p className="text-xs text-green-100">Tap to open a conversation — we typically reply within minutes</p>
+            </div>
+          </a>
+
+          {/* Floating button toggle */}
+          <div className="flex items-center justify-between bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
+                <FaWhatsapp size={18} className="text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">Floating shortcut</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {waFloatEnabled ? "WhatsApp button visible on all pages" : "Only available on this page"}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={toggleWaFloat}
+              aria-label="Toggle floating WhatsApp button"
+              className={`relative w-12 h-6 rounded-full transition-colors duration-200 focus:outline-none ${
+                waFloatEnabled ? "bg-green-500" : "bg-gray-300 dark:bg-gray-600"
+              }`}
+            >
+              <span
+                className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all duration-200 ${
+                  waFloatEnabled ? "left-7" : "left-1"
+                }`}
+              />
+            </button>
           </div>
-        </a>
+        </div>
       )}
 
       {/* Tabs */}
