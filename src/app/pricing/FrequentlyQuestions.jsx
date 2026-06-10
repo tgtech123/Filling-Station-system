@@ -12,8 +12,8 @@ export default function FrequentlyQuestions() {
   const faqs = [
     {
       id: "1",
-      question: "What is Flourish Station?",
-      answer: `${platformName || "Flourish Station"} is a comprehensive fuel station management platform designed to streamline operations, boost efficiency, and maximize revenue. From pump control to staff management, financial tracking, and inventory oversight, we provide everything you need to run a modern filling station.`,
+      question: "What is FuelDesk?",
+      answer: `${platformName || "FuelDesk"} is a comprehensive fuel station management platform designed to streamline operations, boost efficiency, and maximize revenue. From pump control to staff management, financial tracking, and inventory oversight, we provide everything you need to run a modern filling station.`,
     },
     {
       id: "2",
@@ -38,7 +38,7 @@ export default function FrequentlyQuestions() {
     {
       id: "6",
       question: "Do you offer customer support?",
-      answer: `Yes! Free and Pro plans have community support. Pro Max and Enterprise plans include priority email support. We're committed to helping you succeed. Check our support page or contact us directly at support@flourishstation.com.`,
+      answer: `Yes! Free and Pro plans have community support. Pro Max and Enterprise plans include priority email support. We're committed to helping you succeed. Check our support page or contact FuelDesk support directly through the Help section inside the app.`,
     },
     {
       id: "7",

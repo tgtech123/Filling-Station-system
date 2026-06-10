@@ -50,7 +50,7 @@ export default function ProfitLoss() {
                 Profit & Loss
               </h1>
               <p className="text-sm sm:text-md text-[#525252]">
-                View and export all profit and loss of flourish station
+                View and export all profit and loss of your station
               </p>
             </div>
 

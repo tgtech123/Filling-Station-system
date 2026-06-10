@@ -11,7 +11,7 @@ const ManagerProfileModal = ({ onclose }) => {
   const [managerData, setManagerData] = useState({
     firstName: "Dave",
     lastName: "Johnson",
-    stationName: "Flourish Station",
+    stationName: "FuelDesk",
     stationID: "004",
     stationEmailAddress: "fluorishstation@gmail.com",
     stationPhone: "07034394212",

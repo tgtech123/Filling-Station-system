@@ -10,7 +10,7 @@ const PLAN_TEMPLATES = {
   free: {
     name: "Free",
     slug: "free",
-    description: "Perfect for getting started. Learn and explore Flourish Station in a cloud environment.",
+    description: "Perfect for getting started. Learn and explore FuelDesk in a cloud environment.",
     monthlyPrice: 0,
     yearlyPrice: 0,
     duration: 1,

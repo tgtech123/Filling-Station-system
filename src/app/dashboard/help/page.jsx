@@ -24,6 +24,99 @@ const STATUS_ICON = {
   resolved:    <CheckCircle size={14} className="text-green-500" />,
 };
 
+const STATIC_FAQ_GROUPS = [
+  {
+    category: "Getting Started",
+    faqs: [
+      {
+        _id: "s1",
+        question: "I am a new cashier. What do I need to do first?",
+        answer: "Your manager will create your account and share your login credentials. Log in, change your password immediately (go to your Profile > Change Password), and then start recording daily sales and reconciliations.",
+      },
+      {
+        _id: "s2",
+        question: "Can I use FuelDesk on my phone?",
+        answer: "Yes. FuelDesk is a web app that works in any modern mobile browser. Open your browser, go to the FuelDesk website, and log in normally. For the best experience on mobile, use Chrome or Safari.",
+      },
+      {
+        _id: "s3",
+        question: "Can two people be logged in as the same user at the same time?",
+        answer: "The system allows it, but it is not recommended. If you notice unfamiliar activity on your account, go to System Settings > Active Sessions and click Logout Others immediately, then change your password.",
+      },
+    ],
+  },
+  {
+    category: "Shifts & Operations",
+    faqs: [
+      {
+        _id: "s4",
+        question: "How do I know when a tank is running low?",
+        answer: "You will receive a Low Stock Alert notification. Also check Tank Status in the menu — any tank below its threshold will be shown in amber or red.",
+      },
+      {
+        _id: "s5",
+        question: "What happens if the internet goes down during a shift?",
+        answer: "Save your meter readings manually (write them down). Once the connection is restored, enter the readings into the system. Contact your supervisor to note the time gap.",
+      },
+      {
+        _id: "s6",
+        question: "What is the difference between a Dip Reading and a Shift Reading?",
+        answer: "A Shift Reading is recorded by an attendant at the pump (opening and closing meter values) — it tracks litres sold per pump per shift. A Dip Reading is recorded by a supervisor with a physical measuring rod inside the tank — it confirms the actual fuel level and catches losses not recorded by the pump.",
+      },
+      {
+        _id: "s7",
+        question: "An attendant started a shift but forgot to enter the correct meter reading. What now?",
+        answer: "A Supervisor or Manager can review the shift detail and flag it. Contact your supervisor — they can note the discrepancy before approving the shift.",
+      },
+    ],
+  },
+  {
+    category: "Subscription & Billing",
+    faqs: [
+      {
+        _id: "s8",
+        question: "My subscription expired but I cannot upgrade. What do I do?",
+        answer: "Go to System Settings > Subscription & Billing and click Upgrade Plan. If the payment fails, try a different card or contact your bank. You can also contact FuelDesk support for help.",
+      },
+      {
+        _id: "s9",
+        question: "The billing history section shows empty. Why?",
+        answer: "Billing history only shows successful payments made through Paystack. If you are on the Free Plan, no payments have been made yet and the section will be empty.",
+      },
+      {
+        _id: "s10",
+        question: "Can I downgrade my plan immediately?",
+        answer: "No. Downgrades are scheduled — they take effect at the end of your current billing period. This means you keep all your current features and staff limits until the day you have already paid for. The effective date is shown clearly before you confirm the downgrade.",
+      },
+      {
+        _id: "s11",
+        question: "I scheduled a downgrade but changed my mind. Can I cancel it?",
+        answer: "Yes. Go to System Settings > Subscription & Billing, find the amber downgrade notice on your plan card, and click Cancel Downgrade. The scheduled downgrade is removed instantly and your plan stays unchanged.",
+      },
+      {
+        _id: "s14",
+        question: "I am on the highest plan and the Upgrade button is missing. Is this a bug?",
+        answer: "No, this is correct. If you are already on the highest available plan, the button changes to Renew Plan instead. Click it to extend your current plan by another month or year.",
+      },
+    ],
+  },
+  {
+    category: "Loyalty Programme",
+    faqs: [
+      {
+        _id: "s12",
+        question: "How do SMS Portal Notifications work, and who pays for them?",
+        answer: "The station (Manager) pays for SMS credits upfront at ₦6 per credit. When a new customer is enrolled in the Loyalty Programme, the system automatically sends them one SMS with a link to view their points — that uses one credit. The customer pays nothing. Go to Loyalty > Settings > SMS Portal Notifications to top up at any time.",
+      },
+      {
+        _id: "s13",
+        question: "I purchased SMS credits through Paystack but the balance still shows 0. What happened?",
+        answer: "After paying, Paystack redirects you back to the Loyalty Settings page. If the balance has not updated within a few seconds, try refreshing the page — the system verifies your payment on return and updates the balance automatically. If it still shows 0 after refreshing, contact FuelDesk support with your Paystack payment reference number.",
+      },
+    ],
+  },
+];
+
 function FAQItem({ faq }) {
   const [open, setOpen] = useState(false);
   return (
@@ -288,7 +381,7 @@ export default function HelpPage() {
       {/* FAQ Tab */}
       {activeTab === "faq" && hasFaq && (
         <div className="space-y-4">
-          {/* Category filter */}
+          {/* Category filter for server FAQs */}
           {categories.length > 2 && (
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => (
@@ -304,15 +397,34 @@ export default function HelpPage() {
               ))}
             </div>
           )}
+
+          {/* Server-fetched FAQs */}
           {loading ? (
             <p className="text-gray-400 text-sm">Loading FAQs...</p>
-          ) : filteredFaqs.length === 0 ? (
-            <p className="text-gray-400 text-sm">No FAQs available yet.</p>
-          ) : (
+          ) : filteredFaqs.length > 0 ? (
             <div className="space-y-2">
               {filteredFaqs.map((faq) => <FAQItem key={faq._id} faq={faq} />)}
             </div>
+          ) : null}
+
+          {/* Static general FAQs — always shown */}
+          {filteredFaqs.length > 0 && (
+            <div className="flex items-center gap-3 pt-2">
+              <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+              <span className="text-xs text-gray-400 font-medium px-1">General Questions</span>
+              <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+            </div>
           )}
+          <div className="space-y-6">
+            {STATIC_FAQ_GROUPS.map((group) => (
+              <div key={group.category} className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-1">
+                  {group.category}
+                </p>
+                {group.faqs.map((faq) => <FAQItem key={faq._id} faq={faq} />)}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
