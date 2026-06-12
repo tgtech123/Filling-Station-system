@@ -10,7 +10,7 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell, BarChart, Bar,
 } from 'recharts';
-import { api, Card, MetricCard, fmt, getUserRole } from './shared';
+import { api, Card, MetricCard, Hint, fmt, getUserRole } from './shared';
 
 const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
@@ -63,9 +63,15 @@ export default function AccountingDashboard() {
           </button>
         </div>
 
+        <Hint>
+          This overview summarises the station's financial health: what it owns and owes, this year's profit,
+          and how quickly it can pay its bills. The numbers come from the accounting records below — they grow
+          as invoices, payments and journal entries are recorded.
+        </Hint>
+
         {error && (
           <div className="bg-red-50 text-red-700 text-sm rounded-lg p-3 mb-4">
-            {error} — if this is your first visit, open <Link className="underline font-medium" href="/dashboard/accounting/chart-of-accounts">Chart of Accounts</Link> and seed the default chart.
+            {error} — if this is your first visit, start by creating your accounts in <Link className="underline font-medium" href="/dashboard/accounting/chart-of-accounts">Chart of Accounts</Link>.
           </div>
         )}
 

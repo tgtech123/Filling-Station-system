@@ -2,11 +2,38 @@
 import { useState, useEffect, useMemo } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
-import { Plus, Download, Upload, Sparkles, Pencil, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
-import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, fmt, downloadBlob } from '../shared';
+import { Plus, Download, Upload, Pencil, Trash2, ChevronRight, ChevronDown, BookOpen } from 'lucide-react';
+import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Hint, fmt, downloadBlob } from '../shared';
 
 const TYPES = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense', 'Gain', 'Loss'];
 const STATUSES = ['Active', 'Inactive', 'Archived', 'OnHold'];
+
+// Codes the system posts to automatically. Shown as a reference so the
+// accountant can create them with the exact codes — nothing is pre-seeded.
+const SYSTEM_CODES = [
+  ['1000', 'Cash on Hand', 'Asset'], ['1100', 'Bank Account', 'Asset'],
+  ['1200', 'Accounts Receivable', 'Asset'], ['1300', 'Inventory', 'Asset'],
+  ['1500', 'Fixed Assets', 'Asset'], ['1510', 'Accumulated Depreciation', 'Asset'],
+  ['2100', 'Accounts Payable', 'Liability'], ['2200', 'VAT Payable', 'Liability'],
+  ['2210', 'WHT Payable', 'Liability'], ['2220', 'Sales Tax Payable', 'Liability'],
+  ['3000', "Owner's Capital", 'Equity'], ['3900', 'Retained Earnings', 'Equity'],
+  ['4000', 'Fuel Sales (parent)', 'Revenue'],
+  ['4010', 'PMS (Petrol) Sales', 'Revenue'], ['4020', 'AGO (Diesel) Sales', 'Revenue'],
+  ['4030', 'Kerosene (DPK) Sales', 'Revenue'],
+  ['4100', 'Lubricant Sales', 'Revenue'],
+  ['4200', 'Gas (LPG) Sales', 'Revenue'], ['4900', 'Other Income', 'Revenue'],
+  ['5000', 'Cost of Goods Sold (parent)', 'Expense'],
+  ['5010', 'PMS Cost of Sales', 'Expense'], ['5020', 'AGO (Diesel) Cost of Sales', 'Expense'],
+  ['5030', 'Kerosene Cost of Sales', 'Expense'], ['5100', 'Lubricant Cost of Sales', 'Expense'],
+  ['5200', 'Gas Cost of Sales', 'Expense'],
+  ['6000', 'Salaries & Wages', 'Expense'],
+  ['6300', 'Depreciation Expense', 'Expense'], ['6400', 'Bank Charges', 'Expense'],
+  ['6900', 'Other Expenses', 'Expense'],
+  ['7000', 'Realized FX Gain', 'Gain'], ['7010', 'Unrealized FX Gain', 'Gain'],
+  ['7100', 'Gain on Asset Disposal', 'Gain'],
+  ['8000', 'Realized FX Loss', 'Loss'], ['8010', 'Unrealized FX Loss', 'Loss'],
+  ['8100', 'Loss on Asset Disposal', 'Loss'],
+];
 
 const EMPTY = { code: '', name: '', type: 'Asset', parent: '', isReconcilable: false, cashFlowCategory: '', description: '' };
 
@@ -21,6 +48,7 @@ export default function ChartOfAccountsPage() {
   const [expanded, setExpanded] = useState({});
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState('');
+  const [showCodes, setShowCodes] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -34,16 +62,6 @@ export default function ChartOfAccountsPage() {
     }
   };
   useEffect(() => { load(); }, []);
-
-  const seed = async () => {
-    try {
-      const res = await api.post('/api/accounting/accounts/seed');
-      toast.success(res.data.message);
-      load();
-    } catch (e) {
-      toast.error(e.response?.data?.message || 'Seed failed');
-    }
-  };
 
   // Build tree: roots + children grouped under parents
   const tree = useMemo(() => {
@@ -166,9 +184,7 @@ export default function ChartOfAccountsPage() {
           <StatusBadge status={a.status} />
           <span className="w-28 text-right font-mono text-xs text-gray-700 dark:text-gray-300">₦{fmt(a.balance)}</span>
           <button onClick={() => openEdit(a)} className="p-1 text-gray-400 hover:text-blue-600"><Pencil size={14} /></button>
-          {!a.isSystem && (
-            <button onClick={() => remove(a)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 size={14} /></button>
-          )}
+          <button onClick={() => remove(a)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 size={14} /></button>
         </div>
         {isOpen && children.map((c) => renderRow(c, depth + 1))}
       </div>
@@ -184,14 +200,37 @@ export default function ChartOfAccountsPage() {
             <p className="text-sm text-gray-500">{accounts.length} accounts</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {accounts.length === 0 && !loading && (
-              <Btn onClick={seed} variant="success"><Sparkles size={15} /> Seed Default Chart</Btn>
-            )}
+            <Btn onClick={() => setShowCodes(!showCodes)} variant="outline"><BookOpen size={15} /> System Codes</Btn>
             <Btn onClick={() => setImportOpen(true)} variant="outline"><Upload size={15} /> Import</Btn>
             <Btn onClick={exportCsv} variant="outline"><Download size={15} /> Export</Btn>
             <Btn onClick={openAdd}><Plus size={15} /> New Account</Btn>
           </div>
         </div>
+
+        <Hint>
+          The Chart of Accounts is the list of categories every naira flows through — Assets (what you own),
+          Liabilities (what you owe), Equity (the owner's stake), Revenue (money in), and Expenses (money out).
+          You create every account yourself; nothing is added automatically. Accounts marked CONTROL are kept
+          in sync by the system (invoices, receipts) and cannot be posted to by hand.
+        </Hint>
+
+        {showCodes && (
+          <Card title="System posting codes" subtitle="Create these accounts with these exact codes — the system books invoices, payments, taxes, depreciation, FX and per-product sales to them automatically. Tip: make 4010–4030 children of 4000 and 5010–5200 children of 5000 so the balance sheet and P&L subtotal per group. Sales for a product fall back to the parent (4000/5000) until its specific account exists." className="mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1">
+              {SYSTEM_CODES.map(([code, name, type]) => {
+                const exists = accounts.some((a) => a.code === code);
+                return (
+                  <div key={code} className="flex items-center gap-2 text-xs py-0.5">
+                    <span className={exists ? 'text-emerald-500' : 'text-gray-300'}>{exists ? '✓' : '○'}</span>
+                    <span className="font-mono text-gray-500 w-10">{code}</span>
+                    <span className="flex-1 text-gray-700 dark:text-gray-300">{name}</span>
+                    <span className="text-gray-400">{type}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
 
         <div className="flex gap-1.5 mb-4 flex-wrap">
           {['All', ...TYPES].map((t) => (
@@ -210,7 +249,8 @@ export default function ChartOfAccountsPage() {
             <p className="text-center text-gray-400 py-12">Loading…</p>
           ) : tree.roots.length === 0 ? (
             <p className="text-center text-gray-400 py-12">
-              No accounts yet. Click "Seed Default Chart" to create the standard filling-station chart.
+              No accounts yet. Click "New Account" to create your first one — open "System Codes" above
+              to see the codes the system needs for automatic postings.
             </p>
           ) : (
             tree.roots.map((a) => renderRow(a))

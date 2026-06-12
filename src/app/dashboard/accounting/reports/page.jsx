@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Download } from 'lucide-react';
-import { api, Card, inputCls, Btn, Table, fmt, fmtDate, exportRowsAsCsv } from '../shared';
+import { api, Card, inputCls, Btn, Table, Hint, fmt, fmtDate, exportRowsAsCsv } from '../shared';
 
 const TABS = ['Trial Balance', 'Balance Sheet', 'Income Statement', 'Cash Flow', 'Aging', 'General Ledger'];
 
@@ -63,17 +63,17 @@ export default function ReportsPage() {
         data.rows.map((r) => [r.code, r.name, r.type, r.debit, r.credit]), 'trial-balance.csv');
     } else if (tab === 'Income Statement') {
       const rows = [
-        ...data.revenue.map((r) => ['Revenue', r.code, r.name, r.amount]),
-        ...data.gains.map((r) => ['Gain', r.code, r.name, r.amount]),
-        ...data.expenses.map((r) => ['Expense', r.code, r.name, r.amount]),
-        ...data.losses.map((r) => ['Loss', r.code, r.name, r.amount]),
-        ['', '', 'NET INCOME', data.totals.netIncome],
+        ...(data.revenue || []).map((r) => ['Revenue', r.code, r.name, r.amount]),
+        ...(data.gains || []).map((r) => ['Gain', r.code, r.name, r.amount]),
+        ...(data.expenses || []).map((r) => ['Expense', r.code, r.name, r.amount]),
+        ...(data.losses || []).map((r) => ['Loss', r.code, r.name, r.amount]),
+        ['', '', 'NET INCOME', data.totals?.netIncome ?? 0],
       ];
       exportRowsAsCsv(['Section', 'Code', 'Account', 'Amount'], rows, 'income-statement.csv');
     } else if (tab === 'Balance Sheet') {
       const flat = [];
       const walk = (nodes, section, depth = 0) =>
-        nodes.forEach((n) => { flat.push([section, n.code, `${'  '.repeat(depth)}${n.name}`, n.balance, n.comparativeBalance ?? '']); walk(n.children, section, depth + 1); });
+        (nodes || []).forEach((n) => { flat.push([section, n.code, `${'  '.repeat(depth)}${n.name}`, n.balance, n.comparativeBalance ?? '']); walk(n.children, section, depth + 1); });
       walk(data.assets, 'Assets'); walk(data.liabilities, 'Liabilities'); walk(data.equity, 'Equity');
       exportRowsAsCsv(['Section', 'Code', 'Account', 'Balance', 'Comparative'], flat, 'balance-sheet.csv');
     } else if (tab === 'Aging') {
@@ -89,7 +89,7 @@ export default function ReportsPage() {
   }
 
   const renderBSNodes = (nodes, depth = 0) =>
-    nodes.map((n) => (
+    (nodes || []).map((n) => (
       <div key={n.accountId}>
         <div className="flex justify-between py-1 text-sm border-b border-gray-50 dark:border-gray-800" style={{ paddingLeft: depth * 18 }}>
           <span className={depth === 0 ? 'font-medium' : 'text-gray-600 dark:text-gray-400'}>
@@ -104,10 +104,10 @@ export default function ReportsPage() {
       </div>
     ));
 
-  const cfSection = (label, s) => (
+  const cfSection = (label, s = {}) => (
     <div className="mb-4">
       <p className="font-semibold text-sm mb-1">{label}</p>
-      {s.items.slice(0, 8).map((it, i) => (
+      {(s.items || []).slice(0, 8).map((it, i) => (
         <div key={i} className="flex justify-between text-xs py-0.5 text-gray-500">
           <span className="truncate max-w-[300px]">{it.name}</span>
           <span className={`font-mono ${it.amount < 0 ? 'text-red-500' : 'text-emerald-600'}`}>{it.amount < 0 ? '−' : '+'}₦{fmt(Math.abs(it.amount))}</span>
@@ -127,6 +127,15 @@ export default function ReportsPage() {
           <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">Financial Reports</h1>
           <Btn variant="outline" onClick={exportCurrent} disabled={!data}><Download size={15} /> Export CSV</Btn>
         </div>
+
+        <Hint>
+          Six standard financial statements, all built live from your posted entries. Trial Balance — every account's
+          balance, used to prove the books are in balance. Balance Sheet — what the station owns vs owes on a date
+          (add a second date to compare). Income Statement — profit or loss over a period. Cash Flow — where cash
+          actually came from and went. Aging — who owes you and whom you owe, grouped by how overdue. General
+          Ledger — the full transaction history of any single account with a running balance. Everything exports
+          to CSV for Excel.
+        </Hint>
 
         <div className="flex gap-1.5 mb-4 flex-wrap">
           {TABS.map((t) => (
@@ -175,8 +184,8 @@ export default function ReportsPage() {
           <Card title={`Trial Balance as of ${fmtDate(data.asOf)}`}
             subtitle={data.balanced ? '✓ In balance' : '⚠ OUT OF BALANCE'}>
             <Table headers={['Code', 'Account', 'Type', { label: 'Debit', right: true }, { label: 'Credit', right: true }]}
-              empty={data.rows.length === 0 ? 'No posted activity' : null}>
-              {data.rows.map((r) => (
+              empty={(data.rows || []).length === 0 ? 'No posted activity' : null}>
+              {(data.rows || []).map((r) => (
                 <tr key={r.accountId}>
                   <td className="py-1.5 pr-3 font-mono text-xs">{r.code}</td>
                   <td className="py-1.5 pr-3">{r.name}</td>
@@ -207,13 +216,13 @@ export default function ReportsPage() {
             <p className="font-bold text-sm text-blue-700 mt-2 mb-1">ASSETS</p>
             {renderBSNodes(data.assets)}
             <div className="flex justify-between font-bold text-sm py-1.5 border-t-2 border-gray-200">
-              <span>Total Assets</span><span className="font-mono">₦{fmt(data.totals.assets)}</span>
+              <span>Total Assets</span><span className="font-mono">₦{fmt(data.totals?.assets)}</span>
             </div>
 
             <p className="font-bold text-sm text-red-700 mt-4 mb-1">LIABILITIES</p>
             {renderBSNodes(data.liabilities)}
             <div className="flex justify-between font-semibold text-sm py-1.5 border-t border-gray-200">
-              <span>Total Liabilities</span><span className="font-mono">₦{fmt(data.totals.liabilities)}</span>
+              <span>Total Liabilities</span><span className="font-mono">₦{fmt(data.totals?.liabilities)}</span>
             </div>
 
             <p className="font-bold text-sm text-emerald-700 mt-4 mb-1">EQUITY</p>
@@ -222,10 +231,10 @@ export default function ReportsPage() {
               <span>Current period net income</span><span className="font-mono">₦{fmt(data.netIncomeInEquity)}</span>
             </div>
             <div className="flex justify-between font-semibold text-sm py-1.5 border-t border-gray-200">
-              <span>Total Equity</span><span className="font-mono">₦{fmt(data.totals.equity)}</span>
+              <span>Total Equity</span><span className="font-mono">₦{fmt(data.totals?.equity)}</span>
             </div>
             <div className="flex justify-between font-bold text-sm py-2 border-t-2 border-gray-300 mt-2">
-              <span>Total Liabilities + Equity</span><span className="font-mono">₦{fmt(data.totals.liabilitiesAndEquity)}</span>
+              <span>Total Liabilities + Equity</span><span className="font-mono">₦{fmt(data.totals?.liabilitiesAndEquity)}</span>
             </div>
           </Card>
         )}
@@ -233,8 +242,8 @@ export default function ReportsPage() {
         {/* ── Income Statement ── */}
         {tab === 'Income Statement' && data && (
           <Card title={`Income Statement — ${fmtDate(data.from)} to ${fmtDate(data.to)}`}>
-            {[['Revenue', data.revenue, data.totals.revenue], ['Gains', data.gains, data.totals.gains],
-              ['Expenses', data.expenses, data.totals.expenses], ['Losses', data.losses, data.totals.losses]].map(([label, rows, total]) => (
+            {[['Revenue', data.revenue || [], data.totals?.revenue], ['Gains', data.gains || [], data.totals?.gains],
+              ['Expenses', data.expenses || [], data.totals?.expenses], ['Losses', data.losses || [], data.totals?.losses]].map(([label, rows, total]) => (
               rows.length > 0 && (
                 <div key={label} className="mb-3">
                   <p className="font-bold text-sm mb-1">{label.toUpperCase()}</p>
@@ -250,9 +259,9 @@ export default function ReportsPage() {
                 </div>
               )
             ))}
-            <div className={`flex justify-between font-bold py-2 border-t-2 border-gray-300 ${data.totals.netIncome >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-              <span>NET {data.totals.netIncome >= 0 ? 'INCOME' : 'LOSS'}</span>
-              <span className="font-mono">₦{fmt(Math.abs(data.totals.netIncome))}</span>
+            <div className={`flex justify-between font-bold py-2 border-t-2 border-gray-300 ${(data.totals?.netIncome ?? 0) >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+              <span>NET {(data.totals?.netIncome ?? 0) >= 0 ? 'INCOME' : 'LOSS'}</span>
+              <span className="font-mono">₦{fmt(Math.abs(data.totals?.netIncome ?? 0))}</span>
             </div>
           </Card>
         )}
@@ -272,7 +281,7 @@ export default function ReportsPage() {
         )}
 
         {/* ── Aging ── */}
-        {tab === 'Aging' && data && (
+        {tab === 'Aging' && data?.receivables && data?.payables && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {[['Receivables Aging', data.receivables], ['Payables Aging', data.payables]].map(([label, side]) => (
               <Card key={label} title={label} subtitle={`Total open: ₦${fmt(side.total)}`}>
@@ -306,8 +315,8 @@ export default function ReportsPage() {
           <Card title={`${data.account.code} — ${data.account.name}`}
             subtitle={`Opening balance: ₦${fmt(data.openingBalance)} · ${data.total} transactions`}>
             <Table headers={['Entry', 'Date', 'Memo / Description', 'Source', { label: 'Debit', right: true }, { label: 'Credit', right: true }, { label: 'Balance', right: true }]}
-              empty={data.rows.length === 0 ? 'No transactions in this range' : null}>
-              {data.rows.map((r, i) => (
+              empty={(data.rows || []).length === 0 ? 'No transactions in this range' : null}>
+              {(data.rows || []).map((r, i) => (
                 <tr key={i}>
                   <td className="py-1.5 pr-3 font-mono text-xs">{r.entryNumber}</td>
                   <td className="py-1.5 pr-3 text-xs">{fmtDate(r.date)}</td>

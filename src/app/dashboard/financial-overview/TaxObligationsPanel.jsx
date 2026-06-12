@@ -266,7 +266,7 @@ export default function TaxObligationsPanel() {
           </p>
         </div>
         <Link
-          href="/dashboard/reports/taxReport"
+          href="/dashboard/accounting/tax"
           className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 px-3 py-2 rounded-xl border border-blue-200 hover:bg-blue-50 transition-colors shrink-0 whitespace-nowrap"
         >
           Full Breakdown <ExternalLink size={12} />

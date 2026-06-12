@@ -33,12 +33,8 @@ import { PiToggleLeftFill, PiToggleRightFill } from "react-icons/pi";
 import { HiOutlineChartBar } from "react-icons/hi";
 import { FaFire, FaHandHoldingUsd } from "react-icons/fa";
 import { BsFillFuelPumpFill } from "react-icons/bs";
-import { MdDoubleArrow, MdOutlinePeopleAlt } from "react-icons/md";
-import {
-  IoCheckmarkDone,
-  IoDocumentText,
-  IoDocumentTextOutline,
-} from "react-icons/io5";
+import { MdOutlinePeopleAlt } from "react-icons/md";
+import { IoCheckmarkDone, IoDocumentText } from "react-icons/io5";
 import { TfiBoltAlt } from "react-icons/tfi";
 import { BiSolidTachometer } from "react-icons/bi";
 import ProfileAvatar from "./ProfileAvatar";
@@ -48,7 +44,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { TbCurrencyNaira, TbTargetArrow } from "react-icons/tb";
 import { CiGrid41 } from "react-icons/ci";
 import { CgTrack } from "react-icons/cg";
-import { GiExpense, GiTakeMyMoney } from "react-icons/gi";
+import { GiTakeMyMoney } from "react-icons/gi";
 import { useState, useEffect, useRef } from "react";
 import useThemePersistence from "@/hooks/useThemePersistence";
 import usePaymentStore from "@/store/usePaymentStore";
@@ -132,6 +128,24 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     setOpenDropdown(openDropdown === id ? null : id);
   };
 
+  // Collapsible Accounting section — persisted, auto-expands on accounting routes
+  const [accountingOpen, setAccountingOpen] = useState(true);
+  useEffect(() => {
+    if (pathname?.startsWith("/dashboard/accounting")) {
+      setAccountingOpen(true);
+      return;
+    }
+    const saved = localStorage.getItem("sidebar:accountingOpen");
+    if (saved !== null) setAccountingOpen(saved === "true");
+  }, []);
+
+  const toggleAccounting = () => {
+    setAccountingOpen((prev) => {
+      localStorage.setItem("sidebar:accountingOpen", String(!prev));
+      return !prev;
+    });
+  };
+
   // Logout function
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -194,40 +208,6 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       name: "Salary History",
       icon: <History size={20} />,
       link: "/dashboard/accountant/salaryHistory",
-    },
-  ];
-
-  // Accountant dropdowns
-  const reportSubLinks = [
-    {
-      id: "financial-statement",
-      name: "Full Financial Statement",
-      icon: <Landmark size={20} />,
-      link: "/dashboard/reports/financialStatement",
-    },
-    {
-      id: "profit-loss",
-      name: "Profit & Loss",
-      icon: <MdDoubleArrow size={20} />,
-      link: "/dashboard/reports/profitLoss",
-    },
-    {
-      id: "income",
-      name: "Income",
-      icon: <GiTakeMyMoney size={20} />,
-      link: "/dashboard/reports/income",
-    },
-    {
-      id: "expenses",
-      name: "Expenses",
-      icon: <GiExpense size={20} />,
-      link: "/dashboard/reports/expenses",
-    },
-    {
-      id: "tax-report",
-      name: "Tax-Ready Report",
-      icon: <IoDocumentTextOutline size={20} />,
-      link: "/dashboard/reports/taxReport",
     },
   ];
 
@@ -349,14 +329,6 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     },
     // Accountant links
     {
-      id: "accountant-reports",
-      name: "Reports",
-      icon: <HiOutlineChartBar size={20} />,
-      roles: ["accountant"],
-      isDropdown: true,
-      subLinks: reportSubLinks,
-    },
-    {
       id: "commissions",
       name: "Commissions",
       icon: <FaHandHoldingUsd size={20} />,
@@ -406,6 +378,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <HiOutlineChartBar size={20} className="text-indigo-500" />,
       link: "/dashboard/accounting",
       roles: ["accountant", "manager"],
+      section: "accounting",
     },
     {
       id: "accounting-coa",
@@ -413,6 +386,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <BookOpen size={20} className="text-indigo-500" />,
       link: "/dashboard/accounting/chart-of-accounts",
       roles: ["accountant"],
+      section: "accounting",
     },
     {
       id: "accounting-journals",
@@ -420,6 +394,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <IoDocumentText size={20} className="text-indigo-500" />,
       link: "/dashboard/accounting/journals",
       roles: ["accountant"],
+      section: "accounting",
     },
     {
       id: "accounting-payables",
@@ -427,6 +402,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <Package size={20} className="text-indigo-500" />,
       link: "/dashboard/accounting/payables",
       roles: ["accountant"],
+      section: "accounting",
     },
     {
       id: "accounting-receivables",
@@ -434,6 +410,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <Landmark size={20} className="text-indigo-500" />,
       link: "/dashboard/accounting/receivables",
       roles: ["accountant"],
+      section: "accounting",
     },
     {
       id: "accounting-bankrec",
@@ -441,6 +418,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <ShieldCheck size={20} className="text-indigo-500" />,
       link: "/dashboard/accounting/bank-reconciliation",
       roles: ["accountant"],
+      section: "accounting",
     },
     {
       id: "accounting-tax",
@@ -448,6 +426,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <GiTakeMyMoney size={20} className="text-indigo-500" />,
       link: "/dashboard/accounting/tax",
       roles: ["accountant"],
+      section: "accounting",
     },
     {
       id: "accounting-periods",
@@ -455,6 +434,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <History size={20} className="text-indigo-500" />,
       link: "/dashboard/accounting/periods",
       roles: ["accountant"],
+      section: "accounting",
     },
     {
       id: "accounting-reports",
@@ -462,6 +442,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <BarChart2 size={20} className="text-indigo-500" />,
       link: "/dashboard/accounting/reports",
       roles: ["accountant"],
+      section: "accounting",
     },
     {
       id: "supplier-payments",
@@ -469,6 +450,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <Banknote size={20} />,
       roles: ["accountant"],
       link: "/dashboard/procurement",
+      section: "accounting",
     },
     // Manager links
     {
@@ -800,12 +782,26 @@ const visibleLinks = getVisibleLinks(userRole);
             </div>
           ) : (
             <div className="links text-sm space-y-1 mb-8">
-              {visibleLinks.map((link) => (
+              {visibleLinks
+                .filter((link) => !(link.section === "accounting" && !accountingOpen))
+                .map((link) => (
                 <div key={link.id}>
                   {link.isDivider ? (
                     <div className="pt-3 pb-1 px-2">
-                      <div className="flex items-center justify-between">
+                      <div
+                        className={`flex items-center justify-between ${
+                          link.id === "accounting-divider" ? "cursor-pointer select-none group" : ""
+                        }`}
+                        onClick={link.id === "accounting-divider" ? toggleAccounting : undefined}
+                        role={link.id === "accounting-divider" ? "button" : undefined}
+                        aria-expanded={link.id === "accounting-divider" ? accountingOpen : undefined}
+                      >
                         <p className="text-[10px] font-bold uppercase tracking-widest text-orange-400">{link.label}</p>
+                        {link.id === "accounting-divider" && (
+                          <span className="text-orange-400 group-hover:text-orange-500 transition-colors">
+                            {accountingOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </span>
+                        )}
                         {/* Gas department toggle — manager/admin only */}
                         {link.id === "gas-divider" && ["manager", "admin"].includes(userRole) && (
                           <button

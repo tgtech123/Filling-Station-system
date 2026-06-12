@@ -17,7 +17,10 @@ function getToken() {
  * Safe to call multiple times — returns the same socket instance.
  */
 export function getSocket() {
-  if (_socket?.connected) return _socket;
+  // Return the existing instance whether connected OR still connecting —
+  // checking `.connected` here made a second caller during the handshake
+  // window spawn a duplicate zombie connection.
+  if (_socket) return _socket;
 
   const token = getToken();
   if (!token) return null;
