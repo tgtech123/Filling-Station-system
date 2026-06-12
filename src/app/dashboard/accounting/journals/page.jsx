@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, CheckCircle2, XCircle, Undo2, Eye } from 'lucide-react';
-import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, fmt, fmtDate } from '../shared';
+import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate } from '../shared';
 
 const EMPTY_LINE = { account: '', description: '', debit: '', credit: '' };
 
@@ -97,6 +97,13 @@ export default function JournalsPage() {
           </div>
           <Btn onClick={() => setShowCreate(true)}><Plus size={15} /> New Entry</Btn>
         </div>
+
+        <Hint>
+          A journal entry is the basic record of accounting — every entry moves money between at least two
+          accounts and the two sides (debit and credit) must be equal. Large entries wait for a second person's
+          approval, posted entries can never be edited (only reversed), and accounts managed by the system
+          (AP, AR, Inventory) cannot be posted to by hand — that keeps the books tamper-proof.
+        </Hint>
 
         <div className="flex gap-1.5 mb-4 flex-wrap">
           {['', 'posted', 'pending_approval', 'rejected', 'reversed'].map((s) => (

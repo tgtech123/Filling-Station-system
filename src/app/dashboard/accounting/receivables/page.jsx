@@ -3,12 +3,16 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, RotateCw, Banknote, FileMinus, UserPlus } from 'lucide-react';
-import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, fmt, fmtDate } from '../shared';
+import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate } from '../shared';
+
+// Each line's product routes its revenue to that product's GL account
+// (PMS → 4010, AGO/Diesel → 4020, Kerosene → 4030, Lubricant → 4100, Gas → 4200)
+const PRODUCTS = ['PMS', 'AGO (Diesel)', 'Kerosene', 'Lubricant', 'Gas', 'Other'];
 
 const EMPTY_INV = {
   customerId: '', invoiceDate: new Date().toISOString().split('T')[0], dueDate: '',
   taxCode: '', recurringEnabled: false, recurringFrequency: 'monthly', recurringEndDate: '',
-  lines: [{ description: '', quantity: 1, unitPrice: '' }],
+  lines: [{ description: '', product: 'Other', quantity: 1, unitPrice: '' }],
 };
 
 export default function ReceivablesPage() {
@@ -95,7 +99,9 @@ export default function ReceivablesPage() {
         invoiceDate: invForm.invoiceDate,
         dueDate: invForm.dueDate,
         taxCode: invForm.taxCode || undefined,
-        lines: invForm.lines.filter((l) => l.description && Number(l.unitPrice) > 0),
+        lines: invForm.lines
+          .filter((l) => l.description && Number(l.unitPrice) > 0)
+          .map((l) => ({ ...l, product: l.product || 'Other' })),
         recurring: invForm.recurringEnabled
           ? { enabled: true, frequency: invForm.recurringFrequency, endDate: invForm.recurringEndDate || undefined }
           : undefined,
@@ -187,6 +193,14 @@ export default function ReceivablesPage() {
             <Btn onClick={() => setShowInvoice(true)}><Plus size={15} /> New Invoice</Btn>
           </div>
         </div>
+
+        <Hint>
+          Receivables tracks money customers owe the station — corporate clients who buy on credit. Create the
+          customer, then invoice them (tick "recurring" for subscriptions that re-bill themselves weekly, monthly,
+          quarterly or yearly). When their bank transfer arrives, use "Record Receipt" to match the money against
+          their open invoices — leave the matching blank and it settles the oldest invoice first. Use a credit
+          note to reduce what a customer owes (e.g. returns or billing mistakes) instead of deleting an invoice.
+        </Hint>
 
         <div className="flex gap-1.5 mb-4 flex-wrap">
           {TABS.map(([key, label]) => (
@@ -333,11 +347,17 @@ export default function ReceivablesPage() {
                 </select>
               </Field>
 
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lines</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Lines <span className="text-xs text-gray-400 font-normal">— each line's product books to that product's revenue account</span>
+              </p>
               {invForm.lines.map((l, i) => (
                 <div key={i} className="flex gap-2 mb-2">
                   <input className={`${inputCls} flex-1`} placeholder="Description" value={l.description}
                     onChange={(e) => { const lines = [...invForm.lines]; lines[i].description = e.target.value; setInvForm({ ...invForm, lines }); }} />
+                  <select className={`${inputCls} w-32`} value={l.product || 'Other'}
+                    onChange={(e) => { const lines = [...invForm.lines]; lines[i].product = e.target.value; setInvForm({ ...invForm, lines }); }}>
+                    {PRODUCTS.map((p) => <option key={p} value={p}>{p}</option>)}
+                  </select>
                   <input type="number" step="0.01" min="0" className={`${inputCls} w-20`} placeholder="Qty" value={l.quantity}
                     onChange={(e) => { const lines = [...invForm.lines]; lines[i].quantity = e.target.value; setInvForm({ ...invForm, lines }); }} />
                   <input type="number" step="0.01" min="0" className={`${inputCls} w-28`} placeholder="Unit price" value={l.unitPrice}
@@ -349,7 +369,7 @@ export default function ReceivablesPage() {
                   )}
                 </div>
               ))}
-              <Btn variant="outline" small onClick={() => setInvForm({ ...invForm, lines: [...invForm.lines, { description: '', quantity: 1, unitPrice: '' }] })}>
+              <Btn variant="outline" small onClick={() => setInvForm({ ...invForm, lines: [...invForm.lines, { description: '', product: 'Other', quantity: 1, unitPrice: '' }] })}>
                 <Plus size={13} /> Add line
               </Btn>
 

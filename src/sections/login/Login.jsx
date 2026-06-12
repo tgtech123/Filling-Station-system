@@ -32,6 +32,7 @@ const Login = () => {
   const upgraded = searchParams.get("upgraded") === "true";
   const upgradedPlan = searchParams.get("plan") || "";
   const idleLogout = searchParams.get("reason") === "idle";
+  const relocked = searchParams.get("reason") === "relock";
 
   const { settings, fetchPublicSettings } = usePlatformStore();
 
@@ -171,6 +172,18 @@ const Login = () => {
               <p className="text-amber-600 text-xs mt-0.5">
                 You were logged out after 40 minutes of inactivity. Please log
                 in again.
+              </p>
+            </div>
+          )}
+
+          {relocked && (
+            <div className="w-full mt-4 mb-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-center">
+              <p className="text-blue-700 font-semibold text-sm">
+                Please log in again
+              </p>
+              <p className="text-blue-600 text-xs mt-0.5">
+                For your security, your session was locked when you left the
+                app on this device.
               </p>
             </div>
           )}

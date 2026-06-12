@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, Link2, BookCheck, RefreshCw, Download, Printer, CheckCircle2, PlayCircle } from 'lucide-react';
-import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, fmt, fmtDate, downloadBlob } from '../shared';
+import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate, downloadBlob } from '../shared';
 
 const EMPTY_INV = {
   invoiceNumber: '', supplierName: '', invoiceDate: new Date().toISOString().split('T')[0],
-  dueDate: '', taxCode: '', poType: 'none', poId: '',
+  dueDate: '', taxCode: '', poType: 'none', poId: '', expenseAccountCode: '',
   lines: [{ description: '', quantity: 1, unitCost: '' }],
 };
 
@@ -18,6 +18,7 @@ export default function PayablesPage() {
   const [openPOs, setOpenPOs] = useState({ lubricant: [], gas: [] });
   const [taxes, setTaxes] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
+  const [expenseAccounts, setExpenseAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInvModal, setShowInvModal] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
@@ -45,9 +46,10 @@ export default function PayablesPage() {
     load();
     api.get('/api/accounting/ap/open-pos').then((r) => setOpenPOs(r.data.data)).catch(() => {});
     api.get('/api/accounting/tax/config').then((r) => setTaxes(r.data.data?.taxes || [])).catch(() => {});
-    api.get('/api/accounting/accounts').then((r) =>
-      setBankAccounts(r.data.data.filter((a) => a.isReconcilable && a.status === 'Active'))
-    ).catch(() => {});
+    api.get('/api/accounting/accounts').then((r) => {
+      setBankAccounts(r.data.data.filter((a) => a.isReconcilable && a.status === 'Active'));
+      setExpenseAccounts(r.data.data.filter((a) => a.type === 'Expense' && a.status === 'Active'));
+    }).catch(() => {});
   }, []);
 
   const subtotal = invForm.lines.reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.unitCost) || 0), 0);
@@ -60,6 +62,7 @@ export default function PayablesPage() {
         ...invForm,
         poId: invForm.poType === 'none' ? undefined : invForm.poId,
         taxCode: invForm.taxCode || undefined,
+        expenseAccountCode: invForm.poType === 'none' ? (invForm.expenseAccountCode || undefined) : undefined,
         lines: invForm.lines.filter((l) => l.description && Number(l.unitCost) > 0),
       });
       toast.success(res.data.message);
@@ -175,6 +178,14 @@ export default function PayablesPage() {
             <Btn onClick={() => setShowInvModal(true)}><Plus size={15} /> Register Invoice</Btn>
           </div>
         </div>
+
+        <Hint>
+          Payables tracks money the station owes suppliers. When a supplier's invoice arrives, register it here —
+          the system runs a 3-way match: it compares the invoice against your purchase order (what you ordered)
+          and the goods receipt (what actually arrived). Only matching invoices book into the ledger, so you never
+          pay for goods you didn't receive. Pay booked invoices in batches: by bank transfer (download the EFT
+          file for your bank) or by printed check. Withholding tax is deducted automatically at payment.
+        </Hint>
 
         <div className="flex gap-1.5 mb-4">
           {['invoices', 'batches'].map((t) => (
@@ -303,6 +314,16 @@ export default function PayablesPage() {
                         <option key={p._id} value={p._id}>
                           {p.poNumber} — {p.vendor} (₦{fmt(p.amount)}){p.grnRecorded ? ' ✓GRN' : ' — awaiting GRN'}
                         </option>
+                      ))}
+                    </select>
+                  </Field>
+                )}
+                {invForm.poType === 'none' && (
+                  <Field label="Book Expense To" hint="e.g. a product's cost account — 5010 PMS Cost of Sales">
+                    <select className={inputCls} value={invForm.expenseAccountCode} onChange={(e) => setInvForm({ ...invForm, expenseAccountCode: e.target.value })}>
+                      <option value="">Other Expenses (default)</option>
+                      {expenseAccounts.map((a) => (
+                        <option key={a._id} value={a.code}>{a.code} — {a.name}</option>
                       ))}
                     </select>
                   </Field>

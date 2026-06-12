@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Upload, Wand2, CheckCircle2, ArrowLeft, Plus, Trash2, Link2 } from 'lucide-react';
-import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, fmt, fmtDate } from '../shared';
+import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate } from '../shared';
 
 export default function BankReconciliationPage() {
   const [statements, setStatements] = useState([]);
@@ -213,6 +213,14 @@ export default function BankReconciliationPage() {
           </div>
           <Btn onClick={() => setShowImport(true)}><Upload size={15} /> Import Statement</Btn>
         </div>
+
+        <Hint>
+          Reconciliation proves your books agree with the bank. Paste your bank statement (CSV or the bank's
+          MT940 file), then click Auto-Match — the system pairs each bank line with the matching ledger entry by
+          amount, date and reference. Anything left over you match by hand, or set up a rule (e.g. narration
+          contains "SMS CHARGE" → post to Bank Charges) so recurring items book themselves next time. Complete
+          the reconciliation when everything is matched.
+        </Hint>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Card title="Statements" className="lg:col-span-2">

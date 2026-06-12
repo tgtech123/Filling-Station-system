@@ -38,6 +38,19 @@ export function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-NG', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
+/**
+ * Tiny explanatory text for users who are new to accounting — every feature
+ * page carries one of these so nothing needs outside knowledge.
+ */
+export function Hint({ children }) {
+  return (
+    <div className="flex gap-2 items-start bg-blue-50/70 dark:bg-gray-800/60 border border-blue-100 dark:border-gray-700 rounded-lg px-3 py-2 mb-4">
+      <span className="text-blue-400 text-xs leading-4 mt-0.5">ⓘ</span>
+      <p className="text-[11px] leading-4 text-gray-600 dark:text-gray-300">{children}</p>
+    </div>
+  );
+}
+
 export function Card({ title, subtitle, actions, children, className = '' }) {
   return (
     <div className={`bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 ${className}`}>

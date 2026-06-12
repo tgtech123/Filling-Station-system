@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, FileCheck2, Calculator } from 'lucide-react';
-import { api, Card, Modal, Field, inputCls, Btn, Table, fmt, fmtDate, exportRowsAsCsv } from '../shared';
+import { api, Card, Modal, Field, inputCls, Btn, Table, Hint, fmt, fmtDate, exportRowsAsCsv } from '../shared';
 
 export default function TaxPage() {
   const [config, setConfig] = useState(null);
@@ -98,6 +98,14 @@ export default function TaxPage() {
           </div>
           <Btn onClick={() => setShowTax(true)}><Plus size={15} /> Tax Code</Btn>
         </div>
+
+        <Hint>
+          Define your own tax codes here — none exist until you create them. VAT and Sales Tax are added on top
+          of invoices you issue; Withholding Tax (WHT) is deducted from payments you make to suppliers. Once a
+          code exists, every invoice that uses it calculates the tax automatically and records it, so the
+          liability report below always shows exactly what you owe the tax authority per month — ready to file,
+          with a CSV export. Mark a period "filed" after you submit the return.
+        </Hint>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           <Card title="Configured Taxes" className="lg:col-span-2">
