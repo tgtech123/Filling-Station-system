@@ -1,10 +1,9 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
-import { api } from '@/lib/config';
 import toast from 'react-hot-toast';
 import { Plus, Download, Upload, Sparkles, Pencil, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
-import { Card, Modal, Field, inputCls, Btn, StatusBadge, fmt, downloadBlob } from '../shared';
+import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, fmt, downloadBlob } from '../shared';
 
 const TYPES = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense', 'Gain', 'Loss'];
 const STATUSES = ['Active', 'Inactive', 'Archived', 'OnHold'];

@@ -1,10 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
-import { api } from '@/lib/config';
 import toast from 'react-hot-toast';
 import { Download } from 'lucide-react';
-import { Card, inputCls, Btn, Table, fmt, fmtDate, exportRowsAsCsv } from '../shared';
+import { api, Card, inputCls, Btn, Table, fmt, fmtDate, exportRowsAsCsv } from '../shared';
 
 const TABS = ['Trial Balance', 'Balance Sheet', 'Income Statement', 'Cash Flow', 'Aging', 'General Ledger'];
 

@@ -1,10 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
-import { api } from '@/lib/config';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, Link2, BookCheck, RefreshCw, Download, Printer, CheckCircle2, PlayCircle } from 'lucide-react';
-import { Card, Modal, Field, inputCls, Btn, StatusBadge, Table, fmt, fmtDate, downloadBlob } from '../shared';
+import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, fmt, fmtDate, downloadBlob } from '../shared';
 
 const EMPTY_INV = {
   invoiceNumber: '', supplierName: '', invoiceDate: new Date().toISOString().split('T')[0],
