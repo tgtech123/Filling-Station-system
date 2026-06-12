@@ -1,5 +1,33 @@
 'use client';
+import axios from 'axios';
 import { X } from 'lucide-react';
+
+// Same-origin client: requests hit this app's own /api/accounting/* proxy
+// route, which forwards server-side to the backend. Direct cross-origin calls
+// to the API host fail on some mobile browsers ("Load failed") — every other
+// feature in this app proxies the same way.
+export const api = axios.create({
+  headers: { 'Content-Type': 'application/json' },
+});
+
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Who is logged in (role-based UI gating)
+export function getUserRole() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('user') || sessionStorage.getItem('user');
+    return raw ? JSON.parse(raw)?.role?.toLowerCase() ?? null : null;
+  } catch {
+    return null;
+  }
+}
 
 export function fmt(n) {
   return Number(n || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

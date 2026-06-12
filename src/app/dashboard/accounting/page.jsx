@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
-import { api } from '@/lib/config';
 import Link from 'next/link';
 import {
   BookOpen, FileText, Landmark, ReceiptText, Percent, CalendarCheck,
@@ -11,7 +10,7 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   PieChart, Pie, Cell, BarChart, Bar,
 } from 'recharts';
-import { Card, MetricCard, fmt } from './shared';
+import { api, Card, MetricCard, fmt, getUserRole } from './shared';
 
 const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
@@ -30,6 +29,9 @@ export default function AccountingDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // Managers see the overview only — the working modules belong to the accountant
+  const [role, setRole] = useState(null);
+  useEffect(() => { setRole(getUserRole()); }, []);
 
   const load = async () => {
     setLoading(true);
@@ -137,20 +139,24 @@ export default function AccountingDashboard() {
           </>
         )}
 
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Modules</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {MODULES.map((mod) => (
-            <Link
-              key={mod.href}
-              href={mod.href}
-              className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 hover:shadow-md hover:border-blue-200 transition-all group"
-            >
-              <mod.icon size={22} className="text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-              <p className="font-semibold text-sm text-gray-800 dark:text-gray-100">{mod.name}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{mod.desc}</p>
-            </Link>
-          ))}
-        </div>
+        {role === 'accountant' && (
+          <>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Modules</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {MODULES.map((mod) => (
+                <Link
+                  key={mod.href}
+                  href={mod.href}
+                  className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 hover:shadow-md hover:border-blue-200 transition-all group"
+                >
+                  <mod.icon size={22} className="text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
+                  <p className="font-semibold text-sm text-gray-800 dark:text-gray-100">{mod.name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{mod.desc}</p>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

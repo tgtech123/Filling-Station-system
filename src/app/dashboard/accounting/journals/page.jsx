@@ -1,10 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
-import { api } from '@/lib/config';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, CheckCircle2, XCircle, Undo2, Eye } from 'lucide-react';
-import { Card, Modal, Field, inputCls, Btn, StatusBadge, Table, fmt, fmtDate } from '../shared';
+import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, fmt, fmtDate } from '../shared';
 
 const EMPTY_LINE = { account: '', description: '', debit: '', credit: '' };
 

@@ -1,10 +1,9 @@
 'use client';
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
-import { api } from '@/lib/config';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, FileCheck2, Calculator } from 'lucide-react';
-import { Card, Modal, Field, inputCls, Btn, Table, fmt, fmtDate, exportRowsAsCsv } from '../shared';
+import { api, Card, Modal, Field, inputCls, Btn, Table, fmt, fmtDate, exportRowsAsCsv } from '../shared';
 
 export default function TaxPage() {
   const [config, setConfig] = useState(null);
