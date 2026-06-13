@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
-import { Lock, LockOpen, Unlock, CalendarClock, TrendingUp, Globe, RefreshCw, Plus } from 'lucide-react';
+import { Lock, LockOpen, Unlock, CalendarClock, TrendingUp, Globe, RefreshCw, Plus, Boxes } from 'lucide-react';
 import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate } from '../shared';
+
+const STOCK_PRODUCTS = ['PMS', 'AGO (Diesel)', 'Kerosene', 'Lubricant', 'Gas'];
 
 const LEDGERS = [
   { key: 'ap', label: 'Payables (AP)' },
@@ -28,22 +30,27 @@ export default function PeriodsPage() {
   const [rateForm, setRateForm] = useState({ currency: 'USD', rate: '', date: new Date().toISOString().split('T')[0] });
   const [salesRuns, setSalesRuns] = useState([]);
   const [salesPreview, setSalesPreview] = useState(null);
+  const [valuation, setValuation] = useState({ valuations: [], totalValue: 0 });
+  const [showOpening, setShowOpening] = useState(false);
+  const [openForm, setOpenForm] = useState({ product: 'PMS', qty: '', unitCost: '', date: new Date().toISOString().split('T')[0], postToGL: true });
 
   const load = async () => {
     setLoading(true);
     try {
-      const [p, d, f, r, s] = await Promise.all([
+      const [p, d, f, r, s, v] = await Promise.all([
         api.get('/api/accounting/periods'),
         api.get('/api/accounting/depreciation/runs'),
         api.get('/api/accounting/fx/revaluations'),
         api.get('/api/accounting/fx/rates'),
         api.get('/api/accounting/sales-postings'),
+        api.get('/api/accounting/inventory/valuation'),
       ]);
       setPeriods(p.data.data);
       setDepRuns(d.data.data);
       setFxRuns(f.data.data);
       setFxRates(r.data.data);
       setSalesRuns(s.data.data);
+      setValuation(v.data.data);
     } catch (e) {
       toast.error(e.response?.data?.message || 'Failed to load periods');
     } finally {
@@ -73,6 +80,25 @@ export default function PeriodsPage() {
       load();
     } catch (e) {
       toast.error(e.response?.data?.message || 'Reopen failed');
+    }
+  }
+
+  async function saveOpening(e) {
+    e.preventDefault();
+    try {
+      const res = await api.post('/api/accounting/inventory/opening', {
+        product: openForm.product,
+        qty: Number(openForm.qty),
+        unitCost: Number(openForm.unitCost),
+        date: openForm.date,
+        postToGL: openForm.postToGL,
+      });
+      toast.success(res.data.message);
+      setShowOpening(false);
+      setOpenForm({ product: 'PMS', qty: '', unitCost: '', date: new Date().toISOString().split('T')[0], postToGL: true });
+      load();
+    } catch (e2) {
+      toast.error(e2.response?.data?.message || 'Failed to record stock');
     }
   }
 
@@ -233,10 +259,11 @@ export default function PeriodsPage() {
             {salesRuns.length === 0 ? <p className="text-xs text-gray-400">None yet</p> : (
               <ul className="text-sm divide-y divide-gray-50 dark:divide-gray-800">
                 {salesRuns.slice(0, 6).map((r) => (
-                  <li key={r._id} className="py-1.5 flex justify-between">
+                  <li key={r._id} className="py-1.5 flex justify-between items-center gap-2">
                     <span className="font-mono text-xs">{r.period}</span>
-                    <span className="text-xs text-gray-400">{r.lines.map((l) => l.product).join(', ')}</span>
+                    <span className="text-xs text-gray-400 flex-1 truncate">{r.lines.map((l) => l.product).join(', ')}</span>
                     <span className="font-mono text-xs">₦{fmt(r.totalAmount)}</span>
+                    <span className="font-mono text-[11px] text-emerald-600" title="gross margin">+₦{fmt(r.totalMargin ?? 0)}</span>
                   </li>
                 ))}
               </ul>
@@ -290,36 +317,114 @@ export default function PeriodsPage() {
           </Card>
         </div>
 
+        <Card
+          title="Inventory Valuation"
+          subtitle="Perpetual weighted-average cost — what's on hand and what it's worth"
+          className="mb-4"
+          actions={<Btn small variant="outline" onClick={() => setShowOpening(true)}><Plus size={13} /> Opening / Adjust Stock</Btn>}
+        >
+          <Hint>
+            The system values stock at weighted-average cost: each purchase blends into the average, and every
+            sale is costed at that average — that's the cost of sales booked when you post sales. If you started
+            using FuelDesk mid-stream, record your current stock and its cost here once so the first cost of
+            sales is accurate instead of estimated.
+          </Hint>
+          <Table headers={['Product', 'Unit', { label: 'On Hand', right: true }, { label: 'Avg Cost', right: true }, { label: 'Stock Value', right: true }]}
+            empty={valuation.valuations.length === 0 ? 'No stock tracked yet — purchases and opening balances build this automatically' : null}>
+            {valuation.valuations.map((v) => (
+              <tr key={v._id}>
+                <td className="py-1.5 pr-3 font-medium">{v.productKey}</td>
+                <td className="py-1.5 pr-3 text-xs text-gray-400">{v.unit}</td>
+                <td className={`py-1.5 pr-3 text-right font-mono text-xs ${v.qtyOnHand < 0 ? 'text-red-600' : ''}`}>{fmt(v.qtyOnHand)}</td>
+                <td className="py-1.5 pr-3 text-right font-mono text-xs">₦{fmt(v.avgUnitCost)}</td>
+                <td className="py-1.5 text-right font-mono text-xs">₦{fmt(v.totalValue)}</td>
+              </tr>
+            ))}
+            {valuation.valuations.length > 0 && (
+              <tr className="font-bold border-t-2 border-gray-200">
+                <td colSpan={4} className="py-2 pr-3 text-right">Total inventory value</td>
+                <td className="py-2 text-right font-mono">₦{fmt(valuation.totalValue)}</td>
+              </tr>
+            )}
+          </Table>
+        </Card>
+
         {salesPreview && (
-          <Modal title={`Sales Posting Preview — ${salesPreview.period}`} onClose={() => setSalesPreview(null)}>
+          <Modal title={`Sales & Cost Posting Preview — ${salesPreview.period}`} onClose={() => setSalesPreview(null)} wide>
             {salesPreview.alreadyPosted && (
               <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mb-3">
                 Sales for this month were already posted — running again is blocked.
               </p>
             )}
-            <Table headers={['Product', 'Source', 'Sales', { label: 'Amount', right: true }]}
+            <p className="text-[11px] text-gray-400 mb-2">
+              Cost is estimated at the current average cost. The actual posting first blends in every recorded
+              purchase up to month-end, so booked cost of sales may differ slightly. A ⚠ means no purchase cost
+              is on record yet for that product — record opening stock so its cost of sales is accurate.
+            </p>
+            <Table headers={['Product', 'Source', 'Qty', { label: 'Revenue', right: true }, { label: 'Est. Cost', right: true }, { label: 'Est. Margin', right: true }]}
               empty={salesPreview.lines.length === 0 ? 'No sales recorded in this month' : null}>
               {salesPreview.lines.map((l, i) => (
                 <tr key={i}>
-                  <td className="py-1.5 pr-3 font-medium">{l.product}</td>
+                  <td className="py-1.5 pr-3 font-medium">
+                    {l.product}{l.estUnitCost <= 0 && <span title="No purchase cost on record" className="text-amber-500 ml-1">⚠</span>}
+                  </td>
                   <td className="py-1.5 pr-3 text-xs text-gray-400 capitalize">{l.source}</td>
-                  <td className="py-1.5 pr-3 text-xs">{l.count}</td>
-                  <td className="py-1.5 text-right font-mono text-xs">₦{fmt(l.amount)}</td>
+                  <td className="py-1.5 pr-3 text-xs font-mono">{fmt(l.qty)}</td>
+                  <td className="py-1.5 pr-3 text-right font-mono text-xs">₦{fmt(l.amount)}</td>
+                  <td className="py-1.5 pr-3 text-right font-mono text-xs text-gray-500">₦{fmt(l.estCogs)}</td>
+                  <td className={`py-1.5 text-right font-mono text-xs ${l.estMargin >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>₦{fmt(l.estMargin)}</td>
                 </tr>
               ))}
               {salesPreview.lines.length > 0 && (
                 <tr className="font-bold border-t-2 border-gray-200">
-                  <td colSpan={3} className="py-2 pr-3 text-right">Total to post</td>
-                  <td className="py-2 text-right font-mono">₦{fmt(salesPreview.total)}</td>
+                  <td colSpan={3} className="py-2 pr-3 text-right">Totals</td>
+                  <td className="py-2 pr-3 text-right font-mono">₦{fmt(salesPreview.total)}</td>
+                  <td className="py-2 pr-3 text-right font-mono text-gray-500">₦{fmt(salesPreview.totalEstCogs)}</td>
+                  <td className="py-2 text-right font-mono text-emerald-700">₦{fmt(salesPreview.totalEstMargin)}</td>
                 </tr>
               )}
             </Table>
             <div className="flex justify-end gap-2 mt-4">
               <Btn variant="secondary" onClick={() => setSalesPreview(null)}>Close</Btn>
               {!salesPreview.alreadyPosted && salesPreview.lines.length > 0 && (
-                <Btn variant="success" onClick={runSalesPosting}>Post to Ledger</Btn>
+                <Btn variant="success" onClick={runSalesPosting}>Post Sales & Cost</Btn>
               )}
             </div>
+          </Modal>
+        )}
+
+        {showOpening && (
+          <Modal title="Record Opening / Adjustment Stock" onClose={() => setShowOpening(false)}>
+            <p className="text-xs text-gray-500 mb-3">
+              Tell the costing engine what stock you hold and what it cost. This blends into the weighted
+              average — use it for opening balances or to correct a count.
+            </p>
+            <form onSubmit={saveOpening}>
+              <Field label="Product *">
+                <select className={inputCls} value={openForm.product} onChange={(e) => setOpenForm({ ...openForm, product: e.target.value })}>
+                  {STOCK_PRODUCTS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Quantity *" hint="litres / units / kg">
+                  <input type="number" step="0.01" min="0" className={inputCls} value={openForm.qty} onChange={(e) => setOpenForm({ ...openForm, qty: e.target.value })} required />
+                </Field>
+                <Field label="Unit Cost (₦) *" hint="what you paid per unit">
+                  <input type="number" step="0.01" min="0" className={inputCls} value={openForm.unitCost} onChange={(e) => setOpenForm({ ...openForm, unitCost: e.target.value })} required />
+                </Field>
+              </div>
+              <Field label="Date *">
+                <input type="date" className={inputCls} value={openForm.date} onChange={(e) => setOpenForm({ ...openForm, date: e.target.value })} required />
+              </Field>
+              <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mt-1">
+                <input type="checkbox" checked={openForm.postToGL} onChange={(e) => setOpenForm({ ...openForm, postToGL: e.target.checked })} />
+                Also book to ledger (Dr Inventory, Cr Owner's Capital)
+              </label>
+              <div className="flex justify-end gap-2 mt-4">
+                <Btn variant="secondary" onClick={() => setShowOpening(false)}>Cancel</Btn>
+                <Btn type="submit">Record Stock</Btn>
+              </div>
+            </form>
           </Modal>
         )}
 
