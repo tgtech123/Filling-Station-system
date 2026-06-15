@@ -94,9 +94,39 @@ const STATIC_FAQ_GROUPS = [
         answer: "Yes. Go to System Settings > Subscription & Billing, find the amber downgrade notice on your plan card, and click Cancel Downgrade. The scheduled downgrade is removed instantly and your plan stays unchanged.",
       },
       {
+        _id: "s15",
+        question: "The downgrade screen says \"Remove N\" staff. How do I remove them?",
+        answer: "The lower plan allows fewer staff in that role, so you must reduce your team before downgrading. The \"Remove N\" badge tells you how many to remove per role — it is a guide, not a button. To remove staff, go to Staff Management, open the staff member, and terminate/remove them. Then return to System Settings > Subscription & Billing and try the downgrade again — once your counts fit the new plan, it will let you schedule it. Note: the manager (station owner) account is never counted against you, so you are never asked to remove yourself.",
+      },
+      {
         _id: "s14",
         question: "I am on the highest plan and the Upgrade button is missing. Is this a bug?",
         answer: "No, this is correct. If you are already on the highest available plan, the button changes to Renew Plan instead. Click it to extend your current plan by another month or year.",
+      },
+    ],
+  },
+  {
+    category: "Accounting",
+    faqs: [
+      {
+        _id: "a1",
+        question: "I opened Accounting and everything is empty. What do I do first?",
+        answer: "The accounting module never invents data — it starts empty so your books are real. Open Accounting > Chart of Accounts and create your accounts (click \"System Codes\" to see the standard codes and create them with those exact numbers). Then set your tax codes under Tax Engine, and if you already have fuel in your tanks, record it once under Period Close > Inventory Valuation > Opening/Adjust Stock. After that the reports fill in as you record invoices and post sales.",
+      },
+      {
+        _id: "a2",
+        question: "How does each product's revenue and profit get tracked separately?",
+        answer: "Each product (PMS, Diesel/AGO, Kerosene, Lubricant, Gas) has its own revenue account (4010–4200) and cost account (5010–5200). Once a month you click Period Close > Post Product Sales: the system gathers that month's fuel, lubricant and gas sales and books each product's revenue and its cost of sales automatically. The Income Statement then shows gross profit per product with no manual work.",
+      },
+      {
+        _id: "a3",
+        question: "Why can the accountant see Accounting but the manager only sees an overview?",
+        answer: "The full accounting workspace is the accountant's. Managers and admins can view the executive Accounting overview (totals, ratios, trends) for oversight, but the working screens — chart of accounts, journals, payables, receivables, tax, reports — are accountant-only by design.",
+      },
+      {
+        _id: "a4",
+        question: "What is cost of sales / COGS and where does it come from?",
+        answer: "Cost of sales is what the fuel you sold actually cost you. The system values stock at weighted-average cost: every purchase blends into the average, and every sale is costed at that average when you post the month's sales. You don't calculate anything — just keep recording deliveries and procurements, and run the monthly sales posting.",
       },
     ],
   },
