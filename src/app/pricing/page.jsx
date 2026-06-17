@@ -39,10 +39,22 @@ const PricingPage = () => {
   const [emailExists, setEmailExists] = useState(false);
   const [initiatingPayment, setInitiatingPayment] = useState(false);
   const [currentPlan, setCurrentPlan] = useState(null);
+  const [taxRate, setTaxRate] = useState(0.075); // NG VAT; refreshed from public settings
 
   const { plans, loading, fetchPublicPlans } = usePlansStore();
 
   useEffect(() => { fetchPublicPlans(); }, []);
+
+  // Live VAT rate so the payment breakdown matches what Paystack will charge.
+  useEffect(() => {
+    api
+      .get("/api/public/settings")
+      .then((res) => {
+        const ng = res.data?.data?.taxRates?.NG;
+        if (typeof ng === "number") setTaxRate(ng);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (plans.length > 0 && showBlue === null) {
@@ -437,6 +449,7 @@ const PricingPage = () => {
           plan={selectedPlanForPayment}
           relation={getPlanRelation(selectedPlanForPayment)}
           billing={billing}
+          taxRate={taxRate}
           isLoggedIn={isLoggedIn}
           payerName={payerName}
           payerEmail={payerEmail}
@@ -456,7 +469,7 @@ const PricingPage = () => {
 };
 
 function ModalPayment({
-  plan, relation, billing, isLoggedIn,
+  plan, relation, billing, taxRate = 0.075, isLoggedIn,
   payerName, payerEmail, setPayerName, setPayerEmail,
   emailError, setEmailError, emailExists, setEmailExists,
   initiatingPayment, onClose, onPay,
@@ -467,6 +480,10 @@ function ModalPayment({
     ? isRenew ? "Your plan will be renewed for another billing cycle." : "Your plan will be upgraded immediately after payment."
     : "You will set up your station account after payment.";
   const planPrice = billing === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
+  // VAT uses the same rounding as the backend, so the total shown equals the charge.
+  const vat = Math.round((planPrice || 0) * (taxRate || 0));
+  const totalPrice = (planPrice || 0) + vat;
+  const taxPercentLabel = `${Math.round((taxRate || 0) * 100 * 100) / 100}%`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4">
@@ -552,12 +569,12 @@ function ModalPayment({
                 <span className="font-semibold">₦{planPrice.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Tax (7.5%)</span>
-                <span className="font-semibold">₦{Math.round(planPrice * 0.075).toLocaleString()}</span>
+                <span className="text-gray-600">Tax ({taxPercentLabel})</span>
+                <span className="font-semibold">₦{vat.toLocaleString()}</span>
               </div>
               <div className="border-t border-blue-200 pt-2 flex justify-between">
                 <span className="font-bold text-gray-900">Total</span>
-                <span className="font-bold text-blue-600 text-base">₦{Math.round(planPrice * 1.075).toLocaleString()}</span>
+                <span className="font-bold text-blue-600 text-base">₦{totalPrice.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -571,7 +588,7 @@ function ModalPayment({
           {initiatingPayment ? (
             <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Redirecting...</>
           ) : (
-            <><CreditCard size={16} />{isRenew ? "Renew Now" : "Pay Now"} — ₦{planPrice.toLocaleString()}</>
+            <><CreditCard size={16} />{isRenew ? "Renew Now" : "Pay Now"} — ₦{totalPrice.toLocaleString()}</>
           )}
         </button>
 

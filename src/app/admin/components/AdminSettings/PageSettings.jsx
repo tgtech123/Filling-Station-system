@@ -7,6 +7,7 @@ import usePlatformStore from "@/store/usePlatformStore";
 
 const emptyForm = {
   logoUrl: "",
+  taxRates: {},
   platformName: "",
   contactEmail: "",
   contactPhone: "",
@@ -29,11 +30,39 @@ const inputClass =
 const readonlyClass =
   "w-full h-[3.25rem] pl-3 flex items-center text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 rounded-lg border-[2px] border-neutral-200 dark:border-gray-600";
 
+// Friendly names for the known country codes; unknown codes fall back to the code.
+const COUNTRY_NAMES = {
+  NG: "Nigeria", GH: "Ghana", KE: "Kenya", ZA: "South Africa", EG: "Egypt",
+  GB: "United Kingdom", US: "United States", CA: "Canada", AU: "Australia",
+  IN: "India", DE: "Germany", FR: "France",
+};
+
+// The API stores rates as decimal fractions (0.075 = 7.5%); admins edit percentages.
+// Convert on load (→ percent for the form) and on save (→ decimal for the API),
+// rounding away float noise so 0.075 ↔ 7.5 stays exact.
+const ratesToPercent = (rates) => {
+  const out = {};
+  Object.entries(rates || {}).forEach(([code, val]) => {
+    out[code] = Math.round(Number(val) * 100 * 1e4) / 1e4;
+  });
+  return out;
+};
+const percentToRates = (percents) => {
+  const out = {};
+  Object.entries(percents || {}).forEach(([code, val]) => {
+    const num = Number(val);
+    if (Number.isFinite(num)) out[code] = Math.round((num / 100) * 1e6) / 1e6;
+  });
+  return out;
+};
+
 const PageSettings = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [saved, setSaved] = useState(emptyForm);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [newCode, setNewCode] = useState("");
+  const [newRate, setNewRate] = useState("");
   const fileInputRef = useRef(null);
 
   const { settings, loading, saving, fetchAdminSettings, updateSettings } =
@@ -47,6 +76,7 @@ const PageSettings = () => {
     if (settings) {
       const filled = {
         logoUrl: settings.logoUrl ?? "",
+        taxRates: ratesToPercent(settings.taxRates),
         platformName: settings.platformName ?? "",
         contactEmail: settings.contactEmail ?? "",
         contactPhone: settings.contactPhone ?? "",
@@ -70,6 +100,30 @@ const PageSettings = () => {
 
   const setField = (key) => (e) =>
     setForm((f) => ({ ...f, [key]: e.target ? e.target.value : e }));
+
+  // ── Tax / VAT rate helpers (form holds percentages, keyed by country code) ──
+  const setRate = (code, value) =>
+    setForm((f) => ({ ...f, taxRates: { ...f.taxRates, [code]: value } }));
+
+  const addRate = () => {
+    const code = newCode.trim().toUpperCase();
+    if (!/^[A-Z]{2}$/.test(code)) {
+      toast.error("Country code must be 2 letters (e.g. NG)");
+      return;
+    }
+    if (form.taxRates && form.taxRates[code] !== undefined) {
+      toast.error(`${code} already exists — edit it in the list above`);
+      return;
+    }
+    const pct = Number(newRate);
+    if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+      toast.error("Rate must be a number between 0 and 100");
+      return;
+    }
+    setForm((f) => ({ ...f, taxRates: { ...f.taxRates, [code]: pct } }));
+    setNewCode("");
+    setNewRate("");
+  };
 
   const handleLogoFileChange = async (e) => {
     const file = e.target.files?.[0];
@@ -95,7 +149,9 @@ const PageSettings = () => {
   };
 
   const handleSave = async () => {
-    const result = await updateSettings(form);
+    // Convert the percentage form back to the decimal fractions the API expects.
+    const payload = { ...form, taxRates: percentToRates(form.taxRates) };
+    const result = await updateSettings(payload);
     if (result.success) {
       setSaved(form);
       setIsEditing(false);
@@ -379,6 +435,94 @@ const PageSettings = () => {
           )}
           <p className="text-sm text-neutral-400">Used for all pricing and invoices</p>
         </div>
+      </div>
+
+      {/* ── Tax / VAT Rates ───────────────────────────────────────── */}
+      <div className="mt-5 p-4 lg:p-5 bg-white dark:bg-gray-800 rounded-xl w-full">
+        <SectionHeader
+          title="Tax / VAT Rates"
+          subtitle="VAT added on top of subscription prices at checkout, per country. Enter a percentage — e.g. 7.5 for 7.5%."
+        />
+
+        <div className="mt-5 flex flex-col gap-3">
+          {Object.keys(form.taxRates || {}).length === 0 ? (
+            <p className="text-sm text-neutral-400">No tax rates configured yet.</p>
+          ) : (
+            Object.entries(form.taxRates)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([code, pct]) => (
+                <div
+                  key={code}
+                  className="flex items-center justify-between gap-3 border-[2px] border-neutral-300 dark:border-gray-600 rounded-lg p-3 sm:p-4"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-[1rem] font-semibold leading-none dark:text-gray-100">
+                      {COUNTRY_NAMES[code] || code}
+                    </span>
+                    <span className="text-xs text-neutral-400 font-mono mt-1">{code}</span>
+                  </div>
+                  {isEditing ? (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={pct}
+                        onChange={(e) => setRate(code, e.target.value)}
+                        className="w-24 h-[3rem] px-3 text-right rounded-lg border-[2px] border-neutral-300 focus:border-blue-600 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                      />
+                      <span className="text-sm font-semibold text-neutral-500">%</span>
+                    </div>
+                  ) : (
+                    <span className="text-[1rem] font-semibold dark:text-gray-100 shrink-0">
+                      {pct}%
+                    </span>
+                  )}
+                </div>
+              ))
+          )}
+        </div>
+
+        {isEditing && (
+          <div className="mt-4 flex flex-col gap-2">
+            <label className="text-sm font-bold dark:text-gray-200">Add a country</label>
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+              <input
+                type="text"
+                maxLength={2}
+                value={newCode}
+                onChange={(e) => setNewCode(e.target.value.toUpperCase())}
+                placeholder="Code (e.g. NG)"
+                className="sm:w-40 h-[3rem] px-3 uppercase rounded-lg border-[2px] border-neutral-300 focus:border-blue-600 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+              />
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={newRate}
+                  onChange={(e) => setNewRate(e.target.value)}
+                  placeholder="Rate"
+                  className="w-28 h-[3rem] px-3 text-right rounded-lg border-[2px] border-neutral-300 focus:border-blue-600 outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                />
+                <span className="text-sm font-semibold text-neutral-500">%</span>
+              </div>
+              <button
+                type="button"
+                onClick={addRate}
+                className="h-[3rem] px-5 rounded-lg border-2 border-blue-500 text-blue-600 dark:text-blue-400 font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        )}
+
+        <p className="text-sm text-neutral-400 mt-4">
+          The new rate applies to the next payment a customer starts after you save. To stop charging VAT for a country, set its rate to 0.
+        </p>
       </div>
 
       {/* ── Legal ─────────────────────────────────────────────────── */}
