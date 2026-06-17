@@ -211,7 +211,7 @@ function TwoFADisableModal({ onConfirm, onClose, saving }) {
 // ── Billing Modals ────────────────────────────────────────────────────────────
 
 // renewMode = true when already on the highest plan — only option is to renew same plan
-function UpgradeModal({ onClose, currentPlanSlug, availablePlans, renewMode, onUpgrade }) {
+function UpgradeModal({ onClose, currentPlanSlug, availablePlans, renewMode, onUpgrade, taxRate = 0.075 }) {
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [selectedSlug, setSelectedSlug] = useState(
     renewMode ? currentPlanSlug : (availablePlans[0]?.slug || currentPlanSlug)
@@ -220,9 +220,14 @@ function UpgradeModal({ onClose, currentPlanSlug, availablePlans, renewMode, onU
   const [err, setErr] = useState(null);
 
   const selected = availablePlans.find(p => p.slug === selectedSlug) || availablePlans[0];
-  const price = selected
-    ? `₦${((billingCycle === "yearly" ? selected.yearlyPrice : selected.monthlyPrice) || 0).toLocaleString()} / ${billingCycle === "yearly" ? "yr" : "mo"}`
-    : "";
+  // Base plan price + VAT = the total Paystack will actually charge. VAT uses the
+  // same rounding as the backend (Math.round on the naira amount), so the figure
+  // shown here equals the amount charged, to the kobo.
+  const fmt = (n) => `₦${(n || 0).toLocaleString()}`;
+  const basePrice = selected ? ((billingCycle === "yearly" ? selected.yearlyPrice : selected.monthlyPrice) || 0) : 0;
+  const vat = Math.round(basePrice * (taxRate || 0));
+  const totalPrice = basePrice + vat;
+  const taxPercentLabel = `${Math.round((taxRate || 0) * 100 * 100) / 100}%`;
 
   async function handlePay() {
     setBusy(true);
@@ -318,6 +323,21 @@ function UpgradeModal({ onClose, currentPlanSlug, availablePlans, renewMode, onU
 
         {/* Footer */}
         <div className="px-6 pb-6 shrink-0">
+          {/* Price breakdown — base + VAT = total, matching what Paystack charges */}
+          <div className="mb-3 rounded-xl border border-neutral-200 dark:border-gray-700 divide-y divide-neutral-100 dark:divide-gray-700 text-sm">
+            <div className="flex justify-between px-4 py-2.5">
+              <span className="text-gray-500 dark:text-gray-400">{selected?.name || "Plan"} ({billingCycle === "yearly" ? "yearly" : "monthly"})</span>
+              <span className="font-medium dark:text-gray-100">{fmt(basePrice)}</span>
+            </div>
+            <div className="flex justify-between px-4 py-2.5">
+              <span className="text-gray-500 dark:text-gray-400">VAT ({taxPercentLabel})</span>
+              <span className="font-medium dark:text-gray-100">{fmt(vat)}</span>
+            </div>
+            <div className="flex justify-between px-4 py-3 bg-gray-50 dark:bg-gray-700/40">
+              <span className="font-semibold dark:text-gray-100">Total to pay</span>
+              <span className="font-bold text-[#1a71f6]">{fmt(totalPrice)}</span>
+            </div>
+          </div>
           {err && <p className="text-xs text-red-500 mb-2 text-center">{err}</p>}
           <button
             onClick={handlePay}
@@ -325,7 +345,7 @@ function UpgradeModal({ onClose, currentPlanSlug, availablePlans, renewMode, onU
             className="w-full py-3 rounded-xl bg-[#1a71f6] text-white font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {busy ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
-            {busy ? "Redirecting to payment..." : renewMode ? `Renew — Pay ${price}` : `Pay ${price} — Upgrade Now`}
+            {busy ? "Redirecting to payment..." : renewMode ? `Renew — Pay ${fmt(totalPrice)}` : `Pay ${fmt(totalPrice)} — Upgrade Now`}
           </button>
           <p className="text-center text-[11px] text-neutral-400 mt-2">You will be redirected to Paystack to complete payment securely.</p>
         </div>
@@ -677,6 +697,7 @@ export default function SettingsPage() {
   const [showDowngradeModal, setShowDowngradeModal] = useState(false);
   const [showCancelModal, setShowCancelModal]       = useState(false);
   const [planCancelled, setPlanCancelled]           = useState(false);
+  const [taxRate, setTaxRate]                       = useState(0.075); // NG VAT; refreshed from public settings
 
   const { activities, fetchActivity } = useActivityFeedStore();
 
@@ -690,6 +711,17 @@ export default function SettingsPage() {
       if (saved) setNotifPrefs(JSON.parse(saved));
     } catch {}
   }, [fetchActivity]);
+
+  // Live VAT rate so the upgrade modal shows the same total Paystack will charge.
+  useEffect(() => {
+    fetch(`${API}/api/public/settings`)
+      .then((r) => r.json())
+      .then((d) => {
+        const ng = d?.data?.taxRates?.NG;
+        if (typeof ng === "number") setTaxRate(ng);
+      })
+      .catch(() => {});
+  }, []);
 
   const loginHistory = activities.filter(isLoginActivity).slice(0, 5);
 
@@ -1177,6 +1209,7 @@ export default function SettingsPage() {
           currentPlanSlug={planSlug}
           availablePlans={modalPlans}
           renewMode={isHighestPlan}
+          taxRate={taxRate}
           onClose={() => setShowUpgradeModal(false)}
           onUpgrade={handleUpgrade}
         />
