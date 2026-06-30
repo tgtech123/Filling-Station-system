@@ -157,10 +157,11 @@ const Login = () => {
             </Link>
           </div>
 
-          <h1 className="w-full text-[1.875rem] sm:text-[2.5rem] lg:text-[2.875rem] font-bold text-[#323130] text-center mt-2">
-            Login to {settings?.platformName || "FuelDesk"}
+          <h1 className="w-full text-[2rem] sm:text-[2.5rem] lg:text-[2.875rem] font-bold text-[#323130] text-center mt-2">
+              Welcome Back!  
+           {/* <span> {settings?.platformName || "FuelDesk"} </span> */}
           </h1>
-          <p className="w-full text-[1rem] sm:text-[0.78rem] text-gray-500 text-center mt-1">
+          <p className="w-full text-[0.875rem] sm:text-[0.575rem] text-gray-500 text-center mt-1">
             Login to access your customized station dashboard
           </p>
 
