@@ -46,8 +46,8 @@ export default function ResetPassword() {
     <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen lg:h-screen lg:overflow-hidden">
       <div className="w-full flex items-center justify-center bg-gray-50 px-4 py-10 lg:py-0 lg:h-screen lg:overflow-y-auto">
         <div className="w-full max-w-md bg-white border border-gray-200 shadow-xl rounded-2xl px-8 py-10 flex flex-col items-start">
-          <h1 className="text-3xl sm:text-4xl font-bold text-[#323130]">Reset Password</h1>
-          <p className="mt-2 text-sm sm:text-base text-gray-500">Enter your email to receive a reset link</p>
+          <h1 className="text-3xl sm:text-4xl text-center font-bold text-[#323130]">Reset Password</h1>
+          <p className="mt-2 text-sm sm:text-base text-center text-gray-500">Enter your email to receive a reset link</p>
 
           <form className="flex flex-col gap-4 mt-8 w-full">
             <div className="flex flex-col gap-1">

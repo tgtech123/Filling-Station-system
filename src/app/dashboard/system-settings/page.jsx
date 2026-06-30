@@ -12,6 +12,7 @@ import {
   CheckCircle2, Users, Ban,
 } from "lucide-react";
 import useActivityFeedStore from "@/store/useActivityFeedStore";
+import FuelYieldFactorSection from "./FuelYieldFactorSection";
 
 const API =
   process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
@@ -960,6 +961,9 @@ export default function SettingsPage() {
             />
           ))}
         </SectionCard>
+
+        {/* ── FUEL YIELD FACTOR (STATION LITRE) ── */}
+        <FuelYieldFactorSection />
 
         {/* ── SECURITY ── */}
         <SectionCard>

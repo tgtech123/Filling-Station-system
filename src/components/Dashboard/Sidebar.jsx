@@ -27,6 +27,7 @@ import {
   ShieldCheck,
   Building2,
   BookOpen,
+  Scale,
 } from "lucide-react";
 import { RiOilLine } from "react-icons/ri";
 import { PiToggleLeftFill, PiToggleRightFill } from "react-icons/pi";
@@ -305,6 +306,13 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <BiSolidTachometer size={20} />,
       link: "/dashboard/dipReading",
       roles: ["supervisor"],
+    },
+    {
+      id: "stock-reconciliation",
+      name: "Stock Reconciliation",
+      icon: <Scale size={20} />,
+      link: "/dashboard/stockReconciliation",
+      roles: ["manager", "supervisor"],
     },
     {
       id: "pump-performance",
