@@ -7,6 +7,7 @@ import useGasStore from "@/store/useGasStore";
 import useGasSaleStore from "@/store/useGasSaleStore";
 import useGasOrderStore from "@/store/useGasOrderStore";
 import useGasCustomerStore from "@/store/useGasCustomerStore";
+import CylinderPosTab from "./CylinderPosTab";
 import { api } from "@/lib/config";
 
 const PRESETS_KG     = [0.5, 1, 1.5, 2, 3, 5];
@@ -351,6 +352,14 @@ export default function GasCashierPage() {
             Point of Sale
           </button>
           <button
+            onClick={() => setActiveTab("cylinders")}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              activeTab === "cylinders" ? "bg-white shadow text-orange-600" : "text-gray-500"
+            }`}
+          >
+            Cylinders
+          </button>
+          <button
             onClick={() => setActiveTab("orders")}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all relative ${
               activeTab === "orders" ? "bg-white shadow text-orange-600" : "text-gray-500"
@@ -588,6 +597,9 @@ export default function GasCashierPage() {
             </button>
           </div>
         )}
+
+        {/* ─── CYLINDERS TAB (bottle retail) ─────────────────────────── */}
+        {activeTab === "cylinders" && <CylinderPosTab stationInfo={stationInfo} />}
 
         {/* ─── ORDERS INBOX TAB ──────────────────────────────────────── */}
         {activeTab === "orders" && (

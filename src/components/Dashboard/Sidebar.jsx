@@ -623,6 +623,13 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       roles: ["manager", "admin"],
     },
     {
+      id: "gas-cylinders",
+      name: "Gas Cylinders",
+      icon: <Package size={20} className="text-orange-500" />,
+      link: "/dashboard/gas/cylinders",
+      roles: ["manager", "admin"],
+    },
+    {
       id: "gas-customers",
       name: "Loyalty Customers",
       icon: <MdOutlinePeopleAlt size={20} className="text-orange-500" />,
