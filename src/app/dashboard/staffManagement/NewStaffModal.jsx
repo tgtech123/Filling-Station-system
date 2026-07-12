@@ -1,9 +1,10 @@
 ﻿"use client";
-import React, { useState } from "react";
-import { Plus, X, ChevronUp, ChevronDown, EyeOff, Eye } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Plus, X, ChevronUp, ChevronDown, EyeOff, Eye, Loader2 } from "lucide-react";
 import { BsToggleOn, BsToggleOff } from "react-icons/bs";
 import SuccessMessageModal from "./SuccessMessageModal";
 import useStaffStore from "@/store/useStaffStore"; // Import the Zustand store
+import useShiftTypeStore from "@/store/useShiftTypeStore";
 import UpgradePrompt from "@/components/UpgradePrompt";
 
 const NewStaffModal = ({ isOpen, onClose, children }) => {
@@ -32,6 +33,38 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
   const [validationError, setValidationError] = useState("");
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [limitInfo, setLimitInfo] = useState({ role: "", limit: 0 });
+
+  // Shift types — built-ins + this station's custom types (manager can add new)
+  const { builtIn, custom, fetchTypes, createType } = useShiftTypeStore();
+  const [showNewType, setShowNewType] = useState(false);
+  const [newType, setNewType] = useState({ name: "", startTime: "", endTime: "", session: "morning" });
+  const [creatingType, setCreatingType] = useState(false);
+  const [typeError, setTypeError] = useState("");
+
+  useEffect(() => {
+    fetchTypes();
+  }, [fetchTypes]);
+
+  const shiftTypeOptions = [...builtIn, ...custom.filter((t) => t.isActive !== false)];
+
+  const handleCreateType = async () => {
+    if (!newType.name.trim()) {
+      setTypeError("Enter a name for the shift type");
+      return;
+    }
+    setCreatingType(true);
+    setTypeError("");
+    const result = await createType(newType);
+    setCreatingType(false);
+    if (result.success) {
+      // Select the freshly created type on the staff form
+      setFormData((prev) => ({ ...prev, shiftType: result.data.name }));
+      setShowNewType(false);
+      setNewType({ name: "", startTime: "", endTime: "", session: "morning" });
+    } else {
+      setTypeError(result.error);
+    }
+  };
 
   // Form state
   const [formData, setFormData] = useState({
@@ -395,7 +428,16 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                 </span>
               )}
               <span className="flex flex-col gap-2">
-                <label className="font-bold text-[0.875rem]">Shift type</label>
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-[0.875rem]">Shift type</label>
+                  <button
+                    type="button"
+                    onClick={() => { setShowNewType((v) => !v); setTypeError(""); }}
+                    className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800"
+                  >
+                    <Plus size={13} /> {showNewType ? "Cancel" : "New shift type"}
+                  </button>
+                </div>
                 <select
                   name="shiftType"
                   value={formData.shiftType}
@@ -403,12 +445,65 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                   className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl bg-white"
                 >
                   <option value="">Select shift</option>
-                  <option value="One-Day-Morning">One-Day Morning (6AM – 2PM)</option>
-                  <option value="One-Day-Evening">One-Day Evening (2PM – 10PM)</option>
-                  <option value="Day-Off">Day-Off / Fulltime (6AM – 10PM)</option>
-                  <option value="24/7">24/7 (Round the Clock)</option>
-                  <option value="Full-Time">Full-Time (8AM – 6PM)</option>
+                  {shiftTypeOptions.map((t) => (
+                    <option key={t.name} value={t.name}>{t.label}</option>
+                  ))}
                 </select>
+
+                {/* Inline creator — persists to the station and appears in the
+                    supervisor's scheduling page immediately */}
+                {showNewType && (
+                  <div className="border-2 border-blue-100 bg-blue-50/50 rounded-2xl p-3 mt-1">
+                    <input
+                      type="text"
+                      value={newType.name}
+                      onChange={(e) => setNewType((p) => ({ ...p, name: e.target.value }))}
+                      placeholder="Type name, e.g. Night Shift"
+                      className="w-full border-2 border-neutral-200 bg-white rounded-xl px-3 py-2 text-sm mb-2 outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={newType.startTime}
+                        onChange={(e) => setNewType((p) => ({ ...p, startTime: e.target.value }))}
+                        placeholder="Start, e.g. 10PM"
+                        className="border-2 border-neutral-200 bg-white rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      <input
+                        type="text"
+                        value={newType.endTime}
+                        onChange={(e) => setNewType((p) => ({ ...p, endTime: e.target.value }))}
+                        placeholder="End, e.g. 6AM"
+                        className="border-2 border-neutral-200 bg-white rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="text-xs font-semibold text-gray-600">Schedule group:</label>
+                      {["morning", "evening"].map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setNewType((p) => ({ ...p, session: s }))}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+                            newType.session === s ? "bg-blue-600 text-white" : "bg-white border border-neutral-200 text-gray-500"
+                          }`}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                    {typeError && <p className="text-red-500 text-xs mb-2">{typeError}</p>}
+                    <button
+                      type="button"
+                      onClick={handleCreateType}
+                      disabled={creatingType}
+                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold py-2 rounded-xl flex items-center justify-center gap-2"
+                    >
+                      {creatingType ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                      Create &amp; Select
+                    </button>
+                  </div>
+                )}
               </span>
             </p>
 

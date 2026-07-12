@@ -6,6 +6,7 @@ import useGasShiftStore from "@/store/useGasShiftStore";
 import useGasSaleStore from "@/store/useGasSaleStore";
 import useGasStore from "@/store/useGasStore";
 import { Zap, Database } from "lucide-react";
+import { useSocket } from "@/hooks/useSocket";
 
 function fmt(n) { return Number(n || 0).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
@@ -96,6 +97,15 @@ export default function GasAttendantShiftPage() {
     const i = setInterval(fetchPendingSales, 20000);
     return () => clearInterval(i);
   }, []);
+
+  // Socket: a cashier POS sale appears in the pending queue instantly
+  // (the 20s poll above stays as a fallback).
+  useSocket({
+    "gas:sale-updated": () => {
+      fetchPendingSales();
+      if (activeTab === "history") fetchSales({ status: "dispensed", limit: 30 });
+    },
+  });
 
   useEffect(() => {
     if (activeTab === "history") fetchSales({ status: "dispensed", limit: 30 });

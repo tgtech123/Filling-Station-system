@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import CustomTable from "./CustomTable";
-import { ChevronDown, Download, Filter, Search, X } from "lucide-react";
+import { ChevronDown, Download, Filter, Search, X, CheckCircle2, Loader2 } from "lucide-react";
+import { useSocket } from "@/hooks/useSocket";
 
 const STATUS_OPTIONS = ["All", "Pending", "Completed", "Canceled"];
 const FUEL_OPTIONS = ["All", "PMS", "AGO", "Kerosene", "Gas"];
@@ -53,6 +54,9 @@ export default function Deliveries() {
     fetchDeliveries();
   }, []);
 
+  // Socket: delivery created/completed anywhere refreshes this table live
+  useSocket({ "delivery:updated": () => fetchDeliveries() });
+
   // Close export dropdown on outside click
   useEffect(() => {
     const handleClick = (e) => {
@@ -64,7 +68,28 @@ export default function Deliveries() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const handleMarkAsCompleted = async (supplyId) => {
+  // Receive dialog — captures the ACTUAL litres delivered (GRN leg of the
+  // 3-way match). The ordered quantity stays frozen on the record, so short
+  // or over deliveries surface when the accountant matches the invoice.
+  const [receiveTarget, setReceiveTarget] = useState(null); // the delivery being received
+  const [receivedQty, setReceivedQty] = useState("");
+  const [receiving, setReceiving] = useState(false);
+  const [receiveError, setReceiveError] = useState("");
+
+  const openReceive = (delivery) => {
+    setReceiveTarget(delivery);
+    setReceivedQty(String(delivery.orderedQuantity ?? delivery.quantity ?? ""));
+    setReceiveError("");
+  };
+
+  const handleConfirmReceive = async () => {
+    const qty = Number(receivedQty);
+    if (isNaN(qty) || qty < 0) {
+      setReceiveError("Enter the actual litres received (0 or more).");
+      return;
+    }
+    setReceiving(true);
+    setReceiveError("");
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/delivery/update-supply`, {
@@ -73,18 +98,24 @@ export default function Deliveries() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ supplyId, status: "Completed" }),
+        body: JSON.stringify({
+          supplyId: receiveTarget._id,
+          status: "Completed",
+          receivedQuantity: qty,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
-        alert("Delivery marked as completed");
+        setReceiveTarget(null);
         fetchDeliveries();
       } else {
-        alert(data.error || data.message);
+        setReceiveError(data.error || data.message || "Failed to complete delivery");
       }
     } catch (err) {
       console.error(err);
-      alert("Something went wrong while updating");
+      setReceiveError("Something went wrong while updating");
+    } finally {
+      setReceiving(false);
     }
   };
 
@@ -120,7 +151,7 @@ export default function Deliveries() {
   const handleStatusAction = (action, row, rowIndex) => {
     const delivery = filteredDeliveries[rowIndex];
     if (!delivery) return;
-    if (action === "complete") handleMarkAsCompleted(delivery._id);
+    if (action === "complete") openReceive(delivery);
   };
 
   // ── Export helpers ──────────────────────────────────────────────
@@ -318,6 +349,93 @@ export default function Deliveries() {
           onStatusAction={handleStatusAction}
           lastColumnType="status"
         />
+      )}
+
+      {/* ── Receive Delivery modal — records ACTUAL litres received ── */}
+      {receiveTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={(e) => e.target === e.currentTarget && !receiving && setReceiveTarget(null)}
+        >
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100">Receive Delivery</h3>
+              <button
+                onClick={() => !receiving && setReceiveTarget(null)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="bg-gray-50 dark:bg-gray-700/40 rounded-xl px-4 py-3 mb-4 text-sm">
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-400">Tank</span>
+                  <span className="font-semibold text-gray-800 dark:text-gray-100">
+                    {receiveTarget.tankTitle} ({receiveTarget.fuelType})
+                  </span>
+                </div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-gray-400">Supplier</span>
+                  <span className="font-semibold text-gray-800 dark:text-gray-100">{receiveTarget.supplier || "N/A"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Ordered</span>
+                  <span className="font-bold text-gray-800 dark:text-gray-100">
+                    {Number(receiveTarget.orderedQuantity ?? receiveTarget.quantity ?? 0).toLocaleString()} L
+                  </span>
+                </div>
+              </div>
+
+              <label className="text-sm font-semibold text-gray-700 dark:text-gray-200 block mb-1">
+                Actual litres received *
+              </label>
+              <p className="text-xs text-gray-400 mb-2">
+                Enter what the tanker actually discharged. Short or over deliveries are
+                flagged automatically when the supplier&apos;s invoice is matched.
+              </p>
+              <input
+                type="number"
+                min="0"
+                inputMode="decimal"
+                value={receivedQty}
+                onChange={(e) => setReceivedQty(e.target.value)}
+                className="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 p-2.5 rounded-xl text-lg font-bold mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+
+              {/* Variance hint against the ordered quantity */}
+              {receivedQty !== "" &&
+                !isNaN(Number(receivedQty)) &&
+                Number(receivedQty) !== Number(receiveTarget.orderedQuantity ?? receiveTarget.quantity ?? 0) && (
+                  <p className="text-xs font-semibold text-amber-600 mb-2">
+                    {Number(receivedQty) < Number(receiveTarget.orderedQuantity ?? receiveTarget.quantity ?? 0)
+                      ? `Short delivery: ${(Number(receiveTarget.orderedQuantity ?? receiveTarget.quantity ?? 0) - Number(receivedQty)).toLocaleString()} L less than ordered`
+                      : `Over delivery: ${(Number(receivedQty) - Number(receiveTarget.orderedQuantity ?? receiveTarget.quantity ?? 0)).toLocaleString()} L more than ordered`}
+                  </p>
+                )}
+
+              {receiveError && <p className="text-xs text-red-500 mb-2">{receiveError}</p>}
+
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setReceiveTarget(null)}
+                  disabled={receiving}
+                  className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-600 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmReceive}
+                  disabled={receiving}
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {receiving ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+                  Confirm &amp; Fill Tank
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </DisplayCard>
   );

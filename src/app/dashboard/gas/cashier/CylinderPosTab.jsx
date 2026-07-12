@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import useGasCylinderStore from "@/store/useGasCylinderStore";
 import useGasCustomerStore from "@/store/useGasCustomerStore";
+import { useSocket } from "@/hooks/useSocket";
 
 function fmt(n) {
   return Number(n || 0).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -46,20 +47,26 @@ function CylinderReceiptModal({ sale, onClose, stationInfo = { name: "", address
             background-color: #ffffff !important;
           }
           #cyl-receipt-content { padding: 2mm 3mm !important; }
+          /* Pure black + heavy weight — thermal heads are 1-bit, any gray
+             dithers into faint dots on an Xprinter 80mm. */
           #cyl-receipt-content,
           #cyl-receipt-content * {
             color: #000000 !important;
             opacity: 1 !important;
             font-family: 'Courier New', Courier, monospace !important;
-            font-size: 7pt !important;
+            font-size: 9pt !important;
+            font-weight: 800 !important;
+            line-height: 1.5 !important;
             background-color: transparent !important;
             -webkit-print-color-adjust: exact !important;
             color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          #cyl-receipt-content .cyl-station-name { font-size: 8.5pt !important; font-weight: bold !important; }
-          #cyl-receipt-content .cyl-receipt-title { font-size: 8pt !important; font-weight: bold !important; }
-          #cyl-receipt-content .cyl-receipt-total { font-size: 9pt !important; font-weight: 900 !important; }
+          #cyl-receipt-content .cyl-station-name { font-size: 13pt !important; font-weight: 900 !important; text-transform: uppercase !important; }
+          #cyl-receipt-content .cyl-receipt-title { font-size: 11pt !important; font-weight: 900 !important; }
+          #cyl-receipt-content .cyl-receipt-total { font-size: 13pt !important; font-weight: 900 !important; }
+          /* Solid black separators print stronger than light-gray dashed ones */
+          #cyl-receipt-content .border-dashed { border-color: #000000 !important; }
           #cyl-receipt-actions { display: none !important; }
         }
       `}</style>
@@ -140,6 +147,10 @@ export default function CylinderPosTab({ stationInfo }) {
     fetchDailySummary();
     fetchSales({ page: 1, limit: 10 });
   }, [fetchProducts, fetchDailySummary, fetchSales]);
+
+  // Socket: stock levels update live when the manager restocks or another
+  // cashier sells the same product
+  useSocket({ "gas:cylinder-products-updated": () => fetchProducts() });
 
   const selected = products.find((p) => p._id === selectedId);
   const total = selected ? selected.sellingPrice * qty : 0;

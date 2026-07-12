@@ -79,6 +79,8 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import useSupervisorStore from "@/store/useSupervisorStore";
+import useShiftTypeStore from "@/store/useShiftTypeStore";
+import { useSocket } from "@/hooks/useSocket";
 
 export default function ScheduleShiftCard({ user, onClose }) {
   const [shiftType, setShiftType] = useState("");
@@ -120,28 +122,38 @@ export default function ScheduleShiftCard({ user, onClose }) {
   });
 }, [fetchPumpPerformance]);
 
-  // Shift type options
+  // Shift type options — built-ins + the station's custom types (created by
+  // the manager, e.g. from the staff form). Persisted server-side, so they
+  // appear here automatically; the socket listener keeps the list live.
+  const { builtIn, custom, fetchTypes } = useShiftTypeStore();
+
+  useEffect(() => {
+    fetchTypes();
+  }, [fetchTypes]);
+
+  useSocket({ "shift-types:updated": () => fetchTypes() });
+
+  // Built-ins keep the existing already-scheduled disable rules
+  const BUILT_IN_DISABLED = {
+    "One-Day-Morning": user.shiftSchedule?.includes("Morning"),
+    "One-Day-Evening": user.shiftSchedule?.includes("Evening"),
+    "Day-Off": user.shiftSchedule?.includes("Day-Off"),
+    "Full-Time": user.shiftSchedule?.includes("Full"),
+  };
+
   const shiftTypes = [
-    { 
-      value: "One-Day-Morning", 
-      label: "One-Day (Morning) - 6AM - 2PM",
-      disabled: user.shiftSchedule?.includes("Morning")
-    },
-    { 
-      value: "One-Day-Evening", 
-      label: "One-Day (Evening) - 2PM - 10PM",
-      disabled: user.shiftSchedule?.includes("Evening")
-    },
-    { 
-      value: "Day-Off", 
-      label: "Day-Off - 6AM - 10PM",
-      disabled: user.shiftSchedule?.includes("Day-Off")
-    },
-    { 
-      value: "Full-Time", 
-      label: "Full-Time - 6AM - 10PM",
-      disabled: user.shiftSchedule?.includes("Full")
-    },
+    ...builtIn.map((t) => ({
+      value: t.name,
+      label: t.label,
+      disabled: !!BUILT_IN_DISABLED[t.name],
+    })),
+    ...custom
+      .filter((t) => t.isActive !== false)
+      .map((t) => ({
+        value: t.name,
+        label: t.label,
+        disabled: user.shiftSchedule?.includes(t.name) || false,
+      })),
   ];
 
   const handleSave = async () => {

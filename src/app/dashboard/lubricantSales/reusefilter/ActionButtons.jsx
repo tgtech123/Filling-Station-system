@@ -9,6 +9,7 @@ const ActionButtons = ({ transactionId }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [receiptData, setReceiptData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [autoPrint, setAutoPrint] = useState(false);
 
   const fetchTransactionDetails = async () => {
     if (!transactionId) {
@@ -70,16 +71,24 @@ const ActionButtons = ({ transactionId }) => {
     }
   };
 
+  // Quick-print: open the modal in autoPrint mode. The modal itself fires the
+  // print dialog once its content (incl. the station logo) is fully ready —
+  // no timer race, so the bold thermal block is always what gets printed.
   const handlePrint = async () => {
+    setAutoPrint(true);
     await fetchTransactionDetails();
-    setTimeout(() => window.print(), 500);
+  };
+
+  const handleView = async () => {
+    setAutoPrint(false);
+    await fetchTransactionDetails();
   };
 
   return (
     <>
       <div className="flex gap-2">
         <button
-          onClick={fetchTransactionDetails}
+          onClick={handleView}
           disabled={loading}
           className="text-gray-600 border-[1.5px] cursor-pointer py-1.5 px-2 rounded-xl hover:bg-gray-50 disabled:opacity-50"
           title="View Receipt"
@@ -99,8 +108,9 @@ const ActionButtons = ({ transactionId }) => {
 
       <ReceiptModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => { setIsModalOpen(false); setAutoPrint(false); }}
         receiptData={receiptData}
+        autoPrint={autoPrint}
       />
     </>
   );

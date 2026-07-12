@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { LiaTimesSolid } from "react-icons/lia";
 import { BsPrinter } from "react-icons/bs";
@@ -22,12 +22,30 @@ const Divider = ({ dashed }) => (
   <div className={`w-full border-t ${dashed ? "border-dashed border-gray-300" : "border-gray-200"} my-3`} />
 );
 
-const ReceiptModal = ({ isOpen, onClose, receiptData }) => {
+const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false }) => {
   const quote = useMemo(
     () => QUOTES[Math.floor(Math.random() * QUOTES.length)],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [isOpen]
   );
+
+  // Auto-print support: when opened with autoPrint (row quick-print), trigger
+  // the SAME robust print path (image-wait + afterprint close) once the modal
+  // is mounted — never a blind timer racing the fetch/render, which printed
+  // the raw gray dashboard page when it lost.
+  const printedRef = useRef(false);
+  useEffect(() => {
+    if (!isOpen) {
+      printedRef.current = false;
+      return;
+    }
+    if (autoPrint && !printedRef.current) {
+      printedRef.current = true;
+      // Next frame so the portal content (incl. thermal block) is in the DOM.
+      requestAnimationFrame(() => handlePrint());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, autoPrint]);
 
   if (!isOpen) return null;
 

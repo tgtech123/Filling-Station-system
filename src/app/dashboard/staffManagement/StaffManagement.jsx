@@ -4,6 +4,7 @@ import { Users, Briefcase, Wallet, Target } from "lucide-react";
 import FlashCard from "@/components/Dashboard/FlashCard";
 import SwitchButton from './SwitchButton';
 import useStaffManagementStore from "@/store/useStaffManagementStore";
+import { useSocket } from "@/hooks/useSocket";
 
 const StaffManagement = () => {
   const { staffData, loading, errors, fetchStaffManagement } = useStaffManagementStore();
@@ -12,6 +13,14 @@ const StaffManagement = () => {
     const token = localStorage.getItem("token");
     if (token) fetchStaffManagement(token);
   }, [fetchStaffManagement]);
+
+  // Socket: staff created/updated/deleted anywhere refreshes this table live
+  useSocket({
+    "staff:updated": () => {
+      const token = localStorage.getItem("token");
+      if (token) fetchStaffManagement(token);
+    },
+  });
 
   return (
     <div className='bg-neutral-100 dark:bg-gray-900 mt-22 p-6'>

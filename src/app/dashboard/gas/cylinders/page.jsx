@@ -7,6 +7,7 @@ import {
   ChevronLeft, ChevronRight, ShoppingCart, Send, Trash2, CheckCircle2, AlertTriangle,
 } from "lucide-react";
 import useGasCylinderStore from "@/store/useGasCylinderStore";
+import { useSocket } from "@/hooks/useSocket";
 
 const fmtN = (n) => `₦${Number(n || 0).toLocaleString("en-NG", { maximumFractionDigits: 2 })}`;
 const fmtDate = (d) => (d ? new Date(d).toLocaleString("en-NG", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—");
@@ -444,6 +445,14 @@ export default function GasCylindersPage() {
     fetchProducts(true);
     fetchDailySummary();
   }, [fetchProducts, fetchDailySummary]);
+
+  // Socket: sales/restocks/PO receipts elsewhere refresh stock + today cards live
+  useSocket({
+    "gas:cylinder-products-updated": () => {
+      fetchProducts(true);
+      fetchDailySummary();
+    },
+  });
 
   useEffect(() => {
     if (tab === "sales") fetchSales({ page, limit });

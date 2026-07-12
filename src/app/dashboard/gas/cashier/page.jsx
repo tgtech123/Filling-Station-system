@@ -55,12 +55,16 @@ function ReceiptModal({ sale, onClose, stationInfo = { name: "", address: "" } }
           #receipt-content {
             padding: 2mm 3mm !important;
           }
+          /* Pure black + heavy weight — thermal heads are 1-bit, any gray
+             dithers into faint dots on an Xprinter 80mm. */
           #receipt-content,
           #receipt-content * {
             color: #000000 !important;
             opacity: 1 !important;
             font-family: 'Courier New', Courier, monospace !important;
-            font-size: 7pt !important;
+            font-size: 9pt !important;
+            font-weight: 800 !important;
+            line-height: 1.5 !important;
             background-color: transparent !important;
             -webkit-print-color-adjust: exact !important;
             color-adjust: exact !important;
@@ -70,16 +74,21 @@ function ReceiptModal({ sale, onClose, stationInfo = { name: "", address: "" } }
             background-color: #ffffff !important;
           }
           #receipt-content .gas-station-name {
-            font-size: 8.5pt !important;
-            font-weight: bold !important;
+            font-size: 13pt !important;
+            font-weight: 900 !important;
+            text-transform: uppercase !important;
           }
           #receipt-content .gas-receipt-title {
-            font-size: 8pt !important;
-            font-weight: bold !important;
+            font-size: 11pt !important;
+            font-weight: 900 !important;
           }
           #receipt-content .gas-receipt-total {
-            font-size: 9pt !important;
+            font-size: 13pt !important;
             font-weight: 900 !important;
+          }
+          /* Solid black separators print stronger than light-gray dashed ones */
+          #receipt-content .border-dashed {
+            border-color: #000000 !important;
           }
           #gas-receipt-actions { display: none !important; }
         }

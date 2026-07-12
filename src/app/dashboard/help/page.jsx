@@ -24,12 +24,15 @@ const STATUS_ICON = {
   resolved:    <CheckCircle size={14} className="text-green-500" />,
 };
 
+// Each FAQ carries `roles` — who it's relevant to. No `roles` (or "all") means
+// everyone. Managers/admins always see every group; other roles see only theirs.
 const STATIC_FAQ_GROUPS = [
   {
     category: "Getting Started",
     faqs: [
       {
         _id: "s1",
+        roles: ["cashier"],
         question: "I am a new cashier. What do I need to do first?",
         answer: "Your manager will create your account and share your login credentials. Log in, change your password immediately (go to your Profile > Change Password), and then start recording daily sales and reconciliations.",
       },
@@ -43,6 +46,11 @@ const STATIC_FAQ_GROUPS = [
         question: "Can two people be logged in as the same user at the same time?",
         answer: "The system allows it, but it is not recommended. If you notice unfamiliar activity on your account, go to System Settings > Active Sessions and click Logout Others immediately, then change your password.",
       },
+      {
+        _id: "s16",
+        question: "Should I let the browser save my password? And what does \"Remember me\" do?",
+        answer: "It depends on whose device it is. On YOUR OWN phone or laptop, accepting the browser's \"Save password?\" prompt is safe — the browser stores it encrypted on your device and it saves you typing. On a SHARED station computer, always tap \"Never\": a saved password would auto-fill for the next person on the same machine, so sales and reconciliations could be recorded under your name by someone else. The \"Remember me\" checkbox on the login page is different — it keeps your session active for 30 days and pre-fills your email (never your password), so on your own device you usually go straight to your dashboard without logging in at all.",
+      },
     ],
   },
   {
@@ -50,21 +58,25 @@ const STATIC_FAQ_GROUPS = [
     faqs: [
       {
         _id: "s4",
+        roles: ["attendant", "supervisor"],
         question: "How do I know when a tank is running low?",
         answer: "You will receive a Low Stock Alert notification. Also check Tank Status in the menu — any tank below its threshold will be shown in amber or red.",
       },
       {
         _id: "s5",
+        roles: ["attendant", "supervisor", "cashier"],
         question: "What happens if the internet goes down during a shift?",
         answer: "Save your meter readings manually (write them down). Once the connection is restored, enter the readings into the system. Contact your supervisor to note the time gap.",
       },
       {
         _id: "s6",
+        roles: ["attendant", "supervisor"],
         question: "What is the difference between a Dip Reading and a Shift Reading?",
         answer: "A Shift Reading is recorded by an attendant at the pump (opening and closing meter values) — it tracks litres sold per pump per shift. A Dip Reading is recorded by a supervisor with a physical measuring rod inside the tank — it confirms the actual fuel level and catches losses not recorded by the pump.",
       },
       {
         _id: "s7",
+        roles: ["attendant", "supervisor"],
         question: "An attendant started a shift but forgot to enter the correct meter reading. What now?",
         answer: "A Supervisor or Manager can review the shift detail and flag it. Contact your supervisor — they can note the discrepancy before approving the shift.",
       },
@@ -72,6 +84,7 @@ const STATIC_FAQ_GROUPS = [
   },
   {
     category: "Subscription & Billing",
+    roles: ["manager"],
     faqs: [
       {
         _id: "s8",
@@ -107,6 +120,7 @@ const STATIC_FAQ_GROUPS = [
   },
   {
     category: "Accounting",
+    roles: ["accountant"],
     faqs: [
       {
         _id: "a1",
@@ -132,6 +146,7 @@ const STATIC_FAQ_GROUPS = [
   },
   {
     category: "Loyalty Programme",
+    roles: ["manager"],
     faqs: [
       {
         _id: "s12",
@@ -248,10 +263,28 @@ export default function HelpPage() {
   const [form, setForm] = useState({ title: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
   const [waFloatEnabled, setWaFloatEnabled] = useState(false);
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     setWaFloatEnabled(localStorage.getItem("wa_float_enabled") === "1");
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      setUserRole((user.role || "").toLowerCase().trim());
+    } catch {}
   }, []);
+
+  // Role-scoped static FAQs: managers/admins see everything; every other role
+  // only sees groups/questions tagged for them (untagged = relevant to all).
+  const seesAll = userRole === "manager" || userRole === "admin";
+  const roleMatches = (roles) =>
+    seesAll || !roles || roles.includes("all") || roles.includes(userRole);
+  const visibleStaticGroups = STATIC_FAQ_GROUPS
+    .filter((group) => roleMatches(group.roles))
+    .map((group) => ({
+      ...group,
+      faqs: group.faqs.filter((faq) => roleMatches(faq.roles)),
+    }))
+    .filter((group) => group.faqs.length > 0);
 
   const plan = currentPlan?.plan || "free";
   const hasFaq      = FAQ_PLANS.includes(plan);
@@ -446,7 +479,7 @@ export default function HelpPage() {
             </div>
           )}
           <div className="space-y-6">
-            {STATIC_FAQ_GROUPS.map((group) => (
+            {visibleStaticGroups.map((group) => (
               <div key={group.category} className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-1">
                   {group.category}
