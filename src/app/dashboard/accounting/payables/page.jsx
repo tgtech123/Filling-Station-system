@@ -15,7 +15,7 @@ export default function PayablesPage() {
   const [tab, setTab] = useState('invoices');
   const [invoices, setInvoices] = useState([]);
   const [batches, setBatches] = useState([]);
-  const [openPOs, setOpenPOs] = useState({ lubricant: [], gas: [] });
+  const [openPOs, setOpenPOs] = useState({ lubricant: [], gas: [], gas_cylinder: [], fuel: [] });
   const [taxes, setTaxes] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [expenseAccounts, setExpenseAccounts] = useState([]);
@@ -163,7 +163,12 @@ export default function PayablesPage() {
   }
 
   const payable = invoices.filter((i) => ['booked', 'partially_paid'].includes(i.status));
-  const poOptions = invForm.poType === 'lubricant' ? openPOs.lubricant : invForm.poType === 'gas' ? openPOs.gas : [];
+  const poOptions =
+    invForm.poType === 'lubricant' ? openPOs.lubricant
+    : invForm.poType === 'gas' ? openPOs.gas
+    : invForm.poType === 'gas_cylinder' ? (openPOs.gas_cylinder || [])
+    : invForm.poType === 'fuel' ? (openPOs.fuel || [])
+    : [];
 
   return (
     <DashboardLayout>
@@ -303,7 +308,9 @@ export default function PayablesPage() {
                   <select className={inputCls} value={invForm.poType} onChange={(e) => setInvForm({ ...invForm, poType: e.target.value, poId: '' })}>
                     <option value="none">No PO (expense invoice)</option>
                     <option value="lubricant">Lubricant procurement</option>
-                    <option value="gas">Gas procurement</option>
+                    <option value="gas">Gas procurement (bulk LPG)</option>
+                    <option value="gas_cylinder">Gas cylinder PO</option>
+                    <option value="fuel">Fuel delivery</option>
                   </select>
                 </Field>
                 {invForm.poType !== 'none' && (

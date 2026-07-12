@@ -247,6 +247,7 @@ import ScheduleCard from "./ScheduleCard";
 import ScheduleShiftCard from "./ScheduleShiftCard";
 import ScheduledAttendants from "./ScheduledAttendants";
 import useSupervisorStore from "@/store/useSupervisorStore";
+import { useSocket } from "@/hooks/useSocket";
 
 export default function ScheduleShift() {
   const [active, setActive] = useState("linkOne");
@@ -275,6 +276,17 @@ export default function ScheduleShift() {
 
     return () => clearInterval(interval);
   }, [fetchAttendantDirectory, fetchScheduledAttendantsByType]);
+
+  // Socket: refresh instantly when shifts are scheduled/started/ended anywhere
+  // (the 30s poll above stays as a fallback).
+  useSocket({
+    "shift:scheduled": () => {
+      fetchAttendantDirectory();
+      fetchScheduledAttendantsByType();
+    },
+    "shift:started": () => fetchScheduledAttendantsByType(),
+    "shift:ended": () => fetchScheduledAttendantsByType(),
+  });
 
   // Transform attendant directory data
   const infoData = attendantDirectory?.attendants?.map((attendant) => ({

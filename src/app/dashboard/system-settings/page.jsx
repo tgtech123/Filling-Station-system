@@ -234,7 +234,11 @@ function UpgradeModal({ onClose, currentPlanSlug, availablePlans, renewMode, onU
     setBusy(true);
     setErr(null);
     try {
-      await onUpgrade(selectedSlug, billingCycle);
+      // Send the total we DISPLAYED — if an admin changed the plan price since
+      // this modal rendered, the server rejects with the fresh price and the
+      // modal re-renders with the new amount instead of surprising the user
+      // at the Paystack checkout.
+      await onUpgrade(selectedSlug, billingCycle, totalPrice);
     } catch (e) {
       setErr(e?.message || "Failed to initialise payment. Please try again.");
       setBusy(false);
@@ -845,14 +849,22 @@ export default function SettingsPage() {
     toast.success("Other sessions logged out");
   }
 
-  async function handleUpgrade(planSlug, billingCycle) {
+  async function handleUpgrade(planSlug, billingCycle, expectedTotal) {
     const res = await fetch(`${API}/api/payments/initialize`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
-      body: JSON.stringify({ planSlug, billingCycle, country: "NG" }),
+      body: JSON.stringify({ planSlug, billingCycle, country: "NG", expectedTotal }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to initialise payment");
+    if (!res.ok) {
+      // Price changed since the modal rendered — pull the fresh plan prices so
+      // the modal re-renders with the new amount, then surface the message.
+      if (res.status === 409 && data.priceChanged) {
+        fetchPlan();
+        if (typeof data.pricing?.taxRate === "number") setTaxRate(data.pricing.taxRate);
+      }
+      throw new Error(data.error || "Failed to initialise payment");
+    }
     window.location.href = data.data.authorizationUrl;
   }
 

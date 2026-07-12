@@ -21,7 +21,10 @@ const useSupportStore = create((set) => ({
   fetchFaqs: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/api/support/faqs`);
+      // Auth header so the server can scope FAQs to the caller's role.
+      const res = await fetch(`${API_URL}/api/support/faqs`, {
+        headers: getAuthHeaders(),
+      });
       const data = await res.json();
       set({ faqs: data.data || [], loading: false });
     } catch (err) {

@@ -337,11 +337,11 @@ export default function Header({ toggleSidebar, showSidebar }) {
 
   if (!userData) {
     return (
-      <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white dark:bg-gray-900 flex items-center justify-end gap-4">
+      <div className="sticky top-0 z-30 px-4 shadow-lg h-[90px] w-full bg-[#1a71f6] dark:bg-gray-900 flex items-center justify-end gap-4">
         <div className="animate-pulse flex items-center gap-4">
-          <div className="h-10 w-10 bg-gray-200 rounded-xl" />
-          <div className="h-10 w-10 bg-gray-200 rounded-xl" />
-          <div className="h-10 w-24 bg-gray-200 rounded-xl" />
+          <div className="h-10 w-10 bg-white/20 dark:bg-gray-200 rounded-xl" />
+          <div className="h-10 w-10 bg-white/20 dark:bg-gray-200 rounded-xl" />
+          <div className="h-10 w-24 bg-white/20 dark:bg-gray-200 rounded-xl" />
         </div>
       </div>
     );
@@ -350,14 +350,17 @@ export default function Header({ toggleSidebar, showSidebar }) {
   const stationLogo = userData?.station?.logoUrl || userData?.station?.logo || null;
 
   return (
-    <div className="px-4 z-10 shadow-md h-[90px] w-full bg-white dark:bg-gray-900 flex items-center justify-between gap-3 relative">
+    // Sticky + z-30: floats over the scrolling content on every screen size
+    // (below the mobile sidebar drawer at z-50 and its overlay at z-40).
+    // Brand blue in light mode; dark mode keeps the original gray-900.
+    <div className="sticky top-0 z-30 px-4 shadow-lg h-[90px] w-full bg-[#1a71f6] dark:bg-gray-900 flex items-center justify-between gap-3">
 
       {/* ── Left: hamburger + station logo ── */}
       <div className="flex items-center gap-3 flex-shrink-0">
         {/* Hamburger — mobile only */}
         <div
           onClick={toggleSidebar}
-          className="lg:hidden bg-[#0080FF] p-2 text-white rounded-md cursor-pointer hover:bg-blue-600 transition"
+          className="lg:hidden bg-white/20 hover:bg-white/30 dark:bg-[#0080FF] dark:hover:bg-blue-600 p-2 text-white rounded-md cursor-pointer transition"
         >
           <Menu />
         </div>
@@ -386,10 +389,10 @@ export default function Header({ toggleSidebar, showSidebar }) {
           <div ref={msgRef} className="relative">
             <button
               onClick={() => { setMsgOpen((v) => !v); setAlertOpen(false); }}
-              className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
+              className="cursor-pointer relative bg-white/15 hover:bg-white/25 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
               aria-label="Messages"
             >
-              <Bell size={19} className={messageUnreadCount > 0 ? "text-[#1a71f6]" : "text-gray-600 dark:text-gray-300"} />
+              <Bell size={19} className={messageUnreadCount > 0 ? "text-white dark:text-[#1a71f6]" : "text-white/80 dark:text-gray-300"} />
               <UnreadBadge count={messageUnreadCount} />
             </button>
 
@@ -408,10 +411,10 @@ export default function Header({ toggleSidebar, showSidebar }) {
           <div ref={alertRef} className="relative">
             <button
               onClick={() => { setAlertOpen((v) => !v); setMsgOpen(false); }}
-              className="cursor-pointer relative bg-[#f6f6f6] dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
+              className="cursor-pointer relative bg-white/15 hover:bg-white/25 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
               aria-label="Alerts"
             >
-              <Mail size={19} className={alertUnreadCount > 0 ? "text-amber-500" : "text-gray-600 dark:text-gray-300"} />
+              <Mail size={19} className={alertUnreadCount > 0 ? "text-amber-300 dark:text-amber-500" : "text-white/80 dark:text-gray-300"} />
               <UnreadBadge count={alertUnreadCount} />
             </button>
 
@@ -429,20 +432,20 @@ export default function Header({ toggleSidebar, showSidebar }) {
         </div>
 
         {/* Divider between notifications and station switcher / profile area */}
-        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
+        <div className="w-px h-6 bg-white/30 dark:bg-gray-700 flex-shrink-0" />
 
       {/* ── Station Switcher (Enterprise super manager only) ── */}
       {isEnterprise && isSuperManager && branches.length >= 1 && (
         <div className="relative" ref={switcherRef}>
           <button
             onClick={() => setShowSwitcher(!showSwitcher)}
-            className="flex items-center gap-1.5 px-2 lg:px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm"
+            className="flex items-center gap-1.5 px-2 lg:px-3 py-2 rounded-lg border border-white/30 dark:border-gray-700 hover:bg-white/10 dark:hover:bg-gray-800 transition-colors text-sm"
           >
-            <Building2 size={16} className="text-blue-600 flex-shrink-0" />
-            <span className="hidden sm:inline font-medium text-gray-700 dark:text-gray-200 max-w-[8rem] truncate">
+            <Building2 size={16} className="text-white dark:text-blue-600 flex-shrink-0" />
+            <span className="hidden sm:inline font-medium text-white dark:text-gray-200 max-w-[8rem] truncate">
               {branches.find((b) => b.isCurrent)?.name || "Station"}
             </span>
-            <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
+            <ChevronDown size={14} className="text-white/70 dark:text-gray-400 flex-shrink-0" />
           </button>
 
           {showSwitcher && (
@@ -557,19 +560,19 @@ export default function Header({ toggleSidebar, showSidebar }) {
           profileLabel={userData?.role === "manager" ? "Manager Profile" : "View Profile"}
         />
         <div className="min-w-0">
-          <h4 className="text-black dark:text-white text-sm font-semibold truncate max-w-[120px]">
+          <h4 className="text-white text-sm font-semibold truncate max-w-[120px]">
             {fullName}
           </h4>
-          <p className="text-xs text-[#1a71f6] font-semibold">
+          <p className="text-xs font-semibold">
             {userData?.role === "manager" ? (
               <button
                 onClick={() => setShowManagerProfile(true)}
-                className="text-[#1a71f6] font-semibold hover:underline"
+                className="text-blue-100 dark:text-[#1a71f6] font-semibold hover:underline"
               >
                 Manager Profile
               </button>
             ) : (
-              <Link href="/dashboard/profile" className="text-[#1a71f6] hover:underline">
+              <Link href="/dashboard/profile" className="text-blue-100 dark:text-[#1a71f6] hover:underline">
                 View Profile
               </Link>
             )}
@@ -595,9 +598,9 @@ export default function Header({ toggleSidebar, showSidebar }) {
 
       <div
         onClick={() => setShowLogoutConfirm(true)}
-        className="cursor-pointer border-2 border-red-400 p-2 rounded-[12px] hidden lg:flex items-center gap-3 hover:bg-red-50 transition"
+        className="cursor-pointer border-2 border-white/50 dark:border-red-400 p-2 rounded-[12px] hidden lg:flex items-center gap-3 hover:bg-white/10 dark:hover:bg-red-50 transition"
       >
-        <p className="text-[#ff1f1f] font-semibold">Logout</p>
+        <p className="text-white dark:text-[#ff1f1f] font-semibold">Logout</p>
         <LogoutButton />
       </div>
 

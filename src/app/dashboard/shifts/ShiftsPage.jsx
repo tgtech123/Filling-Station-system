@@ -91,6 +91,7 @@ import SearchBar from '@/components/SearchBar';
 import Table from '@/components/Table';
 import { GoChevronRight, GoChevronLeft } from "react-icons/go";
 import useShiftStore from '@/store/useShiftStore';
+import { useSocket } from '@/hooks/useSocket';
 
 const ITEMS_PER_PAGE = 6;
 
@@ -117,6 +118,12 @@ export default function ShiftsPage() {
   useEffect(() => {
     fetchShifts({ page: 1, limit: 100 }); // Fetch all shifts
   }, [fetchShifts]);
+
+  // Socket: new schedules/approvals appear without a manual refresh
+  useSocket({
+    "shift:scheduled": () => fetchShifts({ page: 1, limit: 100 }),
+    "shift:approved": () => fetchShifts({ page: 1, limit: 100 }),
+  });
 
   // Format date helper
   const formatDate = (dateString) => {

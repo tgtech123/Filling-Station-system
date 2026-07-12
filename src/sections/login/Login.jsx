@@ -14,6 +14,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
@@ -38,7 +39,23 @@ const Login = () => {
 
   useEffect(() => {
     fetchPublicSettings();
+    // Prefill from a previous "Remember me" login
+    try {
+      const savedEmail = localStorage.getItem("rememberedEmail");
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setRememberMe(true);
+      }
+    } catch {}
   }, []);
+
+  // Persist/forget the email according to the checkbox at the moment of login
+  const applyRememberedEmail = () => {
+    try {
+      if (rememberMe) localStorage.setItem("rememberedEmail", email);
+      else localStorage.removeItem("rememberedEmail");
+    } catch {}
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -52,7 +69,8 @@ const Login = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        // rememberMe extends the session from 24h to 30 days server-side
+        body: JSON.stringify({ email, password, rememberMe }),
       });
 
       // console.log("res", res.json())
@@ -71,6 +89,7 @@ const Login = () => {
         return;
       }
 
+      applyRememberedEmail();
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -117,13 +136,15 @@ const Login = () => {
       const res = await fetch(`${API_URL}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: otpUserId, otp }),
+        // Relay the login form's "Remember me" — the real token is issued here
+        body: JSON.stringify({ userId: otpUserId, otp, rememberMe }),
       });
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || "Verification failed");
       }
       const data = await res.json();
+      applyRememberedEmail();
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       routeByRole(data.user);
@@ -270,6 +291,8 @@ const Login = () => {
                 </label>
                 <input
                   type="email"
+                  name="email"
+                  autoComplete="username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="username123@gmail.com"
@@ -285,6 +308,8 @@ const Login = () => {
                 </label>
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
+                  autoComplete="current-password"
                   value={password}
                   placeholder="Enter password"
                   onChange={(e) => setPassword(e.target.value)}
@@ -306,13 +331,18 @@ const Login = () => {
                 <p className="text-green-500 text-sm text-start">{message}</p>
               )}
 
-              {/* Remember Me */}
+              {/* Remember Me — 30-day session + prefilled email next visit */}
               <div className="flex items-center gap-3">
                 <input
+                  id="remember-me"
                   type="checkbox"
-                  className="text-blue-600 accent-blue-600 focus:ring-0"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="text-blue-600 accent-blue-600 focus:ring-0 cursor-pointer"
                 />
-                <label className="font-semibold text-sm">Remember me?</label>
+                <label htmlFor="remember-me" className="font-semibold text-sm cursor-pointer select-none">
+                  Remember me for 30 days
+                </label>
               </div>
 
               {/* Sign In Button */}

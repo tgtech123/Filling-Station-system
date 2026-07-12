@@ -145,6 +145,10 @@ function TicketModal({ ticket, onClose, onRespond, onStatusChange }) {
   );
 }
 
+// Roles an FAQ can be targeted at. "all" = every role sees it; managers/admins
+// always see everything regardless.
+const FAQ_TARGET_ROLES = ["all", "manager", "supervisor", "accountant", "cashier", "attendant"];
+
 // ── FAQ Form Modal ─────────────────────────────────────────────
 function FaqModal({ faq, onClose, onSave }) {
   const [form, setForm] = useState({
@@ -153,8 +157,19 @@ function FaqModal({ faq, onClose, onSave }) {
     category: faq?.category || "General",
     order: faq?.order ?? 0,
     isPublished: faq?.isPublished !== false,
+    targetRoles: faq?.targetRoles?.length ? faq.targetRoles : ["all"],
   });
   const [saving, setSaving] = useState(false);
+
+  const toggleRole = (role) => {
+    setForm((p) => {
+      if (role === "all") return { ...p, targetRoles: ["all"] };
+      // Picking a specific role drops "all"; empty selection falls back to "all".
+      let next = p.targetRoles.filter((r) => r !== "all");
+      next = next.includes(role) ? next.filter((r) => r !== role) : [...next, role];
+      return { ...p, targetRoles: next.length ? next : ["all"] };
+    });
+  };
 
   const handleSave = async () => {
     if (!form.question.trim() || !form.answer.trim()) {
@@ -219,6 +234,33 @@ function FaqModal({ faq, onClose, onSave }) {
                 onChange={(e) => setForm((p) => ({ ...p, order: Number(e.target.value) }))}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white"
               />
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block mb-1">
+              Visible to roles
+            </label>
+            <p className="text-xs text-gray-400 mb-2">
+              Managers always see every FAQ. Pick who else this applies to — “all” shows it to everyone.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {FAQ_TARGET_ROLES.map((role) => {
+                const active = form.targetRoles.includes(role);
+                return (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => toggleRole(role)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors ${
+                      active
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200"
+                    }`}
+                  >
+                    {role}
+                  </button>
+                );
+              })}
             </div>
           </div>
           <label className="flex items-center gap-3 cursor-pointer">
@@ -425,6 +467,9 @@ export default function SupportPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-0.5 rounded-full">{faq.category}</span>
+                      {(faq.targetRoles?.length ? faq.targetRoles : ["all"]).map((r) => (
+                        <span key={r} className="text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-1.5 py-0.5 rounded-full capitalize">{r}</span>
+                      ))}
                       {!faq.isPublished && (
                         <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">Draft</span>
                       )}
