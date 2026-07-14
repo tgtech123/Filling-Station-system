@@ -24,8 +24,9 @@ export default function Deliveries() {
 
   const columns = [
     "Tank Title",
-    "Fuel Type",
+    "Product Type",
     "Quantity (L)",
+    "Purchase Ref",
     "Supplier",
     "Expected Delivery",
     "Status",
@@ -140,6 +141,7 @@ export default function Deliveries() {
     d.tankTitle || "N/A",
     d.fuelType || "N/A",
     `${d.quantity || 0} L`,
+    d.purchaseRef || "—",
     d.supplier || "N/A",
     d.deliveryDate
       ? new Date(d.deliveryDate).toLocaleDateString()
@@ -300,7 +302,7 @@ export default function Deliveries() {
 
           <div className="flex-1">
             <p className="text-[11px] font-semibold text-gray-400 mb-2 uppercase tracking-wider">
-              Fuel Type
+              Product Type
             </p>
             <div className="flex flex-wrap gap-1.5">
               {FUEL_OPTIONS.map((f) => (

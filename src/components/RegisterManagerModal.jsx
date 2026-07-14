@@ -301,7 +301,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
     if (currentStep === 3) {
       if (!formData.businessType) errors.businessType = "Please select a business type";
       if (!formData.tankCapacity?.trim()) errors.tankCapacity = "Tank capacity is required";
-      if (!formData.fuelTypesOffered?.length) errors.fuelTypesOffered = "Please select at least one fuel type";
+      if (!formData.fuelTypesOffered?.length) errors.fuelTypesOffered = "Please select at least one product type";
     }
 
     if (currentStep === 4) {
@@ -756,7 +756,7 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
             </div>
 
             <div className="sm:col-span-2 lg:col-span-3">
-              <label className={labelCls}>Fuel Types Offered</label>
+              <label className={labelCls}>Product Types Offered</label>
               <div className="flex flex-wrap gap-3 sm:gap-6 mt-1 text-sm text-gray-600 dark:text-gray-300 font-medium">
                 {["PMS", "AGO", "Diesel", "Kerosene", "Gas"].map((fuel) => (
                   <label key={fuel} className="flex gap-1.5 items-center cursor-pointer">

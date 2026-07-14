@@ -463,7 +463,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     // Manager links
     {
       id: "fuel-management",
-      name: "Fuel Management",
+      name: "Product Management",
       icon: <FaFire size={20} />,
       link: "/dashboard/fuelManagement",
       roles: ["manager"],

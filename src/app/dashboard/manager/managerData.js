@@ -33,7 +33,7 @@ import { RiOilLine } from "react-icons/ri";
       id: 4,
       name: "Fuel Dispensed Today",
       icon: <BiSolidGasPump />,
-      period: "Across all fuel types",
+      period: "Across all products",
       number: "59649 Litres",
     },
   ];
@@ -41,9 +41,9 @@ import { RiOilLine } from "react-icons/ri";
   export const reportType = [
     {
         id: 1,
-        title: "Fuel Management",
+        title: "Product Management",
         icon: <FaFire size={24} />,
-        desc: "Monitor fuel levels, update stocks and manage inventory",
+        desc: "Monitor product levels, update stocks and manage inventory",
         action: "Manage Inventory",
         link: "/dashboard/fuelManagement"
     },

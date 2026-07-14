@@ -241,7 +241,7 @@ export default function AddBranchModal({ onClose, onUpgradeRequired }) {
           {/* Fuel Types */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Fuel Types Offered
+              Product Types Offered
             </label>
             <div className="flex flex-wrap gap-3">
               {fuelOptions.map((fuel) => (
