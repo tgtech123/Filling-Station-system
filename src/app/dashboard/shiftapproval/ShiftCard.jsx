@@ -131,7 +131,7 @@ export default function ShiftCard({ data }) {
           <span className="font-medium dark:text-gray-200">{data.pumpNo}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-600 dark:text-gray-400">Fuel Type:</span>
+          <span className="text-gray-600 dark:text-gray-400">Product Type:</span>
           <span className="font-medium dark:text-gray-200">{data.fuelType}</span>
         </div>
         <div className="flex justify-between">

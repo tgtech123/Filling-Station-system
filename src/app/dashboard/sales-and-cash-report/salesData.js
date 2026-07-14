@@ -29,7 +29,7 @@ export const getSalesData = (salesOverview) => [
   },
   {
     title: "Fuel Sold",
-    date: "Across all fuel type",
+    date: "Across all products",
     amount: salesOverview
       ? `${salesOverview.fuelSold.toLocaleString()} Litres`
       : "—",

@@ -99,13 +99,13 @@ export default function AddTankModal({ onclose }) {
             />
           </div>
           <div>
-            <p className="text-sm font-semibold">Fuel Type</p>
+            <p className="text-sm font-semibold">Product Type</p>
             <select
               className="w-full border-2 border-gray-300 p-2 rounded-[8px] bg-white"
               value={fuelType}
               onChange={(e) => setFuelType(e.target.value)}
             >
-              <option value="">Select fuel type</option>
+              <option value="">Select product type</option>
               <option value="PMS">PMS (Premium Motor Spirit)</option>
               <option value="AGO">AGO (Diesel)</option>
               <option value="Kerosene">Kerosene</option>

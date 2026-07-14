@@ -151,7 +151,7 @@ export default function FuelYieldFactorSection() {
             </div>
 
             {(settings?.tanks || []).length === 0 ? (
-              <p className="text-sm text-neutral-400">No tanks yet. Add tanks in Fuel Management first.</p>
+              <p className="text-sm text-neutral-400">No tanks yet. Add tanks in Product Management first.</p>
             ) : (
               <div className="space-y-2">
                 {settings.tanks.map((t) => {

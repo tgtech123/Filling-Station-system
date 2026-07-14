@@ -56,7 +56,7 @@ export default function FuelManagement() {
             <ArrowLeft />
             Back to Dashboard
           </Link>
-          <h4 className="text-2xl font-semibold">Fuel Management</h4>
+          <h4 className="text-2xl font-semibold">Product Management</h4>
         </div>
         <div>
           <div className="relative group">
@@ -83,7 +83,7 @@ export default function FuelManagement() {
 
       <div className="px-6 lg:px-[40px]">
         <DisplayCard>
-          <h4 className="text-xl font-semibold">Fuel Management</h4>
+          <h4 className="text-xl font-semibold">Product Management</h4>
           <p className="mb-6">Monitor fuel levels and manage inventory</p>
 
           {loading.fuelManagement ? (
@@ -96,13 +96,13 @@ export default function FuelManagement() {
                 <FlashCard
                   name="Daily Consumption"
                   icon={<GiExpense />}
-                  period="Across all fuel types"
+                  period="Across all products"
                   number={`${fuelData?.dailyConsumption?.toLocaleString() || "0"} Litres`}
                 />
                 <FlashCard
                   name="Weekly Average Consumption"
                   icon={<TrendingUp />}
-                  period="Across all fuel types"
+                  period="Across all products"
                   number={`${fuelData?.weeklyAverageConsumption?.toLocaleString() || "0"} Litres`}
                 />
               </div>
@@ -111,7 +111,7 @@ export default function FuelManagement() {
               <div className="mt-6">
                 <div className="flex items-center gap-2 mb-3">
                   <GiFuelTank className="text-gray-500" size={20} />
-                  <h5 className="font-semibold text-gray-700">Current Inventory by Fuel Type</h5>
+                  <h5 className="font-semibold text-gray-700">Current Inventory by Product</h5>
                   <span className="text-xs text-gray-400 font-medium">
                     — Total: {fuelData?.totalCapacityAvailable?.toLocaleString() || "0"} Litres
                   </span>

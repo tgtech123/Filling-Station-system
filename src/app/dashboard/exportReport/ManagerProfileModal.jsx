@@ -604,7 +604,7 @@ const ManagerProfileModal = ({ onclose }) => {
 
             <div className="mt-10">
               <div>
-                <h4 className="font-bold">Fuel types offered</h4>
+                <h4 className="font-bold">Product types offered</h4>
                 <div className="flex gap-3 text-sm font-semibold mt-2">
                   <p className="bg-[#b2ffb4] text-[#04910c] p-2 rounded-xl">
                     {managerData.fuelTypesOffered[0]}

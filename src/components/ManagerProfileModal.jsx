@@ -556,7 +556,7 @@ export default function ManagerProfileModal({ onclose }) {
               </div>
               {managerData.fuelTypesOffered?.length > 0 && (
                 <div className="mt-6">
-                  <h4 className="font-semibold text-sm dark:text-gray-300 mb-2">Fuel types offered</h4>
+                  <h4 className="font-semibold text-sm dark:text-gray-300 mb-2">Product types offered</h4>
                   <div className="flex flex-wrap gap-2">
                     {managerData.fuelTypesOffered.map((f, i) => (
                       <span key={i} className="bg-[#d9edff] text-[#0080ff] text-sm px-3 py-1 rounded-xl font-semibold">{f}</span>

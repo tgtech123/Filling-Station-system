@@ -308,7 +308,7 @@ export default function ManagerDashboard() {
             />
             <FlashCard
               name="Fuel Dispensed Today"
-              period="Across all fuel types"
+              period="Across all products"
               number={`${data.fuelDispensedToday?.toFixed(0) || "0"} Litres`}
             />
           </div>

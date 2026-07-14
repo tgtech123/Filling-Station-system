@@ -310,7 +310,7 @@ export default function PayablesPage() {
                     <option value="lubricant">Lubricant procurement</option>
                     <option value="gas">Gas procurement (bulk LPG)</option>
                     <option value="gas_cylinder">Gas cylinder PO</option>
-                    <option value="fuel">Fuel delivery</option>
+                    <option value="fuel">Fuel purchase / delivery</option>
                   </select>
                 </Field>
                 {invForm.poType !== 'none' && (
