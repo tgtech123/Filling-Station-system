@@ -341,7 +341,7 @@ const Login = () => {
                   className="text-blue-600 accent-blue-600 focus:ring-0 cursor-pointer"
                 />
                 <label htmlFor="remember-me" className="font-semibold text-sm cursor-pointer select-none">
-                  Remember me for 30 days
+                  Remember me
                 </label>
               </div>
 

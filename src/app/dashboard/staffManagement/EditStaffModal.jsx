@@ -4,6 +4,7 @@ import { BiSolidToggleRight, BiSolidToggleLeft } from "react-icons/bi";
 import { X, ChevronUp, ChevronDown } from "lucide-react";
 import { api } from "@/lib/config";
 import useStaffStore from "@/store/useStaffStore";
+import useShiftTypeStore from "@/store/useShiftTypeStore";
 import NumericInput from "@/components/inputs/NumericInput";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API || process.env.NEXT_PUBLIC_API_URL || "https://fueldesk-station-server.onrender.com";
@@ -21,6 +22,12 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
   const [savingTarget, setSavingTarget] = useState(false);
 
   const { updateStaff, loading } = useStaffStore();
+
+  // Shift types — built-ins (minus hidden) + this station's active custom types
+  const { builtIn, custom, fetchTypes } = useShiftTypeStore();
+  useEffect(() => {
+    if (isOpen) fetchTypes();
+  }, [isOpen, fetchTypes]);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -249,11 +256,25 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                   className="text-neutral-800 dark:text-gray-100 bg-white dark:bg-gray-700 border-[2px] pl-3 border-neutral-200 dark:border-gray-600 outline-none focus:border-blue-500 w-full lg:w-[27.719rem] h-[3.25rem] rounded-2xl"
                 >
                   <option value="">Select shift</option>
-                  <option value="One-Day-Morning">One-Day Morning (6AM – 2PM)</option>
-                  <option value="One-Day-Evening">One-Day Evening (2PM – 10PM)</option>
-                  <option value="Day-Off">Day-Off / Fulltime (6AM – 10PM)</option>
-                  <option value="24/7">24/7 (Round the Clock)</option>
-                  <option value="Full-Time">Full-Time (8AM – 6PM)</option>
+                  {(() => {
+                    const opts = [
+                      ...builtIn.filter((t) => t.isActive !== false),
+                      ...custom.filter((t) => t.isActive !== false),
+                    ];
+                    // Keep the staff's current shift selectable even if it was
+                    // later hidden/removed, so editing doesn't drop their value.
+                    if (
+                      formData.shiftType &&
+                      !opts.some((t) => t.name === formData.shiftType)
+                    ) {
+                      opts.push({ name: formData.shiftType, label: `${formData.shiftType} (current)` });
+                    }
+                    return opts.map((t) => (
+                      <option key={t.name} value={t.name}>
+                        {t.label || t.name}
+                      </option>
+                    ));
+                  })()}
                 </select>
               </span>
             </p>

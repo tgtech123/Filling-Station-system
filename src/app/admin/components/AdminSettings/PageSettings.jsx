@@ -15,6 +15,7 @@ const emptyForm = {
   supportWhatsApp: "",
   currency: "",
   termsAndConditions: "",
+  privacyPolicy: "",
   planStatus: true,
   emailNotifications: true,
   inAppNotifications: false,
@@ -84,6 +85,7 @@ const PageSettings = () => {
         supportWhatsApp: settings.supportWhatsApp ?? "",
         currency: settings.currency ?? "",
         termsAndConditions: settings.termsAndConditions ?? "",
+        privacyPolicy: settings.privacyPolicy ?? "",
         planStatus: settings.planStatus ?? true,
         emailNotifications: settings.emailNotifications ?? true,
         inAppNotifications: settings.inAppNotifications ?? false,
@@ -545,6 +547,22 @@ const PageSettings = () => {
             </div>
           )}
           <p className="text-sm text-neutral-400">Displayed to users during registration</p>
+        </div>
+
+        <div className="flex flex-col gap-2 mt-5">
+          <label className="text-sm font-bold dark:text-gray-200">Privacy Policy</label>
+          {isEditing ? (
+            <textarea
+              value={form.privacyPolicy}
+              onChange={setField("privacyPolicy")}
+              className="w-full lg:h-[12.25rem] h-[7.125rem] pl-3 pt-2 rounded-lg border-[2px] border-neutral-300 focus:border-blue-600 outline-none resize-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+            />
+          ) : (
+            <div className="w-full lg:min-h-[12.25rem] min-h-[7.125rem] pl-3 pt-2 rounded-lg border-[2px] border-neutral-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm whitespace-pre-wrap">
+              {saved.privacyPolicy}
+            </div>
+          )}
+          <p className="text-sm text-neutral-400">Shown when users open the Privacy Policy link</p>
         </div>
       </div>
 

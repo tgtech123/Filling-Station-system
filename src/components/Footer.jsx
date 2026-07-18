@@ -1,12 +1,14 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Mail, Phone, MapPin } from "lucide-react";
 import usePlatformStore from "@/store/usePlatformStore";
+import LegalModal from "@/components/LegalModal";
 
 export default function Footer() {
   const { settings, fetchPublicSettings } = usePlatformStore();
+  const [legalDoc, setLegalDoc] = useState(null); // "terms" | "privacy" | null
 
   useEffect(() => {
     fetchPublicSettings();
@@ -109,15 +111,25 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} {name}. All rights reserved.
           </p>
           <div className="flex gap-5">
-            <Link href="#" className="text-blue-200/40 text-xs hover:text-blue-200/80 transition-colors">
+            <button
+              type="button"
+              onClick={() => setLegalDoc("privacy")}
+              className="text-blue-200/40 text-xs hover:text-blue-200/80 transition-colors cursor-pointer"
+            >
               Privacy Policy
-            </Link>
-            <Link href="#" className="text-blue-200/40 text-xs hover:text-blue-200/80 transition-colors">
+            </button>
+            <button
+              type="button"
+              onClick={() => setLegalDoc("terms")}
+              className="text-blue-200/40 text-xs hover:text-blue-200/80 transition-colors cursor-pointer"
+            >
               Terms of Service
-            </Link>
+            </button>
           </div>
         </div>
       </div>
+
+      <LegalModal type={legalDoc} onClose={() => setLegalDoc(null)} />
     </footer>
   );
 }

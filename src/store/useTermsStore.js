@@ -3,6 +3,7 @@ import { api } from "@/lib/config";
 
 const useTermsStore = create((set) => ({
   termsText: "",
+  privacyText: "",
   loading: false,
   error: null,
 
@@ -12,6 +13,7 @@ const useTermsStore = create((set) => ({
       const response = await api.get(`/api/admin/settings/public`);
       set({
         termsText: response.data.data?.termsAndConditions || "No terms available",
+        privacyText: response.data.data?.privacyPolicy || "No privacy policy available",
         loading: false,
       });
     } catch (err) {

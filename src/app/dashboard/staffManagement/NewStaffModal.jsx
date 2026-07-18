@@ -45,7 +45,10 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
     fetchTypes();
   }, [fetchTypes]);
 
-  const shiftTypeOptions = [...builtIn, ...custom.filter((t) => t.isActive !== false)];
+  const shiftTypeOptions = [
+    ...builtIn.filter((t) => t.isActive !== false),
+    ...custom.filter((t) => t.isActive !== false),
+  ];
 
   const handleCreateType = async () => {
     if (!newType.name.trim()) {
