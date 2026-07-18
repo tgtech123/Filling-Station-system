@@ -142,11 +142,13 @@ export default function ScheduleShiftCard({ user, onClose }) {
   };
 
   const shiftTypes = [
-    ...builtIn.map((t) => ({
-      value: t.name,
-      label: t.label,
-      disabled: !!BUILT_IN_DISABLED[t.name],
-    })),
+    ...builtIn
+      .filter((t) => t.isActive !== false)
+      .map((t) => ({
+        value: t.name,
+        label: t.label,
+        disabled: !!BUILT_IN_DISABLED[t.name],
+      })),
     ...custom
       .filter((t) => t.isActive !== false)
       .map((t) => ({

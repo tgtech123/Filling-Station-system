@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight, X, CreditCard, Building, Lock } from "lucide
 import { ImSpinner3 } from "react-icons/im";
 import Image from "next/image";
 import SuccessPage from "./SuccessPage";
+import LegalModal from "@/components/LegalModal";
 
 const PaymentPageOne = () => {
   const [countries, setCountries] = useState([]);
@@ -17,6 +18,10 @@ const PaymentPageOne = () => {
   const [isTransferOpened, setIsTransferOpened] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [legalDoc, setLegalDoc] = useState(null); // "terms" | "privacy" | null
+
+  const legalLinkClass =
+    "text-blue-600 dark:text-blue-400 font-semibold hover:underline";
 
   useEffect(() => {
     setLoadingCountries(true);
@@ -155,7 +160,15 @@ const PaymentPageOne = () => {
                         Services are subscription based. The subscription will automatically renew unless you cancel it. You can manage your subscription at any time from your Station Account.
                       </p>
                       <p className="mt-2 text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
-                        By clicking "Continue", you agree to the terms of service, auto-renewal terms, and acknowledge the privacy policy.
+                        By clicking "Continue", you agree to the{" "}
+                        <button type="button" onClick={() => setLegalDoc("terms")} className={legalLinkClass}>
+                          terms of service
+                        </button>
+                        , auto-renewal terms, and acknowledge the{" "}
+                        <button type="button" onClick={() => setLegalDoc("privacy")} className={legalLinkClass}>
+                          privacy policy
+                        </button>
+                        .
                       </p>
                     </div>
                   )}
@@ -198,7 +211,15 @@ const PaymentPageOne = () => {
                         {isLoading && <ImSpinner3 size={18} className="animate-spin" />}
                       </button>
                       <p className="mt-4 text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
-                        By confirming payment, you agree to the terms of service, auto-renewal terms, and acknowledge the privacy policy.
+                        By confirming payment, you agree to the{" "}
+                        <button type="button" onClick={() => setLegalDoc("terms")} className={legalLinkClass}>
+                          terms of service
+                        </button>
+                        , auto-renewal terms, and acknowledge the{" "}
+                        <button type="button" onClick={() => setLegalDoc("privacy")} className={legalLinkClass}>
+                          privacy policy
+                        </button>
+                        .
                       </p>
                     </div>
                   )}
@@ -287,6 +308,8 @@ const PaymentPageOne = () => {
           </div>
         </div>
       </div>
+
+      <LegalModal type={legalDoc} onClose={() => setLegalDoc(null)} />
     </div>
   );
 };

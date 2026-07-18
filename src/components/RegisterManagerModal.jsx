@@ -24,6 +24,7 @@ import usePaymentStore from "@/store/usePaymentStore";
 import useTermsStore from "@/store/useTermsStore";
 import usePlansStore from "@/store/usePlansStore";
 import LocationSelector from "@/components/LocationSelector";
+import LegalModal from "@/components/LegalModal";
 
 export default function RegisterManagerModal({ onclose, payerInfo }) {
   const [step, setStep] = useState(1);
@@ -39,7 +40,8 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
   const stationImageId = useRef(`station-reg-${Date.now()}`).current;
   const router = useRouter();
   const { initializePayment } = usePaymentStore();
-  const { termsText, loading: termsLoading, fetchTerms } = useTermsStore();
+  const { fetchTerms } = useTermsStore();
+  const [legalDoc, setLegalDoc] = useState(null); // "terms" | "privacy" | null
   const { plans, fetchPublicPlans } = usePlansStore();
 
   const [formData, setFormData] = useState({
@@ -888,16 +890,6 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
               Terms of Service & Privacy Policy
             </h3>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 p-3 max-h-48 overflow-y-auto mb-4">
-              {termsLoading ? (
-                <p className="text-xs text-gray-400">Loading terms...</p>
-              ) : (
-                <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                  {termsText}
-                </p>
-              )}
-            </div>
-
             <div className="flex gap-3 items-start">
               <input
                 type="checkbox"
@@ -908,7 +900,28 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
                 className="mt-0.5 rounded cursor-pointer shrink-0"
               />
               <label htmlFor="termsAccepted" className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 cursor-pointer leading-relaxed">
-                I have read and agree to the Terms of Service and Privacy Policy
+                I have read and agree to the{" "}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault(); // don't toggle the checkbox via the label
+                    setLegalDoc("terms");
+                  }}
+                  className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                >
+                  Terms of Service
+                </button>{" "}
+                and{" "}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setLegalDoc("privacy");
+                  }}
+                  className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                >
+                  Privacy Policy
+                </button>
               </label>
             </div>
 
@@ -984,6 +997,8 @@ export default function RegisterManagerModal({ onclose, payerInfo }) {
           </div>
         </div>
       )}
+
+      <LegalModal type={legalDoc} onClose={() => setLegalDoc(null)} />
     </div>
     </div>
   );
