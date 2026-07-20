@@ -72,7 +72,7 @@ export default function Filter({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/50">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl shadow-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
@@ -84,8 +84,8 @@ export default function Filter({
           </button>
         </div>
 
-        {/* Filter sections - 3 column grid to match image */}
-        <div className="grid grid-cols-3 gap-8 mb-8">
+        {/* Filter sections - 3 columns on larger screens, stacked on mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
           {filterConfig.map(({ key, label, options }) => (
             <div key={key}>
               <h3 className="text-base font-medium text-gray-900 mb-4">

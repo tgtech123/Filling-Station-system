@@ -144,7 +144,7 @@ export default function page() {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-3">
             <button
               className="flex gap-2 border-2 border-gray-300 p-2 rounded-[12px]"
               onClick={() => setOpenDurationModal(true)}

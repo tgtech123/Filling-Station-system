@@ -86,25 +86,41 @@
 import React, { useState, useEffect } from "react";
 import ScheduledAttendantsTable from "@/components/ScheduledAttendantsTable";
 import useSupervisorStore from "@/store/useSupervisorStore";
+import useShiftTypeStore from "@/store/useShiftTypeStore";
 
 const ScheduledAttendantsCard = () => {
   const [activeTab, setActiveTab] = useState("tabOne");
   const { dashboard, loading, error } = useSupervisorStore();
+
+  // Custom shift types carry a session ("morning"/"evening") that decides
+  // which column they land in — same rule the backend schedule view uses.
+  const { custom, fetchTypes } = useShiftTypeStore();
+  useEffect(() => {
+    fetchTypes();
+  }, [fetchTypes]);
+
+  const isEveningType = (shiftType) => {
+    if (shiftType === "One-Day-Evening") return true;
+    const def = custom.find(
+      (t) => t.name?.toLowerCase() === String(shiftType || "").toLowerCase()
+    );
+    return def?.session === "evening";
+  };
 
   // Get scheduled attendants from dashboard
   const scheduledAttendants = dashboard?.scheduledAttendants || { today: [], tomorrow: [] };
 
   // Transform data for One-Day shift (Morning & Evening)
   const oneDayColumns = ["Morning", "Pump no", "Evening", "Pump no"];
-  
+
   const oneDayData = (() => {
     const today = scheduledAttendants.today || [];
-    
-    // Separate morning and evening shifts
-    const morningShifts = today.filter(
-      (att) => att.shiftType === "One-Day-Morning" || att.shiftType === "Day-Off"
-    );
-    const eveningShifts = today.filter((att) => att.shiftType === "One-Day-Evening");
+
+    // Evening = One-Day-Evening or a custom type with session "evening";
+    // everything else (built-ins and custom morning types) goes to Morning so
+    // no scheduled shift ever disappears from this view.
+    const morningShifts = today.filter((att) => !isEveningType(att.shiftType));
+    const eveningShifts = today.filter((att) => isEveningType(att.shiftType));
 
     // Get max length for rows
     const maxLength = Math.max(morningShifts.length, eveningShifts.length);

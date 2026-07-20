@@ -102,14 +102,14 @@ const AuditReconciledSales = () => {
   if (reconciledSales.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 w-full mx-auto">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-800">Audit Reconciled Sales</h2>
             <p className="text-sm text-gray-500">
               Verify and audit daily attendant sales
             </p>
           </div>
-          <Link href="/dashboard/accountant/auditedReconciledPage" className="border border-gray-400 font-semibold rounded-lg text-sm px-4 py-2 text-gray-600 hover:bg-gray-100 transition">
+          <Link href="/dashboard/accountant/auditedReconciledPage" className="self-start sm:self-auto border border-gray-400 font-semibold rounded-lg text-sm px-4 py-2 text-gray-600 hover:bg-gray-100 transition">
             View all report
           </Link>
         </div>
@@ -123,14 +123,14 @@ const AuditReconciledSales = () => {
   return (
     <div className="bg-white rounded-2xl p-4 w-full mx-auto">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
         <div>
           <h2 className="text-lg font-semibold text-gray-800">Audit Reconciled Sales</h2>
           <p className="text-sm text-gray-500">
             Verify and audit daily attendant sales
           </p>
         </div>
-        <Link href="/dashboard/accountant/auditedReconciledPage" className="border border-gray-400 font-semibold rounded-lg text-sm px-4 py-2 text-gray-600 hover:bg-gray-100 transition">
+        <Link href="/dashboard/accountant/auditedReconciledPage" className="self-start sm:self-auto border border-gray-400 font-semibold rounded-lg text-sm px-4 py-2 text-gray-600 hover:bg-gray-100 transition">
           View all report
         </Link>
       </div>
