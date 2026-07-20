@@ -150,12 +150,12 @@ export default function CashierDashboard() {
                 <h1 className="text-[1.25rem] font-semibold">Welcome, {fullName}</h1>
                 
                 <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl mt-[0.75rem] w-full">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div>
                             <h1 className="text-[1.25rem] font-semibold">Dashboard</h1>
                             <p className="mt-[0.5rem] text-[1rem]">Overview of Fuel and lubricant sales</p>
                         </div>
-                        
+
                         {/* Manual Refresh Button */}
                         <button
                             onClick={async () => {
@@ -164,7 +164,7 @@ export default function CashierDashboard() {
                                 setRefreshing(false);
                             }}
                             disabled={refreshing}
-                            className="flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                            className="self-start sm:self-auto flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                         >
                             <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
                             {refreshing ? "Refreshing..." : "Refresh"}

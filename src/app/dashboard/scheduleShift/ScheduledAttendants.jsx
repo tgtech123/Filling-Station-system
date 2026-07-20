@@ -1,4 +1,3 @@
-import DisplayCard from "@/components/Dashboard/DisplayCard";
 import { User } from "lucide-react";
 
 export default function ScheduledAttendants({title, period, time, assignedAttendants}) {
@@ -17,7 +16,9 @@ export default function ScheduledAttendants({title, period, time, assignedAttend
                     <h5 className="text-lg">Assigned Staff</h5>
                 </div>
                 <div className="mt-3 flex flex-col gap-2">
-                    {console.log("Scheduled attendants data:", JSON.stringify(assignedAttendants?.[0]))}
+                    {assignedAttendants.length === 0 && (
+                        <p className="text-sm text-gray-400 italic">No staff assigned</p>
+                    )}
                     {assignedAttendants.map((attendant, index) => {
                         const name   = typeof attendant === "string" ? attendant : attendant.name;
                         const pumpNo = typeof attendant === "object" ? attendant.pumpNo : null;

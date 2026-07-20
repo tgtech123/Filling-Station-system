@@ -76,7 +76,7 @@ const StationSection = ({ station, index }) => {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-3 mt-0.5">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
               <span className="text-xs text-gray-500 dark:text-gray-400">{station.stationCity}</span>
               <StatusBadge status={station.status} />
               {station.month && (
@@ -208,7 +208,7 @@ export default function ConsolidatedPayrollPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.back()}
@@ -217,7 +217,7 @@ export default function ConsolidatedPayrollPage() {
               <ArrowLeft size={18} className="text-gray-600 dark:text-gray-300" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                 Consolidated Payroll
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
@@ -225,7 +225,7 @@ export default function ConsolidatedPayrollPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 shadow-sm">
               <Calendar size={16} className="text-gray-400" />
               <input

@@ -322,7 +322,7 @@ export default function BranchesPage() {
       <div className="p-4 sm:p-6">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
               Branch Overview
@@ -333,7 +333,7 @@ export default function BranchesPage() {
           </div>
           <button
             onClick={() => setShowAddBranch(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors"
+            className="self-start sm:self-auto flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors"
           >
             <Plus size={16} />
             Add Branch
@@ -617,11 +617,11 @@ export default function BranchesPage() {
         {/* Reports Tab */}
         {activeTab === "reports" && (
           <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 Consolidated Report
               </h2>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {["week", "month", "year"].map((p) => (
                   <button
                     key={p}
