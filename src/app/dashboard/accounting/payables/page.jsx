@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, Link2, BookCheck, RefreshCw, Download, Printer, CheckCircle2, PlayCircle } from 'lucide-react';
+import { Plus, Trash2, Link2, BookCheck, RefreshCw, Download, Printer, CheckCircle2, PlayCircle, FileMinus2, RotateCcw, Ban } from 'lucide-react';
 import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate, downloadBlob } from '../shared';
 
 const EMPTY_INV = {
@@ -11,10 +11,27 @@ const EMPTY_INV = {
   lines: [{ description: '', quantity: 1, unitCost: '' }],
 };
 
+const EMPTY_CN = {
+  supplierName: '', invoiceId: '', reason: 'overbilling', taxCode: '', notes: '',
+  lines: [{ description: '', quantity: 1, unitCost: '' }],
+};
+
+// Plain-English labels for the credit-note reasons (so a non-accountant picks the right one)
+const CN_REASONS = [
+  { value: 'overbilling', label: 'Supplier over-billed us' },
+  { value: 'return', label: 'Goods returned to supplier' },
+  { value: 'damaged', label: 'Damaged / faulty goods' },
+  { value: 'price_adjustment', label: 'Agreed price adjustment' },
+  { value: 'other', label: 'Other reason' },
+];
+
+const openBalance = (inv) => Number(inv.totalBase || 0) - Number(inv.amountPaid || 0) - Number(inv.creditApplied || 0);
+
 export default function PayablesPage() {
   const [tab, setTab] = useState('invoices');
   const [invoices, setInvoices] = useState([]);
   const [batches, setBatches] = useState([]);
+  const [creditNotes, setCreditNotes] = useState([]);
   const [openPOs, setOpenPOs] = useState({ lubricant: [], gas: [], gas_cylinder: [], fuel: [] });
   const [taxes, setTaxes] = useState([]);
   const [bankAccounts, setBankAccounts] = useState([]);
@@ -22,19 +39,27 @@ export default function PayablesPage() {
   const [loading, setLoading] = useState(true);
   const [showInvModal, setShowInvModal] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
+  const [showCNModal, setShowCNModal] = useState(false);
+  const [applyTarget, setApplyTarget] = useState(null);   // credit note being applied
+  const [applyInvoiceId, setApplyInvoiceId] = useState('');
+  const [reverseTarget, setReverseTarget] = useState(null); // batch being reversed
+  const [reverseReason, setReverseReason] = useState('');
   const [invForm, setInvForm] = useState(EMPTY_INV);
   const [batchForm, setBatchForm] = useState({ payDate: new Date().toISOString().split('T')[0], method: 'EFT', bankAccountId: '', invoiceIds: [] });
+  const [cnForm, setCnForm] = useState(EMPTY_CN);
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [inv, bat] = await Promise.all([
+      const [inv, bat, cn] = await Promise.all([
         api.get('/api/accounting/ap/invoices'),
         api.get('/api/accounting/ap/batches'),
+        api.get('/api/accounting/ap/credit-notes'),
       ]);
       setInvoices(inv.data.data);
       setBatches(bat.data.data);
+      setCreditNotes(cn.data.data);
     } catch (e) {
       toast.error(e.response?.data?.message || 'Failed to load payables');
     } finally {
@@ -53,6 +78,7 @@ export default function PayablesPage() {
   }, []);
 
   const subtotal = invForm.lines.reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.unitCost) || 0), 0);
+  const cnSubtotal = cnForm.lines.reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.unitCost) || 0), 0);
 
   async function createInvoice(e) {
     e.preventDefault();
@@ -129,6 +155,22 @@ export default function PayablesPage() {
     }
   }
 
+  async function reverseBatch(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await api.post(`/api/accounting/ap/batches/${reverseTarget._id}/reverse`, { reason: reverseReason || undefined });
+      toast.success(res.data.message);
+      setReverseTarget(null);
+      setReverseReason('');
+      load();
+    } catch (e2) {
+      toast.error(e2.response?.data?.message || 'Reversal failed');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function downloadEFT(b) {
     try {
       const res = await api.get(`/api/accounting/ap/batches/${b._id}/eft-file`, { responseType: 'text' });
@@ -162,7 +204,72 @@ export default function PayablesPage() {
     }
   }
 
+  // ── Credit notes ──────────────────────────────────────────────────────────
+  function openCreditNote(inv) {
+    // inv is optional — pre-fill supplier + link when raised against a specific invoice
+    setCnForm({
+      ...EMPTY_CN,
+      supplierName: inv?.supplierName || '',
+      invoiceId: inv?._id || '',
+      lines: [{ description: inv ? `Credit — ${inv.invoiceNumber}` : 'Credit adjustment', quantity: 1, unitCost: '' }],
+    });
+    setShowCNModal(true);
+  }
+
+  async function createCreditNote(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await api.post('/api/accounting/ap/credit-notes', {
+        supplierName: cnForm.supplierName,
+        invoiceId: cnForm.invoiceId || undefined,
+        reason: cnForm.reason,
+        taxCode: cnForm.taxCode || undefined,
+        notes: cnForm.notes || undefined,
+        lines: cnForm.lines.filter((l) => l.description && Number(l.unitCost) > 0),
+      });
+      toast.success(res.data.message);
+      setShowCNModal(false);
+      setCnForm(EMPTY_CN);
+      load();
+      setTab('credit-notes');
+    } catch (e2) {
+      toast.error(e2.response?.data?.message || 'Failed to issue credit note');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function applyCreditNote(e) {
+    e.preventDefault();
+    if (!applyInvoiceId) return toast.error('Choose an invoice to apply the credit to');
+    setSaving(true);
+    try {
+      const res = await api.post(`/api/accounting/ap/credit-notes/${applyTarget._id}/apply`, { invoiceId: applyInvoiceId });
+      toast.success(res.data.message);
+      setApplyTarget(null);
+      setApplyInvoiceId('');
+      load();
+    } catch (e2) {
+      toast.error(e2.response?.data?.message || 'Apply failed');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function voidCreditNote(cn) {
+    if (!confirm(`Void credit note ${cn.creditNoteNumber}? A reversing journal entry will post and any invoice it reduced returns to its previous balance.`)) return;
+    try {
+      const res = await api.post(`/api/accounting/ap/credit-notes/${cn._id}/void`);
+      toast.success(res.data.message);
+      load();
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Void failed');
+    }
+  }
+
   const payable = invoices.filter((i) => ['booked', 'partially_paid'].includes(i.status));
+  const creditable = invoices.filter((i) => ['booked', 'partially_paid', 'paid'].includes(i.status));
   const poOptions =
     invForm.poType === 'lubricant' ? openPOs.lubricant
     : invForm.poType === 'gas' ? openPOs.gas
@@ -176,9 +283,10 @@ export default function PayablesPage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">Accounts Payable</h1>
-            <p className="text-sm text-gray-500">3-way matching · payment execution</p>
+            <p className="text-sm text-gray-500">3-way matching · payment execution · corrections</p>
           </div>
           <div className="flex gap-2">
+            <Btn variant="outline" onClick={() => openCreditNote(null)}><FileMinus2 size={15} /> Credit Note</Btn>
             <Btn variant="outline" onClick={() => setShowBatchModal(true)} disabled={!payable.length}>Payment Batch</Btn>
             <Btn onClick={() => setShowInvModal(true)}><Plus size={15} /> Register Invoice</Btn>
           </div>
@@ -193,10 +301,12 @@ export default function PayablesPage() {
         </Hint>
 
         <div className="flex gap-1.5 mb-4">
-          {['invoices', 'batches'].map((t) => (
+          {['invoices', 'batches', 'credit-notes'].map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-1.5 rounded-full text-xs font-medium capitalize ${tab === t ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}`}>
-              {t === 'invoices' ? `Invoices (${invoices.length})` : `Payment Batches (${batches.length})`}
+              {t === 'invoices' ? `Invoices (${invoices.length})`
+                : t === 'batches' ? `Payment Batches (${batches.length})`
+                : `Credit Notes (${creditNotes.length})`}
             </button>
           ))}
         </div>
@@ -204,7 +314,7 @@ export default function PayablesPage() {
         {tab === 'invoices' && (
           <Card>
             <Table
-              headers={['Ref', 'Supplier', 'Invoice #', 'Due', { label: 'Total', right: true }, { label: 'Paid', right: true }, '3-Way Match', 'Status', '']}
+              headers={['Ref', 'Supplier', 'Invoice #', 'Due', { label: 'Total', right: true }, { label: 'Paid', right: true }, { label: 'Credit', right: true }, '3-Way Match', 'Status', '']}
               empty={!loading && invoices.length === 0 ? 'No supplier invoices registered yet' : null}
             >
               {invoices.map((inv) => (
@@ -215,6 +325,9 @@ export default function PayablesPage() {
                   <td className="py-2 pr-3 text-xs">{fmtDate(inv.dueDate)}</td>
                   <td className="py-2 pr-3 text-right font-mono text-xs">₦{fmt(inv.totalBase)}</td>
                   <td className="py-2 pr-3 text-right font-mono text-xs">₦{fmt(inv.amountPaid)}</td>
+                  <td className="py-2 pr-3 text-right font-mono text-xs">
+                    {inv.creditApplied > 0 ? <span className="text-purple-600">₦{fmt(inv.creditApplied)}</span> : <span className="text-gray-300">—</span>}
+                  </td>
                   <td className="py-2 pr-3">
                     {inv.match?.poType !== 'none' ? (
                       <span title={inv.match?.matchNotes}><StatusBadge status={inv.matchStatus} /></span>
@@ -234,6 +347,11 @@ export default function PayablesPage() {
                         </button>
                       </>
                     )}
+                    {['booked', 'partially_paid', 'paid'].includes(inv.status) && (
+                      <button onClick={() => openCreditNote(inv)} className="p-1 text-gray-400 hover:text-purple-600" title="Issue a credit note against this invoice">
+                        <FileMinus2 size={15} />
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -242,49 +360,105 @@ export default function PayablesPage() {
         )}
 
         {tab === 'batches' && (
-          <Card>
-            <Table
-              headers={['Batch', 'Pay Date', 'Method', { label: 'Gross', right: true }, { label: 'WHT', right: true }, { label: 'Net', right: true }, 'Status', '']}
-              empty={!loading && batches.length === 0 ? 'No payment batches yet' : null}
-            >
-              {batches.map((b) => (
-                <tr key={b._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                  <td className="py-2 pr-3 font-mono text-xs">{b.batchNumber}</td>
-                  <td className="py-2 pr-3 text-xs">{fmtDate(b.payDate)}</td>
-                  <td className="py-2 pr-3 text-xs">{b.method}</td>
-                  <td className="py-2 pr-3 text-right font-mono text-xs">₦{fmt(b.totalAmount)}</td>
-                  <td className="py-2 pr-3 text-right font-mono text-xs">₦{fmt(b.totalWht)}</td>
-                  <td className="py-2 pr-3 text-right font-mono text-xs">₦{fmt(b.totalNet)}</td>
-                  <td className="py-2 pr-3"><StatusBadge status={b.status} /></td>
-                  <td className="py-2 whitespace-nowrap">
-                    {b.status === 'draft' && (
-                      <button onClick={() => batchAction(b, 'approve')} className="p-1 text-gray-400 hover:text-blue-600" title="Approve (maker-checker)">
-                        <CheckCircle2 size={15} />
-                      </button>
-                    )}
-                    {b.status === 'approved' && (
-                      <button onClick={() => { if (confirm('Execute this batch? The payment journal will post.')) batchAction(b, 'execute'); }}
-                        className="p-1 text-gray-400 hover:text-emerald-600" title="Execute payment">
-                        <PlayCircle size={15} />
-                      </button>
-                    )}
-                    {['approved', 'executed'].includes(b.status) && b.method !== 'check' && (
-                      <button onClick={() => downloadEFT(b)} className="p-1 text-gray-400 hover:text-blue-600" title={`Download ${b.method} file`}>
-                        <Download size={15} />
-                      </button>
-                    )}
-                    {b.status === 'executed' && b.method === 'check' && (
-                      <button onClick={() => printChecks(b)} className="p-1 text-gray-400 hover:text-blue-600" title="Print checks">
-                        <Printer size={15} />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </Table>
-          </Card>
+          <>
+            <Hint>
+              A payment batch pays one or more booked invoices in a single run. Made a mistake — wrong amount,
+              a bounced check, or a duplicate payment? Use <b>Reverse</b> (the ↺ button) on an executed batch.
+              It cancels the payment in the books and re-opens the invoices so they show as unpaid again, ready
+              to be paid correctly. Nothing is deleted — the reversal is recorded for the audit trail.
+            </Hint>
+            <Card>
+              <Table
+                headers={['Batch', 'Pay Date', 'Method', { label: 'Gross', right: true }, { label: 'WHT', right: true }, { label: 'Net', right: true }, 'Status', '']}
+                empty={!loading && batches.length === 0 ? 'No payment batches yet' : null}
+              >
+                {batches.map((b) => (
+                  <tr key={b._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="py-2 pr-3 font-mono text-xs">{b.batchNumber}</td>
+                    <td className="py-2 pr-3 text-xs">{fmtDate(b.payDate)}</td>
+                    <td className="py-2 pr-3 text-xs">{b.method}</td>
+                    <td className="py-2 pr-3 text-right font-mono text-xs">₦{fmt(b.totalAmount)}</td>
+                    <td className="py-2 pr-3 text-right font-mono text-xs">₦{fmt(b.totalWht)}</td>
+                    <td className="py-2 pr-3 text-right font-mono text-xs">₦{fmt(b.totalNet)}</td>
+                    <td className="py-2 pr-3"><StatusBadge status={b.status} /></td>
+                    <td className="py-2 whitespace-nowrap">
+                      {b.status === 'draft' && (
+                        <button onClick={() => batchAction(b, 'approve')} className="p-1 text-gray-400 hover:text-blue-600" title="Approve (maker-checker)">
+                          <CheckCircle2 size={15} />
+                        </button>
+                      )}
+                      {b.status === 'approved' && (
+                        <button onClick={() => { if (confirm('Execute this batch? The payment journal will post.')) batchAction(b, 'execute'); }}
+                          className="p-1 text-gray-400 hover:text-emerald-600" title="Execute payment">
+                          <PlayCircle size={15} />
+                        </button>
+                      )}
+                      {['approved', 'executed'].includes(b.status) && b.method !== 'check' && (
+                        <button onClick={() => downloadEFT(b)} className="p-1 text-gray-400 hover:text-blue-600" title={`Download ${b.method} file`}>
+                          <Download size={15} />
+                        </button>
+                      )}
+                      {b.status === 'executed' && b.method === 'check' && (
+                        <button onClick={() => printChecks(b)} className="p-1 text-gray-400 hover:text-blue-600" title="Print checks">
+                          <Printer size={15} />
+                        </button>
+                      )}
+                      {b.status === 'executed' && (
+                        <button onClick={() => { setReverseTarget(b); setReverseReason(''); }} className="p-1 text-gray-400 hover:text-red-600" title="Reverse this payment">
+                          <RotateCcw size={15} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </Table>
+            </Card>
+          </>
         )}
 
+        {tab === 'credit-notes' && (
+          <>
+            <Hint>
+              A <b>credit note</b> is money a supplier owes back to you — because they over-billed, you returned
+              goods, or the goods were damaged. It reduces what you owe that supplier. Raise one against a specific
+              invoice to lower its balance, or on its own to keep as a credit you use on a future invoice. Use a
+              credit note (not "void") whenever the original invoice was already paid or partly paid — voiding is
+              only for a fresh invoice with no payments.
+            </Hint>
+            <Card>
+              <Table
+                headers={['Number', 'Supplier', 'Reason', 'For Invoice', { label: 'Amount', right: true }, { label: 'Applied', right: true }, 'Status', '']}
+                empty={!loading && creditNotes.length === 0 ? 'No credit notes yet' : null}
+              >
+                {creditNotes.map((cn) => (
+                  <tr key={cn._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="py-2 pr-3 font-mono text-xs">{cn.creditNoteNumber}</td>
+                    <td className="py-2 pr-3">{cn.supplierName}</td>
+                    <td className="py-2 pr-3 text-xs capitalize">{String(cn.reason || '').replace(/_/g, ' ')}</td>
+                    <td className="py-2 pr-3 font-mono text-xs">{cn.invoiceRef || <span className="text-gray-300">unapplied</span>}</td>
+                    <td className="py-2 pr-3 text-right font-mono text-xs">₦{fmt(cn.totalBase)}</td>
+                    <td className="py-2 pr-3 text-right font-mono text-xs">₦{fmt(cn.amountApplied)}</td>
+                    <td className="py-2 pr-3"><StatusBadge status={cn.status} /></td>
+                    <td className="py-2 whitespace-nowrap">
+                      {cn.status === 'open' && (
+                        <button onClick={() => { setApplyTarget(cn); setApplyInvoiceId(''); }} className="p-1 text-gray-400 hover:text-blue-600" title="Apply to an invoice">
+                          <Link2 size={15} />
+                        </button>
+                      )}
+                      {cn.status !== 'void' && (
+                        <button onClick={() => voidCreditNote(cn)} className="p-1 text-gray-400 hover:text-red-600" title="Void credit note">
+                          <Ban size={15} />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </Table>
+            </Card>
+          </>
+        )}
+
+        {/* ── Register Invoice ── */}
         {showInvModal && (
           <Modal title="Register Supplier Invoice" onClose={() => setShowInvModal(false)} wide>
             <form onSubmit={createInvoice}>
@@ -377,6 +551,7 @@ export default function PayablesPage() {
           </Modal>
         )}
 
+        {/* ── New Payment Batch ── */}
         {showBatchModal && (
           <Modal title="New Payment Batch" onClose={() => setShowBatchModal(false)} wide>
             <form onSubmit={createBatch}>
@@ -415,7 +590,7 @@ export default function PayablesPage() {
                     />
                     <span className="font-mono text-xs">{inv.internalRef}</span>
                     <span className="flex-1">{inv.supplierName}</span>
-                    <span className="font-mono text-xs">₦{fmt(inv.totalBase - inv.amountPaid)}</span>
+                    <span className="font-mono text-xs">₦{fmt(openBalance(inv))}</span>
                   </label>
                 ))}
               </div>
@@ -423,6 +598,149 @@ export default function PayablesPage() {
               <div className="flex justify-end gap-2">
                 <Btn variant="secondary" onClick={() => setShowBatchModal(false)}>Cancel</Btn>
                 <Btn type="submit" disabled={saving}>{saving ? 'Creating…' : `Create Batch (${batchForm.invoiceIds.length})`}</Btn>
+              </div>
+            </form>
+          </Modal>
+        )}
+
+        {/* ── Issue Credit Note ── */}
+        {showCNModal && (
+          <Modal title="Issue Supplier Credit Note" onClose={() => setShowCNModal(false)} wide>
+            <div className="mb-3">
+              <Hint>
+                Fill this in when a supplier agrees to credit you money — enter the amount they're crediting and why.
+                Link it to the invoice it relates to and it lowers that invoice's balance straight away. Leave the
+                invoice blank to keep it as an open credit you can apply later.
+              </Hint>
+            </div>
+            <form onSubmit={createCreditNote}>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Supplier Name *">
+                  <input className={inputCls} value={cnForm.supplierName} onChange={(e) => setCnForm({ ...cnForm, supplierName: e.target.value })} required />
+                </Field>
+                <Field label="Reason *">
+                  <select className={inputCls} value={cnForm.reason} onChange={(e) => setCnForm({ ...cnForm, reason: e.target.value })}>
+                    {CN_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                </Field>
+              </div>
+
+              <Field label="Apply to Invoice" hint="Optional — the invoice this credit reduces. Leave blank for an open credit.">
+                <select className={inputCls} value={cnForm.invoiceId}
+                  onChange={(e) => {
+                    const inv = creditable.find((i) => i._id === e.target.value);
+                    setCnForm({ ...cnForm, invoiceId: e.target.value, supplierName: inv?.supplierName || cnForm.supplierName });
+                  }}>
+                  <option value="">None (open credit)</option>
+                  {creditable.map((inv) => (
+                    <option key={inv._id} value={inv._id}>
+                      {inv.internalRef} — {inv.supplierName} · open ₦{fmt(openBalance(inv))}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Tax Code" hint="Pick the same VAT code as the invoice so the input VAT is reversed too.">
+                <select className={inputCls} value={cnForm.taxCode} onChange={(e) => setCnForm({ ...cnForm, taxCode: e.target.value })}>
+                  <option value="">None</option>
+                  {taxes.filter((t) => t.isActive && t.kind !== 'WHT').map((t) => (
+                    <option key={t.code} value={t.code}>{t.name} ({t.rate}%)</option>
+                  ))}
+                </select>
+              </Field>
+
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Credit Lines <span className="font-normal text-gray-400">— what is being credited</span>
+              </p>
+              {cnForm.lines.map((l, i) => (
+                <div key={i} className="flex gap-2 mb-2">
+                  <input className={`${inputCls} flex-1`} placeholder="Description" value={l.description}
+                    onChange={(e) => { const lines = [...cnForm.lines]; lines[i].description = e.target.value; setCnForm({ ...cnForm, lines }); }} />
+                  <input type="number" step="0.01" min="0" className={`${inputCls} w-20`} placeholder="Qty" value={l.quantity}
+                    onChange={(e) => { const lines = [...cnForm.lines]; lines[i].quantity = e.target.value; setCnForm({ ...cnForm, lines }); }} />
+                  <input type="number" step="0.01" min="0" className={`${inputCls} w-28`} placeholder="Amount" value={l.unitCost}
+                    onChange={(e) => { const lines = [...cnForm.lines]; lines[i].unitCost = e.target.value; setCnForm({ ...cnForm, lines }); }} />
+                  {cnForm.lines.length > 1 && (
+                    <button type="button" onClick={() => setCnForm({ ...cnForm, lines: cnForm.lines.filter((_, x) => x !== i) })} className="text-gray-300 hover:text-red-500">
+                      <Trash2 size={15} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <div className="flex justify-between items-center mb-3">
+                <Btn variant="outline" small onClick={() => setCnForm({ ...cnForm, lines: [...cnForm.lines, { description: '', quantity: 1, unitCost: '' }] })}>
+                  <Plus size={13} /> Add line
+                </Btn>
+                <span className="text-sm font-mono">Credit subtotal: ₦{fmt(cnSubtotal)}</span>
+              </div>
+
+              <Field label="Notes">
+                <input className={inputCls} value={cnForm.notes} onChange={(e) => setCnForm({ ...cnForm, notes: e.target.value })} placeholder="e.g. Supplier credit note ref #, agreed with…" />
+              </Field>
+
+              <div className="flex justify-end gap-2">
+                <Btn variant="secondary" onClick={() => setShowCNModal(false)}>Cancel</Btn>
+                <Btn type="submit" disabled={saving}>{saving ? 'Issuing…' : 'Issue Credit Note'}</Btn>
+              </div>
+            </form>
+          </Modal>
+        )}
+
+        {/* ── Apply Credit Note ── */}
+        {applyTarget && (
+          <Modal title={`Apply ${applyTarget.creditNoteNumber}`} onClose={() => setApplyTarget(null)}>
+            <div className="mb-3">
+              <Hint>
+                This uses an open supplier credit to reduce an unpaid invoice's balance — so you pay less on that
+                invoice. Only invoices from the same supplier that still owe money can be chosen.
+              </Hint>
+            </div>
+            <form onSubmit={applyCreditNote}>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                Credit available: <span className="font-mono font-semibold">₦{fmt(applyTarget.totalBase - applyTarget.amountApplied)}</span>
+              </p>
+              <Field label="Apply to Invoice *">
+                <select className={inputCls} value={applyInvoiceId} onChange={(e) => setApplyInvoiceId(e.target.value)} required>
+                  <option value="">Choose an unpaid invoice…</option>
+                  {payable
+                    .filter((inv) => inv.supplierName === applyTarget.supplierName)
+                    .map((inv) => (
+                      <option key={inv._id} value={inv._id}>
+                        {inv.internalRef} — open ₦{fmt(openBalance(inv))}
+                      </option>
+                    ))}
+                </select>
+              </Field>
+              <div className="flex justify-end gap-2">
+                <Btn variant="secondary" onClick={() => setApplyTarget(null)}>Cancel</Btn>
+                <Btn type="submit" disabled={saving}>{saving ? 'Applying…' : 'Apply Credit'}</Btn>
+              </div>
+            </form>
+          </Modal>
+        )}
+
+        {/* ── Reverse Payment Batch ── */}
+        {reverseTarget && (
+          <Modal title={`Reverse Payment ${reverseTarget.batchNumber}`} onClose={() => setReverseTarget(null)}>
+            <div className="mb-3">
+              <Hint>
+                Undo this payment: the money goes back in the books and every invoice this batch paid becomes
+                unpaid again, ready to be paid correctly. Use this for a bounced check, wrong amount, or a
+                duplicate payment. The original is kept and marked "reversed" for the audit trail — nothing is
+                deleted.
+              </Hint>
+            </div>
+            <form onSubmit={reverseBatch}>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                This will re-open <b>{reverseTarget.payments?.length || 0}</b> invoice(s) totalling{' '}
+                <span className="font-mono font-semibold">₦{fmt(reverseTarget.totalAmount)}</span>.
+              </p>
+              <Field label="Reason" hint="Recorded on the reversal for the audit trail.">
+                <input className={inputCls} value={reverseReason} onChange={(e) => setReverseReason(e.target.value)} placeholder="e.g. Cheque bounced / duplicate payment" />
+              </Field>
+              <div className="flex justify-end gap-2">
+                <Btn variant="secondary" onClick={() => setReverseTarget(null)}>Cancel</Btn>
+                <Btn type="submit" variant="danger" disabled={saving}>{saving ? 'Reversing…' : 'Reverse Payment'}</Btn>
               </div>
             </form>
           </Modal>
