@@ -458,6 +458,11 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
   const canEdit = (role === "manager" || role === "supervisor") &&
     (order.status === "draft" || order.status === "submitted");
 
+  // Marking a PO ordered/received is an operational action for goods-handling
+  // roles only. Accountant and cashier see the PO (for billing/context) but must
+  // never move it through receipt — the server enforces the same set.
+  const canReceive = ["manager", "supervisor", "admin"].includes(role);
+
   useEffect(() => {
     if (isEditing) fetchSuppliers("lubricant");
   }, [isEditing]);
@@ -1048,19 +1053,11 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
               );
             })()}
 
-            {/* Status actions (view mode) */}
-            {!isEditing && (order.status === "submitted" || order.status === "ordered") && (
+            {/* Status actions (view mode) — goods-handling roles only */}
+            {!isEditing && canReceive && (order.status === "submitted" || order.status === "ordered") && (
               <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                 {!confirmReceipt ? (
                   <>
-                    {role !== "manager" && (
-                      <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-2.5">
-                        <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
-                        <p className="text-xs text-amber-700 dark:text-amber-400">
-                          Marking as received <strong>will not update stock levels</strong>. Ask the manager to confirm receipt and update inventory.
-                        </p>
-                      </div>
-                    )}
                     <div className="flex flex-col sm:flex-row gap-3">
                       {order.status === "submitted" && (
                         <button disabled={actioning} onClick={() => handleAction(markOrdered, "ordered")}
@@ -1072,7 +1069,7 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
                         <button disabled={actioning} onClick={initConfirmReceipt}
                           className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto">
                           <BadgeCheck size={14} />
-                          <span>Mark Received{role === "manager" && <span className="hidden sm:inline"> — confirm delivery</span>}</span>
+                          <span>Mark Received<span className="hidden sm:inline"> — confirm delivery</span></span>
                         </button>
                       )}
                     </div>
@@ -1155,15 +1152,6 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
                       )}
                     </div>
 
-                    {role !== "manager" && (
-                      <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl px-3 py-2.5">
-                        <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
-                        <p className="text-xs text-amber-700 dark:text-amber-400">
-                          Stock will <strong>not</strong> be updated automatically. The manager must confirm receipt to update inventory.
-                        </p>
-                      </div>
-                    )}
-
                     <div className="flex flex-col sm:flex-row gap-3">
                       <button onClick={() => setConfirmReceipt(false)}
                         className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
@@ -1172,7 +1160,7 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
                       <button disabled={actioning} onClick={handleConfirmReceived}
                         className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold disabled:opacity-60 transition-colors">
                         {actioning ? <Loader2 size={14} className="animate-spin" /> : <BadgeCheck size={14} />}
-                        {actioning ? "Confirming…" : `Confirm Receipt${role === "manager" ? " — Update Stock" : ""}`}
+                        {actioning ? "Confirming…" : "Confirm Receipt — Update Stock"}
                       </button>
                     </div>
                   </>

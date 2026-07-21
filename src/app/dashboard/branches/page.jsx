@@ -8,6 +8,7 @@ import usePaymentStore from "@/store/usePaymentStore";
 import AddBranchModal from "@/components/AddBranchModal";
 import CrossBranchStaff from "@/components/CrossBranchStaff";
 import { useRouter } from "next/navigation";
+import { useSuperManagerGuard } from "@/hooks/useSuperManagerGuard";
 import { Building2, ArrowRight, Plus, Crown, Mail, X, Loader2, User, UserMinus, Trash2, AlertTriangle, Banknote } from "lucide-react";
 import toast from "react-hot-toast";
 import ManagerSalaryCard from "@/app/dashboard/profile/ManagerSalaryCard";
@@ -239,6 +240,10 @@ function DeleteBranchModal({ branch, onClose, onDeleted }) {
 }
 
 export default function BranchesPage() {
+  // Owner-only page. The existing init() below already redirects non-enterprise
+  // plans; this additionally blocks a branch (non-owner) manager on an enterprise
+  // plan — the one case the plan check misses. Server enforces it too.
+  const guard = useSuperManagerGuard();
   const router = useRouter();
   const { overview, loading, fetchOverview, switchStation, switching, removeManager, deleteBranch } = useBranchStore();
   const { fetchCurrentPlan } = usePaymentStore();
@@ -307,7 +312,7 @@ export default function BranchesPage() {
     }
   }, [activeTab, reportPeriod]);
 
-  if (planChecking) {
+  if (planChecking || guard !== "allowed") {
     return (
       <DashboardLayout>
         <div className="flex justify-center items-center py-20 text-blue-600 font-semibold">

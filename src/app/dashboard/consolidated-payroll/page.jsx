@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import useSalaryStore from "@/store/useSalaryStore";
+import { useSuperManagerGuard } from "@/hooks/useSuperManagerGuard";
 import {
   Building2, Users, DollarSign, ChevronDown, ChevronUp,
   Download, Printer, AlertCircle, ArrowLeft, Calendar,
@@ -162,6 +163,10 @@ const StationSection = ({ station, index }) => {
 };
 
 export default function ConsolidatedPayrollPage() {
+  // Owner-only page: redirect any non-super-manager away before rendering.
+  // The server also enforces this (403), but this keeps a branch manager who
+  // force-navigates here from ever seeing the page shell.
+  const guard = useSuperManagerGuard();
   const router = useRouter();
   const { fetchConsolidatedPayroll } = useSalaryStore();
   const [data, setData] = useState(null);
@@ -171,13 +176,14 @@ export default function ConsolidatedPayrollPage() {
   const printRef = useRef(null);
 
   useEffect(() => {
+    if (guard !== "allowed") return;
     setLoading(true);
     setError(null);
     fetchConsolidatedPayroll(month)
       .then(setData)
       .catch((err) => setError(err.response?.data?.message || "Failed to load payroll data"))
       .finally(() => setLoading(false));
-  }, [month]);
+  }, [month, guard]);
 
   const handlePrint = () => {
     const content = printRef.current?.innerHTML;
@@ -203,6 +209,15 @@ export default function ConsolidatedPayrollPage() {
     win.document.close();
     win.print();
   };
+
+  // Block render until ownership is confirmed (redirect happens inside the guard)
+  if (guard !== "allowed") {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8">

@@ -68,6 +68,7 @@ export default function Contact() {
     {
       id: 1,
       name: "Oboh ThankGod",
+      img: "/obohT-1.jpeg",
       instaLink: "https://instagram.com/d-sentiment-guy",
       linkedInLink: "https://linkedin.com/d-sentiment-guy",
       twitterLink: "https://twitter.com/Utdgsentiment",
@@ -75,6 +76,7 @@ export default function Contact() {
     {
       id: 2,
       name: "Nnamdi Uzoigwe",
+      img: null,
       instaLink: "https://instagram.com/d-sentiment-guy",
       linkedInLink: "https://linkedin.com/d-sentiment-guy",
       twitterLink: "https://twitter.com/d-sentiment-guy",
@@ -82,11 +84,20 @@ export default function Contact() {
     {
       id: 3,
       name: "Emmanuel Kawekwune",
+      img: null,
       instaLink: "https://instagram.com/d-sentiment-guy",
       linkedInLink: "https://linkedin.com/d-sentiment-guy",
       twitterLink: "https://twitter.com/d-sentiment-guy",
     },
   ];
+
+  const getInitials = (name) =>
+    name
+      .split(" ")
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
 
   const whatsappNumber = (settings?.contactPhone || "+234 7068690589").replace(/\D/g, "");
 
@@ -249,20 +260,52 @@ export default function Contact() {
           {teamData.map((item) => (
             <div
               key={item.id}
-              className="flex flex-col items-center justify-center"
+              className="flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-lg transition-shadow p-6"
             >
-              <div className="bg-gray-300 dark:bg-neutral-500 h-[150px] w-[150px] rounded-full"></div>
-              <h3 className="my-4 font-semibold text-xl text-[#737373]">
+              <div className="relative h-[150px] w-[150px] rounded-full overflow-hidden ring-4 ring-orange-100 dark:ring-gray-600 shadow-md">
+                {item.img ? (
+                  <Image
+                    src={item.img}
+                    alt={item.name}
+                    fill
+                    sizes="150px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-white bg-gradient-to-br from-[#0080ff] to-[#66b3ff]">
+                    {getInitials(item.name)}
+                  </div>
+                )}
+              </div>
+              <h3 className="my-4 font-semibold text-xl text-[#737373] dark:text-gray-200">
                 {item.name}
               </h3>
-              <div className="flex gap-3 text-2xl text-[#ffaf51] font-semibold">
-                <a href={item.instaLink}>
+              <div className="flex gap-4 text-2xl text-[#ffaf51]">
+                <a
+                  href={item.instaLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${item.name} on Instagram`}
+                  className="hover:text-[#0080ff] hover:scale-110 transition-transform"
+                >
                   <FaInstagram />
                 </a>
-                <a href={item.twitterLink}>
+                <a
+                  href={item.twitterLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${item.name} on X`}
+                  className="hover:text-[#0080ff] hover:scale-110 transition-transform"
+                >
                   <FaXTwitter />
                 </a>
-                <a href={item.linkedInLink}>
+                <a
+                  href={item.linkedInLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${item.name} on LinkedIn`}
+                  className="hover:text-[#0080ff] hover:scale-110 transition-transform"
+                >
                   <FaLinkedin />
                 </a>
               </div>
