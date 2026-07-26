@@ -1,4 +1,14 @@
-import { Grid3X3 } from "lucide-react";
+import {
+    Grid3X3,
+    Droplets,
+    ClipboardCheck,
+    Gift,
+    Truck,
+    BookOpenCheck,
+    Building2,
+    ChevronDown,
+    ChevronUp
+} from "lucide-react";
 import img1 from "../../assets/analyticsImg.png"
 import img2 from "../../assets/pumpImg.png"
 import img3 from "../../assets/financeImg.png"
@@ -7,11 +17,12 @@ import img5 from "../../assets/securityImg.png"
 import img6 from "../../assets/smartImg.png"
 import FeatureCard from "@/components/FeatureCard";
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 export default function Features() {
     const ref = useRef(null);
     const isInView = useInView(ref, { once: true, margin: "-100px" });
+    const [showAll, setShowAll] = useState(false);
 
     const data = [
         {
@@ -49,8 +60,54 @@ export default function Features() {
             img: img6,
             caption: "Smart Automation",
             description: "Automate routine tasks and get intelligent insights to optimize operations"
+        },
+        {
+            id: 7,
+            icon: Droplets,
+            accent: "#0080FF",
+            badge: "New",
+            caption: "Wet-Stock Reconciliation",
+            description: "Match tank dip readings against pump meter sales automatically. Per-tank yield factors expose shrinkage, calibration drift and losses before they quietly eat your margin."
+        },
+        {
+            id: 8,
+            icon: ClipboardCheck,
+            accent: "#faa300",
+            caption: "Shift & Cash Accountability",
+            description: "Attendants close their shift on the spot, supervisors and managers approve it, and every variance is flagged. Each naira is traced to a person, a pump and a timestamp."
+        },
+        {
+            id: 9,
+            icon: Gift,
+            accent: "#0080FF",
+            badge: "New",
+            caption: "Loyalty & SMS Rewards",
+            description: "Enrol drivers in seconds, award points on every litre sold, and let them redeem right at the pump — with SMS alerts that keep customers coming back to your station."
+        },
+        {
+            id: 10,
+            icon: Truck,
+            accent: "#faa300",
+            caption: "Procurement to Payment",
+            description: "Raise purchase orders, receive goods against them, and post supplier invoices automatically — with credit notes and payment reversals for when things go wrong."
+        },
+        {
+            id: 11,
+            icon: BookOpenCheck,
+            accent: "#0080FF",
+            caption: "Built-in Accounting Engine",
+            description: "Double-entry journals, trial balance, profit & loss and a fixed-asset register that post themselves from daily operations. Hand your accountant a closed book, not a shoebox."
+        },
+        {
+            id: 12,
+            icon: Building2,
+            accent: "#faa300",
+            caption: "Multi-Branch Command",
+            description: "Run every station from a single login. Consolidated sales, stock and payroll across branches, with one-click drill-down into any individual site."
         }
     ];
+
+    const visible = showAll ? data : data.slice(0, 6);
 
     return (
         <div className="py-12 sm:py-16 lg:py-20 flex flex-col items-center px-4 sm:px-8 lg:px-40">
@@ -77,14 +134,14 @@ export default function Features() {
 
             {/* FEATURE CARDS — staggered scroll reveal */}
             <div className="mt-10 sm:mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
-                {data.map((item, index) => (
+                {visible.map((item, index) => (
                     <motion.div
                         key={item.id}
                         initial={{ opacity: 0, y: 50 }}
                         animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
                         transition={{
                             duration: 0.5,
-                            delay: index * 0.1,
+                            delay: index < 6 ? index * 0.1 : (index - 6) * 0.08,
                             ease: "easeOut"
                         }}
                         whileHover={{
@@ -102,12 +159,30 @@ export default function Features() {
                     >
                         <FeatureCard
                             img={item.img}
+                            icon={item.icon}
+                            accent={item.accent}
+                            badge={item.badge}
                             caption={item.caption}
                             description={item.description}
                         />
                     </motion.div>
                 ))}
             </div>
+
+            {/* EXPAND / COLLAPSE */}
+            <motion.button
+                type="button"
+                onClick={() => setShowAll((prev) => !prev)}
+                className="cursor-pointer mt-10 flex items-center gap-2 py-2 px-6 rounded-[30px] font-semibold text-white bg-gradient-to-r from-[#0080ff] via-[#0c3865] to-[#0c3865]"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+            >
+                {showAll ? (
+                    <>Show fewer features <ChevronUp size={18} /></>
+                ) : (
+                    <>Explore all {data.length} capabilities <ChevronDown size={18} /></>
+                )}
+            </motion.button>
         </div>
     );
 }

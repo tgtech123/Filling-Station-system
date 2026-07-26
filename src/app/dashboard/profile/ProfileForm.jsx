@@ -1,11 +1,11 @@
 'use client';
 import React from 'react';
 
-const InputField = ({ label, name, value, editable, onChange }) => (
+const InputField = ({ label, name, value, editable, onChange, type = "text" }) => (
   <div className="flex flex-col w-full">
     <label className="text-sm font-medium mb-1">{label}</label>
     <input
-      type="text"
+      type={type}
       name={name}
       value={value}
       onChange={onChange}
@@ -50,6 +50,7 @@ const ProfileForm = ({ editable = false, formData, onChange }) => {
           />
           <InputField
             label="Email Address"
+            type="email"
             name="email"
             value={formData.email}
             editable={false}
@@ -57,6 +58,7 @@ const ProfileForm = ({ editable = false, formData, onChange }) => {
           />
           <InputField
             label="Phone Number"
+            type="tel"
             name="phone"
             value={formData.phone}
             editable={false}

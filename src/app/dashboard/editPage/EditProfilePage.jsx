@@ -148,6 +148,7 @@ const EditProfilePage = ({ profileData }) => {
           <div>
             <EditFormField
               label="Email address"
+              type="email"
               name="email"
               value={formData.email}
               icon={<HiOutlineMail className='mt-0.5' size={20}/>}
@@ -162,6 +163,7 @@ const EditProfilePage = ({ profileData }) => {
           <div>
             <EditFormField
               label="Phone number"
+              type="tel"
               name="phone"
               value={formData.phone}
               icon={<FiPhone className='mt-0.5' size={20}/>}
