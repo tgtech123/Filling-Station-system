@@ -3,6 +3,7 @@ import "./globals.css";
 import ClientLayout from "@/components/ClientLayout";
 import ThemeProvider from "@/components/ThemeProvider";
 import ThemeInitializer from "@/components/ThemeInitializer";
+import InputKeyboardGuard from "@/components/InputKeyboardGuard";
 import { Toaster } from "react-hot-toast";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -36,6 +37,7 @@ export default function RootLayout({ children }) {
       >
         <ThemeProvider>
           <ThemeInitializer />
+          <InputKeyboardGuard />
           <ClientLayout>
             {children}
             <Toaster position="top-right" reverseOrder={false} />

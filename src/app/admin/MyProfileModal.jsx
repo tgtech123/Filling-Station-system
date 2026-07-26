@@ -256,7 +256,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
                 Email Address
               </label>
               <input
-                type="text"
+                type="email"
                 name="emailAddress"
                 value={
                   isEditing ? tempData.emailAddress : formData.emailAddress
@@ -276,7 +276,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
                 Phone number
               </label>
               <input
-                type="text"
+                type="tel"
                 name="phoneNumber"
                 value={isEditing ? tempData.phoneNumber : formData.phoneNumber}
                 onChange={(e) =>
