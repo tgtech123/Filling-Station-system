@@ -69,7 +69,17 @@ export default function ManagerProfileModal({ onclose }) {
         emergencyContact: user.emergencyContact || "",
         src: getUserImage(user._id || user.id) || user.image || null,
         employeeID: (user._id || user.id) ? String(user._id || user.id).slice(-6).toUpperCase() : "",
-        position: user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "Manager",
+        // Prefer the label the server sends — it reads "Owner" for the station
+        // owner. `role` stays "manager" for them because every permission check
+        // is keyed on it, so showing it raw would label the owner a manager.
+        position:
+          user.displayRole ||
+          (user.isOwner
+            ? "Owner"
+            : user.role
+            ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+            : "Manager"),
+        isOwner: user.isOwner === true,
         startDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-GB") : "",
         stationName: st.name || "",
         stationID: st._id ? String(st._id).slice(-6).toUpperCase() : "",
