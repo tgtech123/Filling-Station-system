@@ -37,15 +37,43 @@ export default function CustomerDetailPage() {
     fetchSettings();
   }, [id]);
 
+  // The configured price for a product, from Loyalty > Settings.
+  // Returns "" when the owner has not set a price for that product yet, so the
+  // field stays empty and editable rather than showing a misleading 0.
+  const priceForProduct = (product) => {
+    const p = Number(settings?.pricePerLitre?.[product]);
+    return Number.isFinite(p) && p > 0 ? String(p) : "";
+  };
+
+  // Prefill the price as soon as settings arrive, so the field is already
+  // populated for the default product when the form is first opened.
+  useEffect(() => {
+    if (!settings) return;
+    setEarnForm(f => (f.pricePerLitre ? f : { ...f, pricePerLitre: priceForProduct(f.product) }));
+  }, [settings]);
+
   // Auto-calculate litres from amount or vice versa
   const handleEarnField = (key, value) => {
     const next = { ...earnForm, [key]: value };
+
+    // Picking a product pulls its configured price straight in — selecting AGO
+    // fills AGO's price. The cashier never has to look it up or type it, and
+    // the amount/litres conversion works from the first keystroke.
+    if (key === "product") next.pricePerLitre = priceForProduct(value);
+
     const price = Number(next.pricePerLitre);
+
     if (key === "amountSpent" && price > 0) next.litres = (Number(value) / price).toFixed(3);
     if (key === "litres"      && price > 0) next.amountSpent = (Number(value) * price).toFixed(2);
-    if (key === "pricePerLitre") {
-      if (next.amountSpent && Number(value) > 0) next.litres = (Number(next.amountSpent) / Number(value)).toFixed(3);
+
+    // Price changed (typed, or brought in by a product switch) — re-derive the
+    // other figure. Litres is the anchor when present: it is the physical
+    // quantity dispensed, and points are earned from litres.
+    if ((key === "pricePerLitre" || key === "product") && price > 0) {
+      if (next.litres)           next.amountSpent = (Number(next.litres) * price).toFixed(2);
+      else if (next.amountSpent) next.litres      = (Number(next.amountSpent) / price).toFixed(3);
     }
+
     setEarnForm(next);
   };
 
@@ -56,7 +84,9 @@ export default function CustomerDetailPage() {
     const result = await recordEarn({ customerId: id, ...earnForm });
     setSaving(false);
     if (result.success) {
-      setEarnForm(EMPTY_EARN);
+      // Reset, but keep the price prefilled for the default product so the next
+      // sale can be logged without re-entering it.
+      setEarnForm({ ...EMPTY_EARN, pricePerLitre: priceForProduct(EMPTY_EARN.product) });
       setShowEarn(false);
       fetchCustomer(id);
       setSuccess(result.message);
@@ -247,7 +277,7 @@ export default function CustomerDetailPage() {
                 <label className="text-xs font-semibold text-gray-600 mb-1 block">Product *</label>
                 <div className="grid grid-cols-4 gap-2">
                   {PRODUCTS.map(p => (
-                    <button key={p} onClick={() => setEarnForm(f => ({ ...f, product: p }))}
+                    <button key={p} onClick={() => handleEarnField("product", p)}
                       className={`py-2 rounded-xl text-xs font-bold border transition-all ${earnForm.product === p ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"}`}>
                       {p}
                     </button>

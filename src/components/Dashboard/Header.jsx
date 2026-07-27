@@ -244,6 +244,18 @@ export default function Header({ toggleSidebar, showSidebar }) {
   const canUpgrade = currentPlan?.plan !== "enterprise-max" && userData?.role === "manager";
   const isSuperManager = userData?.isSuperManager === true;
 
+  // Label shown to the user. The station OWNER and a hired manager both have
+  // role "manager" — every permission gate depends on that — so the owner must
+  // be distinguished by label, not by role, or they appear as just another
+  // manager.
+  //
+  // Falls back to `isOwner` only, never `isSuperManager`: sessions issued
+  // before this change set isSuperManager true for EVERY manager, so using it
+  // would label hired managers "Owner". A stale session shows "Manager" until
+  // the next login, which is the safe direction to be wrong in.
+  const roleTitle =
+    userData?.displayRole || (userData?.isOwner ? "Owner" : "Manager");
+
   // dropdown open state
   const [msgOpen, setMsgOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
@@ -557,7 +569,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
           username={fullName}
           size="md"
           onProfileClick={userData?.role === "manager" ? () => setShowManagerProfile(true) : undefined}
-          profileLabel={userData?.role === "manager" ? "Manager Profile" : "View Profile"}
+          profileLabel={userData?.role === "manager" ? `${roleTitle} Profile` : "View Profile"}
         />
         <div className="min-w-0">
           <h4 className="text-white text-sm font-semibold truncate max-w-[120px]">
@@ -569,7 +581,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
                 onClick={() => setShowManagerProfile(true)}
                 className="text-blue-100 dark:text-[#1a71f6] font-semibold hover:underline"
               >
-                Manager Profile
+                {roleTitle} Profile
               </button>
             ) : (
               <Link href="/dashboard/profile" className="text-blue-100 dark:text-[#1a71f6] hover:underline">
@@ -587,7 +599,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
           username={fullName}
           size="md"
           onProfileClick={userData?.role === "manager" ? () => setShowManagerProfile(true) : undefined}
-          profileLabel={userData?.role === "manager" ? "Manager Profile" : "View Profile"}
+          profileLabel={userData?.role === "manager" ? `${roleTitle} Profile` : "View Profile"}
           onLogout={() => setShowLogoutConfirm(true)}
         />
       </div>
