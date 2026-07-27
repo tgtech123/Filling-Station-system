@@ -41,7 +41,7 @@ export default function ManagerProfileModal({ onclose }) {
     stationName: "", stationID: "", stationEmailAddress: "",
     stationPhone: "", stationAddress: "", stationState: "", stationCity: "",
     stationCountry: "Nigeria", licenseNo: "", establishedDate: "", taxID: "",
-    employeeID: "", position: "Manager", department: "General Dept",
+    employeeID: "", position: "Manager", isOwner: false, department: "General Dept",
     employmentType: "Contract", startDate: "", workSchedule: "24/7",
     annualWages: "", payFrequency: "Monthly",
     businessType: "", operatingHours: "", noOfPumps: "",
@@ -256,7 +256,12 @@ export default function ManagerProfileModal({ onclose }) {
           {/* Title row */}
           <header className="flex justify-between items-start">
             <div>
-              <h3 className="text-[22px] font-semibold dark:text-white">Manager Profile</h3>
+              {/* Owner or Manager — `position` already resolves to "Owner" for
+                  the station owner, so the modal title matches the button that
+                  opened it instead of always saying "Manager Profile". */}
+              <h3 className="text-[22px] font-semibold dark:text-white">
+                {managerData?.isOwner ? "Owner" : "Manager"} Profile
+              </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">Personal and employment information</p>
             </div>
             <button onClick={onclose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors mt-1">

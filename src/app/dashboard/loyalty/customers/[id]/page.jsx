@@ -37,12 +37,21 @@ export default function CustomerDetailPage() {
     fetchSettings();
   }, [id]);
 
-  // The configured price for a product, from Loyalty > Settings.
-  // Returns "" when the owner has not set a price for that product yet, so the
-  // field stays empty and editable rather than showing a misleading 0.
+  // Price to prefill for a product.
+  //
+  // Live pump price first: it is what the owner actually maintains and it is
+  // always current. The Loyalty > Settings figure is a manually-kept copy that
+  // defaults to 0, so relying on it alone meant nothing prefilled until someone
+  // had typed prices in there by hand.
+  //
+  // Returns "" when neither is set, so the field stays empty and editable
+  // rather than showing a misleading 0.
   const priceForProduct = (product) => {
-    const p = Number(settings?.pricePerLitre?.[product]);
-    return Number.isFinite(p) && p > 0 ? String(p) : "";
+    const live = Number(settings?.livePricePerLitre?.[product]);
+    if (Number.isFinite(live) && live > 0) return String(live);
+
+    const configured = Number(settings?.pricePerLitre?.[product]);
+    return Number.isFinite(configured) && configured > 0 ? String(configured) : "";
   };
 
   // Prefill the price as soon as settings arrive, so the field is already
@@ -300,7 +309,7 @@ export default function CustomerDetailPage() {
                 <label className="text-xs font-semibold text-gray-600 mb-1 block">Price / Litre (₦)</label>
                 <input type="number" value={earnForm.pricePerLitre}
                   onChange={e => handleEarnField("pricePerLitre", e.target.value)}
-                  placeholder={settings?.pricePerLitre?.[earnForm.product] || "e.g. 800"}
+                  placeholder={priceForProduct(earnForm.product) || "e.g. 800"}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
               </div>
               <div>

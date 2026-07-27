@@ -154,6 +154,20 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     router.push("/");
   };
 
+  // ── Department scoping (cashiers and attendants only) ─────────────────────
+  // A station can run fuel and gas with different people on each. Floor staff
+  // see only the side they are assigned to; "both" sees everything. Managers,
+  // owners, supervisors and accountants are not tied to a department.
+  const staffDept = (userData?.department || "fuel").toLowerCase();
+  const isFloorStaff = ["cashier", "attendant"].includes(
+    (userData?.role || "").toLowerCase()
+  );
+  const gasOnlyStaff = isFloorStaff && staffDept === "gas";
+
+  // Links every staff member keeps regardless of department — the entry point
+  // and anything that is about them rather than about a product line.
+  const DEPARTMENT_NEUTRAL_LINKS = ["dashboard", "gas-divider"];
+
   // Get role information
   const getRoleInfo = (role) => {
     const roleMap = {
@@ -189,11 +203,23 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       },
     };
 
-    return roleMap[role] || {
+    const info = roleMap[role] || {
       name: "Unknown",
       level: 0,
       color: "bg-gray-500",
     };
+
+    // The station OWNER and a hired manager both have role "manager" — every
+    // permission check depends on that — so the owner has to be distinguished
+    // by LABEL, not by role, or they show up as just another manager.
+    // Uses the server's displayRole, falling back to isOwner. Never
+    // isSuperManager: sessions issued before this change set it true for every
+    // manager, which would label hired managers "Owner".
+    if (role === "manager" && (userData?.displayRole === "Owner" || userData?.isOwner)) {
+      return { ...info, name: "Owner", level: 5, color: "bg-amber-500" };
+    }
+
+    return info;
   };
 
   // Salary sub-links (accountant)
@@ -245,7 +271,12 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     id: "dashboard",
     name: "Dashboard",
     icon: <House />,
-    link: `/dashboard/${role}`, 
+    // Gas-only cashiers and attendants land on their gas screen. The fuel
+    // dashboard is blocked for them server-side, so pointing them at it would
+    // just be a link to a 403.
+    link: gasOnlyStaff
+      ? (role === "cashier" ? "/dashboard/gas/cashier" : "/dashboard/gas/shifts")
+      : `/dashboard/${role}`,
     roles: ["cashier", "attendant", "accountant", "supervisor", "manager","admin"],
   },
     // Cashier links
@@ -686,9 +717,18 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     if (!Array.isArray(link.roles)) return false;
     if (!link.roles.includes(normalizedRole)) return false;
 
-    // Attendants and cashiers only see gas links if their department includes gas
-    if (["attendant", "cashier"].includes(normalizedRole) && link.id?.startsWith("gas-")) {
-      if (dept === "fuel") return false;
+    // Cashiers and attendants see ONLY their own department.
+    //
+    // This used to hide gas links from fuel staff but not the reverse, so a gas
+    // cashier still saw every fuel and lubricant screen. The server now blocks
+    // cross-department access outright, so showing those links would just hand
+    // someone a menu of 403s — and the point of the split is that each person
+    // sees what they work on and nothing else.
+    if (["attendant", "cashier"].includes(normalizedRole)) {
+      const isGasLink = link.id?.startsWith("gas-");
+      if (dept === "fuel" && isGasLink) return false;
+      if (dept === "gas" && !isGasLink && !DEPARTMENT_NEUTRAL_LINKS.includes(link.id)) return false;
+      // "both" sees everything — the small station where one person covers all.
     }
 
     if (gasEnabled === false && link.id?.startsWith("gas-")) {
