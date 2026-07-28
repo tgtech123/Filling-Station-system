@@ -17,6 +17,7 @@ import useThemePersistence from "@/hooks/useThemePersistence";
 import Image from "next/image";
 import { useImageStore } from "@/store/useImageStore";
 import useAdminProfileStore from "@/store/useAdminProfileStore";
+import { getCurrentUserId } from "@/lib/currentUser";
 import { useRouter } from "next/navigation";
 import LogoutConfirmModal from "@/components/LogoutConfirmModal";
 
@@ -24,7 +25,8 @@ const SidebarTwo = ({ activeItem, setActiveItem, sidebarOpen, setSidebarOpen }) 
   const [mounted, setMounted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const USER_ID = "admin-user-1";
+  // Real signed-in admin, not a hardcoded literal — see lib/currentUser.
+  const USER_ID = getCurrentUserId();
 
   const { adminName, adminImage, adminRole, initProfile } = useAdminProfileStore();
   const getUserImage = useImageStore((s) => s.getUserImage);
@@ -38,8 +40,8 @@ const SidebarTwo = ({ activeItem, setActiveItem, sidebarOpen, setSidebarOpen }) 
   };
 
   const profileImage = mounted
-    ? adminImage || getUserImage(USER_ID) || "/sammi.jpeg"
-    : "/sammi.jpeg";
+    ? adminImage || (USER_ID && getUserImage(USER_ID)) || "/station-logo.png"
+    : "/station-logo.png";
 
   useEffect(() => {
     setMounted(true);

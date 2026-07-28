@@ -6,30 +6,37 @@ import ImageUploadButton from "@/components/ImageUploadButton";
 import useImageStore from "@/store/useImageStore";
 import useAdminProfileStore from "@/store/useAdminProfileStore";
 import { api } from "@/lib/config";
+import { getCurrentUser, getCurrentUserId } from "@/lib/currentUser";
 
 const MyProfileModal = ({ isOpen, onClose }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isMessage, setIsMessage] = useState({ type: "", text: "" });
 
-  const [adminId] = useState(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem("user") || "{}");
-      return u.id || u._id || "admin-default";
-    } catch {
-      return "admin-default";
-    }
-  });
+  // Same id resolution the header and sidebar use — one helper, so the photo
+  // is cached and read under a single key. The "admin-default" fallback is
+  // gone: it silently pooled every signed-out or malformed session under one
+  // shared key, meaning two admins could see each other's photo.
+  const [adminId] = useState(() => getCurrentUserId());
   const { setImage } = useImageStore();
   const { updateName, updateImage } = useAdminProfileStore();
 
-  const [formData, setFormData] = useState({
-    firstName: "Oboh",
-    lastName: "Thankgod",
-    emailAddress: "tgtech101@gmail.com",
-    phoneNumber: "+234 7068690289",
+  // Loaded from the signed-in account. These used to be hardcoded to one
+  // person's details, so every admin saw the same name and email.
+  const [formData, setFormData] = useState(() => {
+    const u = getCurrentUser();
+    return {
+      firstName: u.firstName || "",
+      lastName: u.lastName || "",
+      emailAddress: u.email || "",
+      phoneNumber: u.phone || "",
+    };
   });
 
   const [tempData, setTempData] = useState(formData);
+  const [savingProfile, setSavingProfile] = useState(false);
+  // Changing the email requires re-entering the password, so it is handled
+  // separately from name/phone rather than saved silently.
+  const [emailPassword, setEmailPassword] = useState("");
   const messageTimer = useRef(null);
 
   // ── Change Password state ──────────────────────────────────
@@ -45,17 +52,87 @@ const MyProfileModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     clearTimeout(messageTimer.current);
-    setFormData(tempData);
-    setIsEditing(false);
-    setIsMessage({ type: "success", text: "Profile updated successfully!" });
-    messageTimer.current = setTimeout(
-      () => setIsMessage({ type: "", text: "" }),
-      3000
-    );
-    // Sync name to store + localStorage so Header/Sidebar update instantly
-    updateName(tempData.firstName, tempData.lastName);
+
+    if (!tempData.firstName.trim() || !tempData.lastName.trim()) {
+      setIsMessage({ type: "error", text: "First and last name are required." });
+      return;
+    }
+
+    const emailChanged =
+      tempData.emailAddress.trim().toLowerCase() !==
+      formData.emailAddress.trim().toLowerCase();
+
+    // The API requires the current password before it will change an email —
+    // that check is what stops someone taking over an unattended session.
+    if (emailChanged && !emailPassword) {
+      setIsMessage({
+        type: "error",
+        text: "Enter your current password below to change your email address.",
+      });
+      return;
+    }
+
+    setSavingProfile(true);
+    try {
+      // Name and phone: plain self-service update.
+      const { data } = await api.patch("/api/auth/me", {
+        firstName: tempData.firstName.trim(),
+        lastName: tempData.lastName.trim(),
+        phone: tempData.phoneNumber.trim(),
+      });
+
+      // Email: separate endpoint, password-verified.
+      if (emailChanged) {
+        await api.post("/api/auth/change-credentials", {
+          currentPassword: emailPassword,
+          email: tempData.emailAddress.trim(),
+        });
+      }
+
+      // Persist locally so the header and sidebar reflect it without a reload.
+      try {
+        const u = getCurrentUser();
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...u,
+            firstName: tempData.firstName.trim(),
+            lastName: tempData.lastName.trim(),
+            phone: tempData.phoneNumber.trim(),
+            email: emailChanged ? tempData.emailAddress.trim() : u.email,
+          })
+        );
+      } catch {}
+
+      setFormData(tempData);
+      setEmailPassword("");
+      setIsEditing(false);
+      updateName(tempData.firstName, tempData.lastName);
+      setIsMessage({
+        type: "success",
+        text: emailChanged
+          ? "Profile and email updated. Use the new email next time you sign in."
+          : "Profile updated successfully!",
+      });
+    } catch (err) {
+      // Say what actually went wrong instead of reporting a success that never
+      // happened — the previous version always claimed it saved.
+      setIsMessage({
+        type: "error",
+        text:
+          err?.response?.data?.error ||
+          err?.response?.data?.message ||
+          "Could not save your profile. Please try again.",
+      });
+    } finally {
+      setSavingProfile(false);
+      messageTimer.current = setTimeout(
+        () => setIsMessage({ type: "", text: "" }),
+        4000
+      );
+    }
   };
 
   const handleCancel = () => {
@@ -183,10 +260,11 @@ const MyProfileModal = ({ isOpen, onClose }) => {
                 </button>
                 <button
                   onClick={handleSave}
-                  className="flex gap-2 bg-[#0080FF] w-[150px] h-[40px] text-white font-semibold rounded-lg cursor-pointer hover:bg-blue-700 items-center justify-center"
+                  disabled={savingProfile}
+                  className="flex gap-2 bg-[#0080FF] w-[150px] h-[40px] text-white font-semibold rounded-lg cursor-pointer hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed items-center justify-center"
                 >
                   <Save size={18} />
-                  Save Changes
+                  {savingProfile ? "Saving…" : "Save Changes"}
                 </button>
               </div>
             )}
@@ -289,6 +367,33 @@ const MyProfileModal = ({ isOpen, onClose }) => {
               />
               <Phone className="absolute mt-11 ml-3 text-neutral-500" />
             </div>
+
+            {/*
+              Only appears when the email has actually been changed. The API
+              re-checks the current password before moving an email address —
+              without that, anyone at an unattended screen could point the
+              account at their own inbox and reset the password from there.
+            */}
+            {isEditing &&
+              tempData.emailAddress.trim().toLowerCase() !==
+                formData.emailAddress.trim().toLowerCase() && (
+                <div className="relative flex flex-col gap-2 lg:col-span-2">
+                  <label className="font-bold text-[0.875rem] leading-[150%]">
+                    Current password{" "}
+                    <span className="font-normal text-neutral-500">
+                      — required to change your email
+                    </span>
+                  </label>
+                  <input
+                    type="password"
+                    value={emailPassword}
+                    onChange={(e) => setEmailPassword(e.target.value)}
+                    placeholder="Enter your current password"
+                    autoComplete="current-password"
+                    className="w-full max-w-[25.656rem] h-[3.25rem] border-[1.8px] focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-3"
+                  />
+                </div>
+              )}
           </form>
         </div>
 

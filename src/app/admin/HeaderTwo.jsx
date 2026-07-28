@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import MyProfileModal from "./MyProfileModal";
 import { useImageStore } from "@/store/useImageStore";
 import useAdminProfileStore from "@/store/useAdminProfileStore";
+import { getCurrentUserId } from "@/lib/currentUser";
 import useThemePersistence from "@/hooks/useThemePersistence";
 import useAdminNotificationStore from "@/store/useAdminNotificationStore";
 import {
@@ -96,7 +97,11 @@ const HeaderTwo = ({ onMenuClick }) => {
   const [notifOpen, setNotifOpen]           = useState(false);
   const [selectedNotif, setSelectedNotif]   = useState(null);
   const notifRef                            = useRef(null);
-  const USER_ID = "admin-user-1";
+  // The real signed-in admin, not a hardcoded literal. This used to be
+  // "admin-user-1", while the profile modal cached the uploaded photo under the
+  // account's actual id — so the header looked under a key nothing was ever
+  // written to and fell back to a stock image.
+  const USER_ID = getCurrentUserId();
 
   const { adminName, adminImage, initProfile } = useAdminProfileStore();
   const getUserImage = useImageStore((s) => s.getUserImage);
@@ -121,9 +126,13 @@ const HeaderTwo = ({ onMenuClick }) => {
     router.push("/");
   };
 
+  // Account value first (it is what the server returned at login and what
+  // survives a new device), then the local cache, then a neutral placeholder.
+  // The old fallback was /sammi.jpeg — a stock photo of a real person, shown to
+  // every admin who had not uploaded anything.
   const profileImage = mounted
-    ? adminImage || getUserImage(USER_ID) || "/sammi.jpeg"
-    : "/sammi.jpeg";
+    ? adminImage || (USER_ID && getUserImage(USER_ID)) || "/station-logo.png"
+    : "/station-logo.png";
 
   useEffect(() => {
     setMounted(true);

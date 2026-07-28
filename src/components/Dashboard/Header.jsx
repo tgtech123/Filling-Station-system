@@ -412,7 +412,16 @@ export default function Header({ toggleSidebar, showSidebar }) {
             </button>
 
             {msgOpen && (
-              <div className="absolute top-[calc(100%+8px)] right-0 w-[min(320px,92vw)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
+              /*
+                On mobile this is anchored to the VIEWPORT, not the button.
+                These icons sit mid-header — the station switcher and profile
+                come after them — so `right-0` pinned the panel's right edge to
+                the button, and a 92vw-wide panel then ran off the left of the
+                screen. Fixed + inset-x-3 keeps it on screen at any width;
+                from sm: up there is room to anchor it to the button again.
+                top-[98px] clears the 90px header.
+              */
+              <div className="fixed left-3 right-3 top-[98px] w-auto sm:absolute sm:left-auto sm:right-0 sm:top-[calc(100%+8px)] sm:w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-y-auto max-h-[75vh] z-50">
                 <MessagesDropdown
                   messages={messages}
                   onMarkAll={() => { markAllMessagesRead(); }}
@@ -435,7 +444,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
             </button>
 
             {alertOpen && (
-              <div className="absolute top-[calc(100%+8px)] right-0 w-[min(320px,92vw)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-hidden z-50">
+              <div className="fixed left-3 right-3 top-[98px] w-auto sm:absolute sm:left-auto sm:right-0 sm:top-[calc(100%+8px)] sm:w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-neutral-200 dark:border-gray-700 overflow-y-auto max-h-[75vh] z-50">
                 <AlertsDropdown
                   alerts={alerts}
                   onMarkAll={() => { markAllAlertsRead(); }}

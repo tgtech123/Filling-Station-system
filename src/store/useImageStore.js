@@ -50,12 +50,18 @@ const useImageStore = create(
             }
           } catch {}
 
-          // Persist the URL to the backend so other devices see it after login.
-          // Requires the backend endpoint: PATCH /api/auth/profile/image
+          // Persist to the account so the photo survives a new device, a new
+          // browser, or clearing storage — and so the value the app reads back
+          // at login is the one that was uploaded.
+          //
+          // This previously posted to /api/auth/profile/image, which was never
+          // built: the call failed silently inside this catch and the image
+          // only ever lived in localStorage. It now uses the self-service
+          // profile endpoint, which accepts `image`.
           try {
             const token = localStorage.getItem("token");
             if (token) {
-              await fetch(`${process.env.NEXT_PUBLIC_API || ""}/api/auth/profile/image`, {
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API || ""}/api/auth/me`, {
                 method: "PATCH",
                 headers: {
                   "Content-Type": "application/json",
@@ -63,10 +69,15 @@ const useImageStore = create(
                 },
                 body: JSON.stringify({ image: transformedUrl }),
               });
+              if (!res.ok) {
+                console.error("Profile image did not save to the account:", res.status);
+              }
             }
-          } catch {
-            // Non-fatal — image already stored locally; backend will sync once
-            // the endpoint is deployed.
+          } catch (err) {
+            // Non-fatal for this session — the image is already on screen — but
+            // log it, because silently swallowing this is what hid the missing
+            // endpoint in the first place.
+            console.error("Profile image sync failed:", err?.message);
           }
 
           return { url: transformedUrl, publicId: data.public_id };
