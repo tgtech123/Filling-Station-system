@@ -139,7 +139,10 @@ const SalesReportMan = () => {
 
         {/* ── Sales Tab — Stat Cards + Chart ──────────────────────────────────── */}
         {isActiveTab === "TabOne" && (
-          <div>
+          // mt-6 — the tab switcher sits in the flex row above with no bottom
+          // spacing of its own, so without this the first stat card is flush
+          // against the tabs and reads as if the tab is sitting on the card.
+          <div className="mt-6">
             {errors?.salesOverview && (
               <div className="my-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
                 {errors.salesOverview}

@@ -5,15 +5,24 @@ import { Users, Plus, Search, Fuel, CheckCircle2, AlertCircle, Loader2, ChevronR
 import Link from "next/link";
 import useFuelLoyaltyStore from "@/store/useFuelLoyaltyStore";
 
+const TIER_STYLES = {
+  Bronze:   { bg: "bg-orange-100",  text: "text-orange-700",  dot: "bg-orange-500" },
+  Silver:   { bg: "bg-gray-100",    text: "text-gray-600",    dot: "bg-gray-400"   },
+  Gold:     { bg: "bg-yellow-100",  text: "text-yellow-700",  dot: "bg-yellow-500" },
+  Platinum: { bg: "bg-purple-100",  text: "text-purple-700",  dot: "bg-purple-500" },
+};
+
 function TierBadge({ tier }) {
-  const map = {
-    Bronze:   { bg: "bg-orange-100",  text: "text-orange-700"  },
-    Silver:   { bg: "bg-gray-100",    text: "text-gray-600"    },
-    Gold:     { bg: "bg-yellow-100",  text: "text-yellow-700"  },
-    Platinum: { bg: "bg-purple-100",  text: "text-purple-700"  },
-  };
-  const s = map[tier] || map.Bronze;
-  return <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.bg} ${s.text}`}>{tier}</span>;
+  const s = TIER_STYLES[tier] || TIER_STYLES.Bronze;
+  // whitespace-nowrap + leading-none keep the label a tight pill instead of
+  // wrapping or growing taller than the text it contains.
+  return (
+    <span
+      className={`inline-flex items-center text-[11px] font-bold leading-none px-2 py-1 rounded-full whitespace-nowrap ${s.bg} ${s.text}`}
+    >
+      {tier}
+    </span>
+  );
 }
 
 const EMPTY = { name: "", phone: "", plateNumber: "" };
@@ -80,13 +89,40 @@ export default function LoyaltyCustomersPage() {
 
         {/* Tier filter pills */}
         <div className="flex gap-2 mb-5 flex-wrap">
-          {Object.entries(tierCounts).map(([tier, count]) => (
-            <button key={tier} onClick={() => setTierFilter(tierFilter === tier ? "" : tier)}
-              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${tierFilter === tier ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"}`}>
-              <TierBadge tier={tier} />
-              <span>{count}</span>
-            </button>
-          ))}
+          {/*
+            One pill per tier, not a badge nested inside a button pill — the
+            rounded badge sitting inside the rounded button was what made these
+            look stretched and double-outlined. The tier's colour now lives on
+            a small dot, so every pill is the same height whatever its label.
+          */}
+          {Object.entries(tierCounts).map(([tier, count]) => {
+            const s = TIER_STYLES[tier] || TIER_STYLES.Bronze;
+            const active = tierFilter === tier;
+            return (
+              <button
+                key={tier}
+                onClick={() => setTierFilter(active ? "" : tier)}
+                aria-pressed={active}
+                className={`inline-flex items-center gap-2 text-xs font-semibold leading-none px-3 py-2 rounded-full border whitespace-nowrap transition-all ${
+                  active
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : `bg-white ${s.text} border-gray-200 hover:border-blue-300`
+                }`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${active ? "bg-white" : s.dot}`}
+                />
+                {tier}
+                <span
+                  className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
+                    active ? "bg-white/20 text-white" : `${s.bg} ${s.text}`
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {success && (

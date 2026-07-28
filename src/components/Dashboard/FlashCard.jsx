@@ -17,10 +17,17 @@ export default function FlashCard({ name, icon, period, variable, trend, number 
 
       <div className="flex justify-between">
         <h3 className="text-lg sm:text-2xl font-semibold text-[#1a71f6] dark:text-blue-400 group-hover:text-white transition-colors">{variable}</h3>
-        {number && (
+        {/*
+          `number != null` — NOT a truthiness check. A card whose value is the
+          number 0 would short-circuit `{number && …}`, and React then renders a
+          bare `0` text node with no <h3> around it: no font size, no colour, no
+          mx-auto. That is why "Under Maintenance: 0" and the zeroed Activity
+          Log counters sat out of line with every other card.
+        */}
+        {number != null && number !== "" && (
           <h3 className="text-base sm:text-xl lg:text-2xl mx-auto font-semibold text-[#1a71f6] dark:text-blue-400 group-hover:text-white transition-colors">{number}</h3>
         )}
-        {trend && (
+        {trend != null && trend !== "" && (
           <div className="text-[#04910c] dark:text-green-400 group-hover:text-white flex items-center gap-1 font-semibold transition-colors">
             <TrendingUp />
             {trend}%

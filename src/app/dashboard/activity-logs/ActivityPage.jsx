@@ -56,6 +56,10 @@ const mapLogRow = (log) => [
 const ActivityPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm,  setSearchTerm]  = useState("");
+  // Duration and status were rendered as buttons with no onClick — decoration
+  // over an API that already accepted startDate/endDate/role/status. Now wired.
+  const [duration,    setDuration]    = useState("all");
+  const [statusFilter, setStatusFilter] = useState("");
   const itemsPerPage = 8;
 
   const activityLogs          = useManagerReportsStore((state) => state.activityLogs);
@@ -65,10 +69,30 @@ const ActivityPage = () => {
   const fetchActivityLogs     = useManagerReportsStore((state) => state.fetchActivityLogs);
   const setActivityLogsFilters = useManagerReportsStore((state) => state.setActivityLogsFilters);
 
-  // ── Initial fetch + re-fetch when page changes ────────────────────────────
+  // Turn a duration choice into the date range the API expects. "all" sends no
+  // dates at all, which the server reads as unbounded.
+  const dateRangeFor = (value) => {
+    if (value === "all") return { startDate: undefined, endDate: undefined };
+
+    const end = new Date();
+    const start = new Date();
+    if (value === "today") start.setHours(0, 0, 0, 0);
+    else if (value === "7d") start.setDate(start.getDate() - 7);
+    else if (value === "30d") start.setDate(start.getDate() - 30);
+    else if (value === "month") start.setDate(1), start.setHours(0, 0, 0, 0);
+
+    return { startDate: start.toISOString(), endDate: end.toISOString() };
+  };
+
+  // ── Initial fetch + re-fetch when page or filters change ──────────────────
   useEffect(() => {
-    fetchActivityLogs({ page: currentPage, limit: itemsPerPage });
-  }, [currentPage]);
+    fetchActivityLogs({
+      page: currentPage,
+      limit: itemsPerPage,
+      ...dateRangeFor(duration),
+      status: statusFilter || undefined,
+    });
+  }, [currentPage, duration, statusFilter]);
 
   // ── Search: store handles in-memory filtering via setActivityLogsFilters ──
   // No new network request — the store applies the filter on the already-
@@ -131,13 +155,35 @@ const ActivityPage = () => {
 
           {/* Duration · Filter · Export */}
           <div className="flex gap-2 flex-wrap">
-            <button className="border-2 border-neutral-300 dark:border-gray-600 dark:text-gray-200 px-4 py-2 rounded-2xl font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              Duration
-            </button>
-            <button className="border-2 border-neutral-300 dark:border-gray-600 dark:text-gray-200 px-4 py-2 rounded-2xl font-semibold text-sm flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-              Filter
-              <IoFilter size={18} />
-            </button>
+            {/* Native selects rather than custom popovers: they work on every
+                device, are keyboard and screen-reader accessible for free, and
+                the API behind them already supported these parameters. */}
+            <label className="sr-only" htmlFor="activity-duration">Duration</label>
+            <select
+              id="activity-duration"
+              value={duration}
+              onChange={(e) => { setDuration(e.target.value); setCurrentPage(1); }}
+              className="border-2 border-neutral-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 px-4 py-2 rounded-2xl font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+            >
+              <option value="all">All time</option>
+              <option value="today">Today</option>
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="month">This month</option>
+            </select>
+
+            <label className="sr-only" htmlFor="activity-status">Filter by status</label>
+            <select
+              id="activity-status"
+              value={statusFilter}
+              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+              className="border-2 border-neutral-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 px-4 py-2 rounded-2xl font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+            >
+              <option value="">All statuses</option>
+              <option value="Success">Success</option>
+              <option value="Failed">Failed</option>
+              <option value="Critical">Critical</option>
+            </select>
             <button className="bg-blue-500 text-white px-4 py-2 flex gap-2 items-center rounded-2xl hover:bg-blue-700 font-bold text-sm transition-colors">
               Export
               <Download size={16} />
