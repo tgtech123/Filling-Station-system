@@ -6,6 +6,7 @@ import SuccessMessageModal from "./SuccessMessageModal";
 import useStaffStore from "@/store/useStaffStore"; // Import the Zustand store
 import useShiftTypeStore from "@/store/useShiftTypeStore";
 import UpgradePrompt from "@/components/UpgradePrompt";
+import { api } from "@/lib/config";
 
 const NewStaffModal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
@@ -83,6 +84,8 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
     shiftType: "",
     responsibility: "",
     addSaleTarget: false,
+    targetAmount: "",
+    targetDuration: "Monthly",
     payType: "",
     amount: 0,
     twoFactorAuthEnabled: false,
@@ -192,6 +195,28 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
 
       if (result?.error) {
         throw new Error(result.error);
+      }
+
+      // Apply the sales target to the staff member we just created. Targets are
+      // a separate record (SalesTarget) with their own endpoint, so the boolean
+      // on the staff document alone was never going to produce one.
+      // createStaff resolves to the staff document itself (store returns
+      // data.staff), so the id is on the result directly.
+      const newStaffId = result?._id || result?.id;
+      if (formData.addSaleTarget && formData.targetAmount && newStaffId) {
+        try {
+          await api.patch(`/api/staff/${newStaffId}/target`, {
+            targetAmount: Number(formData.targetAmount),
+            duration: formData.targetDuration || "Monthly",
+          });
+        } catch (targetErr) {
+          // The staff member exists — don't fail the whole flow over the
+          // target. Say so plainly so it can be set from their profile.
+          console.error("Failed to set sales target:", targetErr);
+          setValidationError(
+            "Staff created, but the sales target could not be saved. Set it from their profile."
+          );
+        }
       }
 
 
@@ -398,7 +423,9 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
           </div>
 
           <div>
-            <p className="grid grid-cols-1 lg:grid-cols-2 mb-[0.75rem]">
+            {/* gap-3 — these two-column rows had no gap at all, so on wide
+                screens the two fields sat flush against each other. */}
+            <p className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-[0.75rem]">
               <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Role</label>
                 <select
@@ -530,7 +557,13 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                 Add sales target
               </span>
 
-              <span onClick={handleSalesTargetToggle} className="cursor-pointer">
+              <span
+                onClick={handleSalesTargetToggle}
+                role="switch"
+                aria-checked={toggleOn}
+                aria-label="Add sales target"
+                className="cursor-pointer"
+              >
                 {toggleOn ? (
                   <BsToggleOn size={25} className="text-blue-600" />
                 ) : (
@@ -538,6 +571,48 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
                 )}
               </span>
             </p>
+
+            {/*
+              The toggle used to set a boolean and nothing else — there was no
+              way to say what the target actually WAS, so switching it on had no
+              visible effect. These fields appear with it and are applied to the
+              new staff member right after they are created.
+            */}
+            {toggleOn && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-[1rem]">
+                <span className="flex flex-col gap-2">
+                  <label className="text-neutral-800 text-sm font-medium">
+                    Target amount (₦) <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    name="targetAmount"
+                    value={formData.targetAmount}
+                    onChange={handleInputChange}
+                    placeholder="e.g. 500000"
+                    className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
+                  />
+                </span>
+                <span className="flex flex-col gap-2">
+                  <label className="text-neutral-800 text-sm font-medium">
+                    Period <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="targetDuration"
+                    value={formData.targetDuration}
+                    onChange={handleInputChange}
+                    className="text-neutral-500 border-[2px] pl-3 border-neutral-100 outline-none focus:ring-1 focus:ring-blue-500 w-full h-[3.25rem] rounded-2xl"
+                  >
+                    <option value="Daily">Daily</option>
+                    <option value="Weekly">Weekly</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="Quarterly">Quarterly</option>
+                  </select>
+                </span>
+              </div>
+            )}
+
             <hr className="border-[1px] border-neutral-100 mt-[1rem]" />
           </div>
 
@@ -550,7 +625,9 @@ const NewStaffModal = ({ isOpen, onClose, children }) => {
 
             <hr className="border-[1px] border-neutral-100 mb-[0.75rem]" />
 
-            <p className="grid grid-cols-1 lg:grid-cols-2 mb-[0.75rem]">
+            {/* gap-3 — these two-column rows had no gap at all, so on wide
+                screens the two fields sat flush against each other. */}
+            <p className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-[0.75rem]">
               <span className="flex flex-col gap-2">
                 <label className="font-bold text-[0.875rem]">Pay type</label>
                 <select

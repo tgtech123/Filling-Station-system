@@ -72,6 +72,12 @@ export default function LocationSelector({
 
   const [fetchError, setFetchError] = useState({ countries: "", states: "", cities: "" });
 
+  // A state is picked, the lookup has finished, and there is still nothing to
+  // choose from — either the dataset has no cities for it or the request
+  // failed. Either way the dropdown would be an empty required field.
+  const noCityOptions =
+    !!state && !loadingCities && cities.length === 0;
+
   const abortRefs = useRef({ countries: null, states: null, cities: null });
   const defaultCountryFired = useRef(false);
 
@@ -297,7 +303,9 @@ export default function LocationSelector({
         </div>
       )}
 
-      {/* City */}
+      {/* City — falls back to free text when the dataset has no list for this
+          state (and when the lookup failed outright), so a required field can
+          never leave the user with nothing to pick. */}
       {showCity && (
         <div className={wrapperCls}>
           <label className={resolvedLabelCls}>
@@ -305,28 +313,50 @@ export default function LocationSelector({
             {required.city && <span className="text-red-500 ml-0.5">*</span>}
           </label>
           <div className="relative">
-            <select
-              value={city}
-              onChange={handleCityChange}
-              disabled={disabled || !state || loadingCities}
-              className={resolvedSelectCls("city", disabled || !state || loadingCities)}
-            >
-              <option value="">
-                {loadingCities
-                  ? "Loading cities…"
-                  : !state
-                  ? "Select a state first"
-                  : "Select City"}
-              </option>
-              {cities.map((c) => (
-                <option key={c} value={c}>
-                  {c}
+            {/*
+              The city list comes from an external dataset that has gaps — some
+              states return nothing at all. A required dropdown with no options
+              is a dead end, so when there is no list to choose from we fall
+              back to a plain text field and let the user type it.
+            */}
+            {noCityOptions ? (
+              <input
+                type="text"
+                value={city}
+                onChange={handleCityChange}
+                disabled={disabled || !state}
+                placeholder="Enter your city"
+                className={resolvedSelectCls("city", disabled || !state)}
+              />
+            ) : (
+              <select
+                value={city}
+                onChange={handleCityChange}
+                disabled={disabled || !state || loadingCities}
+                className={resolvedSelectCls("city", disabled || !state || loadingCities)}
+              >
+                <option value="">
+                  {loadingCities
+                    ? "Loading cities…"
+                    : !state
+                    ? "Select a state first"
+                    : "Select City"}
                 </option>
-              ))}
-            </select>
+                {cities.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            )}
             <LoadingDot loading={loadingCities} />
           </div>
-          <FieldError msg={fetchError.cities || errors.city} />
+          {noCityOptions && !errors.city && (
+            <p className="mt-1 text-xs text-gray-500">
+              No city list available for this state — please type it in.
+            </p>
+          )}
+          <FieldError msg={errors.city} />
         </div>
       )}
     </>

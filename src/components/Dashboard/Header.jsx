@@ -404,7 +404,10 @@ export default function Header({ toggleSidebar, showSidebar }) {
               className="cursor-pointer relative bg-white/15 hover:bg-white/25 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
               aria-label="Messages"
             >
-              <Bell size={19} className={messageUnreadCount > 0 ? "text-white dark:text-[#1a71f6]" : "text-white/80 dark:text-gray-300"} />
+              {/* Envelope = messages. This button opens MessagesDropdown, but
+                  was rendering a bell — so the icon users read as "alerts"
+                  opened messages, and vice versa on the button beside it. */}
+              <Mail size={19} className={messageUnreadCount > 0 ? "text-white dark:text-[#1a71f6]" : "text-white/80 dark:text-gray-300"} />
               <UnreadBadge count={messageUnreadCount} />
             </button>
 
@@ -426,7 +429,8 @@ export default function Header({ toggleSidebar, showSidebar }) {
               className="cursor-pointer relative bg-white/15 hover:bg-white/25 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors w-10 h-10 rounded-xl flex items-center justify-center"
               aria-label="Alerts"
             >
-              <Mail size={19} className={alertUnreadCount > 0 ? "text-amber-300 dark:text-amber-500" : "text-white/80 dark:text-gray-300"} />
+              {/* Bell = alerts, matching the envelope/messages button above. */}
+              <Bell size={19} className={alertUnreadCount > 0 ? "text-amber-300 dark:text-amber-500" : "text-white/80 dark:text-gray-300"} />
               <UnreadBadge count={alertUnreadCount} />
             </button>
 
