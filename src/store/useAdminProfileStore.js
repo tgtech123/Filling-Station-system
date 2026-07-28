@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import useImageStore from "./useImageStore";
 
 const useAdminProfileStore = create((set) => ({
   adminName: "",
@@ -13,6 +14,19 @@ const useAdminProfileStore = create((set) => ({
         adminImage: user.image || "",
         adminRole: user.role || "Admin",
       });
+
+      // Seed the image cache from the account.
+      //
+      // On a new device or after clearing storage the server has the photo but
+      // the local cache is empty — the header reads the account value and the
+      // profile modal reads the cache, so without this they disagree and the
+      // modal falls back to initials. Only fills a gap; never overwrites a
+      // freshly uploaded image that has not synced yet.
+      const id = String(user.id || user._id || "");
+      if (id && user.image) {
+        const { userImages, setImage } = useImageStore.getState();
+        if (!userImages[id]) setImage(id, user.image);
+      }
     } catch {}
   },
 

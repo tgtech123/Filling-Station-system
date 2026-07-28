@@ -49,19 +49,56 @@ const Stations = ({ onViewStation }) => {
     }, 500);
   };
 
-  // Map real station objects to the shape DataTable expects
+  // Map real station objects to the shape DataTable expects.
+  //
+  // Branches are ORDERED UNDER the account that owns them rather than scattered
+  // through the list by creation date. A branch is a site, not a customer — it
+  // inherits the parent's plan and is never billed separately — so listing them
+  // as peers made one Enterprise account look like several paying stations.
   const rows = useMemo(() => {
     if (!stations || stations.length === 0) return [];
-    return stations.map((s, i) => ({
+
+    const idOf = (s) => String(s._id || s.id || "");
+    const roots = stations.filter((s) => !s.isBranch);
+    const branchesByParent = new Map();
+    for (const s of stations) {
+      if (!s.isBranch) continue;
+      const key = String(s.parentStationId || "");
+      if (!branchesByParent.has(key)) branchesByParent.set(key, []);
+      branchesByParent.get(key).push(s);
+    }
+
+    // Root, then its branches, then the next root.
+    const ordered = [];
+    for (const root of roots) {
+      ordered.push(root);
+      for (const b of branchesByParent.get(idOf(root)) ?? []) ordered.push(b);
+    }
+    // A branch whose parent isn't in the current result set (a search hit, say)
+    // must still be listed — never silently drop a station.
+    for (const s of stations) {
+      if (s.isBranch && !ordered.includes(s)) ordered.push(s);
+    }
+
+    return ordered.map((s, i) => ({
       id: s._id || s.id || `ST-${String(i + 1).padStart(3, "0")}`,
-      stationName: s.name || s.stationName || "—",
+      // Branch rows are indented and named against their parent so the
+      // relationship is obvious at a glance; roots show their branch count.
+      stationName: s.isBranch
+        ? `↳ ${s.name || s.stationName || "—"}`
+        : `${s.name || s.stationName || "—"}${
+            s.branchCount > 0
+              ? `  (${s.branchCount} branch${s.branchCount === 1 ? "" : "es"})`
+              : ""
+          }`,
       owner: s.isBranch
-        ? `${s.ownerName || s.manager?.name || "—"} (Branch)`
+        ? `Branch of ${s.parentName || s.ownerName || "—"}`
         : s.ownerName || s.manager?.name || "—",
-      // backend returns plan as slug (e.g. "pro-max") or defaults to "free"
-      plan: formatPlan(s.plan || "free"),
-      // backend always sets planExpiryDate (free=30d, trial=7d, paid=payment date +1m/+1y)
-      expiryDate: formatExpiry(s.planExpiryDate),
+      // Branches inherit the parent's plan and expiry — they are not billed on
+      // their own. Repeating the plan on every branch row is what made a single
+      // Enterprise subscription look like several. Marked as inherited instead.
+      plan: s.isBranch ? "Inherited" : formatPlan(s.plan || "free"),
+      expiryDate: s.isBranch ? "—" : formatExpiry(s.planExpiryDate),
       status: s.isActive === false ? "Suspended" : s.status || "Active",
       action: "more",
       _raw: s,
@@ -92,10 +129,15 @@ const Stations = ({ onViewStation }) => {
     return [
       {
         id: 1,
-        label: "Total Registered Stations",
+        label: "Registered Accounts",
         value: s.totalRegisteredStations?.toLocaleString() ?? "—",
         change: g1.text,
-        changeLabel: "From last month",
+        // This counts billable ACCOUNTS. Branch sites are shown alongside so the
+        // real footprint is visible without being counted as paying customers.
+        changeLabel:
+          s.totalBranchSites > 0
+            ? `+ ${s.totalBranchSites} branch site${s.totalBranchSites === 1 ? "" : "s"}`
+            : "From last month",
         showChange: true,
         icon: Gauge,
         iconBg: "bg-blue-50",

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { thermalReceiptCss, printThermalReceipt } from "@/lib/thermalReceipt";
 import {
   Package, Minus, Plus, Loader2, AlertCircle, Printer, Search, X, CheckCircle2,
 } from "lucide-react";
@@ -24,54 +25,9 @@ function CylinderReceiptModal({ sale, onClose, stationInfo = { name: "", address
   if (!sale) return null;
   return createPortal(
     <>
-      {/* 80mm thermal print CSS — same pattern as the gas refill receipt */}
-      <style>{`
-        @page { size: 80mm auto; margin: 2mm 3mm; }
-        @media print {
-          body > *:not(#cyl-receipt-print-root) { display: none !important; }
-          #cyl-receipt-print-root {
-            display: block !important;
-            position: static !important;
-            width: 72mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: none !important;
-          }
-          #cyl-receipt-card {
-            position: static !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            width: 72mm !important;
-            max-width: 72mm !important;
-            overflow: visible !important;
-            background-color: #ffffff !important;
-          }
-          #cyl-receipt-content { padding: 2mm 3mm !important; }
-          /* Pure black + heavy weight — thermal heads are 1-bit, any gray
-             dithers into faint dots on an Xprinter 80mm. */
-          #cyl-receipt-content,
-          #cyl-receipt-content * {
-            color: #000000 !important;
-            opacity: 1 !important;
-            font-family: 'Courier New', Courier, monospace !important;
-            font-size: 9pt !important;
-            font-weight: 800 !important;
-            line-height: 1.5 !important;
-            background-color: transparent !important;
-            -webkit-print-color-adjust: exact !important;
-            color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          #cyl-receipt-content .cyl-station-name { font-size: 13pt !important; font-weight: 900 !important; text-transform: uppercase !important; }
-          #cyl-receipt-content .cyl-receipt-title { font-size: 11pt !important; font-weight: 900 !important; }
-          #cyl-receipt-content .cyl-receipt-total { font-size: 13pt !important; font-weight: 900 !important; }
-          /* Solid black separators print stronger than light-gray dashed ones */
-          #cyl-receipt-content .border-dashed { border-color: #000000 !important; }
-          #cyl-receipt-actions { display: none !important; }
-        }
-      `}</style>
+      <style>{thermalReceiptCss("cyl-receipt-print-root")}</style>
       <div id="cyl-receipt-print-root" className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div id="cyl-receipt-card" className="bg-white rounded-2xl shadow-2xl max-w-sm w-full">
+        <div id="cyl-receipt-card" className="receipt-card bg-white rounded-2xl shadow-2xl max-w-sm w-full">
           <div id="cyl-receipt-content" className="p-6 font-mono text-sm">
           <div className="text-center mb-4">
             <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -113,13 +69,68 @@ function CylinderReceiptModal({ sale, onClose, stationInfo = { name: "", address
           )}
           </div>
           <div id="cyl-receipt-actions" className="px-6 pb-6 flex gap-2">
-            <button onClick={() => window.print()} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
+            <button onClick={() => printThermalReceipt()} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors">
               <Printer size={16} /> Print
             </button>
             <button onClick={onClose} className="flex-1 border border-gray-200 text-gray-600 font-semibold py-2.5 rounded-xl text-sm hover:bg-gray-50 transition-colors">
               Close
             </button>
           </div>
+        </div>
+
+        {/* Print-only thermal block — identical structure to the lubricant and
+            gas refill receipts, so all three print the same on the Xprinter. */}
+        <div className="receipt-thermal-print">
+          <div className="t-logo-wrap">
+            <img src={stationInfo.logo || "/station-logo.png"} alt="Station logo" />
+          </div>
+
+          <div className="t-station-name">{stationInfo.name || "Gas Station"}</div>
+          {stationInfo.address && <div className="t-address">{stationInfo.address}</div>}
+
+          <div className="t-line-solid" />
+          <div className="t-receipt-title">Cylinder Sale Receipt</div>
+          <div className="t-line-dashed" />
+
+          <div className="t-meta-row"><span>Ref</span><span>{sale.receiptNumber}</span></div>
+          <div className="t-meta-row"><span>Date</span><span>{new Date(sale.date || sale.createdAt).toLocaleString("en-NG")}</span></div>
+          <div className="t-meta-row"><span>Payment</span><span>{sale.paymentMethod}</span></div>
+          <div className="t-meta-row">
+            <span>Customer</span>
+            <span>
+              {sale.customer?.firstName
+                ? `${sale.customer.firstName} ${sale.customer.lastName || ""}`.trim()
+                : sale.walkInName || "Walk-in"}
+            </span>
+          </div>
+
+          <div className="t-line-solid" />
+
+          <div className="t-meta-row">
+            <span>Item</span>
+            <span>{sale.productLabel}{sale.brand ? ` (${sale.brand})` : ""}</span>
+          </div>
+          <div className="t-meta-row"><span>Unit price</span><span>{fmt(sale.unitPrice)}</span></div>
+          <div className="t-meta-row"><span>Quantity</span><span>{sale.quantity}</span></div>
+
+          <div className="t-line-solid" />
+
+          <div className="t-total-row">
+            <span className="t-total-label">TOTAL</span>
+            <span className="t-total-amount">N{fmt(sale.totalAmount)}</span>
+          </div>
+
+          <div className="t-line-dashed" />
+
+          <div className="t-receipt-title">Sale Completed</div>
+          <div className="t-address">Hand the cylinder to the customer</div>
+
+          {sale.pointsEarned > 0 && (
+            <div className="t-footer-line">+{sale.pointsEarned} loyalty points earned</div>
+          )}
+
+          <div className="t-line-dashed" />
+          <div className="t-footer-line">Thank you for your patronage</div>
         </div>
       </div>
     </>,

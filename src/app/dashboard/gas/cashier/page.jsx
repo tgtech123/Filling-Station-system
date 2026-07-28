@@ -9,6 +9,7 @@ import useGasOrderStore from "@/store/useGasOrderStore";
 import useGasCustomerStore from "@/store/useGasCustomerStore";
 import CylinderPosTab from "./CylinderPosTab";
 import { api } from "@/lib/config";
+import { thermalReceiptCss, printThermalReceipt } from "@/lib/thermalReceipt";
 
 const PRESETS_KG     = [0.5, 1, 1.5, 2, 3, 5];
 const PRESETS_AMOUNT = [500, 1000, 2000, 5000, 10000];
@@ -28,73 +29,15 @@ function TierBadge({ tier }) {
 }
 
 function ReceiptModal({ sale, onClose, stationInfo = { name: "", address: "" } }) {
-  const handlePrint = () => window.print();
+  // Shared with the lubricant receipt: waits for the logo to load before
+  // opening the dialog, so it never prints as a blank box.
+  const handlePrint = () => printThermalReceipt();
   if (!sale) return null;
   return createPortal(
     <>
-      <style>{`
-        @page { size: 80mm auto; margin: 2mm 3mm; }
-        @media print {
-          body > *:not(#gas-receipt-print-root) { display: none !important; }
-          #gas-receipt-print-root {
-            display: block !important;
-            position: static !important;
-            width: 72mm !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: none !important;
-          }
-          #gas-receipt-card {
-            position: static !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-            width: 72mm !important;
-            max-width: 72mm !important;
-            overflow: visible !important;
-          }
-          #receipt-content {
-            padding: 2mm 3mm !important;
-          }
-          /* Pure black + heavy weight — thermal heads are 1-bit, any gray
-             dithers into faint dots on an Xprinter 80mm. */
-          #receipt-content,
-          #receipt-content * {
-            color: #000000 !important;
-            opacity: 1 !important;
-            font-family: 'Courier New', Courier, monospace !important;
-            font-size: 9pt !important;
-            font-weight: 800 !important;
-            line-height: 1.5 !important;
-            background-color: transparent !important;
-            -webkit-print-color-adjust: exact !important;
-            color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          #gas-receipt-card {
-            background-color: #ffffff !important;
-          }
-          #receipt-content .gas-station-name {
-            font-size: 13pt !important;
-            font-weight: 900 !important;
-            text-transform: uppercase !important;
-          }
-          #receipt-content .gas-receipt-title {
-            font-size: 11pt !important;
-            font-weight: 900 !important;
-          }
-          #receipt-content .gas-receipt-total {
-            font-size: 13pt !important;
-            font-weight: 900 !important;
-          }
-          /* Solid black separators print stronger than light-gray dashed ones */
-          #receipt-content .border-dashed {
-            border-color: #000000 !important;
-          }
-          #gas-receipt-actions { display: none !important; }
-        }
-      `}</style>
+      <style>{thermalReceiptCss("gas-receipt-print-root")}</style>
       <div id="gas-receipt-print-root" className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div id="gas-receipt-card" className="bg-white rounded-2xl shadow-2xl max-w-sm w-full">
+        <div id="gas-receipt-card" className="receipt-card bg-white rounded-2xl shadow-2xl max-w-sm w-full">
           {/* Receipt */}
           <div id="receipt-content" className="p-6 font-mono text-sm">
             <div className="text-center mb-4">
@@ -149,6 +92,65 @@ function ReceiptModal({ sale, onClose, stationInfo = { name: "", address: "" } }
               Close
             </button>
           </div>
+        </div>
+
+        {/*
+          Print-only thermal block — the Xprinter never sees the Tailwind card
+          above. Same structure and classes as the lubricant receipt so both
+          come off the roll looking identical.
+        */}
+        <div className="receipt-thermal-print">
+          <div className="t-logo-wrap">
+            <img src={stationInfo.logo || "/station-logo.png"} alt="Station logo" />
+          </div>
+
+          <div className="t-station-name">{stationInfo.name || "Gas Station"}</div>
+          {stationInfo.address && <div className="t-address">{stationInfo.address}</div>}
+
+          <div className="t-line-solid" />
+          <div className="t-receipt-title">Gas Sales Receipt</div>
+          <div className="t-line-dashed" />
+
+          <div className="t-meta-row"><span>Ref</span><span>{sale.receiptNumber}</span></div>
+          <div className="t-meta-row"><span>Date</span><span>{new Date(sale.date || sale.createdAt).toLocaleString("en-NG")}</span></div>
+          <div className="t-meta-row"><span>Cashier</span><span>{`${sale.cashier?.firstName ?? ""} ${sale.cashier?.lastName ?? ""}`.trim() || "—"}</span></div>
+          <div className="t-meta-row"><span>Payment</span><span>{sale.paymentMethod}</span></div>
+          <div className="t-meta-row">
+            <span>Customer</span>
+            <span>
+              {sale.customer
+                ? `${sale.customer?.firstName ?? ""} ${sale.customer?.lastName ?? ""}`.trim()
+                : sale.walkInName || "Walk-in"}
+            </span>
+          </div>
+
+          <div className="t-line-solid" />
+
+          <div className="t-meta-row"><span>Cylinder</span><span>{sale.cylinderSize}</span></div>
+          <div className="t-meta-row"><span>Volume</span><span>{sale.quantityKg?.toFixed(3)} kg</span></div>
+          <div className="t-meta-row"><span>Price/kg</span><span>{fmt(sale.pricePerKg)}</span></div>
+          {sale.discountApplied > 0 && (
+            <div className="t-meta-row"><span>Discount</span><span>-{fmt(sale.discountApplied)}</span></div>
+          )}
+
+          <div className="t-line-solid" />
+
+          <div className="t-total-row">
+            <span className="t-total-label">TOTAL</span>
+            <span className="t-total-amount">N{fmt(sale.amountPaid)}</span>
+          </div>
+
+          <div className="t-line-dashed" />
+
+          <div className="t-receipt-title">Awaiting Attendant</div>
+          <div className="t-address">Take this receipt to the attendant</div>
+
+          {sale.pointsEarned > 0 && (
+            <div className="t-footer-line">+{sale.pointsEarned} loyalty points earned</div>
+          )}
+
+          <div className="t-line-dashed" />
+          <div className="t-footer-line">Thank you for your patronage</div>
         </div>
       </div>
     </>,
@@ -255,7 +257,14 @@ export default function GasCashierPage() {
         api.get(`/api/filling-stations/${user.station}`)
           .then(res => {
             const d = res.data?.data || res.data;
-            if (d?.name) setStationInfo({ name: d.name, address: d.address || "" });
+            // logo carried through so the thermal receipt can print it, the
+            // same way the lubricant receipt does.
+            if (d?.name)
+              setStationInfo({
+                name: d.name,
+                address: d.address || "",
+                logo: d.image || d.logoUrl || d.logo || "",
+              });
           })
           .catch(() => {});
       }
