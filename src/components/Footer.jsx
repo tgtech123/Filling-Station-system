@@ -53,13 +53,24 @@ export default function Footer() {
               Product
             </h4>
             <nav className="flex flex-col gap-3">
-              {["Features", "Pricing", "Support", "Documentation"].map((item) => (
+              {/*
+                Every one of these was href="#" — they looked like links and did
+                nothing. Each now points at a page that actually exists.
+                "Documentation" had no destination at all, so it is replaced by
+                Get Started, which does.
+              */}
+              {[
+                { label: "Features", href: "/#features" },
+                { label: "Pricing", href: "/pricing" },
+                { label: "Support", href: "/contact" },
+                { label: "Get Started", href: "/login" },
+              ].map(({ label, href }) => (
                 <Link
-                  key={item}
-                  href="#"
+                  key={label}
+                  href={href}
                   className="text-blue-200/60 text-sm hover:text-white transition-all duration-200 hover:translate-x-1 transform"
                 >
-                  {item}
+                  {label}
                 </Link>
               ))}
             </nav>

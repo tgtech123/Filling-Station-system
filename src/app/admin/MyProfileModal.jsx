@@ -200,7 +200,13 @@ const MyProfileModal = ({ isOpen, onClose }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex flex-col p-5 sm:p-8 bg-white dark:bg-gray-800 w-full max-w-[56.3125rem] max-h-[90dvh] overflow-y-auto scrollbar-hide rounded-xl my-auto"
+        /*
+          Scrolls vertically with the scrollbar hidden; never horizontally.
+          overflow-x-hidden is the backstop — the real cause of the sideways
+          drift was fixed-width inputs (w-[25.656rem]) overflowing their grid
+          column, which are now fluid.
+        */
+        className="flex flex-col p-5 sm:p-8 bg-white dark:bg-gray-800 w-full max-w-[56.3125rem] max-h-[90dvh] overflow-y-auto overflow-x-hidden scrollbar-hide rounded-xl my-auto"
       >
         <span
           onClick={onClose}
@@ -218,8 +224,11 @@ const MyProfileModal = ({ isOpen, onClose }) => {
             Manage your profile information and security settings
           </p>
 
-          <div className="flex justify-between mt-[2rem]">
-            <div className="flex gap-7">
+          {/* Wraps on narrow screens. The avatar, the name and two fixed-width
+              buttons together exceed a phone's width, and with no wrapping they
+              pushed the modal sideways. */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mt-[2rem]">
+            <div className="min-w-0 flex items-center gap-4 sm:gap-7">
               {isEditing ? (
                 <ImageUploadButton
                   userId={adminId}
@@ -230,8 +239,8 @@ const MyProfileModal = ({ isOpen, onClose }) => {
                 <Avatar userId={adminId} size="lg" />
               )}
 
-              <div className="flex flex-col gap-2">
-                <h1 className="text-[1.275rem] font-semibold leading-[134%]">
+              <div className="min-w-0 flex flex-col gap-2">
+                <h1 className="text-[1.275rem] font-semibold leading-[134%] break-words">
                   {formData.firstName} {formData.lastName}
                 </h1>
                 <p className="text-[1rem] leading-[150%]">General Admin</p>
@@ -250,7 +259,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
                 Edit Profile
               </button>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={handleCancel}
                   className="flex gap-2 border border-neutral-300 w-[120px] h-[40px] text-neutral-700 font-semibold rounded-lg cursor-pointer hover:bg-neutral-100 items-center justify-center"
@@ -295,7 +304,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
           </div>
 
           <form className="grid lg:grid-cols-2 grid-cols-1 gap-5">
-            <div className="flex flex-col gap-2">
+            <div className="min-w-0 flex flex-col gap-2">
               <label className="font-bold text-[0.875rem] leading-[150%]">
                 First name
               </label>
@@ -307,12 +316,12 @@ const MyProfileModal = ({ isOpen, onClose }) => {
                   setTempData({ ...tempData, firstName: e.target.value })
                 }
                 disabled={!isEditing}
-                className={`w-[25.656rem] h-[3.25rem] border-[1.8px] ${
+                className={`w-full h-[3.25rem] border-[1.8px] ${
                   !isEditing ? "bg-neutral-200 border-neutral-300" : ""
                 } focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-3`}
               />
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="min-w-0 flex flex-col gap-2">
               <label className="font-bold text-[0.875rem] leading-[150%]">
                 Last name
               </label>
@@ -324,12 +333,12 @@ const MyProfileModal = ({ isOpen, onClose }) => {
                   setTempData({ ...tempData, lastName: e.target.value })
                 }
                 disabled={!isEditing}
-                className={`w-[25.656rem] h-[3.25rem] border-[1.8px] ${
+                className={`w-full h-[3.25rem] border-[1.8px] ${
                   !isEditing ? "bg-neutral-200 border-neutral-300" : ""
                 } focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-3`}
               />
             </div>
-            <div className="relative flex flex-col gap-2">
+            <div className="min-w-0 relative flex flex-col gap-2">
               <label className="font-bold text-[0.875rem] leading-[150%]">
                 Email Address
               </label>
@@ -343,13 +352,13 @@ const MyProfileModal = ({ isOpen, onClose }) => {
                   setTempData({ ...tempData, emailAddress: e.target.value })
                 }
                 disabled={!isEditing}
-                className={`w-[25.656rem] h-[3.25rem] border-[1.8px] ${
+                className={`w-full h-[3.25rem] border-[1.8px] ${
                   !isEditing ? "bg-neutral-200 border-neutral-300" : ""
                 } focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-10`}
               />
               <Mail size={24} className="absolute mt-11 ml-3 text-neutral-500" />
             </div>
-            <div className="relative flex flex-col gap-2">
+            <div className="min-w-0 relative flex flex-col gap-2">
               <label className="font-bold text-[0.875rem] leading-[150%]">
                 Phone number
               </label>
@@ -361,7 +370,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
                   setTempData({ ...tempData, phoneNumber: e.target.value })
                 }
                 disabled={!isEditing}
-                className={`w-[25.656rem] h-[3.25rem] border-[1.8px] ${
+                className={`w-full h-[3.25rem] border-[1.8px] ${
                   !isEditing ? "bg-neutral-200 border-neutral-300" : ""
                 } focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-10`}
               />
@@ -390,7 +399,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
                     onChange={(e) => setEmailPassword(e.target.value)}
                     placeholder="Enter your current password"
                     autoComplete="current-password"
-                    className="w-full max-w-[25.656rem] h-[3.25rem] border-[1.8px] focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-3"
+                    className="w-full h-[3.25rem] border-[1.8px] focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-3"
                   />
                 </div>
               )}
@@ -411,7 +420,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
 
         <div className="grid lg:grid-cols-2 grid-cols-1 gap-5">
           {/* Current Password */}
-          <div className="relative flex flex-col gap-2">
+          <div className="min-w-0 relative flex flex-col gap-2">
             <label className="font-bold text-[0.875rem] leading-[150%]">
               Current Password
             </label>
@@ -420,7 +429,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
               placeholder="*********************"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-[25.656rem] h-[3.25rem] border-[1.8px] focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-3 pr-10"
+              className="w-full h-[3.25rem] border-[1.8px] focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-3 pr-10"
             />
             <button
               type="button"
@@ -432,7 +441,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* New Password */}
-          <div className="relative flex flex-col gap-2">
+          <div className="min-w-0 relative flex flex-col gap-2">
             <label className="font-bold text-[0.875rem] leading-[150%]">
               New Password
             </label>
@@ -441,7 +450,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
               placeholder="*********************"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-[25.656rem] h-[3.25rem] border-[1.8px] focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-3 pr-10"
+              className="w-full h-[3.25rem] border-[1.8px] focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-3 pr-10"
             />
             <button
               type="button"
@@ -453,7 +462,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* Confirm New Password */}
-          <div className="relative flex flex-col gap-2">
+          <div className="min-w-0 relative flex flex-col gap-2">
             <label className="font-bold text-[0.875rem] leading-[150%]">
               Confirm New Password
             </label>
@@ -462,7 +471,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
               placeholder="*********************"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-[25.656rem] h-[3.25rem] border-[1.8px] focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-3 pr-10"
+              className="w-full h-[3.25rem] border-[1.8px] focus:border-[2px] focus:border-blue-500 border-neutral-300 focus:outline-none rounded-xl pl-3 pr-10"
             />
             <button
               type="button"
