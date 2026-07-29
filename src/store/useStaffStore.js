@@ -7,6 +7,24 @@ const isFresh = () => _cache.staff.data !== null && Date.now() - _cache.staff.ts
 const bustCache = () => { _cache.staff.ts = 0; };
 
 const useStaffStore = create((set, get) => ({
+
+  /**
+   * Drop every cached slot so the next fetch actually hits the network.
+   *
+   * Each store serves a short TTL cache, and the freshness check runs BEFORE
+   * the request — so a socket event arriving mid-TTL would refetch and get the
+   * same stale data back. Zeroing `ts` makes isFresh() false whatever the slot
+   * shape is, which is what makes the live updates real rather than eventual.
+   */
+  invalidate: () => {
+    Object.values(_cache).forEach((slot) => {
+      if (slot && typeof slot === "object" && "ts" in slot) slot.ts = 0;
+    });
+    // Refetch, don't just expire. Busting the cache alone means the screen only
+    // updates on the next navigation — which is exactly the "I had to refresh"
+    // problem. Refetching here is what makes the socket update visible.
+    get().getAllStaff();
+  },
   staff: [],
   loading: {
     fetching: false,

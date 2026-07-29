@@ -222,7 +222,14 @@ const EndShiftCard = ({ onClose, onEnd, currentShift }) => {
   };
 
   return (
-    <div className="fixed top-28 right-4 w-[90vw] sm:w-[24rem] bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+    /*
+      max-h is measured from where the panel actually starts. It was top-28
+      (7rem) with max-h-[90vh], so the panel could extend 7rem past the bottom
+      of the screen — the End Shift button ended up below the viewport and
+      scrolling inside the panel could not bring it into reach.
+      dvh rather than vh so mobile browser chrome is accounted for.
+    */
+    <div className="fixed top-28 right-4 w-[90vw] sm:w-[24rem] bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4 sm:p-6 max-h-[calc(100dvh-8rem)] overflow-y-auto overscroll-contain">
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
@@ -318,18 +325,21 @@ const EndShiftCard = ({ onClose, onEnd, currentShift }) => {
           </div>
         )}
 
-        {/* End Shift Button */}
-        <button
-          type="submit"
-          disabled={loading}
-          className={`w-full font-semibold text-white text-sm py-2 rounded-lg transition-all duration-200 ${
-            loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-[#0080FF] hover:bg-blue-200"
-          }`}
-        >
-          {loading ? "Ending..." : "End Shift"}
-        </button>
+        {/* End Shift Button — sticks to the bottom of the scrolling panel so it
+            is reachable without scrolling to the very end of a long form. */}
+        <div className="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-1 bg-white border-t border-gray-100">
+          <button
+            type="submit"
+            disabled={loading}
+            className={`w-full font-semibold text-white text-sm py-2.5 rounded-lg transition-all duration-200 ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-[#0080FF] hover:bg-blue-600"
+            }`}
+          >
+            {loading ? "Ending..." : "End Shift"}
+          </button>
+        </div>
       </form>
     </div>
   );

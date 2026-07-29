@@ -279,15 +279,27 @@ function AttendantReport() {
 
           {/* Action buttons */}
           <div className="flex gap-4">
+            {/* Toggles. These used to only ever set `true`, so once open there
+                was no way to dismiss the panel except by completing the form. */}
             <button
               className="flex gap-2 border-2 border-gray-300 p-2 rounded-[12px]"
-              onClick={() => setOpenDurationModal(true)}
+              onClick={() => {
+                setOpenDurationModal((v) => !v);
+                setOpenFilter(false);
+              }}
+              aria-expanded={openDurationModal}
             >
               Duration
-              <ChevronDown />
+              <ChevronDown
+                className={`transition-transform ${openDurationModal ? "rotate-180" : ""}`}
+              />
             </button>
-            <button 
-              onClick={() => setOpenFilter(true)} 
+            <button
+              onClick={() => {
+                setOpenFilter((v) => !v);
+                setOpenDurationModal(false);
+              }}
+              aria-expanded={openFilter}
               className="flex gap-2 border-2 border-gray-300 p-2 rounded-[12px]"
             >
               Filter

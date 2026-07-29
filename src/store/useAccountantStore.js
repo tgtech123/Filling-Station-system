@@ -50,6 +50,20 @@ function setCache(slot, data, cacheKey = '') {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const useAccountantStore = create((set, get) => ({
+
+  /**
+   * Drop every cached slot so the next fetch actually hits the network.
+   *
+   * Each store serves a short TTL cache, and the freshness check runs BEFORE
+   * the request — so a socket event arriving mid-TTL would refetch and get the
+   * same stale data back. Zeroing `ts` makes isFresh() false whatever the slot
+   * shape is, which is what makes the live updates real rather than eventual.
+   */
+  invalidate: () => {
+    Object.values(_cache).forEach((slot) => {
+      if (slot && typeof slot === "object" && "ts" in slot) slot.ts = 0;
+    });
+  },
   // State
   dashboard: null,
   reconciledSales: [],
