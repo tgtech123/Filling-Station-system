@@ -110,7 +110,9 @@ export default function Features() {
     const visible = showAll ? data : data.slice(0, 6);
 
     return (
-        <div className="py-12 sm:py-16 lg:py-20 flex flex-col items-center px-4 sm:px-8 lg:px-40">
+        // id + scroll-mt: the footer's "Features" link points at /#features, and
+        // the margin keeps the heading clear of the sticky header when it lands.
+        <div id="features" className="scroll-mt-24 py-12 sm:py-16 lg:py-20 flex flex-col items-center px-4 sm:px-8 lg:px-40">
             <button className="flex gap-2 border-2 border-[#faa300] items-center py-2 px-6 rounded-[30px] text-[#faa300] bg-gradient-to-r from-[#c5e2ff] to-[#fff5c5]">
                 <Grid3X3 className="text-[#faa300]" />
                 <p className="font-semibold">Powerful Features</p>

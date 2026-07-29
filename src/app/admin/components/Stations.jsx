@@ -68,16 +68,37 @@ const Stations = ({ onViewStation }) => {
       branchesByParent.get(key).push(s);
     }
 
-    // Root, then its branches, then the next root.
+    // Root, then its branches — depth-first, because a branch can itself have
+    // branches (FLOURISH GG - ELIOZU sits under Flourish GG, which sits under
+    // Woleche). Walking only one level deep left grandchildren stranded at the
+    // bottom of the list, detached from the account they belong to.
     const ordered = [];
-    for (const root of roots) {
-      ordered.push(root);
-      for (const b of branchesByParent.get(idOf(root)) ?? []) ordered.push(b);
-    }
+    const depthOf = new Map();
+    // Staff across a whole account — the root plus every branch beneath it,
+    // at any depth. Accumulated during the same walk so it stays correct
+    // however deeply branches are nested.
+    const groupStaffByRoot = new Map();
+
+    const walk = (node, depth, rootId) => {
+      ordered.push(node);
+      depthOf.set(idOf(node), depth);
+      groupStaffByRoot.set(
+        rootId,
+        (groupStaffByRoot.get(rootId) ?? 0) + Number(node.staffCount ?? 0)
+      );
+      for (const child of branchesByParent.get(idOf(node)) ?? []) {
+        if (!ordered.includes(child)) walk(child, depth + 1, rootId);
+      }
+    };
+    for (const root of roots) walk(root, 0, idOf(root));
+
     // A branch whose parent isn't in the current result set (a search hit, say)
     // must still be listed — never silently drop a station.
     for (const s of stations) {
-      if (s.isBranch && !ordered.includes(s)) ordered.push(s);
+      if (s.isBranch && !ordered.includes(s)) {
+        ordered.push(s);
+        depthOf.set(idOf(s), 1);
+      }
     }
 
     return ordered.map((s, i) => ({
@@ -85,7 +106,9 @@ const Stations = ({ onViewStation }) => {
       // Branch rows are indented and named against their parent so the
       // relationship is obvious at a glance; roots show their branch count.
       stationName: s.isBranch
-        ? `↳ ${s.name || s.stationName || "—"}`
+        ? `${"  ".repeat(depthOf.get(idOf(s)) || 1)}↳ ${
+            s.name || s.stationName || "—"
+          }`
         : `${s.name || s.stationName || "—"}${
             s.branchCount > 0
               ? `  (${s.branchCount} branch${s.branchCount === 1 ? "" : "es"})`
@@ -94,6 +117,15 @@ const Stations = ({ onViewStation }) => {
       owner: s.isBranch
         ? `Branch of ${s.parentName || s.ownerName || "—"}`
         : s.ownerName || s.manager?.name || "—",
+      // Staff on this station. For an account with branches the total across
+      // the whole group is shown too, since that is the number that matters
+      // when you are looking at what one customer actually runs.
+      staff: (() => {
+        const own = Number(s.staffCount ?? 0);
+        if (s.isBranch) return String(own);
+        const groupTotal = groupStaffByRoot.get(idOf(s)) ?? own;
+        return groupTotal > own ? `${own}  (${groupTotal} total)` : String(own);
+      })(),
       // Branches inherit the parent's plan and expiry — they are not billed on
       // their own. Repeating the plan on every branch row is what made a single
       // Enterprise subscription look like several. Marked as inherited instead.

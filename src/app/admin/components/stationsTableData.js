@@ -3,6 +3,7 @@ export const stationsTableData = {
     { key: "id", label: "ID" },
     { key: "stationName", label: "Station Name" },
     { key: "owner", label: "Owner Name" },
+    { key: "staff", label: "Staff" },
     { key: "plan", label: "Plan" },
     { key: "expiryDate", label: "Expiry Date" },
     { key: "status", label: "Status" },
