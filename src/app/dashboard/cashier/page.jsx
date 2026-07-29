@@ -159,8 +159,19 @@ export default function CashierDashboard() {
                         {/* Manual Refresh Button */}
                         <button
                             onClick={async () => {
+                                // force: true — the store serves a 2-minute
+                                // cache and used to return it before making any
+                                // request, so pressing Refresh inside that
+                                // window did nothing at all. It also refreshes
+                                // the lubricant panels, not just the top cards,
+                                // since "Refresh" should mean the whole page.
                                 setRefreshing(true);
-                                await fetchDashboard({ silent: true });
+                                const store = useCashierDashboardStore.getState();
+                                await Promise.all([
+                                    store.fetchDashboard({ silent: true, force: true }),
+                                    store.fetchWeeklyLubricantSummary({ force: true }),
+                                    store.fetchDailyLubricantSummary({ force: true }),
+                                ]);
                                 setRefreshing(false);
                             }}
                             disabled={refreshing}

@@ -17,6 +17,22 @@ const isFresh = (slot, ttl) => slot.data !== null && Date.now() - slot.ts < ttl;
 
 // Zustand store for Cashier Dashboard
 export const useCashierDashboardStore = create((set, get) => ({
+  /**
+   * Drop every cached slot so the next fetch actually hits the network.
+   *
+   * The freshness check runs BEFORE the request, so a socket event arriving
+   * mid-TTL would refetch and get the same stale data back. Zeroing `ts` makes
+   * isFresh() false whatever the slot shape is — this is what makes the live
+   * updates real rather than eventual.
+   */
+  invalidate: () => {
+    Object.values(_cache).forEach((slot) => {
+      if (slot && typeof slot === "object" && "ts" in slot) slot.ts = 0;
+    });
+    // Refetch silently so the numbers move on their own without a spinner.
+    get().fetchDashboard({ silent: true, force: true });
+  },
+
   // State
   dashboardData: null,
   dailySales: [],
@@ -45,8 +61,8 @@ export const useCashierDashboardStore = create((set, get) => ({
   _pollInterval: null,
 
   // Fetch cashier dashboard data
-  fetchDashboard: async ({ silent = false } = {}) => {
-    if (isFresh(_cache.dashboard, TTL.dashboard)) {
+  fetchDashboard: async ({ silent = false, force = false } = {}) => {
+    if (!force && isFresh(_cache.dashboard, TTL.dashboard)) {
       set({ dashboardData: _cache.dashboard.data, isLoading: false });
       return { success: true, data: _cache.dashboard.data };
     }
@@ -68,8 +84,8 @@ export const useCashierDashboardStore = create((set, get) => ({
   },
 
   // 🆕 NEW: Fetch weekly lubricant summary (calendar week: Mon-Sun)
-  fetchWeeklyLubricantSummary: async () => {
-    if (isFresh(_cache.weeklyLubricant, TTL.lubricant)) {
+  fetchWeeklyLubricantSummary: async ({ force = false } = {}) => {
+    if (!force && isFresh(_cache.weeklyLubricant, TTL.lubricant)) {
       set({ weeklyLubricantSummary: _cache.weeklyLubricant.data, isLoading: false });
       return { success: true, data: _cache.weeklyLubricant.data };
     }
@@ -97,8 +113,8 @@ export const useCashierDashboardStore = create((set, get) => ({
   },
 
   // 🆕 NEW: Fetch daily lubricant summary
-  fetchDailyLubricantSummary: async () => {
-    if (isFresh(_cache.dailyLubricant, TTL.dashboard)) {
+  fetchDailyLubricantSummary: async ({ force = false } = {}) => {
+    if (!force && isFresh(_cache.dailyLubricant, TTL.dashboard)) {
       set({ dailyLubricantSummary: _cache.dailyLubricant.data, isLoading: false });
       return { success: true, data: _cache.dailyLubricant.data };
     }
@@ -120,8 +136,8 @@ export const useCashierDashboardStore = create((set, get) => ({
   },
 
   // 🆕 NEW: Fetch monthly lubricant summary
-  fetchMonthlyLubricantSummary: async () => {
-    if (isFresh(_cache.monthlyLubricant, TTL.lubricant)) {
+  fetchMonthlyLubricantSummary: async ({ force = false } = {}) => {
+    if (!force && isFresh(_cache.monthlyLubricant, TTL.lubricant)) {
       set({ monthlyLubricantSummary: _cache.monthlyLubricant.data, isLoading: false });
       return { success: true, data: _cache.monthlyLubricant.data };
     }
@@ -149,8 +165,8 @@ export const useCashierDashboardStore = create((set, get) => ({
   },
 
   // 🆕 NEW: Fetch all lubricant transactions
-  fetchLubricantTransactions: async () => {
-    if (isFresh(_cache.lubricantTxns, TTL.dashboard)) {
+  fetchLubricantTransactions: async ({ force = false } = {}) => {
+    if (!force && isFresh(_cache.lubricantTxns, TTL.dashboard)) {
       set({ lubricantTransactions: _cache.lubricantTxns.data, isLoading: false });
       return { success: true, data: _cache.lubricantTxns.data };
     }
@@ -173,9 +189,9 @@ export const useCashierDashboardStore = create((set, get) => ({
   },
 
   // Fetch daily attendant sales for reconciliation
-  fetchDailySales: async (filters = {}, { silent = false } = {}) => {
+  fetchDailySales: async (filters = {}, { silent = false, force = false } = {}) => {
     const cacheKey = JSON.stringify(filters);
-    if (isFresh(_cache.dailySales, TTL.sales) && _cache.dailySales.key === cacheKey) {
+    if (!force && isFresh(_cache.dailySales, TTL.sales) && _cache.dailySales.key === cacheKey) {
       set({ dailySales: _cache.dailySales.data, isLoading: false, isBackgroundRefreshing: false });
       return { success: true, data: _cache.dailySales.data };
     }

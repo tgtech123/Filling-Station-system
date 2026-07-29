@@ -148,6 +148,38 @@ const StartShiftCard = ({ onClose, onStart }) => {
             {!prefilled && schedule.lastClosingMeterReading === null && (
               <p className="text-xs text-gray-400 mt-1">No previous reading on this pump — enter the current meter display.</p>
             )}
+
+            {/*
+              Typing over the prefill means litres went through the pump that no
+              shift accounts for. It is allowed — the physical meter is the
+              truth and a pump can be reset or repaired — but it must be
+              visible, not silent. This station already has one such gap: a
+              shift closed at 189 and the next opened at 300.
+            */}
+            {!prefilled &&
+              schedule.lastClosingMeterReading !== null &&
+              openingReading !== "" &&
+              parseFloat(openingReading) !== Number(schedule.lastClosingMeterReading) && (
+                <div className="mt-2 flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg p-2">
+                  <AlertCircle size={14} className="text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-red-700">
+                    This does not match the last closing reading of{" "}
+                    <strong>{Number(schedule.lastClosingMeterReading).toLocaleString()}</strong> on{" "}
+                    {schedule.scheduledShift.pumpTitle}.{" "}
+                    {(() => {
+                      const diff =
+                        parseFloat(openingReading) - Number(schedule.lastClosingMeterReading);
+                      const abs = Math.abs(diff).toLocaleString(undefined, {
+                        maximumFractionDigits: 2,
+                      });
+                      return diff > 0
+                        ? `${abs} L would be unaccounted for.`
+                        : `The reading is ${abs} L lower than the last close.`;
+                    })()}{" "}
+                    Only continue if the pump really shows this — your supervisor will see the gap.
+                  </p>
+                </div>
+              )}
           </div>
 
           {error && (

@@ -12,6 +12,8 @@ import { useSocket, useSocketConnect } from "@/hooks/useSocket";
 import useDashboardStore from "@/store/useDashboardStore";
 import useActivityFeedStore from "@/store/useActivityFeedStore";
 import useNotificationStore from "@/store/useNotificationStore";
+import useStaffStore from "@/store/useStaffStore";
+import { useCashierDashboardStore } from "@/store/useCashierDashboardStore";
 
 function DashboardLayout({ children }) {
   const router   = useRouter();
@@ -55,24 +57,70 @@ function DashboardLayout({ children }) {
   // ── Socket: connect once for the entire dashboard session ──────────────────
   useSocketConnect(authChecked);
 
+  /*
+    Short names for the four stores the live events touch, so the event map
+    below reads as a table of "what changed → what to refresh".
+
+    Wrapped in try/catch: a store that is not mounted on the current page must
+    never let a socket event throw and tear down the listener for everything
+    else. Silent by design — a failed background refresh should not interrupt
+    someone mid-task.
+  */
+  const safely = (fn) => {
+    try {
+      fn();
+    } catch {
+      /* store not available on this page — nothing to refresh */
+    }
+  };
+  const dash    = () => safely(() => useDashboardStore.getState().invalidate());
+  const feed    = () => safely(() => useActivityFeedStore.getState().invalidate());
+  const staff   = () => safely(() => useStaffStore.getState().invalidate());
+  const cashier = () => safely(() => useCashierDashboardStore.getState().invalidate());
+
   // ── Socket: global event handlers shared by every dashboard page ───────────
   useSocket(
     {
-      // Any meaningful write signals a dashboard metrics refresh
-      "dashboard:refresh": () => {
-        useDashboardStore.getState().invalidate();
-      },
-      // Activity feed — refresh on any shift event
-      "shift:started": () => {
-        useActivityFeedStore.getState().invalidate();
-      },
-      "shift:ended": () => {
-        useActivityFeedStore.getState().invalidate();
-      },
-      "shift:approved": () => {
-        useActivityFeedStore.getState().invalidate();
-      },
-      // Bell badge — refresh for every user when a notification is created
+      /*
+        Every event the server emits is handled here, so no screen depends on a
+        manual refresh to show what is already true.
+
+        Each store's invalidate() both expires its cache AND refetches — busting
+        the cache alone left the page showing stale numbers until the next
+        navigation, which is what made a refresh feel necessary.
+      */
+
+      // ── Shifts ──────────────────────────────────────────────────────────
+      "shift:started":   () => { feed(); dash(); staff(); },
+      "shift:ended":     () => { feed(); dash(); staff(); cashier(); },
+      "shift:approved":  () => { feed(); dash(); cashier(); },
+      "shift:scheduled": () => { feed(); staff(); },
+      "shift-types:updated": () => { feed(); },
+      "shift:price-reading-recorded": () => { feed(); dash(); },
+
+      // ── Money in ────────────────────────────────────────────────────────
+      "reconciliation:done": () => { feed(); dash(); cashier(); },
+      "lubricant:sold":      () => { feed(); dash(); cashier(); },
+      "gas:cylinder-sale":   () => { feed(); dash(); cashier(); },
+      "gas:sale-updated":    () => { feed(); dash(); cashier(); },
+
+      // ── Stock & pricing ─────────────────────────────────────────────────
+      "price:changed":   () => { feed(); dash(); cashier(); },
+      "delivery:updated": () => { feed(); dash(); },
+      "gas:cylinder-products-updated": () => { feed(); dash(); },
+      "stock-reconciliation:created":  () => { feed(); dash(); },
+      "stock-reconciliation:approved": () => { feed(); dash(); },
+      "stock-reconciliation:rejected": () => { feed(); dash(); },
+      "stock-reconciliation:settings-updated": () => { dash(); },
+
+      // ── People ──────────────────────────────────────────────────────────
+      "staff:updated":      () => { staff(); dash(); feed(); },
+      "payroll:staff-added": () => { staff(); },
+
+      // ── Catch-all the server sends after any meaningful write ────────────
+      "dashboard:refresh": () => { dash(); },
+
+      // Bell badge — every user, on every notification
       "notification:new": () => {
         useNotificationStore.getState().invalidate();
       },

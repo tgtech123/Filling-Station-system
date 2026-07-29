@@ -124,13 +124,18 @@ export default function SalesSummary() {
       {/* Dashboard Cards */}
       {!isLoading && (
         <>
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-2">
+          {/*
+            Stepped breakpoints. These jumped straight from one column to three
+            at xl (1280px), so every tablet and most laptops showed a single
+            tall column of cards. They now go 1 → 2 → 3 as the width allows.
+          */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {data.slice(0, 3).map((item) => (
               <FlashCard key={item.id} {...item} />
             ))}
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
             {data.slice(3).map((item) => (
               <FlashCard key={item.id} {...item} />
             ))}
