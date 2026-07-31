@@ -61,7 +61,10 @@ export default function AccountantDashboard() {
               )}
             </div>
 
-            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Five across at lg gave each card ~190px, so the label and the
+                icon collided. Now 3 across at lg (3 + 2 rows) and only 5 on a
+                genuinely wide screen. */}
+            <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-4">
               {dashboardFlashCards.map((item) => (
                 <FlashCard key={item.id} {...item} />
               ))}

@@ -68,9 +68,16 @@ const exportToExcel = async (data, columns, fileName = "data") => {
   const totals = new Array(columnCount).fill(null);
 
   for (let col = 0; col < columnCount; col++) {
+    // "—" and "-" are placeholders for "no value", used across the reports for
+    // things like a branch with no expiry date. Treated as empty rather than as
+    // text: otherwise one placeholder cell disqualified the whole column and
+    // the report silently lost its total.
+    const isBlank = (v) =>
+      v === undefined || v === null || v === "" || v === "—" || v === "-";
+
     const values = data
       .map((r) => (Array.isArray(r) ? r[col] : undefined))
-      .filter((v) => v !== undefined && v !== null && v !== "");
+      .filter((v) => !isBlank(v));
 
     if (values.length === 0) continue;
 

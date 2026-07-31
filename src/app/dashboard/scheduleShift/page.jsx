@@ -54,7 +54,10 @@ export default function ScheduleShift() {
   const infoData = attendantDirectory?.attendants?.map((attendant) => ({
     id: attendant._id,
     name: attendant.name,
-    img: attendant.image || "/default-avatar.png",
+    // null, not a placeholder path — "/default-avatar.png" does not exist, and
+    // pointing at it made every photo-less staff member 404 on every render.
+    // The card falls back to initials when this is empty.
+    img: attendant.image || null,
     shiftSchedule: attendant.shiftType,
     role: attendant.role,
     onDuty: attendant.status === "On Duty",

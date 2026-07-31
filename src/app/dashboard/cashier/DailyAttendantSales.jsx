@@ -332,7 +332,7 @@ const DailyAttendantSales = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-[1.125rem] font-medium text-gray-900 dark:text-white">
-              Daily Attendant Slaes Summary
+              Daily Attendant Sales Summary
             </h1>
             <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded-full">
               {pendingCount} pending

@@ -26,7 +26,9 @@ const SkeletonCard = () => (
 
 const PricingPage = () => {
   const searchParams = useSearchParams();
-  const [billing, setBilling] = useState("yearly");
+  // Monthly is the default: it is the lower headline figure and the commitment
+  // most first-time buyers expect. Yearly stays one tap away behind the toggle.
+  const [billing, setBilling] = useState("monthly");
   const [showBlue, setShowBlue] = useState(null);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState(null);
@@ -374,6 +376,15 @@ const PricingPage = () => {
       {/* Billing toggle */}
       <div className="flex justify-center px-4 mb-10">
         <div className="flex bg-white border border-gray-200 rounded-full p-1 shadow-sm w-full max-w-xs sm:max-w-sm">
+          {/* Monthly sits first because it is the default selection — a toggle
+              whose active side is on the right reads as though it was switched. */}
+          <button
+            onClick={() => setBilling("monthly")}
+            className={`flex-1 flex items-center justify-center py-2.5 px-4 rounded-full text-sm font-semibold transition-all duration-200
+              ${!isYearly ? "bg-blue-600 text-white shadow" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            Bill Monthly
+          </button>
           <button
             onClick={() => setBilling("yearly")}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-full text-sm font-semibold transition-all duration-200
@@ -384,13 +395,6 @@ const PricingPage = () => {
               ${isYearly ? "bg-white/20 text-white" : "bg-green-100 text-green-600"}`}>
               Save 10%
             </span>
-          </button>
-          <button
-            onClick={() => setBilling("monthly")}
-            className={`flex-1 flex items-center justify-center py-2.5 px-4 rounded-full text-sm font-semibold transition-all duration-200
-              ${!isYearly ? "bg-blue-600 text-white shadow" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Bill Monthly
           </button>
         </div>
       </div>
@@ -505,6 +509,7 @@ function ModalPayment({
           <h3 className="font-bold text-lg text-gray-900 dark:text-white">{modalTitle}</h3>
           <p className="text-gray-500 text-sm mt-1">
             {plan.name} — ₦{planPrice.toLocaleString()}/{billing === "monthly" ? "mo" : "yr"}
+            {planPrice > 0 && <span className="text-gray-400"> + {taxPercentLabel} VAT</span>}
           </p>
         </div>
 
@@ -573,7 +578,7 @@ function ModalPayment({
                 <span className="font-semibold">₦{vat.toLocaleString()}</span>
               </div>
               <div className="border-t border-blue-200 pt-2 flex justify-between">
-                <span className="font-bold text-gray-900">Total</span>
+                <span className="font-bold text-gray-900">Total <span className="font-medium text-gray-500">(VAT included)</span></span>
                 <span className="font-bold text-blue-600 text-base">₦{totalPrice.toLocaleString()}</span>
               </div>
             </div>
@@ -591,6 +596,15 @@ function ModalPayment({
             <><CreditCard size={16} />{isRenew ? "Renew Now" : "Pay Now"} — ₦{totalPrice.toLocaleString()}</>
           )}
         </button>
+
+        {/* The button shows the gross figure from the moment the modal opens,
+            before the breakdown appears (that waits for name + email). Without
+            this line the total reads as an unexplained mark-up on the plan price. */}
+        {totalPrice > 0 && (
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            VAT included — {taxPercentLabel} ({`₦${vat.toLocaleString()}`}) on ₦{planPrice.toLocaleString()}
+          </p>
+        )}
 
         <button onClick={onClose} className="w-full mt-3 py-2.5 text-sm text-gray-400 hover:text-gray-600 font-medium">
           Cancel

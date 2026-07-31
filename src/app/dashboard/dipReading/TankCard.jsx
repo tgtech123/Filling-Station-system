@@ -43,13 +43,16 @@ export default function TankCard({
       return;
     }
 
-    const diff = Math.abs(systemVal - manualVal);
+    // Rounded to 2 dp — tank quantities carry floating-point noise, so a raw
+    // difference could read "0.030000000000001 Ltrs Deviation".
+    const diff = Math.round((Math.abs(systemVal - manualVal) + Number.EPSILON) * 100) / 100;
+    const diffFmt = diff.toLocaleString(undefined, { maximumFractionDigits: 2 });
 
     // Update UI based on comparison
     if (diff !== 0) {
-      setMessage(`${diff} Ltrs Deviation`);
+      setMessage(`${diffFmt} Ltrs Deviation`);
       setErrorMessage(
-        `Manual Reading differs from system reading by ${diff} Litres. Please verify the reading and investigate if necessary.`
+        `Manual Reading differs from system reading by ${diffFmt} Litres. Please verify the reading and investigate if necessary.`
       );
       setError(true);
       setStatus("Deviation");
@@ -86,11 +89,19 @@ export default function TankCard({
         });
       }
 
-      // Show success message briefly
+      // Always confirm the save.
+      //
+      // This only ran when diff === 0 — an exact match, which almost never
+      // happens with a physical dip rod. So the normal case saved the reading
+      // and showed only a red "X Ltrs Deviation", which reads as a rejection.
+      // The feature worked; it just never said so.
       if (diff === 0) {
-        setTimeout(() => {
-          setMessage("Reading Submitted Successfully");
-        }, 500);
+        setMessage("Reading recorded - matched system");
+      } else {
+        setMessage(`Reading recorded - ${diffFmt} Ltrs deviation`);
+        setErrorMessage(
+          `Saved. Manual reading differs from the system by ${diffFmt} Litres — worth investigating.`
+        );
       }
     } catch (err) {
       setError(true);
