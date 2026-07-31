@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import { Progress } from "@/components/Dashboard/Progress";
 import { Button } from "@/components/ui/button";
 import { CircleFadingArrowUp, Mail, Phone } from "lucide-react";
@@ -14,17 +16,48 @@ export default function ScheduleCard({
   onOpen,
   salesTarget,
 }) {
+  // One retry at most — a broken URL flips this and the initials take over,
+  // so a failing image can never re-trigger itself.
+  const [brokenImg, setBrokenImg] = useState(false);
+
+  const initials =
+    String(name || "")
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join("")
+      .toUpperCase() || "?";
+
   return (
     <div className="px-3 py-4 rounded-[10px] bg-white border-2 border-[#e7e7e7] min-w-0">
       {/* Header */}
       <div className="flex justify-between items-start pb-4 border-b border-gray-200 gap-2">
         <div className="flex gap-2 items-center min-w-0">
-          <img
-            src={img}
-            alt={name}
-            className="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200"
-            onError={(e) => { e.target.src = "/default-avatar.png"; }}
-          />
+          {/*
+            Initials instead of a placeholder file.
+
+            This was <img src={img}> where img defaulted to "/default-avatar.png"
+            — a file that does not exist. It 404'd, onError fired and set src to
+            THE SAME missing file, which 404'd again: an infinite loop hammering
+            the network, which is the flicker that was visible on every staff
+            member without a photo. Initials need no request and cannot fail.
+          */}
+          {img && !brokenImg ? (
+            <img
+              src={img}
+              alt={name}
+              className="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200"
+              onError={() => setBrokenImg(true)}
+            />
+          ) : (
+            <div
+              aria-hidden="true"
+              className="w-10 h-10 rounded-full shrink-0 border border-gray-200 bg-[#1a71f6]/10 text-[#1a71f6] flex items-center justify-center text-sm font-bold select-none"
+            >
+              {initials}
+            </div>
+          )}
           <div className="min-w-0">
             <h4 className="font-semibold text-base truncate">{name}</h4>
             <p className="text-xs text-gray-500 truncate">{role}</p>

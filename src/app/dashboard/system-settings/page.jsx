@@ -339,7 +339,7 @@ function UpgradeModal({ onClose, currentPlanSlug, availablePlans, renewMode, onU
               <span className="font-medium dark:text-gray-100">{fmt(vat)}</span>
             </div>
             <div className="flex justify-between px-4 py-3 bg-gray-50 dark:bg-gray-700/40">
-              <span className="font-semibold dark:text-gray-100">Total to pay</span>
+              <span className="font-semibold dark:text-gray-100">Total to pay <span className="font-normal text-gray-500 dark:text-gray-400">(VAT included)</span></span>
               <span className="font-bold text-[#1a71f6]">{fmt(totalPrice)}</span>
             </div>
           </div>
@@ -352,7 +352,9 @@ function UpgradeModal({ onClose, currentPlanSlug, availablePlans, renewMode, onU
             {busy ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
             {busy ? "Redirecting to payment..." : renewMode ? `Renew — Pay ${fmt(totalPrice)}` : `Pay ${fmt(totalPrice)} — Upgrade Now`}
           </button>
-          <p className="text-center text-[11px] text-neutral-400 mt-2">You will be redirected to Paystack to complete payment securely.</p>
+          <p className="text-center text-[11px] text-neutral-400 mt-2">
+            VAT included. You will be redirected to Paystack to complete payment securely.
+          </p>
         </div>
       </div>
     </ModalBackdrop>
