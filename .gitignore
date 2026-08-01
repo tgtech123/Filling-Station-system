@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Claude Code local settings — records approved shell commands verbatim,
+# so inline credentials can leak into the repo. Per-developer, never commit.
+.claude/settings.local.json
