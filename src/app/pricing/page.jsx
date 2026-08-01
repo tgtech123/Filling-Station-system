@@ -132,9 +132,12 @@ const PricingPage = () => {
     return `Get ${name}`;
   };
 
+  // Features still marked "Soon" on the cards. "Custom SLA agreement" was moved
+  // out: an SLA is negotiated and signed per customer, so it is available on
+  // Enterprise Max today and does not depend on anything shipping first.
   const comingSoonFeatures = [
     "Dedicated support","White-glove onboarding",
-    "Dedicated account manager","Custom SLA agreement","API access","Custom integrations",
+    "Dedicated account manager","API access","Custom integrations",
   ];
 
   const planKey = (plan, i) => plan._id || plan.id || plan.slug || String(i);
