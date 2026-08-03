@@ -89,8 +89,16 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.8 }}
           >
+            {/* 99.5%, not 100%. 100% is not achievable by any provider and reads
+                as marketing rather than fact. What we actually run today is a
+                single Render service (a deploy or restart is a brief outage) on
+                an Atlas cluster whose tier carries no uptime SLA of its own, so
+                99.9% would also be a promise we cannot keep. 99.5% allows roughly
+                3.5 hours a month, which single-instance hosting can genuinely
+                meet. Raise this only after moving to a paid Atlas tier and a
+                second Render instance. */}
             <div className="text-center lg:text-left">
-              <h4 className="font-semibold text-xl sm:text-2xl text-black dark:text-white">100%</h4>
+              <h4 className="font-semibold text-xl sm:text-2xl text-black dark:text-white">99.5%</h4>
               <p className="text-sm text-gray-600 dark:text-gray-400">Uptime</p>
             </div>
             <div className="text-center lg:text-left">
