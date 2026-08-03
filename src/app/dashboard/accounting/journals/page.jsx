@@ -19,6 +19,24 @@ export default function JournalsPage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], memo: '', lines: [{ ...EMPTY_LINE }, { ...EMPTY_LINE }] });
 
+  // The station owner reaches this page as the APPROVER in maker-checker, not as
+  // a bookkeeper: creating entries is accountant-only on the server, so offering
+  // them the form would be a dead end ending in a 403. Read in an effect rather
+  // than a state initialiser because localStorage does not exist during prerender.
+  const [role, setRole] = useState(null);
+  const canCreate = role === 'accountant';
+
+  useEffect(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem('user') || '{}');
+      setRole(u?.role || null);
+      // Land the approver directly on the queue they came here to clear.
+      if (u?.role && u.role !== 'accountant') setStatusFilter('pending_approval');
+    } catch {
+      setRole(null);
+    }
+  }, []);
+
   const load = async () => {
     setLoading(true);
     try {
@@ -36,8 +54,11 @@ export default function JournalsPage() {
 
   useEffect(() => { load(); }, [page, statusFilter]);
   useEffect(() => {
+    // Only the create form needs the chart of accounts, and that endpoint is
+    // accountant-only — fetching it as the owner buys a guaranteed 403.
+    if (!canCreate) return;
     api.get('/api/accounting/accounts').then((res) => setAccounts(res.data.data)).catch(() => {});
-  }, []);
+  }, [canCreate]);
 
   const totalDebit = form.lines.reduce((s, l) => s + (Number(l.debit) || 0), 0);
   const totalCredit = form.lines.reduce((s, l) => s + (Number(l.credit) || 0), 0);
@@ -92,10 +113,16 @@ export default function JournalsPage() {
       <div className="w-full px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">Journal Entries</h1>
-            <p className="text-sm text-gray-500">{total} entries — control accounts only accept system postings</p>
+            <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+              {canCreate ? 'Journal Entries' : 'Journal Approvals'}
+            </h1>
+            <p className="text-sm text-gray-500">
+              {canCreate
+                ? `${total} entries — control accounts only accept system postings`
+                : `${total} entries — you can approve or reject, but not create. An entry you raised cannot be approved by you.`}
+            </p>
           </div>
-          <Btn onClick={() => setShowCreate(true)}><Plus size={15} /> New Entry</Btn>
+          {canCreate && <Btn onClick={() => setShowCreate(true)}><Plus size={15} /> New Entry</Btn>}
         </div>
 
         <Hint>

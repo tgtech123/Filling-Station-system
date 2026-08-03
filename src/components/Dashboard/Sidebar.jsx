@@ -420,6 +420,19 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       section: "accounting",
     },
     {
+      // The owner's half of maker-checker. A journal above the approval
+      // threshold, or any supplier payment batch, cannot be released by the
+      // person who raised it — in a one-accountant station the owner is the
+      // only other authoriser, so without this link nothing could ever post.
+      id: "accounting-approvals",
+      name: "Approvals",
+      icon: <ShieldCheck size={20} className="text-amber-500" />,
+      link: "/dashboard/accounting/journals",
+      roles: ["manager"],
+      ownerOnly: true,
+      section: "accounting",
+    },
+    {
       id: "accounting-coa",
       name: "Chart of Accounts",
       icon: <BookOpen size={20} className="text-indigo-500" />,
@@ -713,9 +726,14 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
   const links = allLinks(normalizedRole);
   const dept = (userData?.department || "fuel").toLowerCase();
 
+  // The owner and a hired manager share role "manager", so `roles` alone cannot
+  // express "the owner only". Same signal the role badge uses.
+  const isOwnerUser = userData?.displayRole === "Owner" || userData?.isOwner === true;
+
   return links.filter((link) => {
     if (!Array.isArray(link.roles)) return false;
     if (!link.roles.includes(normalizedRole)) return false;
+    if (link.ownerOnly && !isOwnerUser) return false;
 
     // Cashiers and attendants see ONLY their own department.
     //

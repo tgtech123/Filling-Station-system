@@ -40,7 +40,21 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
     responsibility: "",
     payType: "",
     amount: "",
+    isGroupAccountant: false,
   });
+
+  // Appointing the chain's group accountant is the owner's call alone — the
+  // server rejects the field from anybody else. A hired manager must therefore
+  // not send it at all, or their ordinary staff edits would start failing 403.
+  const [isOwnerUser, setIsOwnerUser] = useState(false);
+  useEffect(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      setIsOwnerUser(u?.displayRole === "Owner" || u?.isOwner === true);
+    } catch {
+      setIsOwnerUser(false);
+    }
+  }, []);
 
   // Fetch current sales target on open
   useEffect(() => {
@@ -77,6 +91,7 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
           : (staffData.responsibility || staffData.responsibilities || ""),
         payType: staffData.payType || "",
         amount: staffData.amount || staffData.earnings || "", // Try both keys
+        isGroupAccountant: staffData.isGroupAccountant === true,
       });
     }
   }, [isOpen, staffData]);
@@ -96,6 +111,12 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
           .map((s) => s.trim())
           .filter(Boolean),
       };
+      // Send the appointment only when it is actually ours to make. The server
+      // 403s on the field itself, not on its value, so a stray `false` from a
+      // hired manager would block an otherwise valid edit.
+      if (!(isOwnerUser && formData.role === "accountant")) {
+        delete payload.isGroupAccountant;
+      }
       await updateStaff(staffData?._id, payload, token);
       onClose();
     } catch (err) {
@@ -245,6 +266,26 @@ const EditStaffModal = ({ isOpen, onClose, staffData, token }) => {
                     <option value="gas">Gas Department Only</option>
                     <option value="both">Both Departments</option>
                   </select>
+                </span>
+              )}
+              {isOwnerUser && formData.role === "accountant" && (
+                <span className="flex flex-col gap-2">
+                  <label className="font-bold text-[0.875rem]">Group Accountant (Chain CFO)</label>
+                  <label className="flex items-start gap-3 w-full lg:w-[27.719rem] p-3 rounded-2xl border-[2px] border-neutral-200 dark:border-gray-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isGroupAccountant === true}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, isGroupAccountant: e.target.checked }))
+                      }
+                      className="mt-0.5 w-4 h-4 accent-blue-600 shrink-0"
+                    />
+                    <span className="text-[0.8125rem] text-neutral-600 dark:text-gray-300">
+                      Can approve journals and supplier payments across every branch in
+                      this chain. They still cannot create entries in a branch, so the
+                      person raising an entry is never the person approving it.
+                    </span>
+                  </label>
                 </span>
               )}
               <span className="flex flex-col gap-2">
