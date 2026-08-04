@@ -146,7 +146,7 @@ export default function Contact() {
               {settingsLoading && !settings ? (
                 <div className="h-4 w-44 bg-blue-400/40 rounded animate-pulse" />
               ) : (
-                <p>{settings?.contactEmail || "support@flourishstation.com"}</p>
+                <p>{settings?.contactEmail || "info@fueldesks.com"}</p>
               )}
             </div>
             <div className="flex gap-4 items-center">

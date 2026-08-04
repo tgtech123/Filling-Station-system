@@ -646,7 +646,7 @@ function CancelPlanModal({ onClose, planName }) {
         </div>
         <div className="flex flex-col gap-2">
           <a
-            href={`mailto:support@flourishstation.com?subject=${subject}&body=${body}`}
+            href={`mailto:info@fueldesks.com?subject=${subject}&body=${body}`}
             onClick={onClose}
             className="flex-1 py-2.5 rounded-xl border-[2px] border-red-400 text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors text-center"
           >

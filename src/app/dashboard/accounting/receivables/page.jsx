@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, RotateCw, Banknote, FileMinus, UserPlus } from 'lucide-react';
+import { Plus, Trash2, RotateCw, Banknote, FileMinus, UserPlus, Mail, Loader2, BellRing } from 'lucide-react';
 import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate } from '../shared';
 
 // Each line's product routes its revenue to that product's GL account
@@ -36,6 +36,27 @@ export default function ReceivablesPage() {
   const [showReceipt, setShowReceipt] = useState(false);
   const [rcptForm, setRcptForm] = useState({ customerId: '', amount: '', bankAccountId: '', reference: '', applications: [] });
   const [openInvoices, setOpenInvoices] = useState([]);
+
+  // Emailing an invoice is deliberate — an accountant drafts, checks it against
+  // the delivery note, then sends. Tracked per row so only the button being
+  // pressed shows a spinner.
+  const [sendingId, setSendingId] = useState(null);
+
+  const sendInvoice = async (inv, reminder = false) => {
+    setSendingId(inv._id);
+    try {
+      const res = await api.post(`/api/accounting/ar/invoices/${inv._id}/send`, { reminder });
+      toast.success(res.data?.message || 'Invoice sent');
+      load();
+    } catch (e2) {
+      // The server explains WHY (no customer email, unverified sender, mail
+      // outage). Showing that verbatim beats a generic failure the accountant
+      // cannot act on.
+      toast.error(e2.response?.data?.message || 'Could not send the invoice');
+    } finally {
+      setSendingId(null);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -214,7 +235,7 @@ export default function ReceivablesPage() {
         {tab === 'invoices' && (
           <Card>
             <Table
-              headers={['Invoice #', 'Customer', 'Date', 'Due', { label: 'Total', right: true }, { label: 'Open', right: true }, 'Recurring', 'Status']}
+              headers={['Invoice #', 'Customer', 'Date', 'Due', { label: 'Total', right: true }, { label: 'Open', right: true }, 'Recurring', 'Status', 'Sent']}
               empty={!loading && invoices.length === 0 ? 'No invoices yet' : null}
             >
               {invoices.map((inv) => (
@@ -229,6 +250,43 @@ export default function ReceivablesPage() {
                     {inv.recurring?.enabled ? <span className="text-blue-600 capitalize">{inv.recurring.frequency}</span> : '—'}
                   </td>
                   <td className="py-2"><StatusBadge status={inv.status} /></td>
+                  <td className="py-2 pl-3">
+                    {inv.status === 'void' ? (
+                      <span className="text-xs text-gray-400">—</span>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => sendInvoice(inv, Boolean(inv.emailSentAt))}
+                          disabled={sendingId === inv._id}
+                          title={
+                            inv.emailSentAt
+                              ? `Last sent ${fmtDate(inv.emailSentAt)} to ${inv.emailSentTo}${
+                                  inv.emailSentCount > 1 ? ` (${inv.emailSentCount} times)` : ''
+                                } — send a reminder`
+                              : 'Email this invoice to the customer'
+                          }
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors disabled:opacity-50
+                            ${inv.emailSentAt
+                              ? 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300'
+                              : 'border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-800'}`}
+                        >
+                          {sendingId === inv._id ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : inv.emailSentAt ? (
+                            <BellRing size={13} />
+                          ) : (
+                            <Mail size={13} />
+                          )}
+                          {sendingId === inv._id ? 'Sending' : inv.emailSentAt ? 'Remind' : 'Send'}
+                        </button>
+                        {inv.emailSentAt && (
+                          <span className="text-[11px] text-gray-400 whitespace-nowrap">
+                            {fmtDate(inv.emailSentAt)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </td>
                 </tr>
               ))}
             </Table>

@@ -268,7 +268,7 @@ function PortalContent() {
             Powered by{" "}
             <span className="font-semibold text-blue-500">FuelDesk</span>
             {" · "}
-            <a href="mailto:support@fueldesk.app" className="underline hover:text-blue-500 transition-colors">
+            <a href="mailto:info@fueldesks.com" className="underline hover:text-blue-500 transition-colors">
               Contact us
             </a>
           </p>
