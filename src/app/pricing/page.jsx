@@ -6,6 +6,7 @@ import usePlansStore from "@/store/usePlansStore";
 import RegisterManagerModal from "@/components/RegisterManagerModal";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { api } from "@/lib/config";
 
 const SkeletonCard = () => (
@@ -218,8 +219,45 @@ const PricingPage = () => {
       });
       window.location.href = response.data.data.authorizationUrl;
     } catch (err) {
-      if (err.response?.data?.error === "account_exists") setEmailExists(true);
-      else setEmailError(err.response?.data?.message || "Failed to initialize payment. Please try again.");
+      const body = err.response?.data;
+
+      if (body?.error === "account_exists") {
+        setEmailExists(true);
+      } else if (body?.error === "payment_pending_registration") {
+        // They already paid and never finished registering — almost always
+        // because they closed the browser, which took sessionStorage with it.
+        // Resume that registration rather than charging them a second time.
+        const d = body.data || {};
+        try {
+          sessionStorage.setItem(
+            "paymentVerified",
+            JSON.stringify({
+              verified: true,
+              plan: d.planName,
+              planSlug: d.planSlug,
+              billingCycle: d.billingCycle,
+              reference: d.reference,
+              payer: { name: d.guestName || payerName, email: d.guestEmail || payerEmail },
+            })
+          );
+          sessionStorage.setItem(
+            "selectedPlan",
+            JSON.stringify({
+              slug: d.planSlug,
+              name: d.planName,
+              billingCycle: d.billingCycle,
+              amount: d.amount,
+            })
+          );
+        } catch { /* storage blocked — registration still works, just unprefilled */ }
+
+        toast.success(body.message || "You have already paid — continuing your registration.");
+        setShowEmailModal(false);
+        setShowRegisterModal(true);
+      } else {
+        setEmailError(body?.message || "Failed to initialize payment. Please try again.");
+      }
+
       setInitiatingPayment(false);
     }
   };
