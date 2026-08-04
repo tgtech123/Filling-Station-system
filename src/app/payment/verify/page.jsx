@@ -15,6 +15,7 @@ function PaymentVerifyContent() {
   // "login"     → existing-email guest goes to /login with upgrade banner
   // "setup"     → brand new user goes to /pricing?register=true to create station
   const [redirectTarget, setRedirectTarget] = useState("dashboard");
+  const [failureReason, setFailureReason] = useState("");
 
   useEffect(() => {
     if (!reference) {
@@ -98,9 +99,16 @@ function PaymentVerifyContent() {
           }, 2000);
         }
       } catch (err) {
+        // The card has already been charged by this point. Silently bouncing the
+        // customer back to pricing reads as "my money is gone" and invites them
+        // to pay a second time — which is exactly what happened. Keep them here,
+        // show the reference, and tell them the truth: the payment is recorded
+        // and their plan is waiting.
         console.error("Verify failed:", err);
+        setFailureReason(
+          err?.response?.data?.error || err?.response?.data?.message || err?.message || ""
+        );
         setStatus("failed");
-        setTimeout(() => router.push("/pricing"), 3000);
       }
     };
 
@@ -185,13 +193,43 @@ function PaymentVerifyContent() {
               </svg>
             </div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              Payment Failed
+              We could not confirm your payment yet
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
-              Something went wrong. You can try again from your dashboard.
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              <strong>Your payment is safe.</strong> If your card was charged, the
+              payment is recorded and your plan is waiting — this is only a problem
+              confirming it right now. <strong>Please do not pay again.</strong>
             </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500">
-              Redirecting to pricing page...
+
+            {reference && (
+              <div className="bg-gray-50 dark:bg-gray-700/40 rounded-xl p-3 mb-4 text-left">
+                <p className="text-[11px] uppercase tracking-wide text-gray-400 mb-1">
+                  Your reference — quote this to support
+                </p>
+                <p className="font-mono text-xs break-all dark:text-gray-200">{reference}</p>
+              </div>
+            )}
+
+            {failureReason && (
+              <p className="text-xs text-gray-400 mb-4">Details: {failureReason}</p>
+            )}
+
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 mb-2"
+            >
+              Try again
+            </button>
+            <button
+              onClick={() => { window.location.href = "/pricing"; }}
+              className="w-full py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-600 dark:text-gray-300"
+            >
+              Continue registration
+            </button>
+            <p className="text-xs text-gray-400 mt-3">
+              To finish later, return to Pricing and enter <strong>the same email
+              address you paid with</strong> — we will recognise the payment and take
+              you straight to setup without charging you again.
             </p>
           </>
         )}
