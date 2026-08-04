@@ -4,6 +4,7 @@ import { DollarSign, CircleX, Wallet } from "lucide-react";
 import { FaRegCheckCircle } from "react-icons/fa";
 import StatGrid from "../StatGrid";
 import PaymentInfo from "./PaymentInfo";
+import UnclaimedPayments from "./UnclaimedPayments";
 import useAdminStore from "@/store/useAdminStore";
 
 const GeneralPage = () => {
@@ -65,6 +66,13 @@ const GeneralPage = () => {
       ) : (
         <StatGrid data={cardData} />
       )}
+
+      {/* Sits above the full payment list on purpose: these are customers who
+          paid and got nothing, which is the only thing on this page that needs
+          acting on rather than reading. */}
+      <div className="mt-[1.375rem]">
+        <UnclaimedPayments />
+      </div>
 
       <div className="mt-[1.375rem]">
         <PaymentInfo />
