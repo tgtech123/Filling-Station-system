@@ -135,7 +135,7 @@ export default function FrequentlyQuestions() {
              Contact us
           </Link>
           {/* <a
-            href="mailto:support@flourishstation.com"
+            href="mailto:info@fueldesks.com"
             className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors"
           >
             Contact Us
