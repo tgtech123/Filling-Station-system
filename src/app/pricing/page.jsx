@@ -40,6 +40,31 @@ const PricingPage = () => {
   const [emailError, setEmailError] = useState("");
   const [emailExists, setEmailExists] = useState(false);
   const [initiatingPayment, setInitiatingPayment] = useState(false);
+
+  /**
+   * Reset the "Redirecting..." spinner when the browser restores this page.
+   *
+   * Sending someone to Paystack is a full navigation away. Coming BACK — the
+   * back button, or reopening a closed tab — restores the page from the
+   * back/forward cache with its JavaScript state intact, so `initiatingPayment`
+   * is still true and the button spins forever with no way out. A reload is not
+   * involved, so React never re-initialises the state on its own.
+   *
+   * `pageshow` with `event.persisted` is the only reliable signal for a bfcache
+   * restore; `visibilitychange` covers Safari, which does not always set it.
+   */
+  useEffect(() => {
+    const clearPending = () => setInitiatingPayment(false);
+    const onPageShow = (e) => { if (e.persisted) clearPending(); };
+    const onVisible = () => { if (document.visibilityState === "visible") clearPending(); };
+
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, []);
   const [currentPlan, setCurrentPlan] = useState(null);
   const [taxRate, setTaxRate] = useState(0.075); // NG VAT; refreshed from public settings
 
