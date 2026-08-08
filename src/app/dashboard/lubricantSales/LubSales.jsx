@@ -1,7 +1,8 @@
 ﻿"use client";
 import { API_URL } from "@/lib/config";
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
+import AddLubricantModal from "../lubricantManagement/AddLubricantModal";
 import DynamicSalesTable from "./DynamicSalesTable";
 import ReceiptModal from "./reusefilter/ReceiptModal";
 import { useLubricantStore } from "@/store/lubricantStore";
@@ -24,8 +25,28 @@ const LubSales = () => {
   const [user, setUser] = useState(null);
   const [receiptData, setReceiptData] = useState(null);
 
+  /**
+   * The last failed scan, kept structured rather than as a string so the banner
+   * can offer the right action: registering an unknown barcode is useful,
+   * offering it for a product that is merely out of stock is not.
+   */
+  const [scanError, setScanError] = useState(null);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+
   // 🆕 Get selected product from store
-  const { selectedProductForSale, clearSelectedProductForSale, fetchAllTransactions } = useLubricantStore();
+  const {
+    selectedProductForSale,
+    clearSelectedProductForSale,
+    fetchAllTransactions,
+    lubricants,
+    fetchLubricants,
+  } = useLubricantStore();
+
+  // Load the catalogue once so scans resolve locally. Without this every beep
+  // is a network round trip and the till crawls on a poor connection.
+  useEffect(() => {
+    if (!lubricants?.length) fetchLubricants();
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -114,8 +135,72 @@ const LubSales = () => {
     setMessage(`✅ ${product.productName} added to cart`);
   };
 
-  // 🔍 Fetch a single lubricant
+  /**
+   * Resolve a scanned barcode and put it in the basket.
+   *
+   * Local first. The full product list is already in the store, so a scan is an
+   * in-memory lookup — effectively instant — instead of a network round trip on
+   * every beep. A till on a slow forecourt connection, or hitting a server
+   * waking from idle, could otherwise take seconds per item, and a queue forms.
+   *
+   * The network is still consulted when the barcode is not in the local list,
+   * because the catalogue may have been added to on another device since this
+   * page loaded. That is the only case that pays for a round trip.
+   */
   const fetchLubricant = async (code, index) => {
+    const startedAt = performance.now();
+    const finish = (outcome) => {
+      const ms = Math.round(performance.now() - startedAt);
+      // Kept as a log rather than shown to the cashier: it is for diagnosing a
+      // slow till, not something they can act on.
+      console.log(`[scan] ${code} → ${outcome} in ${ms}ms`);
+    };
+
+    const applyItem = (item) => {
+      const price = Number(item.unitPrice ?? 0);
+      const updatedRows = [...rows];
+      updatedRows[index] = {
+        ...updatedRows[index],
+        productName: item.productName || "",
+        unitPrice: price.toString(),
+        amount: (price * updatedRows[index].quantity).toString(),
+        lubricantId: item._id,
+      };
+      setRows(updatedRows);
+
+      const lastRow = updatedRows[updatedRows.length - 1];
+      if (lastRow.barcode && lastRow.productName) {
+        setRows([
+          ...updatedRows,
+          { barcode: "", productName: "", unitPrice: "", quantity: "1", amount: "", lubricantId: null },
+        ]);
+      }
+    };
+
+    // ── Local hit ──────────────────────────────────────────────────────────
+    const local = (lubricants || []).find(
+      (l) => String(l.barcode || "").trim() === String(code).trim()
+    );
+
+    if (local) {
+      if (Number(local.qtyInStock) <= 0) {
+        setScanError({
+          code: "OUT_OF_STOCK",
+          message: `${local.productName} (${code}) has 0 in stock — restock before selling.`,
+          barcode: code,
+        });
+        setMessage("");
+        finish("out of stock");
+        return;
+      }
+      applyItem(local);
+      setScanError(null);
+      setMessage("");
+      finish("ok (local)");
+      return;
+    }
+
+    // ── Not in the local catalogue: ask the server ─────────────────────────
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/lubricant/get-lubricant`, {
@@ -130,40 +215,30 @@ const LubSales = () => {
       const result = await res.json();
 
       if (res.ok && result.data) {
-        const item = result.data;
-        const price = Number(item.unitPrice ?? 0);
-
-        const updatedRows = [...rows];
-        updatedRows[index] = {
-          ...updatedRows[index],
-          productName: item.productName || "",
-          unitPrice: price.toString(),
-          amount: (price * updatedRows[index].quantity).toString(),
-          lubricantId: item._id,
-        };
-
-        setRows(updatedRows);
-
-        // 🧩 Automatically add a new blank row for next product
-        const lastRow = updatedRows[updatedRows.length - 1];
-        if (lastRow.barcode && lastRow.productName) {
-          setRows([
-            ...updatedRows,
-            {
-              barcode: "",
-              productName: "",
-              unitPrice: "",
-              quantity: "1",
-              amount: "",
-              lubricantId: null,
-            },
-          ]);
-        }
-      } else {
-        setMessage(`❌ Lubricant with barcode "${code}" not found. Enter the correct barcode or register the barcode first.`);
+        applyItem(result.data);
+        setScanError(null);
+        setMessage("");
+        finish("ok (server)");
+        return;
       }
+
+      // Distinct outcomes need distinct messages. Collapsing them into one
+      // "not found" told a cashier holding a real bottle that it did not
+      // exist, when the truth was that the stock had run out.
+      if (result?.code === "OUT_OF_STOCK") {
+        setScanError({ code: "OUT_OF_STOCK", message: result.error, barcode: code, productName: result.productName });
+        finish("out of stock");
+      } else if (res.status === 404 || result?.code === "NOT_FOUND") {
+        setScanError({ code: "NOT_FOUND", message: result?.error || `No product with barcode "${code}" at this station.`, barcode: code });
+        finish("not found");
+      } else {
+        setScanError({ code: "ERROR", message: result?.error || result?.message || "Could not look up that barcode.", barcode: code });
+        finish("error");
+      }
+      setMessage("");
     } catch (error) {
-      setMessage("Error fetching lubricant");
+      setScanError({ code: "OFFLINE", message: "Could not reach the server. Check the connection and scan again.", barcode: code });
+      finish("network error");
     }
   };
 
@@ -317,11 +392,72 @@ const LubSales = () => {
   return (
     <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 md:p-8 flex flex-col rounded-xl gap-6 text-neutral-800 dark:text-neutral-100 w-full min-w-0">
       <div className="mb-2 flex flex-col text-neutral-800 dark:text-neutral-100 gap-2 sm:gap-3">
-        <h1 className="text-2xl sm:text-3xl font-bold">Lubricant Sales</h1>
-        <p className="text-lg sm:text-xl font-medium">
-          Record, print and export all sales receipt
-        </p>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Lubricant &amp; Store Sales</h1>
+            <p className="text-lg sm:text-xl font-medium">
+              Record, print and export all sales receipt
+            </p>
+          </div>
+          {/* Registering a product from the till: a cashier scanning something
+              new should not have to leave the sale to add it. */}
+          <button
+            onClick={() => setShowAddProduct(true)}
+            className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"
+          >
+            <Plus size={15} /> New item
+          </button>
+        </div>
       </div>
+
+      {/* ── Scan failures ─────────────────────────────────────────────────
+          Named precisely, because "not found" for an out-of-stock product
+          sends a cashier hunting for a barcode that is perfectly correct. */}
+      {scanError && (
+        <div
+          className={`p-3.5 rounded-xl border ${
+            scanError.code === "OUT_OF_STOCK"
+              ? "bg-amber-50 border-amber-300 text-amber-800"
+              : "bg-red-50 border-red-300 text-red-700"
+          }`}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-bold">
+                {scanError.code === "OUT_OF_STOCK"
+                  ? "Out of stock"
+                  : scanError.code === "NOT_FOUND"
+                  ? "Not registered at this station"
+                  : scanError.code === "OFFLINE"
+                  ? "No connection"
+                  : "Scan failed"}
+              </p>
+              <p className="text-sm mt-0.5">{scanError.message}</p>
+              {scanError.code === "OUT_OF_STOCK" && (
+                <p className="text-xs mt-1 opacity-80">
+                  This item cannot be added to the sale until stock is received or adjusted.
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => setScanError(null)}
+              className="shrink-0 p-1 rounded-lg hover:bg-black/5"
+              aria-label="Dismiss"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          {scanError.code === "NOT_FOUND" && (
+            <button
+              onClick={() => setShowAddProduct(true)}
+              className="mt-2.5 inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold"
+            >
+              <Plus size={13} /> Register “{scanError.barcode}” now
+            </button>
+          )}
+        </div>
+      )}
 
       {message && (
         <div
@@ -518,6 +654,18 @@ const LubSales = () => {
         onClose={() => setIsModalOpen(false)}
         receiptData={receiptData}
       />
+
+      {showAddProduct && (
+        <AddLubricantModal
+          onclose={() => {
+            setShowAddProduct(false);
+            setScanError(null);
+            // Refresh the catalogue so the item just registered can be scanned
+            // immediately, without reloading the page mid-sale.
+            fetchLubricants();
+          }}
+        />
+      )}
     </div>
   );
 };

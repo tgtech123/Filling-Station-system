@@ -60,7 +60,10 @@ export default function Inventory() {
 
     const inventoryColumns = [
         "Product Name",
-        "Product Type",
+        // Replaces "Product Type", which was hardcoded to "Lubricant" on every
+        // row and told the user nothing. Category is the field that actually
+        // varies now, and it is what decides how the sale is reported.
+        "Category",
         "Qty in Stock",
         "Price Per Unit",
         viewMode === "week" ? "Qty Sold This Week" : "Qty Sold This Month" // 🆕 Dynamic column
@@ -86,9 +89,16 @@ export default function Inventory() {
                 const sale = salesMap.get(lub._id.toString());
                 const soldQty = sale?.quantity || 0;
 
+                const CATEGORY_LABEL = {
+                    lubricant: "Lubricant",
+                    drinks: "Store — Drinks",
+                    snacks: "Store — Snacks",
+                    other: "Store — Other",
+                };
+
                 return [
                     lub.productName || "—",
-                    lub.productType || "N/A",
+                    CATEGORY_LABEL[lub.category] || "Lubricant",
                     quantity,
                     `₦${price?.toLocaleString() || 0}`,
                     soldQty

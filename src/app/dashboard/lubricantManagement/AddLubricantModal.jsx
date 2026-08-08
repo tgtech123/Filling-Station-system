@@ -11,6 +11,7 @@ export default function AddLubricantModal({ onclose }) {
     barcode: "",
     productName: "",
     productType: "Lubricant",
+    category: "lubricant",
     brand: "",
     qtyInStock: "",
     reOrderLevel: "",
@@ -58,6 +59,7 @@ export default function AddLubricantModal({ onclose }) {
         barcode: "",
         productName: "",
         productType: "Lubricant",
+    category: "lubricant",
         brand: "",
         qtyInStock: "",
         reOrderLevel: "",
@@ -85,8 +87,17 @@ export default function AddLubricantModal({ onclose }) {
         </div>
 
         <div className="mb-4">
-          <h4 className="font-semibold text-lg">Add Lubricant</h4>
-          <p>Add new lubricant to stock</p>
+          {/* Neutral wording: this form now stocks drinks and snacks as well as
+              oil, and a cashier adding Coca-Cola should not be told they are
+              adding a lubricant. */}
+          <h4 className="font-semibold text-lg">
+            {formData.category === "lubricant" ? "Add Lubricant" : "Add Store Item"}
+          </h4>
+          <p>
+            {formData.category === "lubricant"
+              ? "Add new lubricant to stock"
+              : "Add a drink, snack or other shop item to stock"}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full">
@@ -125,6 +136,30 @@ export default function AddLubricantModal({ onclose }) {
                 placeholder="e.g Mobil 20w50"
                 required
               />
+            </div>
+          </div>
+
+          {/* Category drives which revenue and cost accounts the sale posts to.
+              Without it a crate of Coca-Cola is reported as lubricant revenue,
+              and the owner cannot tell whether the shop or the oil rack is
+              making the money. */}
+          <div className="flex gap-2 flex-col lg:flex-row w-full">
+            <div className="flex-1">
+              <p className="text-sm font-semibold">Category *</p>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full border-2 border-gray-300 p-2 rounded-[8px] bg-white"
+              >
+                <option value="lubricant">Lubricant (oils, greases)</option>
+                <option value="drinks">Store — Drinks</option>
+                <option value="snacks">Store — Snacks</option>
+                <option value="other">Store — Other</option>
+              </select>
+              <p className="text-xs text-gray-400 mt-1">
+                Store items are reported separately from lubricants in your accounts.
+              </p>
             </div>
           </div>
 
