@@ -17,12 +17,20 @@ const useProcurementStore = create((set, get) => ({
   reorderLoading: false,
   error: null,
 
-  fetchReorderItems: async () => {
+  /**
+   * `orderType` is "lubricant" | "store" | "" (everything).
+   *
+   * Lubricants and shop stock come from different suppliers, so the person
+   * raising an order needs the list already filtered — asking them to pick the
+   * right lines out of one mixed list is the step that goes wrong.
+   */
+  fetchReorderItems: async (orderType = "") => {
     set({ reorderLoading: true, error: null });
     try {
-      const res = await fetch(`${API_URL}/api/procurement/reorder-items`, {
-        headers: authHeaders(),
-      });
+      const url = orderType
+        ? `${API_URL}/api/procurement/reorder-items?orderType=${orderType}`
+        : `${API_URL}/api/procurement/reorder-items`;
+      const res = await fetch(url, { headers: authHeaders() });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to fetch reorder items");
       set({ reorderItems: data.data || [], reorderLoading: false });
@@ -31,12 +39,14 @@ const useProcurementStore = create((set, get) => ({
     }
   },
 
-  fetchProcurements: async (status = "") => {
+  fetchProcurements: async (status = "", orderType = "") => {
     set({ loading: true, error: null });
     try {
-      const url = status
-        ? `${API_URL}/api/procurement?status=${status}`
-        : `${API_URL}/api/procurement`;
+      const params = new URLSearchParams();
+      if (status) params.set("status", status);
+      if (orderType) params.set("orderType", orderType);
+      const qs = params.toString();
+      const url = qs ? `${API_URL}/api/procurement?${qs}` : `${API_URL}/api/procurement`;
       const res = await fetch(url, { headers: authHeaders() });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to fetch procurements");
@@ -111,6 +121,31 @@ const useProcurementStore = create((set, get) => ({
         procurements: s.procurements.map((p) => (p._id === id ? data.data : p)),
       }));
       return { success: true, data: data.data };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
+  /**
+   * Record the supplier's reply to a PO.
+   *
+   * items: [{ lubricantId, confirmedQuantity, confirmedUnitCost, confirmedSellingPrice }]
+   * The server returns a `changes` list of every line whose quantity or price
+   * differs from what was requested — that is what the manager reviews.
+   */
+  confirmProcurement: async (id, items, supplierNotes = "") => {
+    try {
+      const res = await fetch(`${API_URL}/api/procurement/${id}/confirm`, {
+        method: "PATCH",
+        headers: { ...authHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ items, supplierNotes }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      set((s) => ({
+        procurements: s.procurements.map((p) => (p._id === id ? data.data : p)),
+      }));
+      return { success: true, data: data.data, changes: data.changes || [], message: data.message };
     } catch (err) {
       return { success: false, error: err.message };
     }

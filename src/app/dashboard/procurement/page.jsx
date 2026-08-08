@@ -7,6 +7,7 @@ import {
   Eye, Edit3, Save, FileText, TruckIcon, BadgeCheck, Filter, ArrowLeft,
   Search, ChevronDown, Building2, Phone, AtSign, UserPlus, Check,
   AlertCircle, Loader2, X, CreditCard, Banknote, Clock, CircleDollarSign,
+  ClipboardCheck,
 } from "lucide-react";
 import useProcurementStore from "@/store/useProcurementStore";
 import useSupplierStore from "@/store/useSupplierStore";
@@ -24,6 +25,8 @@ const STATUS_CONFIG = {
   draft:     { label: "Draft",     bg: "bg-gray-100",   text: "text-gray-600",   icon: <Edit3 size={11}/>      },
   submitted: { label: "Submitted", bg: "bg-blue-100",   text: "text-blue-700",   icon: <Send size={11}/>       },
   ordered:   { label: "Ordered",   bg: "bg-purple-100", text: "text-purple-700", icon: <TruckIcon size={11}/>  },
+  // Supplier has replied with what they can supply and at what price.
+  confirmed: { label: "Confirmed", bg: "bg-amber-100",  text: "text-amber-700",  icon: <ClipboardCheck size={11}/> },
   received:  { label: "Received",  bg: "bg-green-100",  text: "text-green-700",  icon: <BadgeCheck size={11}/> },
 };
 
@@ -236,8 +239,14 @@ function RegisterSupplierModal({ onClose, onSaved, type = "lubricant" }) {
               <UserPlus size={15} className="text-white" />
             </div>
             <div>
-              <h3 className="font-bold text-white text-sm">Register New Supplier</h3>
-              <p className="text-blue-100 text-xs">Add to your supplier directory</p>
+              <h3 className="font-bold text-white text-sm">
+                Register {type === "store" ? "Store" : "Lubricant"} Supplier
+              </h3>
+              <p className="text-blue-100 text-xs">
+                {type === "store"
+                  ? "Drinks, snacks and shop wholesalers"
+                  : "Oil and lubricant distributors"}
+              </p>
             </div>
           </div>
           <button onClick={onClose} className="w-7 h-7 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors">
@@ -452,7 +461,60 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
   const [showAddProducts, setShowAddProducts] = useState(false);
   const [showRegister,    setShowRegister]    = useState(false);
 
-  const { markOrdered, markReceived, updateProcurement, recordPayment, reorderItems, fetchReorderItems } = useProcurementStore();
+  const { markOrdered, markReceived, updateProcurement, recordPayment, reorderItems, fetchReorderItems, confirmProcurement } = useProcurementStore();
+
+  // ── Supplier's reply to the PO ────────────────────────────────────────────
+  const [showSupplierReply, setShowSupplierReply] = useState(false);
+  const [replyRows, setReplyRows] = useState({});
+  const [supplierNotes, setSupplierNotes] = useState(order?.supplierNotes || "");
+  const [savingReply, setSavingReply] = useState(false);
+
+  const setReplyRow = (lubricantId, field, value) =>
+    setReplyRows((prev) => ({
+      ...prev,
+      [lubricantId]: { ...(prev[lubricantId] || {}), [field]: value },
+    }));
+
+  // The markup lives on the product, not the order line, so the suggested
+  // selling price comes from the reorder list the page already loaded.
+  const productMarkup = (lubricantId) =>
+    reorderItems.find((p) => String(p._id) === String(lubricantId))?.sellingPercentage ?? 0;
+
+  const saveSupplierReply = async () => {
+    setSavingReply(true);
+    try {
+      // Only send lines the user actually touched — an untouched line means
+      // "confirmed as requested", and sending blanks would overwrite it.
+      const items = Object.entries(replyRows)
+        .map(([lubricantId, r]) => {
+          const out = { lubricantId };
+          if (r.confirmedQuantity !== undefined && r.confirmedQuantity !== "")
+            out.confirmedQuantity = Number(r.confirmedQuantity);
+          if (r.confirmedUnitCost !== undefined && r.confirmedUnitCost !== "")
+            out.confirmedUnitCost = Number(r.confirmedUnitCost);
+          if (r.confirmedSellingPrice !== undefined && r.confirmedSellingPrice !== "")
+            out.confirmedSellingPrice = Number(r.confirmedSellingPrice);
+          return out;
+        })
+        .filter((o) => Object.keys(o).length > 1);
+
+      const result = await confirmProcurement(order._id, items, supplierNotes);
+      if (result.success) {
+        setOrder(result.data);
+        setShowSupplierReply(false);
+        toast.success(result.message || "Supplier's reply saved");
+        // Name what changed — that is the manager's decision point, not a
+        // detail to be discovered later at the delivery door.
+        (result.changes || []).forEach((c) =>
+          toast(`${c.productName}: ${c.requestedQty} → ${c.confirmedQty ?? c.requestedQty} @ ₦${Number(c.confirmedUnitCost ?? c.originalUnitCost).toLocaleString()}`, { icon: "📝" })
+        );
+      } else {
+        toast.error(result.error || "Could not save the supplier's reply");
+      }
+    } finally {
+      setSavingReply(false);
+    }
+  };
   const { suppliers, loading: suppLoading, fetchSuppliers } = useSupplierStore();
 
   const canEdit = (role === "manager" || role === "supervisor") &&
@@ -474,9 +536,16 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
     setEditVendorEmail(order.vendorEmail || "");
     setEditNotes(order.notes || "");
     setEditItems((order.items || []).map((i) => ({ ...i })));
-    if (!reorderItems.length) fetchReorderItems();
+    // Editing an existing order — load the products for THAT order's type, so a
+    // store order cannot have engine oil added to it from a stale list.
+    if (!reorderItems.length) fetchReorderItems(order.orderType || "lubricant");
     setIsEditing(true);
   };
+
+  // Registering a vendor from inside an order registers them for THAT kind of
+  // supply — a drinks wholesaler added while editing a store order must not
+  // then appear in the lubricant vendor list.
+  const supplierType = order?.orderType === "store" ? "store" : "lubricant";
 
   const cancelEdit = () => {
     setIsEditing(false);
@@ -1054,18 +1123,148 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
             })()}
 
             {/* Status actions (view mode) — goods-handling roles only */}
-            {!isEditing && canReceive && (order.status === "submitted" || order.status === "ordered") && (
+            {/* ── Supplier's reply ──────────────────────────────────────────
+                The PO goes out; the supplier fills it in and sends it back by
+                email, WhatsApp or on paper with what they can actually supply
+                and today's prices. This is where that reply is entered, and it
+                becomes what the delivery is checked against. */}
+            {!isEditing && canReceive && showSupplierReply && (
+              <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-700 rounded-xl p-3.5">
+                  <p className="text-sm font-bold text-amber-800 dark:text-amber-400 mb-0.5 flex items-center gap-1.5">
+                    <ClipboardCheck size={15} /> Supplier's Reply
+                  </p>
+                  <p className="text-xs text-amber-700/80 dark:text-amber-400/70 mb-3">
+                    Enter what {order.vendorName || "the supplier"} confirmed — quantity available and
+                    their price today. Selling price updates from your markup; adjust it if you need to.
+                  </p>
+
+                  <div className="space-y-2.5">
+                    {(order.items || []).map((it) => {
+                      const row = replyRows[it.lubricantId] || {};
+                      const cost = Number(row.confirmedUnitCost ?? it.unitCost ?? 0);
+                      const markup = Number(it.sellingPercentage ?? productMarkup(it.lubricantId) ?? 0);
+                      const suggested = cost * (1 + markup / 100);
+                      const selling = row.confirmedSellingPrice ?? (suggested ? suggested.toFixed(2) : "");
+                      const qtyShort =
+                        row.confirmedQuantity !== undefined &&
+                        Number(row.confirmedQuantity) < Number(it.quantityToProcure);
+                      const priceUp = cost > Number(it.unitCost || 0);
+
+                      return (
+                        <div key={it.lubricantId} className="bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-amber-100 dark:border-gray-700">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <p className="text-sm font-semibold dark:text-gray-100">{it.productName}</p>
+                            <p className="text-[11px] text-gray-400 whitespace-nowrap">
+                              asked {it.quantityToProcure} @ ₦{Number(it.unitCost || 0).toLocaleString()}
+                            </p>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="text-[11px] text-gray-500">Qty available</label>
+                              <input
+                                type="number" min="0"
+                                value={row.confirmedQuantity ?? ""}
+                                placeholder={String(it.quantityToProcure)}
+                                onChange={(e) => setReplyRow(it.lubricantId, "confirmedQuantity", e.target.value)}
+                                className={`w-full px-2 py-1.5 text-sm rounded-lg border ${qtyShort ? "border-amber-400 bg-amber-50" : "border-gray-200 dark:border-gray-600"} dark:bg-gray-700`}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[11px] text-gray-500">Their cost ₦</label>
+                              <input
+                                type="number" min="0" step="0.01"
+                                value={row.confirmedUnitCost ?? ""}
+                                placeholder={String(it.unitCost ?? 0)}
+                                onChange={(e) => setReplyRow(it.lubricantId, "confirmedUnitCost", e.target.value)}
+                                className={`w-full px-2 py-1.5 text-sm rounded-lg border ${priceUp ? "border-red-300 bg-red-50" : "border-gray-200 dark:border-gray-600"} dark:bg-gray-700`}
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[11px] text-gray-500">
+                                Sell at ₦ {markup ? <span className="text-gray-400">({markup}%)</span> : null}
+                              </label>
+                              <input
+                                type="number" min="0" step="0.01"
+                                value={selling}
+                                onChange={(e) => setReplyRow(it.lubricantId, "confirmedSellingPrice", e.target.value)}
+                                className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700"
+                              />
+                            </div>
+                          </div>
+
+                          {qtyShort && (
+                            <p className="text-[11px] text-amber-700 mt-1.5">
+                              Short by {Number(it.quantityToProcure) - Number(row.confirmedQuantity)} — the
+                              delivery will be checked against {row.confirmedQuantity}, not {it.quantityToProcure}.
+                            </p>
+                          )}
+                          {Number(selling) > 0 && Number(selling) < cost && (
+                            <p className="text-[11px] text-red-600 mt-1.5">
+                              Selling below cost — check this is intended.
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <textarea
+                    value={supplierNotes}
+                    onChange={(e) => setSupplierNotes(e.target.value)}
+                    placeholder="Notes from the supplier (delivery date, part shipment, substitutions...)"
+                    rows={2}
+                    className="w-full mt-2.5 px-2.5 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 dark:bg-gray-700"
+                  />
+
+                  <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                    <button
+                      disabled={savingReply}
+                      onClick={saveSupplierReply}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60"
+                    >
+                      {savingReply ? <Loader2 size={14} className="animate-spin" /> : <ClipboardCheck size={14} />}
+                      Save supplier's reply
+                    </button>
+                    <button
+                      onClick={() => setShowSupplierReply(false)}
+                      className="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-sm font-medium text-gray-600 dark:text-gray-300"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!isEditing && canReceive && (order.status === "submitted" || order.status === "ordered" || order.status === "confirmed") && (
               <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                 {!confirmReceipt ? (
                   <>
                     <div className="flex flex-col sm:flex-row gap-3">
+                      {!showSupplierReply && ["submitted", "ordered", "confirmed"].includes(order.status) && (
+                        <button
+                          disabled={actioning}
+                          onClick={() => {
+                            // The suggested selling price needs each product's
+                            // markup, which lives on the product not the order
+                            // line — make sure that list is loaded first.
+                            if (!reorderItems.length) fetchReorderItems(order.orderType || "lubricant");
+                            setShowSupplierReply(true);
+                          }}
+                          className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto">
+                          <ClipboardCheck size={14} />
+                          {order.status === "confirmed" ? "Update supplier's reply" : "Enter supplier's reply"}
+                        </button>
+                      )}
                       {order.status === "submitted" && (
                         <button disabled={actioning} onClick={() => handleAction(markOrdered, "ordered")}
                           className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto">
                           <TruckIcon size={14} /> Mark as Ordered
                         </button>
                       )}
-                      {["submitted", "ordered"].includes(order.status) && (
+                      {["submitted", "ordered", "confirmed"].includes(order.status) && (
                         <button disabled={actioning} onClick={initConfirmReceipt}
                           className="flex items-center justify-center gap-2 px-4 py-3 sm:py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-semibold disabled:opacity-60 w-full sm:w-auto">
                           <BadgeCheck size={14} />
@@ -1188,7 +1387,7 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
 
       {showRegister && (
         <RegisterSupplierModal
-          type="lubricant"
+          type={supplierType}
           onClose={() => setShowRegister(false)}
           onSaved={handleNewSupplierSaved}
         />
@@ -1223,16 +1422,30 @@ export default function ProcurementPage() {
   const [userData,        setUserData]        = useState(null);
   const [showRegister,    setShowRegister]    = useState(false);
 
+  /**
+   * Lubricants and store stock are bought from different suppliers, so the whole
+   * screen works in one mode at a time: the reorder list, the existing orders and
+   * the vendor dropdown all follow this switch. Mixing them would offer a drinks
+   * wholesaler in the vendor list while ordering engine oil.
+   */
+  const [orderType, setOrderType] = useState("lubricant");
+  // A vendor registered from this screen is registered for whatever is being
+  // ordered right now, so they appear in the correct dropdown next time.
+  const supplierType = orderType;
+
   useEffect(() => {
     try {
       const u = JSON.parse(localStorage.getItem("user") || "{}");
       setUserData(u);
       if (u?.role === "accountant") setActiveTab("orders");
     } catch {}
-    fetchReorderItems();
-    fetchProcurements();
-    fetchSuppliers("lubricant");
   }, []);
+
+  useEffect(() => {
+    fetchReorderItems(orderType);
+    fetchProcurements("", orderType);
+    fetchSuppliers(orderType);
+  }, [orderType]);
 
   const procuredBy     = userData ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "Manager" : "Manager";
   const stationLogo    = userData?.station?.logoUrl || userData?.station?.logo || userData?.station?.image || "";
@@ -1348,6 +1561,26 @@ export default function ProcurementPage() {
                 <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Select products to procure, set vendor details and submit</p>
               </div>
             </div>
+            {/* Lubricants vs Store — different suppliers, so never one list */}
+            <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl w-full sm:w-auto mr-0 sm:mr-2">
+              {[
+                { key: "lubricant", label: "Lubricants" },
+                { key: "store", label: "Store" },
+              ].map((o) => (
+                <button
+                  key={o.key}
+                  onClick={() => setOrderType(o.key)}
+                  className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    orderType === o.key
+                      ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                      : "text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+
             <div className="flex gap-2 w-full sm:w-auto">
               {(userData?.role === "accountant" ? ["orders"] : ["new", "orders"]).map((t) => (
                 <button key={t} onClick={() => setActiveTab(t)}
@@ -1787,7 +2020,7 @@ export default function ProcurementPage() {
       {/* Register Supplier Modal (main page level) */}
       {showRegister && (
         <RegisterSupplierModal
-          type="lubricant"
+          type={supplierType}
           onClose={() => setShowRegister(false)}
           onSaved={handleNewSupplierSaved}
         />
