@@ -96,10 +96,27 @@ export default function Inventory() {
                     other: "Store — Other",
                 };
 
+                /**
+                 * Stock in base units, with the pack equivalent alongside.
+                 *
+                 * "240 pieces" is the truth but not the answer to the question
+                 * a manager is actually asking at the shelf, which is how many
+                 * packs they can still sell. Shown for the largest unit only —
+                 * listing every unit turns a column into a paragraph.
+                 */
+                const baseUnit = lub.baseUnit || "piece";
+                const biggest = (lub.saleUnits || []).reduce(
+                    (best, u) => (!best || u.factor > best.factor ? u : best),
+                    null
+                );
+                const stockLabel = biggest && quantity >= biggest.factor
+                    ? `${quantity} ${baseUnit}s (${Math.floor(quantity / biggest.factor)} ${biggest.name}s)`
+                    : `${quantity} ${baseUnit}${quantity === 1 ? "" : "s"}`;
+
                 return [
                     lub.productName || "—",
                     CATEGORY_LABEL[lub.category] || "Lubricant",
-                    quantity,
+                    stockLabel,
                     `₦${price?.toLocaleString() || 0}`,
                     soldQty
                 ];

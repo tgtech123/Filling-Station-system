@@ -4,6 +4,9 @@ import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import { Users, Plus, Search, Fuel, CheckCircle2, AlertCircle, Loader2, ChevronRight, X, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import useFuelLoyaltyStore from "@/store/useFuelLoyaltyStore";
+import useCurrentRole from "@/hooks/useCurrentRole";
+import AccessNotice from "../AccessNotice";
+import { STAFF, can } from "../roles";
 
 const TIER_STYLES = {
   Bronze:   { bg: "bg-orange-100",  text: "text-orange-700",  dot: "bg-orange-500" },
@@ -37,12 +40,20 @@ export default function LoyaltyCustomersPage() {
   const [error, setError]         = useState(null);
   const [success, setSuccess]     = useState(null);
 
-  useEffect(() => { fetchCustomers(); }, []);
+  // Listing customers is staff-only on the server (the accountant is not in
+  // that group), so the fetch waits until the role is known and permits it.
+  const { role, ready } = useCurrentRole();
+  const canView = can(role, STAFF);
 
   useEffect(() => {
+    if (ready && canView) fetchCustomers();
+  }, [ready, role]);
+
+  useEffect(() => {
+    if (!ready || !canView) return;
     const t = setTimeout(() => fetchCustomers({ search, tier: tierFilter }), 400);
     return () => clearTimeout(t);
-  }, [search, tierFilter]);
+  }, [search, tierFilter, ready, role]);
 
   const handleRegister = async () => {
     setError(null);
@@ -63,6 +74,15 @@ export default function LoyaltyCustomersPage() {
 
   const tierCounts = { Bronze: 0, Silver: 0, Gold: 0, Platinum: 0 };
   customers.forEach(c => { if (tierCounts[c.tier] !== undefined) tierCounts[c.tier]++; });
+
+  if (ready && !canView) return (
+    <DashboardLayout>
+      <AccessNotice
+        title="Customer records are for station staff"
+        message="Cashiers, attendants, supervisors and managers register and manage loyalty customers."
+      />
+    </DashboardLayout>
+  );
 
   return (
     <DashboardLayout>

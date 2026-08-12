@@ -14,6 +14,8 @@ import {
   Wrench,
   ChevronDown,
   ChevronUp,
+  ChevronsLeft,
+  ChevronsRight,
   Landmark,
   Pyramid,
   History,
@@ -126,7 +128,55 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
   }, [isVisible, toggleSidebar]);
 
   const toggleDropdown = (id) => {
-    setOpenDropdown(openDropdown === id ? null : id);
+    const next = openDropdown === id ? null : id;
+    setOpenDropdown(next);
+    // Remembered, because this component remounts on every navigation — which is
+    // exactly what used to slam the menu shut the moment you clicked something
+    // inside it.
+    localStorage.setItem("sidebar:openDropdown", next ?? "");
+  };
+
+  /**
+   * Which cascading menu is open.
+   *
+   * Two sources, in this order: the menu that owns the page you are on, and
+   * failing that whatever you last opened by hand. Before this it was neither —
+   * plain component state that reset to null on mount, so clicking a submenu
+   * navigated, remounted the sidebar and collapsed the menu you were working
+   * in. You then had to reopen it to reach the next item.
+   */
+  useEffect(() => {
+    // visibleLinks is built further down the component; this callback runs after
+    // render, so it is populated by the time we read it.
+    const owning = visibleLinks.find(
+      (l) => l.isDropdown && l.subLinks?.some((s) => pathname === s.link)
+    );
+    if (owning) {
+      setOpenDropdown(owning.id);
+      return;
+    }
+    const saved = localStorage.getItem("sidebar:openDropdown");
+    if (saved) setOpenDropdown(saved);
+  }, [pathname, userRole]);
+
+  /**
+   * Collapsed to an icon rail (desktop only).
+   *
+   * 280px of permanent sidebar is a lot of screen to give up on a laptop when
+   * the work is a wide table — the shift sheets and the ledger both run off the
+   * right edge. Collapsing keeps navigation one click away instead of hiding it
+   * behind a drawer. Mobile is untouched: there the sidebar is already a drawer.
+   */
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    setCollapsed(localStorage.getItem("sidebar:collapsed") === "true");
+  }, []);
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      localStorage.setItem("sidebar:collapsed", String(!prev));
+      return !prev;
+    });
   };
 
   // Collapsible Accounting section — persisted, auto-expands on accounting routes
@@ -594,14 +644,17 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       id: "fuel-loyalty-divider",
       isDivider: true,
       label: "Fuel Loyalty",
-      roles: ["cashier", "attendant", "manager", "admin"],
+      roles: ["cashier", "attendant", "supervisor", "manager", "admin"],
     },
     {
+      // The supervisor approves redemptions alongside the manager, so they need
+      // a way in — a notification about a pending request is no use if the only
+      // screen that can clear it is unreachable from the menu.
       id: "fuel-loyalty",
       name: "Loyalty Program",
       icon: <BsFillFuelPumpFill size={18} className="text-blue-500" />,
       link: "/dashboard/loyalty",
-      roles: ["manager", "admin"],
+      roles: ["manager", "admin", "supervisor"],
     },
     {
       id: "fuel-loyalty-customers",
@@ -781,15 +834,15 @@ const visibleLinks = getVisibleLinks(userRole);
     // >
 
     <div
-  className={`w-[280px] lg:flex lg:relative h-[100vh] top-0 left-0 bg-white dark:bg-gray-900 shadow-md transform transition-transform duration-500 ease-in-out ${
+  className={`w-[280px] ${collapsed ? "lg:w-[84px]" : "lg:w-[280px]"} lg:flex lg:relative h-[100vh] top-0 left-0 bg-white dark:bg-gray-900 shadow-md transform transition-transform duration-500 ease-in-out ${
     isVisible ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
-  } lg:translate-x-0 lg:opacity-100 fixed z-50 lg:transition-none flex flex-col`}
+  } lg:translate-x-0 lg:opacity-100 fixed z-50 lg:transition-[width] lg:duration-200 flex flex-col`}
 >
 
       {/* Header */}
       <div className="flex-shrink-0 flex justify-between items-start pt-2 px-2">
         {/* Logo + station name stacked */}
-        <div className="flex flex-col gap-1">
+        <div className={`flex flex-col gap-1 ${collapsed ? "lg:hidden" : ""}`}>
           <div className="bg-white rounded-lg px-2.5 py-1.5 border border-gray-100 shadow-sm flex items-center justify-center max-w-[140px]">
             {userData?.station?.logoUrl || userData?.station?.logo ? (
               <img
@@ -807,6 +860,18 @@ const visibleLinks = getVisibleLinks(userRole);
             </p>
           )}
         </div>
+
+        {/* Collapse toggle — desktop only; on mobile the drawer already closes. */}
+        <button
+          onClick={toggleCollapsed}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shrink-0 ${
+            collapsed ? "mx-auto mt-2" : "mt-2 mr-1"
+          }`}
+        >
+          {collapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
+        </button>
         <div className="w-full flex justify-end px-4 pt-4 lg:hidden">
           <button
             onClick={toggleSidebar}
@@ -834,7 +899,7 @@ const visibleLinks = getVisibleLinks(userRole);
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto scrollbar-hide overflow-x-hidden">
-        <aside className="mt-6 text-[#888] flex flex-col w-full px-4 pb-24">
+        <aside className={`mt-6 text-[#888] flex flex-col w-full pb-24 ${collapsed ? "px-2 lg:items-center" : "px-4"}`}>
           {/* Role Info */}
           <div className="mb-6 px-2">
             <p className="text-xs text-[#666] mb-1">
@@ -847,7 +912,7 @@ const visibleLinks = getVisibleLinks(userRole);
           </div>
 
           {/* Navigation Links */}
-          <p className="mb-4 text-xs font-semibold">NAVIGATION</p>
+          <p className={`mb-4 text-xs font-semibold ${collapsed ? "lg:hidden" : ""}`}>NAVIGATION</p>
 
           {visibleLinks.length === 0 ? (
             <div className="text-xs text-gray-400 px-4 py-2">
@@ -861,8 +926,12 @@ const visibleLinks = getVisibleLinks(userRole);
                 <div key={link.id}>
                   {link.isDivider ? (
                     <div className="pt-3 pb-1 px-2">
+                      {/* On the rail a section heading has nowhere to go, so it
+                          becomes a hairline — the grouping survives, the words
+                          do not. */}
+                      {collapsed && <div className="hidden lg:block h-px bg-gray-200 dark:bg-gray-700 my-1" />}
                       <div
-                        className={`flex items-center justify-between ${
+                        className={`flex items-center justify-between ${collapsed ? "lg:hidden" : ""} ${
                           link.id === "accounting-divider" ? "cursor-pointer select-none group" : ""
                         }`}
                         onClick={link.id === "accounting-divider" ? toggleAccounting : undefined}
@@ -885,7 +954,7 @@ const visibleLinks = getVisibleLinks(userRole);
                             }}
                             disabled={gasToggling}
                             title={gasEnabled === false ? "Enable Gas Department" : "Disable Gas Department"}
-                            className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${
+                            className={`${collapsed ? "lg:hidden" : ""} flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border transition-all ${
                               gasEnabled === false
                                 ? "bg-orange-100 border-orange-300 text-orange-600 hover:bg-orange-200"
                                 : "bg-gray-100 border-gray-300 text-gray-500 hover:bg-red-50 hover:border-red-300 hover:text-red-500"
@@ -912,25 +981,30 @@ const visibleLinks = getVisibleLinks(userRole);
                   ) : link.isDropdown ? (
                     <>
                       <div
-                        onClick={() => toggleDropdown(link.id)}
+                        // On the rail there is no room for a submenu, so opening
+                        // one opens the sidebar with it.
+                        onClick={() => { if (collapsed) setCollapsed(false); toggleDropdown(link.id); }}
+                        title={collapsed ? link.name : undefined}
                         className={`flex cursor-pointer items-center justify-between gap-3 ${
                           isActive(pathname, link)
                             ? "bg-[#ff9d29] text-white"
                             : "bg-transparent text-[#888] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-[#666] dark:hover:text-gray-300"
-                        } rounded-[12px] py-3 px-4 transition-all duration-200`}
+                        } rounded-[12px] py-3 ${collapsed ? "lg:justify-center lg:px-0 px-4" : "px-4"} transition-all duration-200`}
                       >
                         <div className="flex items-center gap-3">
                           <span>{link.icon}</span>
-                          <span>{link.name}</span>
+                          <span className={collapsed ? "lg:hidden" : ""}>{link.name}</span>
                         </div>
-                        {openDropdown === link.id ? (
-                          <ChevronUp size={18} />
-                        ) : (
-                          <ChevronDown size={18} />
-                        )}
+                        <span className={collapsed ? "lg:hidden" : ""}>
+                          {openDropdown === link.id ? (
+                            <ChevronUp size={18} />
+                          ) : (
+                            <ChevronDown size={18} />
+                          )}
+                        </span>
                       </div>
                       {openDropdown === link.id && (
-                        <div className="ml-8 mt-1 space-y-1">
+                        <div className={`ml-8 mt-1 space-y-1 ${collapsed ? "lg:hidden" : ""}`}>
                           {link.subLinks.map((subLink) => (
                             <Link
                               href={subLink.link}
@@ -951,14 +1025,15 @@ const visibleLinks = getVisibleLinks(userRole);
                   ) : (
                     <Link
                       href={link.link}
+                      title={collapsed ? link.name : undefined}
                       className={`flex items-center gap-3 ${
                         pathname === link.link
                           ? "bg-[#ff9d29] text-white"
                           : "bg-transparent text-[#888] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-[#666] dark:hover:text-gray-300"
-                      } rounded-[12px] py-3 px-4 transition-all duration-200`}
+                      } rounded-[12px] py-3 ${collapsed ? "lg:justify-center lg:px-0 px-4" : "px-4"} transition-all duration-200`}
                     >
                       <span>{link.icon}</span>
-                      <span>{link.name}</span>
+                      <span className={collapsed ? "lg:hidden" : ""}>{link.name}</span>
                     </Link>
                   )}
                 </div>
@@ -997,7 +1072,7 @@ const visibleLinks = getVisibleLinks(userRole);
           )}
 
           {/* Tools */}
-          <p className="mb-4 text-xs font-semibold">TOOLS</p>
+          <p className={`mb-4 text-xs font-semibold ${collapsed ? "lg:hidden" : ""}`}>TOOLS</p>
           <div className="links text-sm space-y-1">
             <Link
               href="/dashboard/help"
@@ -1034,15 +1109,17 @@ const visibleLinks = getVisibleLinks(userRole);
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 absolute bottom-4 left-4 right-4 p-3 rounded-[12px] border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
-        <div className="flex items-center justify-between gap-2">
+      <div className={`flex-shrink-0 absolute bottom-4 left-4 right-4 ${collapsed ? "lg:left-2 lg:right-2 lg:p-2" : ""} p-3 rounded-[12px] border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm`}>
+        <div className={`flex items-center justify-between gap-2 ${collapsed ? "lg:flex-col lg:gap-2" : ""}`}>
           <div className="flex items-center gap-2 min-w-0">
             <ProfileAvatar
               userId={userData?._id || userData?.id || userData?.employeeId}
               username={fullName}
               size="sm"
             />
-            <div className="min-w-0">
+            {/* Name and role are the first things to go on the rail — the avatar
+                still says who is signed in. */}
+            <div className={`min-w-0 ${collapsed ? "lg:hidden" : ""}`}>
               <p className="text-sm font-semibold text-gray-900 dark:text-white truncate max-w-[140px]">{fullName}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{roleInfo?.name}</p>
             </div>

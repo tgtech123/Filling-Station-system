@@ -47,13 +47,21 @@ const ActionButtons = ({ transactionId }) => {
           address: txn.fillingStation?.address || "",
           date: new Date(txn.createdAt).toLocaleString(),
           paymentType: txn.paymentMethod || "N/A",
-          items: txn.items.map((item, index) => ({
-            sn: index + 1,
-            name: item.productName,
-            unitPrice: item.priceSold,
-            quantity: item.qtySold,
-            amount: item.amount,
-          })),
+          // A receipt must read the way the sale was made. Someone who bought
+          // two packs should not be handed a slip saying 24, and the pack price
+          // is what they paid — priceSold is a per-piece figure for reporting.
+          items: txn.items.map((item, index) => {
+            const soldInPacks = (item.unitFactor ?? 1) > 1;
+            return {
+              sn: index + 1,
+              name: soldInPacks
+                ? `${item.productName} (${item.unitName} of ${item.unitFactor})`
+                : item.productName,
+              unitPrice: soldInPacks ? item.unitPrice : item.priceSold,
+              quantity: soldInPacks ? item.qtyInUnits : item.qtySold,
+              amount: item.amount,
+            };
+          }),
           total: txn.totalAmount || 0,
         };
 

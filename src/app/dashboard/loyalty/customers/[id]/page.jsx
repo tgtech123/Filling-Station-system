@@ -7,6 +7,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useFuelLoyaltyStore from "@/store/useFuelLoyaltyStore";
 import { API_URL } from "@/lib/config";
+import useCurrentRole from "@/hooks/useCurrentRole";
+import AccessNotice from "../../AccessNotice";
+import ShopRewardPicker from "../../ShopRewardPicker";
+import { MGR, STAFF, can } from "../../roles";
 
 function TierBadge({ tier }) {
   const map = { Bronze:"bg-orange-100 text-orange-700", Silver:"bg-gray-100 text-gray-600", Gold:"bg-yellow-100 text-yellow-700", Platinum:"bg-purple-100 text-purple-700" };
@@ -20,7 +24,7 @@ const EMPTY_EARN = { product: "PMS", litres: "", amountSpent: "", pricePerLitre:
 export default function CustomerDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { selectedCustomer: customer, transactions, redemptions, settings, fetchCustomer, fetchSettings, recordEarn, requestRedemption, loading } = useFuelLoyaltyStore();
+  const { selectedCustomer: customer, transactions, redemptions, settings, fetchCustomer, fetchSettings, recordEarn, requestRedemption, confirmDispensed, loading } = useFuelLoyaltyStore();
 
   const [showEarn, setShowEarn]           = useState(false);
   const [showRedeem, setShowRedeem]       = useState(false);
@@ -32,10 +36,15 @@ export default function CustomerDetailPage() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting]           = useState(false);
 
+  const { role, ready } = useCurrentRole();
+  const canView   = can(role, STAFF); // reading a customer is staff-only
+  const canDelete = can(role, MGR);
+
   useEffect(() => {
+    if (!ready || !canView) return;
     fetchCustomer(id);
     fetchSettings();
-  }, [id]);
+  }, [id, ready, role]);
 
   // Price to prefill for a product.
   //
@@ -105,6 +114,26 @@ export default function CustomerDetailPage() {
     }
   };
 
+  // The claim the customer is here about: still waiting on a manager, or
+  // approved and not yet poured. Rejected and completed ones are history.
+  const openClaim = (redemptions || []).find(
+    r => r.status === "pending" || (r.status === "approved" && !r.dispensedAt)
+  );
+
+  const handleDispensed = async (items) => {
+    setError(null);
+    setSaving(true);
+    const result = await confirmDispensed(openClaim._id, items);
+    setSaving(false);
+    if (result.success) {
+      fetchCustomer(id);
+      setSuccess(result.message);
+      setTimeout(() => setSuccess(null), 5000);
+    } else {
+      setError(result.error);
+    }
+  };
+
   const handleRedeem = async () => {
     setError(null);
     setSaving(true);
@@ -154,9 +183,20 @@ export default function CustomerDetailPage() {
     ? (customer.totalPoints * settings.litresPerRedemptionPoint).toFixed(2)
     : "—";
 
-  if (loading.customer) return (
+  // Wait for the role before deciding anything — until it is known this screen
+  // cannot tell "still loading" apart from "not allowed to load".
+  if (!ready || loading.customer) return (
     <DashboardLayout>
       <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-blue-500 animate-spin" /></div>
+    </DashboardLayout>
+  );
+
+  if (!canView) return (
+    <DashboardLayout>
+      <AccessNotice
+        title="Customer records are for station staff"
+        message="Cashiers, attendants, supervisors and managers can open a loyalty customer."
+      />
     </DashboardLayout>
   );
 
@@ -250,10 +290,16 @@ export default function CustomerDetailPage() {
               className="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
               <RotateCcw size={16} /> Redeem Points
             </button>
-            <button onClick={() => setConfirmDelete(true)}
-              className="w-10 flex items-center justify-center bg-red-50 hover:bg-red-100 border border-red-200 text-red-500 rounded-xl transition-colors shrink-0">
-              <Trash2 size={16} />
-            </button>
+            {/* Removing a customer is manager-only on the server. Showing the
+                button to an attendant offers an action that always ends in
+                "access denied" — and on a destructive control that reads as the
+                app being broken rather than the permission being deliberate. */}
+            {canDelete && (
+              <button onClick={() => setConfirmDelete(true)}
+                className="w-10 flex items-center justify-center bg-red-50 hover:bg-red-100 border border-red-200 text-red-500 rounded-xl transition-colors shrink-0">
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
 
           {/* Delete confirm */}
@@ -373,6 +419,60 @@ export default function CustomerDetailPage() {
               <button onClick={() => { setShowRedeem(false); setError(null); }}
                 className="px-5 border border-gray-200 rounded-xl text-gray-500 text-sm hover:bg-gray-50">Cancel</button>
             </div>
+          </div>
+        )}
+
+        {/* Open claim.
+            The attendant who hands the fuel over cannot see the manager's
+            redemption queue (listing it is manager/supervisor/accountant only),
+            so the release has to be confirmable from where they actually are —
+            standing with the customer. */}
+        {openClaim && (
+          <div className={`rounded-2xl border shadow-sm p-5 mb-5 ${openClaim.status === "approved" ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className={`font-bold ${openClaim.status === "approved" ? "text-emerald-800" : "text-amber-800"}`}>
+                  {openClaim.status === "approved" ? "Reward approved — release the fuel" : "Claim awaiting approval"}
+                </p>
+                <p className={`text-sm mt-0.5 ${openClaim.status === "approved" ? "text-emerald-700" : "text-amber-700"}`}>
+                  {Number(openClaim.litresValue).toFixed(2)}L of {openClaim.product} · {Number(openClaim.pointsRedeemed).toLocaleString()} pts
+                </p>
+                {openClaim.source === "customer" && (
+                  <p className="text-xs text-gray-500 mt-1">Claimed by the customer from their portal</p>
+                )}
+              </div>
+              {openClaim.claimCode && (
+                <span className="font-mono font-bold text-gray-700 bg-white border border-gray-200 rounded-lg px-2 py-1 text-sm shrink-0">
+                  {openClaim.claimCode}
+                </span>
+              )}
+            </div>
+
+            {openClaim.status === "pending" && (
+              <p className="text-xs text-amber-700 mt-3">
+                A manager or supervisor must approve this before any fuel is released.
+              </p>
+            )}
+
+            {openClaim.status === "approved" && !openClaim.dispensedAt && (
+              openClaim.product === "Lubricant" ? (
+                // A shop reward has to name what left the shelf — fuel does not,
+                // the pump meter already recorded it.
+                <div className="mt-3">
+                  <ShopRewardPicker
+                    redemptionId={openClaim._id}
+                    onConfirm={handleDispensed}
+                    confirming={saving}
+                  />
+                </div>
+              ) : (
+                <button onClick={() => handleDispensed()} disabled={saving}
+                  className="w-full mt-3 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors">
+                  {saving ? <Loader2 size={16} className="animate-spin" /> : <Droplets size={16} />}
+                  I have released this fuel
+                </button>
+              )
+            )}
           </div>
         )}
 

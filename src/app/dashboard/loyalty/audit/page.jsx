@@ -4,14 +4,34 @@ import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import { ShieldAlert, CheckCircle2, AlertTriangle, Loader2, Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import useFuelLoyaltyStore from "@/store/useFuelLoyaltyStore";
+import useCurrentRole from "@/hooks/useCurrentRole";
+import AccessNotice from "../AccessNotice";
+import { MGR, can } from "../roles";
 
 export default function LoyaltyAuditPage() {
   const { auditReport, loading, fetchAudit } = useFuelLoyaltyStore();
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
-  useEffect(() => { fetchAudit(date); }, [date]);
+  // The audit compares loyalty credits against pump meters — manager-only on
+  // the server, and the one screen that would expose a fiddle if it were not.
+  const { role, ready } = useCurrentRole();
+  const canView = can(role, MGR);
+
+  useEffect(() => {
+    if (!ready || !canView) return;
+    fetchAudit(date);
+  }, [date, ready, role]);
 
   const hasFlags = auditReport.some(r => r.status === "flagged");
+
+  if (ready && !canView) return (
+    <DashboardLayout>
+      <AccessNotice
+        title="The loyalty audit is manager-only"
+        message="It cross-checks points awarded against pump meter readings."
+      />
+    </DashboardLayout>
+  );
 
   return (
     <DashboardLayout>
@@ -79,13 +99,22 @@ export default function LoyaltyAuditPage() {
                       ? <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600">Flagged</span>
                       : <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-600">Clean</span>}
                   </div>
-                  <span className="text-xs text-gray-400">{r.loyaltyCount} loyalty transaction{r.loyaltyCount !== 1 ? "s" : ""}</span>
+                  <span className="text-xs text-gray-400">
+                    {r.loyaltyCount} credit{r.loyaltyCount !== 1 ? "s" : ""}
+                    {r.redeemedCount > 0 && ` · ${r.redeemedCount} redemption${r.redeemedCount !== 1 ? "s" : ""}`}
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="bg-blue-50 rounded-xl p-3 text-center">
                     <p className="text-xs text-blue-400 font-medium">Loyalty Credits</p>
                     <p className="font-bold text-blue-700 mt-0.5">{r.loyaltyLitres} L</p>
+                  </div>
+                  {/* The half the audit used to ignore — free litres poured out.
+                      They cost the station money and come from the same pumps. */}
+                  <div className="bg-emerald-50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-emerald-500 font-medium">Redeemed Out</p>
+                    <p className="font-bold text-emerald-700 mt-0.5">{r.redeemedLitres ?? 0} L</p>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-3 text-center">
                     <p className="text-xs text-gray-400 font-medium">Pump Meter Total</p>
@@ -101,13 +130,15 @@ export default function LoyaltyAuditPage() {
 
                 {/* Progress bar */}
                 <div className="mt-3">
+                  {/* Both directions against the meter — credits given and fuel
+                      poured back out both have to fit inside what the pumps moved. */}
                   <div className="flex justify-between text-xs text-gray-400 mb-1">
-                    <span>Loyalty as % of pump sales</span>
-                    <span>{r.pumpLitres > 0 ? ((r.loyaltyLitres / r.pumpLitres) * 100).toFixed(1) : "—"}%</span>
+                    <span>Loyalty litres as % of pump total</span>
+                    <span>{r.pumpLitres > 0 ? (((r.loyaltyLitres + (r.redeemedLitres || 0)) / r.pumpLitres) * 100).toFixed(1) : "—"}%</span>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div className={`h-full rounded-full transition-all ${r.status === "flagged" ? "bg-red-500" : "bg-blue-400"}`}
-                      style={{ width: `${r.pumpLitres > 0 ? Math.min(100, (r.loyaltyLitres / r.pumpLitres) * 100) : 0}%` }} />
+                      style={{ width: `${r.pumpLitres > 0 ? Math.min(100, ((r.loyaltyLitres + (r.redeemedLitres || 0)) / r.pumpLitres) * 100) : 0}%` }} />
                   </div>
                 </div>
               </div>

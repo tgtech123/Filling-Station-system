@@ -8,6 +8,7 @@ import { TbCurrencyNaira } from "react-icons/tb";
 import LubricantSales from "./LubricantSales";
 import Inventory from "./Inventory";
 import AddLubricantModal from "./AddLubricantModal";
+import PricingDefaultsModal from "./PricingDefaultsModal";
 import Link from "next/link";
 import { CgTrack } from "react-icons/cg";
 import LubricantTracker from "./LubricantTracker";
@@ -17,6 +18,7 @@ export default function LubricantManagement() {
   const [isLubricantModalOpen, setIsLubricantModalOpen] = useState(false);
   const [showLubricantTracker, setShowLubricantTracker] = useState(false);
   const [activeTab, setActiveTab] = useState("Lubricant sales");
+  const [showPricingDefaults, setShowPricingDefaults] = useState(false);
 
   const { lubricants, dailySummary, fetchLubricants, fetchDailySummary } = useLubricantStore();
 
@@ -150,13 +152,23 @@ export default function LubricantManagement() {
           </Link>
           <h4 className="text-xl sm:text-2xl font-semibold">Lubricant Management</h4>
         </div>
-        <button
-          onClick={handleOpenLubricantModal}
-          className="cursor-pointer flex gap-2 items-center border-2 border-[#0080ff] hover:bg-[#0080ff] hover:text-white py-2 px-5 rounded-[12px] text-[#0080ff] font-semibold text-sm transition-colors"
-        >
-          <Plus size={18} />
-          Add Lubricant
-        </button>
+        <div className="flex gap-2">
+          {/* The margins every new product starts from. Sits beside "Add"
+              because that is where someone realises the default is wrong. */}
+          <button
+            onClick={() => setShowPricingDefaults(true)}
+            className="cursor-pointer flex gap-2 items-center border-2 border-gray-300 hover:bg-gray-100 py-2 px-4 rounded-[12px] text-gray-600 font-semibold text-sm transition-colors"
+          >
+            Pricing defaults
+          </button>
+          <button
+            onClick={handleOpenLubricantModal}
+            className="cursor-pointer flex gap-2 items-center border-2 border-[#0080ff] hover:bg-[#0080ff] hover:text-white py-2 px-5 rounded-[12px] text-[#0080ff] font-semibold text-sm transition-colors"
+          >
+            <Plus size={18} />
+            Add Lubricant
+          </button>
+        </div>
       </header>
 
       <div className="px-6 lg:px-[40px]">
@@ -225,6 +237,9 @@ export default function LubricantManagement() {
 
       {isLubricantModalOpen && (
         <AddLubricantModal onclose={handleLubricantModalClose} />
+      )}
+      {showPricingDefaults && (
+        <PricingDefaultsModal onClose={() => setShowPricingDefaults(false)} />
       )}
 
       {showLubricantTracker && (
