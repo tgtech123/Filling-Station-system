@@ -18,6 +18,18 @@ const useNotificationStore = create((set, get) => ({
   _setError: (key, err) =>
     set((s) => ({ errors: { ...s.errors, [key]: err } })),
 
+  /**
+   * The API calls it `isRead`; everything in this store and in the header calls
+   * it `read`. Nothing translated between the two, so `!m.read` was true for
+   * every notification ever fetched: the badge never cleared, and "mark all as
+   * read" only appeared to work until the next fetch (socket event or the
+   * five-minute poll) overwrote the local flag with an undefined one.
+   *
+   * One adapter at the boundary, one vocabulary inside.
+   */
+  _normalize: (rows) =>
+    (rows ?? []).map((r) => ({ ...r, read: r.isRead ?? r.read ?? false })),
+
   // ── Fetch messages ─────────────────────────────────────────────────────────
   fetchMessages: async () => {
     const { _setLoading, _setError } = get();
@@ -25,7 +37,7 @@ const useNotificationStore = create((set, get) => ({
     _setError("messages", null);
     try {
       const res = await api.get(`/api/notifications/messages`);
-      const messages = res.data?.messages ?? res.data ?? [];
+      const messages = get()._normalize(res.data?.messages ?? res.data ?? []);
       const messageUnreadCount = messages.filter((m) => !m.read).length;
       set({ messages, messageUnreadCount });
     } catch (err) {
@@ -44,7 +56,7 @@ const useNotificationStore = create((set, get) => ({
     _setError("alerts", null);
     try {
       const res = await api.get(`/api/notifications/alerts`);
-      const alerts = res.data?.alerts ?? res.data ?? [];
+      const alerts = get()._normalize(res.data?.alerts ?? res.data ?? []);
       const alertUnreadCount = alerts.filter((a) => !a.read).length;
       set({ alerts, alertUnreadCount });
     } catch (err) {
@@ -65,7 +77,7 @@ const useNotificationStore = create((set, get) => ({
       );
       set((s) => {
         const messages = s.messages.map((m) =>
-          m._id === id || m.id === id ? { ...m, read: true } : m
+          m._id === id || m.id === id ? { ...m, read: true, isRead: true } : m
         );
         return { messages, messageUnreadCount: messages.filter((m) => !m.read).length };
       });
@@ -73,7 +85,7 @@ const useNotificationStore = create((set, get) => ({
       // optimistic — update UI regardless
       set((s) => {
         const messages = s.messages.map((m) =>
-          m._id === id || m.id === id ? { ...m, read: true } : m
+          m._id === id || m.id === id ? { ...m, read: true, isRead: true } : m
         );
         return { messages, messageUnreadCount: messages.filter((m) => !m.read).length };
       });
@@ -90,7 +102,7 @@ const useNotificationStore = create((set, get) => ({
     } catch (_) {}
     set((s) => {
       const alerts = s.alerts.map((a) =>
-        a._id === id || a.id === id ? { ...a, read: true } : a
+        a._id === id || a.id === id ? { ...a, read: true, isRead: true } : a
       );
       return { alerts, alertUnreadCount: alerts.filter((a) => !a.read).length };
     });
@@ -105,7 +117,7 @@ const useNotificationStore = create((set, get) => ({
       );
     } catch (_) {}
     set((s) => ({
-      messages: s.messages.map((m) => ({ ...m, read: true })),
+      messages: s.messages.map((m) => ({ ...m, read: true, isRead: true })),
       messageUnreadCount: 0,
     }));
   },
@@ -119,7 +131,7 @@ const useNotificationStore = create((set, get) => ({
       );
     } catch (_) {}
     set((s) => ({
-      alerts: s.alerts.map((a) => ({ ...a, read: true })),
+      alerts: s.alerts.map((a) => ({ ...a, read: true, isRead: true })),
       alertUnreadCount: 0,
     }));
   },

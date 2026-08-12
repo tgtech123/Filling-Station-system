@@ -263,9 +263,68 @@ const useFuelLoyaltyStore = create((set, get) => ({
     } catch {}
   },
 
+  portalRedemptions: [],
+
+  portalFetchRedemptions: async () => {
+    const token = get().portalToken || sessionStorage.getItem("portal_token");
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_URL}/api/fuel-loyalty/portal/redemptions`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) set({ portalRedemptions: data.data || [] });
+    } catch {}
+  },
+
+  // The customer claims their own reward. Nothing is deducted here — the claim
+  // carries a code they present at the station, and a manager or supervisor
+  // approves it before any fuel moves.
+  portalClaimReward: async (product) => {
+    const token = get().portalToken || sessionStorage.getItem("portal_token");
+    if (!token) return { success: false, error: "Please sign in again" };
+    try {
+      const res = await fetch(`${API_URL}/api/fuel-loyalty/portal/redemptions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ product }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.message };
+      await get().portalFetchRedemptions();
+      return { success: true, data: data.data, message: data.message };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
   portalLogout: () => {
     sessionStorage.removeItem("portal_token");
-    set({ portalToken: null, portalCustomer: null, portalTransactions: [] });
+    set({ portalToken: null, portalCustomer: null, portalTransactions: [], portalRedemptions: [] });
+  },
+
+  // Staff side: the attendant confirms they handed the reward over. This is what
+  // ties it to their shift so it is not counted as a cash shortage — and for a
+  // shop reward, `items` is what takes the goods off stock.
+  confirmDispensed: async (id, items) => {
+    try {
+      const { data } = await api.patch(`${BASE}/staff/redemptions/${id}/dispensed`, items ? { items } : {});
+      return { success: true, message: data.message, data: data.data };
+    } catch (e) {
+      return { success: false, error: e.response?.data?.message || e.message };
+    }
+  },
+
+  // What a shop reward can be taken as: in stock, and within the reward's value.
+  // Served by the loyalty API rather than the lubricants list, which attendants
+  // and supervisors cannot read.
+  fetchShopRewardOptions: async (id) => {
+    try {
+      const { data } = await api.get(`${BASE}/staff/redemptions/${id}/shop-options`);
+      return { success: true, data: data.data };
+    } catch (e) {
+      return { success: false, error: e.response?.data?.message || e.message };
+    }
   },
 }));
 

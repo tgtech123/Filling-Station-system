@@ -16,6 +16,9 @@ const LubSales = () => {
       quantity: "1",
       amount: "",
       lubricantId: null,
+      unitName: "",
+      saleUnits: [],
+      baseUnit: "piece",
     },
   ]);
   const [paymentMethod, setPaymentMethod] = useState("POS");
@@ -90,6 +93,11 @@ const LubSales = () => {
         quantity: "1",
         amount: price.toString(),
         lubricantId: product._id,
+        // Sold by the piece until the cashier picks a bigger unit.
+        unitName: product.baseUnit || "piece",
+        basePrice: price.toString(),
+        baseUnit: product.baseUnit || "piece",
+        saleUnits: product.saleUnits || [],
       };
       setRows(updatedRows);
       
@@ -104,6 +112,9 @@ const LubSales = () => {
             quantity: "1",
             amount: "",
             lubricantId: null,
+            unitName: "",
+            saleUnits: [],
+            baseUnit: "piece",
           },
         ]);
       }
@@ -118,6 +129,11 @@ const LubSales = () => {
           quantity: "1",
           amount: price.toString(),
           lubricantId: product._id,
+          // Sold by the piece until the cashier picks a bigger unit.
+          unitName: product.baseUnit || "piece",
+          basePrice: price.toString(),
+          baseUnit: product.baseUnit || "piece",
+          saleUnits: product.saleUnits || [],
         },
         // Add another blank row for next product
         {
@@ -127,6 +143,9 @@ const LubSales = () => {
           quantity: "1",
           amount: "",
           lubricantId: null,
+          unitName: "",
+          saleUnits: [],
+          baseUnit: "piece",
         },
       ]);
     }
@@ -157,7 +176,14 @@ const LubSales = () => {
     };
 
     const applyItem = (item) => {
-      const price = Number(item.unitPrice ?? 0);
+      // A scanned code can be the product's own barcode or one printed on its
+      // carton. Matching the carton selects the carton — that is the whole
+      // reason a case has its own barcode.
+      const scanned = String(code).trim();
+      const scannedUnit = (item.saleUnits || []).find(
+        (u) => String(u.barcode || "").trim() && String(u.barcode).trim() === scanned
+      );
+      const price = Number(scannedUnit ? scannedUnit.price : item.unitPrice ?? 0);
       const updatedRows = [...rows];
       updatedRows[index] = {
         ...updatedRows[index],
@@ -165,6 +191,10 @@ const LubSales = () => {
         unitPrice: price.toString(),
         amount: (price * updatedRows[index].quantity).toString(),
         lubricantId: item._id,
+        unitName: scannedUnit ? scannedUnit.name : item.baseUnit || "piece",
+        basePrice: String(Number(item.unitPrice ?? 0)),
+        baseUnit: item.baseUnit || "piece",
+        saleUnits: item.saleUnits || [],
       };
       setRows(updatedRows);
 
@@ -172,7 +202,7 @@ const LubSales = () => {
       if (lastRow.barcode && lastRow.productName) {
         setRows([
           ...updatedRows,
-          { barcode: "", productName: "", unitPrice: "", quantity: "1", amount: "", lubricantId: null },
+          { barcode: "", productName: "", unitPrice: "", quantity: "1", amount: "", lubricantId: null, unitName: "", saleUnits: [], baseUnit: "piece" },
         ]);
       }
     };
@@ -265,6 +295,30 @@ const LubSales = () => {
     if (code) fetchLubricant(code, index);
   };
 
+  /**
+   * Switching a line between piece, pack and carton.
+   *
+   * Re-prices the line from the unit's own price rather than multiplying the
+   * piece price up — a pack is normally sold below twelve singles, and that
+   * discount is why anyone buys one. Quantity stays as typed: 2 stays 2, it just
+   * means two packs now.
+   */
+  const handleUnitChange = (index, name) => {
+    const updatedRows = [...rows];
+    const row = updatedRows[index];
+    const unit = (row.saleUnits || []).find((u) => u.name === name);
+
+    row.unitName = name;
+    row.unitPrice = String(unit ? Number(unit.price) : Number(row.basePrice || 0));
+    row.amount = String((parseFloat(row.quantity) || 0) * (parseFloat(row.unitPrice) || 0));
+
+    setRows(updatedRows);
+  };
+
+  /** "Pack of 12" — what one of this unit contains, for the dropdown. */
+  const unitLabel = (row, unit) =>
+    unit ? `${unit.name} of ${unit.factor}` : row.baseUnit || "piece";
+
   const handleQtyChange = (e, index) => {
     const value = e.target.value;
     const updatedRows = [...rows];
@@ -288,6 +342,9 @@ const LubSales = () => {
               quantity: "1",
               amount: "",
               lubricantId: null,
+              unitName: "",
+              saleUnits: [],
+              baseUnit: "piece",
             },
           ]
     );
@@ -378,6 +435,9 @@ const LubSales = () => {
             quantity: "1",
             amount: "",
             lubricantId: null,
+            unitName: "",
+            saleUnits: [],
+            baseUnit: "piece",
           },
         ]);
         setMessage("");
@@ -520,6 +580,27 @@ const LubSales = () => {
                 />
               </div>
 
+              {/* Sold as — only when the product has bigger units defined */}
+              {row.saleUnits?.length > 0 && (
+                <div className="mb-3">
+                  <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">
+                    Sold as
+                  </label>
+                  <select
+                    value={row.unitName || row.baseUnit || "piece"}
+                    onChange={(e) => handleUnitChange(index, e.target.value)}
+                    className="w-full px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-600 dark:text-gray-100 rounded-lg text-sm capitalize"
+                  >
+                    <option value={row.baseUnit || "piece"}>{row.baseUnit || "piece"}</option>
+                    {row.saleUnits.map((u) => (
+                      <option key={u.name} value={u.name}>
+                        {unitLabel(row, u)} — ₦{Number(u.price).toLocaleString()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Unit price + Quantity side by side */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -566,11 +647,12 @@ const LubSales = () => {
 
       {/* ── Desktop table layout (≥ sm) ── */}
       <div className="hidden sm:block w-full overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700 pb-2">
-        <table className="min-w-[620px] text-sm text-left text-gray-700 dark:text-gray-200 w-full">
+        <table className="min-w-[760px] text-sm text-left text-gray-700 dark:text-gray-200 w-full">
           <thead className="bg-gray-100 dark:bg-gray-700 text-md font-semibold text-gray-700 dark:text-gray-200">
             <tr>
               <th className="px-4 py-3">Barcode</th>
               <th className="px-4 py-3">Product name</th>
+              <th className="px-4 py-3">Sold as</th>
               <th className="px-4 py-3">Unit price (₦)</th>
               <th className="px-4 py-3">Quantity</th>
               <th className="px-4 py-3">Amount</th>
@@ -598,6 +680,24 @@ const LubSales = () => {
                     disabled
                     className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-200 rounded-xl mt-2"
                   />
+                </td>
+                <td className="px-5 py-2">
+                  {row.saleUnits?.length > 0 ? (
+                    <select
+                      value={row.unitName || row.baseUnit || "piece"}
+                      onChange={(e) => handleUnitChange(index, e.target.value)}
+                      className="w-full px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100 rounded-xl mt-2 capitalize"
+                    >
+                      <option value={row.baseUnit || "piece"}>{row.baseUnit || "piece"}</option>
+                      {row.saleUnits.map((u) => (
+                        <option key={u.name} value={u.name}>
+                          {unitLabel(row, u)} — ₦{Number(u.price).toLocaleString()}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="px-3 py-2 mt-2 text-gray-400 capitalize">{row.baseUnit || "piece"}</p>
+                  )}
                 </td>
                 <td className="px-5 py-2">
                   <input

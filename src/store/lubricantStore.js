@@ -71,6 +71,44 @@ export const useLubricantStore = create((set, get) => ({
   },
 
   // Add lubricant
+  /**
+   * The station's standing margins, by category and by unit name.
+   *
+   * Cached on the store rather than fetched per modal open: the add-product form
+   * needs it the instant a category is chosen, and a round trip at that moment
+   * shows the user an empty percentage box that fills in a beat later.
+   */
+  pricingSettings: null,
+
+  fetchPricingSettings: async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/lubricant/pricing-settings`, {
+        headers: get().getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (res.ok) set({ pricingSettings: data.data });
+      return data.data;
+    } catch {
+      return null;
+    }
+  },
+
+  updatePricingSettings: async (payload) => {
+    try {
+      const res = await fetch(`${API_URL}/api/lubricant/pricing-settings`, {
+        method: "PATCH",
+        headers: get().getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || "Failed to save" };
+      set({ pricingSettings: data.data });
+      return { success: true, message: data.message, data: data.data };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
   addLubricant: async (lubricantData) => {
     set({ loading: true, error: null });
     try {

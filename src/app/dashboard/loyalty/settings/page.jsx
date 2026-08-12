@@ -5,6 +5,10 @@ import { Star, Save, Loader2, CheckCircle2, AlertCircle, Info, MessageSquare, Cr
 import Link from "next/link";
 import useFuelLoyaltyStore from "@/store/useFuelLoyaltyStore";
 import { API_URL } from "@/lib/config";
+import useCurrentRole from "@/hooks/useCurrentRole";
+import { getCurrentUser } from "@/lib/currentUser";
+import AccessNotice from "../AccessNotice";
+import { MGR, can } from "../roles";
 
 const PRODUCTS = ["PMS", "AGO", "Kerosene", "Lubricant"];
 
@@ -23,7 +27,16 @@ export default function LoyaltySettingsPage() {
   const [smsCount, setSmsCount]             = useState(100);
   const [smsInitializing, setSmsInitializing] = useState(false);
 
-  useEffect(() => { fetchSettings(); }, []);
+  // Every field here is a manager decision on the server (PATCH settings and
+  // the SMS credit endpoints are mgr), so nothing is fetched for anyone else —
+  // a cashier reaching this URL would otherwise get the form, fill it in and
+  // only then be told they may not save it.
+  const { role, ready } = useCurrentRole();
+  const canManage = can(role, MGR);
+
+  useEffect(() => {
+    if (ready && canManage) fetchSettings();
+  }, [ready, role]);
 
   useEffect(() => {
     if (settings && !form) {
@@ -50,11 +63,14 @@ export default function LoyaltySettingsPage() {
     setSmsLoading(false);
   };
 
-  useEffect(() => { fetchSmsStatus(); }, []);
+  useEffect(() => {
+    if (ready && canManage) fetchSmsStatus();
+  }, [ready, role]);
 
   // Detect redirect back from Paystack — actively verify and apply credits
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!ready || !canManage) return;
     const params = new URLSearchParams(window.location.search);
     const smsRef = params.get("sms_ref");
     if (!smsRef) return;
@@ -74,7 +90,7 @@ export default function LoyaltySettingsPage() {
         }
       })
       .catch(() => setError("Could not verify payment. Please refresh the page."));
-  }, []);
+  }, [ready, role]);
 
   // Instantly save the active toggle — no Save button needed for this field
   const handleToggleActive = async () => {
@@ -126,16 +142,24 @@ export default function LoyaltySettingsPage() {
     }
   };
 
-  if (loading.settings && !form) return (
+  if (ready && !canManage) return (
+    <DashboardLayout>
+      <AccessNotice
+        title="Loyalty settings are manager-only"
+        message="Points rates, prices and SMS credits are set by the station manager."
+      />
+    </DashboardLayout>
+  );
+
+  if (!ready || (loading.settings && !form)) return (
     <DashboardLayout>
       <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 text-purple-500 animate-spin" /></div>
     </DashboardLayout>
   );
 
-  // Portal link example
-  const stationId = typeof window !== "undefined"
-    ? (JSON.parse(localStorage.getItem("user") || "{}").station?._id || "")
-    : "";
+  // Portal link example. Read through getCurrentUser so a corrupt stored user
+  // returns {} instead of throwing out of the render.
+  const stationId = getCurrentUser().station?._id || "";
 
   const creditsRemaining = smsStatus?.smsCreditBalance ?? 0;
   const smsActive        = smsStatus?.smsLoyaltyEnabled ?? false;

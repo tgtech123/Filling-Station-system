@@ -4,6 +4,9 @@ import { useSearchParams } from "next/navigation";
 import { Fuel, Phone, Car, Eye, EyeOff, ArrowRight, CheckCircle2, AlertCircle, Loader2, LogOut, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 import useFuelLoyaltyStore from "@/store/useFuelLoyaltyStore";
 
+/** What a reward can be claimed as — mirrors the server's validProducts. */
+const PORTAL_PRODUCTS = ["PMS", "AGO", "Kerosene", "Lubricant"];
+
 // ── Tier config ──────────────────────────────────────────────────────────────
 const TIER_CONFIG = {
   Bronze:   { color: "text-orange-700",  bg: "bg-orange-100",  bar: "bg-orange-400",  next: "Silver",   target: 500  },
@@ -18,7 +21,7 @@ function PortalContent() {
   const searchParams = useSearchParams();
   const stationFromUrl = searchParams.get("station") || "";
 
-  const { portalToken, portalCustomer, portalTransactions, portalLookup, portalSetPin, portalLogin, portalFetchMe, portalFetchTransactions, portalLogout } = useFuelLoyaltyStore();
+  const { portalToken, portalCustomer, portalTransactions, portalLookup, portalSetPin, portalLogin, portalFetchMe, portalFetchTransactions, portalRedemptions, portalFetchRedemptions, portalClaimReward, portalLogout } = useFuelLoyaltyStore();
 
   // ── Auth flow state ───────────────────────────────────────────────────────
   const [step, setStep] = useState("lookup"); // lookup | setpin | login | dashboard
@@ -32,6 +35,25 @@ function PortalContent() {
   const [error, setError]             = useState(null);
   const [success, setSuccess]         = useState(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [claimProduct, setClaimProduct] = useState("PMS");
+  const [claiming, setClaiming]         = useState(false);
+
+  // The one claim that is still waiting on the station. Only ever one open at a
+  // time — the server refuses a second while one is pending.
+  const pendingClaim = portalRedemptions.find(r => r.status === "pending");
+
+  const handleClaim = async () => {
+    setError(null);
+    setClaiming(true);
+    const result = await portalClaimReward(claimProduct);
+    setClaiming(false);
+    if (result.success) {
+      setSuccess(result.message);
+      setTimeout(() => setSuccess(null), 6000);
+    } else {
+      setError(result.error);
+    }
+  };
 
   // Restore session
   useEffect(() => {
@@ -41,6 +63,7 @@ function PortalContent() {
       setStep("dashboard");
       portalFetchMe();
       portalFetchTransactions();
+      portalFetchRedemptions();
     }
   }, []);
 
@@ -75,6 +98,7 @@ function PortalContent() {
           setStep("dashboard");
           portalFetchMe();
           portalFetchTransactions();
+          portalFetchRedemptions();
         } else {
           setError(loginResult.error);
         }
@@ -94,6 +118,7 @@ function PortalContent() {
       setStep("dashboard");
       portalFetchMe();
       portalFetchTransactions();
+      portalFetchRedemptions();
     } else {
       setError(result.error);
     }
@@ -199,8 +224,56 @@ function PortalContent() {
                   ? <span className="ml-2 text-green-600 font-semibold">You qualify!</span>
                   : <span className="ml-2 text-gray-400">({c.minPointsToRedeem - c.totalPoints} pts more needed)</span>}
               </p>
-              <p className="text-xs text-gray-400 mt-1">To redeem, ask a cashier or attendant at the station.</p>
             </div>
+
+            {/* Claim it themselves.
+                Before this the only way to redeem was to ask an attendant, which
+                meant the customer's own reward depended on someone else raising
+                it for them — and the station had no way to tell a real claim
+                from one an attendant invented. A claim raised here starts behind
+                the customer's PIN and carries a code they read out at the
+                counter, where a manager or supervisor approves it. */}
+            {pendingClaim ? (
+              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                <p className="text-xs text-amber-600 font-semibold uppercase tracking-wide">Claim awaiting approval</p>
+                <p className="text-3xl font-bold text-amber-700 mt-1 tracking-wider">{pendingClaim.claimCode}</p>
+                <p className="text-sm text-amber-700 mt-1">
+                  {Number(pendingClaim.litresValue).toFixed(1)}L of {pendingClaim.product}
+                </p>
+                <p className="text-xs text-amber-600 mt-2">
+                  Show this code at the station. A manager or supervisor will approve it and your fuel will be released.
+                </p>
+                {pendingClaim.expiresAt && (
+                  <p className="text-[11px] text-amber-500 mt-1">
+                    Valid until {new Date(pendingClaim.expiresAt).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}
+                  </p>
+                )}
+              </div>
+            ) : c.totalPoints >= c.minPointsToRedeem ? (
+              <div className="mt-3">
+                <p className="text-xs font-semibold text-gray-600 mb-1.5">Claim your reward as</p>
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                  {PORTAL_PRODUCTS.map(p => (
+                    <button key={p} onClick={() => setClaimProduct(p)}
+                      className={`py-2 rounded-xl text-xs font-bold border transition-all ${claimProduct === p ? "bg-emerald-600 text-white border-emerald-600" : "bg-white text-gray-600 border-gray-200"}`}>
+                      {p}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={handleClaim} disabled={claiming}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+                  {claiming ? <Loader2 size={16} className="animate-spin" /> : <RotateCcw size={16} />}
+                  Claim {Number(c.redeemableFor || 0).toFixed(1)}L free fuel
+                </button>
+                <p className="text-xs text-gray-400 mt-2 text-center">
+                  You'll get a code to show at the station. Nothing is deducted until it's approved.
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 mt-3">
+                Keep buying to reach {c.minPointsToRedeem} points — then you can claim your reward right here.
+              </p>
+            )}
           </div>
 
           {/* Stats */}

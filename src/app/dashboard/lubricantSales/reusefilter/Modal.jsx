@@ -42,7 +42,17 @@ const Modal = ({ isOpen, onClose }) => {
     const idMap = {};
     const rows = transactions.map((txn, index) => {
       const productNames = txn.items?.map(i => i.productName).join(", ") || "N/A";
-      const totalQty     = txn.items?.reduce((s, i) => s + i.qtySold, 0) ?? 0;
+      // Counted the way it was sold — "2 Packs + 3 pieces", not a bare 27 that
+      // matches neither the receipt nor what the customer walked out with.
+      const totalQty = txn.items?.length
+        ? txn.items
+            .map((i) => {
+              const qty = (i.unitFactor ?? 1) > 1 ? i.qtyInUnits : i.qtySold;
+              const unit = (i.unitFactor ?? 1) > 1 ? i.unitName : "";
+              return unit ? `${qty} ${unit}${qty > 1 ? "s" : ""}` : `${qty}`;
+            })
+            .join(" + ")
+        : 0;
       const txnId        = txn.txnId || "N/A";
       const key          = `${txnId}__${index}`;
       idMap[key]         = txn.transactionId;

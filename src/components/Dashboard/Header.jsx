@@ -9,7 +9,6 @@ import Image from "next/image";
 import Link from "next/link";
 import stroke from "../../assets/stroke.png";
 import staticLogo from "../../assets/station-logo.png";
-import LogoutButton from "./LogoutButton";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import useNotificationStore from "@/store/useNotificationStore";
@@ -39,6 +38,27 @@ function formatFullDate(timestamp) {
     month: "long", day: "numeric", year: "numeric",
     hour: "numeric", minute: "2-digit",
   });
+}
+
+/**
+ * Read state, whichever store the item came from.
+ *
+ * The station store speaks `read`, the admin store speaks `isRead`. Checking
+ * only one of them left half the notifications in the app permanently styled
+ * unread no matter how often they were opened.
+ */
+function isRead(item) {
+  return item?.read ?? item?.isRead ?? false;
+}
+
+/**
+ * Category slugs are storage keys, not English. Rendering them raw is where
+ * "delivery_arrived" came from.
+ */
+function categoryLabel(category) {
+  if (!category) return "";
+  const words = String(category).replace(/_/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
 function severityStyle(severity) {
@@ -102,7 +122,7 @@ function NotifModal({ item, type, onClose }) {
             }
             <h3 className="text-sm font-semibold text-gray-900 leading-snug">{item.title}</h3>
             {item.category && (
-              <span className="text-[10px] bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">{item.category}</span>
+              <span className="text-[10px] bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">{categoryLabel(item.category)}</span>
             )}
             {type === "alert" && item.severity && (
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${sv.badge}`}>{item.severity}</span>
@@ -126,10 +146,113 @@ function NotifModal({ item, type, onClose }) {
   );
 }
 
+// ── Full list ─────────────────────────────────────────────────────────────────
+
+/**
+ * Everything, not the first five.
+ *
+ * "View all" was a button with no handler — it looked live and did nothing, so
+ * anything past the fifth notification was unreachable. This is the whole list,
+ * scrollable, with the same click-to-open and mark-all the dropdown has.
+ */
+function NotifListModal({ title, items, type, onClose, onMarkAll, onItemClick }) {
+  const unread = items.filter((i) => !isRead(i)).length;
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-start justify-center p-4 pt-16 bg-black/50 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-gray-700 shrink-0">
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">{title}</h3>
+            <p className="text-xs text-neutral-400">
+              {items.length} total{unread > 0 ? ` · ${unread} unread` : ""}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {unread > 0 && (
+              <button
+                onClick={onMarkAll}
+                className="cursor-pointer flex items-center gap-1 text-xs font-semibold text-[#1a71f6] hover:text-blue-800 transition-colors"
+              >
+                <CheckCheck size={12} /> Mark all read
+              </button>
+            )}
+            <button onClick={onClose} className="cursor-pointer text-gray-400 hover:text-gray-600 transition-colors">
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div className="overflow-y-auto">
+          {items.length === 0 ? (
+            <EmptyState message={type === "alert" ? "No alerts" : "No messages"} />
+          ) : (
+            items.map((item) => {
+              const id = item._id || item.id;
+              const sv = severityStyle(item.severity);
+              return (
+                <button
+                  key={id}
+                  onClick={() => onItemClick(item)}
+                  className={`w-full text-left border-l-4 px-4 py-3 border-b border-neutral-50 dark:border-gray-700 hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-colors ${
+                    isRead(item)
+                      ? "border-l-transparent bg-white dark:bg-gray-800"
+                      : type === "alert" ? `${sv.border} bg-gray-50/50 dark:bg-gray-700/30` : "border-l-[#1a71f6] bg-blue-50/30 dark:bg-gray-700/30"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className={`text-sm leading-snug ${isRead(item) ? "font-normal text-gray-600 dark:text-gray-400" : "font-semibold text-gray-900 dark:text-gray-100"}`}>
+                      {item.title}
+                    </p>
+                    <span className="text-[10px] text-neutral-400 shrink-0 mt-0.5">
+                      {relativeTime(item.timestamp || item.createdAt)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {item.category && (
+                      <span className="text-[10px] bg-blue-50 text-blue-600 font-semibold px-1.5 py-0.5 rounded-full">
+                        {categoryLabel(item.category)}
+                      </span>
+                    )}
+                    {type === "alert" && item.severity && (
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${sv.badge}`}>{item.severity}</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-neutral-400 mt-1 line-clamp-2">
+                    {item.body || item.message || item.description || ""}
+                  </p>
+                </button>
+              );
+            })
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Messages dropdown ─────────────────────────────────────────────────────────
 
-function MessagesDropdown({ messages, onMarkAll, onItemClick }) {
-  const preview = messages.slice(0, 5);
+/**
+ * The five worth showing: unread first, newest within that.
+ *
+ * A straight `slice(0, 5)` meant five old read items could fill the panel while
+ * the thing actually waiting on you sat in sixth place, unreachable — "View all"
+ * being dead made that a hard stop rather than an inconvenience.
+ */
+function previewOf(items) {
+  return [...items]
+    .sort((a, b) => {
+      if (isRead(a) !== isRead(b)) return isRead(a) ? 1 : -1;
+      return new Date(b.timestamp || b.createdAt || 0) - new Date(a.timestamp || a.createdAt || 0);
+    })
+    .slice(0, 5);
+}
+
+function MessagesDropdown({ messages, onMarkAll, onItemClick, onViewAll }) {
+  const preview = previewOf(messages);
   return (
     <>
       <DropdownHeader title="Messages" onMarkAll={onMarkAll} />
@@ -141,10 +264,10 @@ function MessagesDropdown({ messages, onMarkAll, onItemClick }) {
               <button
                 key={id}
                 onClick={() => onItemClick(msg)}
-                className={`w-full text-left border-l-4 px-4 py-3 border-b border-neutral-50 hover:bg-blue-50/50 transition-colors ${msg.read ? "border-l-transparent bg-white" : "border-l-[#1a71f6] bg-blue-50/30"}`}
+                className={`w-full text-left border-l-4 px-4 py-3 border-b border-neutral-50 hover:bg-blue-50/50 transition-colors ${isRead(msg) ? "border-l-transparent bg-white" : "border-l-[#1a71f6] bg-blue-50/30"}`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <p className={`text-sm leading-snug truncate ${msg.read ? "font-normal text-gray-600" : "font-semibold text-gray-900"}`}>
+                  <p className={`text-sm leading-snug truncate ${isRead(msg) ? "font-normal text-gray-600" : "font-semibold text-gray-900"}`}>
                     {msg.title}
                   </p>
                   <span className="text-[10px] text-neutral-400 shrink-0 mt-0.5">{relativeTime(msg.timestamp || msg.createdAt)}</span>
@@ -155,7 +278,7 @@ function MessagesDropdown({ messages, onMarkAll, onItemClick }) {
           })
       }
       <div className="px-4 py-2.5 border-t border-neutral-100">
-        <button className="cursor-pointer w-full text-xs font-semibold text-[#1a71f6] hover:text-blue-800 flex items-center justify-center gap-1 transition-colors">
+        <button onClick={onViewAll} className="cursor-pointer w-full text-xs font-semibold text-[#1a71f6] hover:text-blue-800 flex items-center justify-center gap-1 transition-colors">
           View all messages <ChevronRight size={12} />
         </button>
       </div>
@@ -165,8 +288,8 @@ function MessagesDropdown({ messages, onMarkAll, onItemClick }) {
 
 // ── Alerts dropdown ───────────────────────────────────────────────────────────
 
-function AlertsDropdown({ alerts, onMarkAll, onItemClick }) {
-  const preview = alerts.slice(0, 5);
+function AlertsDropdown({ alerts, onMarkAll, onItemClick, onViewAll }) {
+  const preview = previewOf(alerts);
   return (
     <>
       <DropdownHeader title="Alerts" onMarkAll={onMarkAll} />
@@ -179,12 +302,12 @@ function AlertsDropdown({ alerts, onMarkAll, onItemClick }) {
               <button
                 key={id}
                 onClick={() => onItemClick(alert)}
-                className={`w-full text-left border-l-4 px-4 py-3 border-b border-neutral-50 hover:bg-gray-50 transition-colors ${alert.read ? "border-l-transparent bg-white" : `${sv.border} bg-gray-50/50`}`}
+                className={`w-full text-left border-l-4 px-4 py-3 border-b border-neutral-50 hover:bg-gray-50 transition-colors ${isRead(alert) ? "border-l-transparent bg-white" : `${sv.border} bg-gray-50/50`}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${sv.dot}`} />
-                    <p className={`text-sm leading-snug truncate ${alert.read ? "font-normal text-gray-600" : "font-semibold text-gray-900"}`}>
+                    <p className={`text-sm leading-snug truncate ${isRead(alert) ? "font-normal text-gray-600" : "font-semibold text-gray-900"}`}>
                       {alert.title}
                     </p>
                   </div>
@@ -201,7 +324,7 @@ function AlertsDropdown({ alerts, onMarkAll, onItemClick }) {
           })
       }
       <div className="px-4 py-2.5 border-t border-neutral-100">
-        <button className="cursor-pointer w-full text-xs font-semibold text-[#1a71f6] hover:text-blue-800 flex items-center justify-center gap-1 transition-colors">
+        <button onClick={onViewAll} className="cursor-pointer w-full text-xs font-semibold text-[#1a71f6] hover:text-blue-800 flex items-center justify-center gap-1 transition-colors">
           View all alerts <ChevronRight size={12} />
         </button>
       </div>
@@ -265,6 +388,8 @@ export default function Header({ toggleSidebar, showSidebar }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // selected item for modal
+  // Which full list is open, if any: "messages" | "alerts" | null
+  const [viewAll, setViewAll] = useState(null);
   const [selectedMsg, setSelectedMsg] = useState(null);
   const [selectedAlert, setSelectedAlert] = useState(null);
 
@@ -321,14 +446,14 @@ export default function Header({ toggleSidebar, showSidebar }) {
 
   const handleMsgClick = useCallback((msg) => {
     const id = msg._id || msg.id;
-    if (!msg.read) markMessageRead(id);
+    if (!isRead(msg)) markMessageRead(id);
     setSelectedMsg(msg);
     setMsgOpen(false);
   }, [markMessageRead]);
 
   const handleAlertClick = useCallback((alert) => {
     const id = alert._id || alert.id;
-    if (!alert.read) markAlertRead(id);
+    if (!isRead(alert)) markAlertRead(id);
     setSelectedAlert(alert);
     setAlertOpen(false);
   }, [markAlertRead]);
@@ -426,6 +551,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
                   messages={messages}
                   onMarkAll={() => { markAllMessagesRead(); }}
                   onItemClick={handleMsgClick}
+                  onViewAll={() => { setViewAll("messages"); setMsgOpen(false); }}
                 />
               </div>
             )}
@@ -449,6 +575,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
                   alerts={alerts}
                   onMarkAll={() => { markAllAlertsRead(); }}
                   onItemClick={handleAlertClick}
+                  onViewAll={() => { setViewAll("alerts"); setAlertOpen(false); }}
                 />
               </div>
             )}
@@ -617,22 +744,34 @@ export default function Header({ toggleSidebar, showSidebar }) {
         />
       </div>
 
-      <div className="hidden lg:flex">
-        <Image src={stroke} alt="stroke" />
-      </div>
-
-      <div
-        onClick={() => setShowLogoutConfirm(true)}
-        className="cursor-pointer border-2 border-white/50 dark:border-red-400 p-2 rounded-[12px] hidden lg:flex items-center gap-3 hover:bg-white/10 dark:hover:bg-red-50 transition"
-      >
-        <p className="text-white dark:text-[#ff1f1f] font-semibold">Logout</p>
-        <LogoutButton />
-      </div>
+      {/* Logout lives at the foot of the sidebar, where it is out of the way of
+          everything people press all day. A second one up here was the same
+          action twice, sitting next to the controls used most. */}
 
       </div>{/* end right side */}
 
 
       {/* ── Modals ── */}
+      {viewAll === "messages" && (
+        <NotifListModal
+          title="All messages"
+          items={messages}
+          type="message"
+          onClose={() => setViewAll(null)}
+          onMarkAll={() => markAllMessagesRead()}
+          onItemClick={(msg) => { handleMsgClick(msg); setViewAll(null); }}
+        />
+      )}
+      {viewAll === "alerts" && (
+        <NotifListModal
+          title="All alerts"
+          items={alerts}
+          type="alert"
+          onClose={() => setViewAll(null)}
+          onMarkAll={() => markAllAlertsRead()}
+          onItemClick={(alert) => { handleAlertClick(alert); setViewAll(null); }}
+        />
+      )}
       {selectedMsg && (
         <NotifModal item={selectedMsg} type="message" onClose={() => setSelectedMsg(null)} />
       )}
