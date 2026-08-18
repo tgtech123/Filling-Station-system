@@ -1,0 +1,246 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { X, Loader2, ArrowDownCircle, ArrowUpCircle, Settings2, AlertTriangle } from "lucide-react";
+import { useLubricantStore } from "@/store/lubricantStore";
+
+const REASONS = [
+  { value: "miscount",            label: "Miscounted before" },
+  { value: "damaged",             label: "Damaged / expired" },
+  { value: "theft",               label: "Theft or loss" },
+  { value: "received_unrecorded", label: "Came in without being recorded" },
+  { value: "sold_unrecorded",     label: "Sold without being rung up" },
+  { value: "returned",            label: "Customer returned it" },
+  { value: "staff_use",           label: "Taken for station use" },
+  { value: "other",               label: "Something else" },
+];
+
+const EVENT_STYLE = {
+  sale:       { icon: ArrowDownCircle, colour: "text-blue-500",    label: "Sold" },
+  purchase:   { icon: ArrowUpCircle,   colour: "text-green-600",   label: "Bought" },
+  delivery:   { icon: ArrowUpCircle,   colour: "text-emerald-600", label: "Delivered" },
+  adjustment: { icon: Settings2,       colour: "text-amber-600",   label: "Adjusted" },
+};
+
+/**
+ * Everything that ever happened to one product, and the means to correct it.
+ *
+ * The two belong on the same screen: someone opens this BECAUSE the shelf and
+ * the system disagree, and the first useful question is not "what is the right
+ * number" but "where did they diverge". The history answers that; the
+ * adjustment closes it. Splitting them would mean correcting a count without
+ * ever looking at what caused it, which is how the same discrepancy comes back
+ * every week.
+ */
+export default function ProductTrackerModal({ product, onClose }) {
+  const { fetchProductHistory, adjustStock } = useLubricantStore();
+
+  const [loading, setLoading]   = useState(true);
+  const [data, setData]         = useState(null);
+  const [error, setError]       = useState(null);
+
+  const [showAdjust, setShowAdjust] = useState(false);
+  const [newQty, setNewQty]         = useState("");
+  const [reason, setReason]         = useState("miscount");
+  const [note, setNote]             = useState("");
+  const [saving, setSaving]         = useState(false);
+  const [success, setSuccess]       = useState(null);
+
+  const load = async () => {
+    const result = await fetchProductHistory(product._id);
+    if (result.success) setData(result.data);
+    else setError(result.error);
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, [product._id]);
+
+  const current = data?.product?.qtyInStock ?? product.qtyInStock ?? 0;
+  const unit = data?.product?.baseUnit || product.baseUnit || "piece";
+  const difference = newQty === "" ? 0 : Number(newQty) - Number(current);
+
+  const handleAdjust = async () => {
+    setError(null);
+    setSaving(true);
+    const result = await adjustStock(product._id, {
+      quantityAfter: Number(newQty),
+      reason,
+      note,
+      // What we were looking at. If a sale lands mid-count the server refuses
+      // rather than letting a stale figure reverse it.
+      expectedBefore: Number(current),
+    });
+    setSaving(false);
+    if (result.success) {
+      setSuccess(result.message);
+      setShowAdjust(false);
+      setNewQty("");
+      setNote("");
+      setLoading(true);
+      load();
+    } else {
+      setError(result.error);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[88vh] flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-start justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700 shrink-0">
+          <div className="min-w-0">
+            <h3 className="font-bold text-gray-900 dark:text-white truncate">{product.productName}</h3>
+            <p className="text-sm text-gray-500">
+              {current} {unit}{current === 1 ? "" : "s"} in stock
+              {product.barcode ? <span className="font-mono text-xs text-gray-400"> · {product.barcode}</span> : null}
+            </p>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 shrink-0">
+            <X size={20} />
+          </button>
+        </div>
+
+        {success && (
+          <p className="mx-5 mt-3 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-2.5">{success}</p>
+        )}
+        {error && (
+          <p className="mx-5 mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-2.5">{error}</p>
+        )}
+
+        {/* Adjust */}
+        <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
+          {!showAdjust ? (
+            <button
+              onClick={() => { setShowAdjust(true); setNewQty(String(current)); setSuccess(null); }}
+              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+            >
+              The shelf says something different — correct the count
+            </button>
+          ) : (
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
+              <div className="flex items-end gap-3 flex-wrap">
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">
+                    Actual count on the shelf
+                  </p>
+                  <input
+                    type="number"
+                    min={0}
+                    value={newQty}
+                    onChange={(e) => setNewQty(e.target.value)}
+                    className="w-28 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2.5 py-1.5 text-sm font-bold"
+                  />
+                </div>
+                <div className="flex-1 min-w-[180px]">
+                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Why does it differ?</p>
+                  <select
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    className="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2.5 py-1.5 text-sm"
+                  >
+                    {REASONS.map((r) => (
+                      <option key={r.value} value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <input
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="Anything worth remembering about this (optional)"
+                className="w-full mt-2 border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2.5 py-1.5 text-sm"
+              />
+
+              {newQty !== "" && difference !== 0 && (
+                <p className={`text-xs mt-2 font-semibold ${difference < 0 ? "text-red-600" : "text-green-600"}`}>
+                  {difference > 0 ? "+" : ""}{difference} {unit}
+                  {Math.abs(difference) === 1 ? "" : "s"} — {current} becomes {newQty}.
+                  {difference < 0 && " This is a write-off and your manager is told."}
+                </p>
+              )}
+
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={handleAdjust}
+                  disabled={saving || newQty === "" || difference === 0}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2 rounded-lg"
+                >
+                  {saving && <Loader2 size={14} className="animate-spin" />}
+                  Save correction
+                </button>
+                <button
+                  onClick={() => setShowAdjust(false)}
+                  className="text-sm text-gray-500 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* History */}
+        <div className="overflow-y-auto px-5 py-3">
+          {loading ? (
+            <div className="flex justify-center py-10"><Loader2 className="w-6 h-6 text-blue-500 animate-spin" /></div>
+          ) : !data?.events?.length ? (
+            <p className="text-sm text-gray-400 text-center py-10">
+              Nothing has moved this product's stock yet.
+            </p>
+          ) : (
+            <>
+              {/* The number that matters most: stock that moved with no record
+                  behind it. Anything other than zero is the discrepancy itself. */}
+              {Math.abs(data.openingBalance) > 0 && (
+                <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
+                  <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-800">
+                    <span className="font-bold">{Math.abs(data.openingBalance)} {unit}
+                    {Math.abs(data.openingBalance) === 1 ? "" : "s"} unaccounted for.</span>{" "}
+                    The records below do not fully explain today's count — either stock existed
+                    before this history begins, or some movement was never recorded.
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                {data.events.map((e, i) => {
+                  const style = EVENT_STYLE[e.type] || EVENT_STYLE.adjustment;
+                  const Icon = style.icon;
+                  return (
+                    <div key={i} className="flex items-start gap-3 border border-gray-100 dark:border-gray-700 rounded-xl p-3">
+                      <Icon size={18} className={`${style.colour} shrink-0 mt-0.5`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                            {style.label}
+                            <span className={`ml-2 font-bold ${e.change < 0 ? "text-red-600" : "text-green-600"}`}>
+                              {e.change > 0 ? "+" : ""}{e.change}
+                            </span>
+                          </p>
+                          <p className="text-xs text-gray-400 shrink-0">
+                            {new Date(e.at).toLocaleString("en-NG", {
+                              day: "numeric", month: "short", year: "numeric",
+                              hour: "2-digit", minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">{e.detail}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          by {e.by}
+                          {e.reference ? ` · ${e.reference}` : ""}
+                          {" · "}left {e.balanceAfter} {unit}{e.balanceAfter === 1 ? "" : "s"}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

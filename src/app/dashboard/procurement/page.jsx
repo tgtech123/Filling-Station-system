@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import useProcurementStore from "@/store/useProcurementStore";
 import useSupplierStore from "@/store/useSupplierStore";
+import { useLubricantStore } from "@/store/lubricantStore";
+import ReceivePricing from "./ReceivePricing";
 import toast from "react-hot-toast";
 
 // ─── urgency config ──────────────────────────────────────────────────────────
@@ -445,6 +447,18 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
   const [actioning,       setActioning]       = useState(false);
   const [confirmReceipt,  setConfirmReceipt]  = useState(false);
   const [receivedQtys,    setReceivedQtys]    = useState({});
+  // Prices settled at the door, keyed by product id. Empty until touched, so an
+  // untouched product keeps whatever the markup produces on the server.
+  const [pricing,         setPricing]         = useState({});
+
+  /**
+   * The station catalogue, so the pricing rows know each product's units.
+   * The PO line itself carries only a name and a cost — the pack ladder lives
+   * on the product.
+   */
+  const { lubricants, fetchLubricants } = useLubricantStore();
+  useEffect(() => { if (!lubricants?.length) fetchLubricants(); }, []);
+  const productById = new Map((lubricants || []).map((l) => [String(l._id), l]));
   const [unitCosts,       setUnitCosts]       = useState({});
   const [paymentAmount,   setPaymentAmount]   = useState("");
   const [paymentNotes,    setPaymentNotes]    = useState("");
@@ -639,6 +653,9 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
       lubricantId:      item.lubricantId.toString(),
       receivedQuantity: Number(receivedQtys[item.lubricantId?.toString()] ?? item.quantityToProcure),
       unitCost:         Number(unitCosts[item.lubricantId?.toString()] ?? item.unitCost ?? 0),
+      // Prices as adjusted on this screen. Omitted when untouched, so the
+      // server falls back to recomputing from each product own markup.
+      ...(pricing[item.lubricantId?.toString()] || {}),
     }));
     const result = await markReceived(order._id, receivedItems);
     setActioning(false);
@@ -1330,6 +1347,16 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
                                 />
                               </div>
                             </div>
+
+                            {/* The delivery is the moment the real cost is known
+                                — invoice in hand — so it is where the shelf
+                                price gets settled, singles and packs alike. */}
+                            <ReceivePricing
+                              product={productById.get(id)}
+                              unitCost={cost}
+                              value={pricing[id] || {}}
+                              onChange={(next) => setPricing((prev) => ({ ...prev, [id]: next }))}
+                            />
                           </div>
                         );
                       })}

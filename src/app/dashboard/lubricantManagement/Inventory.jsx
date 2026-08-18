@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import Table from "./Table";
 import { useLubricantStore } from "@/store/lubricantStore";
+import ProductTrackerModal from "./ProductTrackerModal";
 
 export default function Inventory() {
     const { 
@@ -16,6 +17,27 @@ export default function Inventory() {
     } = useLubricantStore();
 
     const [viewMode, setViewMode] = useState("week"); // "week" or "month"
+
+    // Product tracker: which item is open, and the search that finds it.
+    const [trackedProduct, setTrackedProduct] = useState(null);
+    const [trackerSearch, setTrackerSearch]   = useState("");
+
+    const trackableProducts = useMemo(() => {
+        const q = trackerSearch.trim().toLowerCase();
+        const all = (lubricants || []).filter(Boolean);
+        // Unsearched, show the ones most likely to be queried: empty or nearly
+        // empty shelves are what sends someone looking at history.
+        if (!q) {
+            return [...all]
+                .sort((a, b) => (Number(a.qtyInStock) || 0) - (Number(b.qtyInStock) || 0))
+                .slice(0, 12);
+        }
+        return all.filter(
+            (l) =>
+                String(l.productName || "").toLowerCase().includes(q) ||
+                String(l.barcode || "").toLowerCase().includes(q)
+        );
+    }, [lubricants, trackerSearch]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -189,10 +211,48 @@ export default function Inventory() {
                     <p className="mb-4">
                         Track lubricant stock levels and sales performance
                     </p>
-                    <Table 
+                    <Table
                         columns={inventoryColumns}
                         data={inventoryData}
                     />
+
+                    {/* ── Product tracker ──────────────────────────────────
+                        Opened when the shelf and the system disagree. Kept
+                        beside the inventory table because that is where someone
+                        notices the number is wrong. */}
+                    <div className="mt-6 border-t border-gray-100 dark:border-gray-700 pt-4">
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            Track a product
+                        </p>
+                        <p className="text-xs text-gray-400 mb-2">
+                            Every delivery, sale and correction for one item — and where to fix the count.
+                        </p>
+                        <input
+                            value={trackerSearch}
+                            onChange={(e) => setTrackerSearch(e.target.value)}
+                            placeholder="Search by name or barcode…"
+                            className="w-full border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm mb-2"
+                        />
+                        <div className="max-h-56 overflow-y-auto space-y-1">
+                            {trackableProducts.map((lub) => (
+                                <button
+                                    key={lub._id}
+                                    onClick={() => setTrackedProduct(lub)}
+                                    className="w-full flex items-center justify-between gap-3 text-left border border-gray-100 dark:border-gray-700 rounded-lg px-3 py-2 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors"
+                                >
+                                    <span className="text-sm text-gray-700 dark:text-gray-200 truncate">
+                                        {lub.productName}
+                                    </span>
+                                    <span className={`text-xs font-semibold shrink-0 ${Number(lub.qtyInStock) <= 0 ? "text-red-500" : "text-gray-400"}`}>
+                                        {lub.qtyInStock} {lub.baseUnit || "piece"}{Number(lub.qtyInStock) === 1 ? "" : "s"}
+                                    </span>
+                                </button>
+                            ))}
+                            {trackableProducts.length === 0 && (
+                                <p className="text-xs text-gray-400 py-3 text-center">No product matches that.</p>
+                            )}
+                        </div>
+                    </div>
                     {/* Progress Bars */}
                     <div className="mt-6 space-y-4">
                         {progressData.map((item, index) => (
@@ -250,12 +310,24 @@ export default function Inventory() {
                             </button>
                         </div>
                     </div>
-                    <Table 
+                    <Table
                         columns={bestSellingColumns}
                         data={topSellingData}
                     />
                 </DisplayCard>
             </div>
+
+            {trackedProduct && (
+                <ProductTrackerModal
+                    product={trackedProduct}
+                    onClose={() => {
+                        setTrackedProduct(null);
+                        // A correction may have changed the count — reload so the
+                        // table beside it is not left showing the old figure.
+                        fetchLubricants();
+                    }}
+                />
+            )}
         </div>
     );
 }

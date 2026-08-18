@@ -182,7 +182,7 @@ const Login = () => {
               Welcome Back!  
            {/* <span> {settings?.platformName || "FuelDesk"} </span> */}
           </h1>
-          <p className="w-full text-[0.875rem] sm:text-[0.575rem] text-gray-500 text-center mt-1">
+          <p className="w-full text-[1rem] sm:text-[0.975rem] text-gray-500 text-center mt-1">
             Login to access your customized station dashboard
           </p>
 
@@ -325,10 +325,10 @@ const Login = () => {
               </div>
 
               {error && (
-                <p className="text-red-500 text-sm text-start">{error}</p>
+                <p className="text-red-500 border-[1px] border-red-700 text-sm text-start">{error}</p>
               )}
               {message && (
-                <p className="text-green-500 text-sm text-start">{message}</p>
+                <p className="text-green-500 border-[1px] border-green-800 text-sm text-start">{message}</p>
               )}
 
               {/* Remember Me — 30-day session + prefilled email next visit */}
