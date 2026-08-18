@@ -85,24 +85,87 @@ export function subscribeToCustomerDisplay(onMessage) {
  * windows at the start of every shift. It needs a permission the user may refuse,
  * so the plain popup is the fallback and the flow works either way.
  */
+export const CUSTOMER_DISPLAY_PATH = "/dashboard/customer-display";
+
+/**
+ * Open the customer screen, on the second monitor where the browser allows it.
+ *
+ * Returns a result rather than a window, because every failure here needs a
+ * different sentence in front of the cashier. "Nothing happened" is the one
+ * outcome that leaves someone stuck at a till with no idea what to try.
+ *
+ *   placed   — put on the external monitor automatically
+ *   opened   — opened, but the browser chose where; drag it across
+ *   blocked  — popup blocker stopped it; they must allow popups or open the URL
+ *   nodual   — Windows is not extending onto a second screen at all
+ */
 export async function openCustomerDisplay() {
-  const url = "/dashboard/customer-display";
+  if (typeof window === "undefined") return { status: "blocked" };
+
+  let external = null;
+  let screenCount = 1;
 
   try {
-    if (typeof window !== "undefined" && "getScreenDetails" in window) {
+    if ("getScreenDetails" in window) {
       const details = await window.getScreenDetails();
-      const external = details.screens.find((s) => !s.isPrimary) || details.currentScreen;
-      if (external) {
-        const features = `left=${external.left},top=${external.top},width=${external.availWidth},height=${external.availHeight}`;
-        const win = window.open(url, "fueldesk-customer-display", features);
-        // Fullscreen has to be requested from inside that window; it does so on
-        // first interaction. Nothing more to do here.
-        if (win) return win;
-      }
+      screenCount = details.screens.length;
+      external = details.screens.find((s) => !s.isPrimary) || null;
+    } else if (window.screen?.isExtended) {
+      // Chrome knows the desktop is extended even before permission is granted.
+      screenCount = 2;
     }
   } catch {
-    // Permission refused or no second screen — fall through to the popup.
+    // Permission refused. Not fatal — we can still open a window, we just
+    // cannot choose which screen it lands on.
   }
 
-  return window.open(url, "fueldesk-customer-display", "width=1024,height=768");
+  if (external) {
+    const features = `left=${external.left},top=${external.top},width=${external.availWidth},height=${external.availHeight}`;
+    const win = window.open(CUSTOMER_DISPLAY_PATH, "fueldesk-customer-display", features);
+    if (win) {
+      win.focus();
+
+      /**
+       * Take it full screen from here.
+       *
+       * On a rear-mounted customer display nobody will EVER click that screen —
+       * it faces away from the cashier and the customer cannot reach it. So the
+       * "click to go full screen" fallback inside that page would never fire,
+       * and the customer would look at a browser address bar all day.
+       *
+       * Same origin, and this runs inside the cashier's own click, so the
+       * gesture requirement is satisfied. Wrapped because a refused fullscreen
+       * must not stop the window being useful.
+       */
+      const goFullscreen = () => {
+        try {
+          win.document.documentElement?.requestFullscreen?.().catch(() => {});
+        } catch {
+          /* not loaded yet, or blocked — the window still works */
+        }
+      };
+      if (win.document?.readyState === "complete") goFullscreen();
+      else win.addEventListener?.("load", goFullscreen, { once: true });
+
+      // Focus belongs back on the till: the cashier is about to scan, and a
+      // scanner types into whichever window has focus.
+      setTimeout(() => window.focus(), 300);
+
+      return { status: "placed", window: win };
+    }
+    return { status: "blocked" };
+  }
+
+  const win = window.open(CUSTOMER_DISPLAY_PATH, "fueldesk-customer-display", "width=1024,height=768");
+  if (!win) return { status: "blocked" };
+
+  // Focus must end on the TILL, not the customer window. A barcode scanner is a
+  // keyboard: it types into whatever has focus, so leaving the customer window
+  // in front means the next scan goes nowhere and the cashier cannot see why.
+  setTimeout(() => window.focus(), 300);
+
+  // Only one screen as far as the browser is concerned. Usually Windows is set
+  // to Duplicate rather than Extend, which is the single most common reason
+  // this appears not to work at all.
+  return { status: screenCount > 1 ? "opened" : "nodual", window: win };
 }
