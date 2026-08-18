@@ -6,6 +6,7 @@ import { Calendar, Plus, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import Modal from "./reusefilter/Modal";
 import { useLubricantStore } from "@/store/lubricantStore";
+import { getCurrentUser } from "@/lib/currentUser";
 import LubricantStockModal from "./LubricantStockModal";
 
 const SalesHeader = () => {
@@ -16,6 +17,19 @@ const SalesHeader = () => {
   const [searchError, setSearchError] = useState(""); 
   const [stockModalOpen, setStockModalOpen] = useState(false);
   const inputRef = useRef(null);
+
+  /**
+   * Adding stock is a management action, not a till one.
+   *
+   * This button sat on the sales page beside Reprint, so a cashier could open a
+   * purchase form and set costs and quantities from the counter. Stocking and
+   * pricing belong to the manager and supervisor; the cashier sells and
+   * reprints. The server refuses them either way — this stops the app offering
+   * something it will then decline.
+   */
+  const [role, setRole] = useState(null);
+  useEffect(() => setRole(getCurrentUser()?.role || null), []);
+  const canAddStock = ["manager", "supervisor", "admin"].includes(role);
 
   const { searchLubricants, setSelectedProductForSale } = useLubricantStore();
 
@@ -162,18 +176,20 @@ const SalesHeader = () => {
             <BsPrinter size={20} />
           </button>
 
-          <button
-            onClick={() => setStockModalOpen(true)}
-            className="border-2 border-[#0080FF] flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 text-[#0080ff] font-semibold hover:bg-blue-700 hover:text-white hover:border-blue-700 rounded-lg transition-colors"
-          >
-            Add Stock
-            <Plus size={20} />
-          </button>
+          {canAddStock && (
+            <button
+              onClick={() => setStockModalOpen(true)}
+              className="border-2 border-[#0080FF] flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 text-[#0080ff] font-semibold hover:bg-blue-700 hover:text-white hover:border-blue-700 rounded-lg transition-colors"
+            >
+              Add Stock
+              <Plus size={20} />
+            </button>
+          )}
         </div>
 
         {/* Modal */}
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-        {stockModalOpen && <LubricantStockModal onClose={() => setStockModalOpen(false)} />}
+        {stockModalOpen && canAddStock && <LubricantStockModal onClose={() => setStockModalOpen(false)} />}
       </div>
     </div>
   );

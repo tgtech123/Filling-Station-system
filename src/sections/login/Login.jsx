@@ -325,10 +325,10 @@ const Login = () => {
               </div>
 
               {error && (
-                <p className="text-red-500 border-[1px] border-red-700 text-sm text-start">{error}</p>
+                <p className="text-red-500 border-[1px] p-1 rounded-md border-red-700 text-sm text-center">{error}</p>
               )}
               {message && (
-                <p className="text-green-500 border-[1px] border-green-800 text-sm text-start">{message}</p>
+                <p className="text-green-500 border-[1px] p-1 rounded-md border-green-800 text-sm text-center">{message}</p>
               )}
 
               {/* Remember Me — 30-day session + prefilled email next visit */}

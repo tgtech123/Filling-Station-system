@@ -5,7 +5,7 @@ import { X, Plus, Monitor } from "lucide-react";
 import DynamicSalesTable from "./DynamicSalesTable";
 import ReceiptModal from "./reusefilter/ReceiptModal";
 import { useLubricantStore } from "@/store/lubricantStore";
-import { publishToCustomerDisplay, openCustomerDisplay } from "@/lib/customerDisplay";
+import { publishToCustomerDisplay, openCustomerDisplay, CUSTOMER_DISPLAY_PATH } from "@/lib/customerDisplay";
 
 const LubSales = () => {
   const [rows, setRows] = useState([
@@ -99,6 +99,38 @@ const LubSales = () => {
       clearSelectedProductForSale(); // Clear after adding
     }
   }, [selectedProductForSale]);
+
+  /**
+   * Open the customer screen and say what actually happened.
+   *
+   * Every failure mode here needs its own sentence — "nothing happened" leaves
+   * someone standing at a till with no idea what to try next, which is exactly
+   * how this ends up reported as simply not working.
+   */
+  const [displayHelp, setDisplayHelp] = useState(null);
+
+  const handleOpenCustomerScreen = async () => {
+    const result = await openCustomerDisplay();
+    if (result.status === "placed") {
+      setDisplayHelp(null);
+      setMessage("✅ Customer screen opened on the second monitor");
+    } else if (result.status === "opened") {
+      setDisplayHelp({
+        tone: "info",
+        text: "Opened, but the browser chose the screen. Drag the new window onto the customer's monitor, then press F11 to make it full screen. It stays there next time.",
+      });
+    } else if (result.status === "nodual") {
+      setDisplayHelp({
+        tone: "warn",
+        text: "Windows is not showing a second screen. Right-click the desktop → Display settings → set the second display to \"Extend these displays\" (not Duplicate), then press this button again.",
+      });
+    } else {
+      setDisplayHelp({
+        tone: "warn",
+        text: "Your browser blocked the pop-up. Allow pop-ups for this site, or open a new browser window on the customer's monitor and go to the address below.",
+      });
+    }
+  };
 
   const addProductToTable = (product) => {
    const price = Number(product.unitPrice ?? 0);
@@ -541,7 +573,7 @@ const LubSales = () => {
                 once at the start of a shift; the window then mirrors every
                 basket on its own. */}
             <button
-              onClick={openCustomerDisplay}
+              onClick={handleOpenCustomerScreen}
               title="Open the customer-facing screen"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-semibold"
             >
@@ -550,6 +582,37 @@ const LubSales = () => {
           </div>
         </div>
       </div>
+
+      {/* Customer screen didn't land where it should. The address is shown
+          because opening it by hand on the second monitor always works, whatever
+          the browser decided to do. */}
+      {displayHelp && (
+        <div
+          className={`p-3.5 rounded-xl border ${
+            displayHelp.tone === "warn"
+              ? "bg-amber-50 border-amber-300 text-amber-800"
+              : "bg-blue-50 border-blue-200 text-blue-800"
+          }`}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-bold">Customer screen</p>
+              <p className="text-sm mt-0.5">{displayHelp.text}</p>
+              <p className="text-xs mt-1.5 font-mono break-all opacity-90">
+                {typeof window !== "undefined" ? window.location.origin : ""}
+                {CUSTOMER_DISPLAY_PATH}
+              </p>
+            </div>
+            <button
+              onClick={() => setDisplayHelp(null)}
+              className="shrink-0 p-1 rounded-lg hover:bg-black/5"
+              aria-label="Dismiss"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Scan failures ─────────────────────────────────────────────────
           Named precisely, because "not found" for an out-of-stock product
