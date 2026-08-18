@@ -1,11 +1,11 @@
 ﻿"use client";
 import { API_URL } from "@/lib/config";
 import React, { useState, useEffect } from "react";
-import { X, Plus } from "lucide-react";
-import AddLubricantModal from "../lubricantManagement/AddLubricantModal";
+import { X, Plus, Monitor } from "lucide-react";
 import DynamicSalesTable from "./DynamicSalesTable";
 import ReceiptModal from "./reusefilter/ReceiptModal";
 import { useLubricantStore } from "@/store/lubricantStore";
+import { publishToCustomerDisplay, openCustomerDisplay } from "@/lib/customerDisplay";
 
 const LubSales = () => {
   const [rows, setRows] = useState([
@@ -34,7 +34,6 @@ const LubSales = () => {
    * offering it for a product that is merely out of stock is not.
    */
   const [scanError, setScanError] = useState(null);
-  const [showAddProduct, setShowAddProduct] = useState(false);
 
   // 🆕 Get selected product from store
   const {
@@ -68,6 +67,30 @@ const LubSales = () => {
       return () => clearTimeout(timer);
     }
   }, [message]);
+
+  /**
+   * Mirror the basket to the customer-facing screen.
+   *
+   * Only the four things a customer is entitled to see — what it is, how many,
+   * the price each and the line total. Cost, margin and stock never leave this
+   * component: a monitor facing the shop floor is a public display.
+   */
+  useEffect(() => {
+    publishToCustomerDisplay({
+      stationName: user?.station?.name || "",
+      items: rows
+        .filter((r) => r.productName && Number(r.amount) > 0)
+        .map((r) => ({
+          name: r.productName,
+          quantity: Number(r.quantity) || 0,
+          unitName: r.unitName && r.unitName !== r.baseUnit ? r.unitName : "",
+          unitPrice: Number(r.unitPrice) || 0,
+          amount: Number(r.amount) || 0,
+        })),
+      total: rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0),
+      status: "active",
+    });
+  }, [rows, user]);
 
 
   useEffect(() => {
@@ -175,7 +198,41 @@ const LubSales = () => {
       console.log(`[scan] ${code} → ${outcome} in ${ms}ms`);
     };
 
-    const applyItem = (item) => {
+    const isAlreadyOnBill = (item) => {
+      /**
+       * Already on the bill?
+       *
+       * Scanning the same product twice almost always means the cashier lost
+       * track — two bottles beeped, or one beep they did not hear. Silently
+       * adding a second line for the same product is the worst answer: the
+       * receipt shows it twice, the customer queries it, and the cashier has to
+       * work out which line to delete with a queue waiting.
+       *
+       * So: refuse, say exactly where it already is, and let them set the
+       * quantity by hand. Auto-incrementing is the other tempting option, but
+       * then a double-beep silently charges for two and nobody ever sees it.
+       *
+       * Returns true when it handled the scan.
+       */
+      const duplicateAt = rows.findIndex(
+        (r, i) => i !== index && r.lubricantId && String(r.lubricantId) === String(item._id)
+      );
+      if (duplicateAt !== -1) {
+        setScanError({
+          code: "ALREADY_ON_BILL",
+          message: `${item.productName} is already on line ${duplicateAt + 1} (quantity ${rows[duplicateAt].quantity}). Change the quantity on that line instead of scanning again.`,
+          barcode: code,
+        });
+        // Clear the code just scanned so this line stays ready for the NEXT
+        // product rather than holding one that was refused.
+        setRows((prev) => prev.map((r, i) => (i === index ? { ...r, barcode: "" } : r)));
+        setMessage("");
+        return true;
+      }
+      return false;
+    };
+
+    const applyScannedItem = (item) => {
       // A scanned code can be the product's own barcode or one printed on its
       // carton. Matching the carton selects the carton — that is the whole
       // reason a case has its own barcode.
@@ -184,32 +241,49 @@ const LubSales = () => {
         (u) => String(u.barcode || "").trim() && String(u.barcode).trim() === scanned
       );
       const price = Number(scannedUnit ? scannedUnit.price : item.unitPrice ?? 0);
-      const updatedRows = [...rows];
-      updatedRows[index] = {
-        ...updatedRows[index],
-        productName: item.productName || "",
-        unitPrice: price.toString(),
-        amount: (price * updatedRows[index].quantity).toString(),
-        lubricantId: item._id,
-        unitName: scannedUnit ? scannedUnit.name : item.baseUnit || "piece",
-        basePrice: String(Number(item.unitPrice ?? 0)),
-        baseUnit: item.baseUnit || "piece",
-        saleUnits: item.saleUnits || [],
-      };
-      setRows(updatedRows);
 
-      const lastRow = updatedRows[updatedRows.length - 1];
-      if (lastRow.barcode && lastRow.productName) {
-        setRows([
-          ...updatedRows,
-          { barcode: "", productName: "", unitPrice: "", quantity: "1", amount: "", lubricantId: null, unitName: "", saleUnits: [], baseUnit: "piece" },
-        ]);
-      }
+      /**
+       * One functional update, not a read-then-write against `rows`.
+       *
+       * A hardware scanner fires faster than React re-renders. Copying `rows`
+       * from the closure meant a second beep landing before the first repaint
+       * started from the OLD basket and silently dropped the item that had just
+       * been added — the exact failure a cashier cannot see and the customer
+       * pays for. Deriving from `prev` makes every scan land, at any speed.
+       */
+      setRows((prev) => {
+        const next = [...prev];
+        next[index] = {
+          ...next[index],
+          productName: item.productName || "",
+          unitPrice: price.toString(),
+          amount: (price * (Number(next[index].quantity) || 1)).toString(),
+          lubricantId: item._id,
+          unitName: scannedUnit ? scannedUnit.name : item.baseUnit || "piece",
+          basePrice: String(Number(item.unitPrice ?? 0)),
+          baseUnit: item.baseUnit || "piece",
+          saleUnits: item.saleUnits || [],
+        };
+
+        // Keep one empty row waiting, so the next scan always has somewhere to go.
+        const last = next[next.length - 1];
+        if (last.barcode && last.productName) {
+          next.push({ barcode: "", productName: "", unitPrice: "", quantity: "1", amount: "", lubricantId: null, unitName: "", saleUnits: [], baseUnit: "piece" });
+        }
+        return next;
+      });
     };
 
     // ── Local hit ──────────────────────────────────────────────────────────
+    // Matches the product's own barcode OR any of its units'. A carton carries
+    // its own code, and without checking those a scanned carton fell through to
+    // the network and came back "not found" — the slowest possible answer to a
+    // barcode the station had actually registered.
+    const target = String(code).trim();
     const local = (lubricants || []).find(
-      (l) => String(l.barcode || "").trim() === String(code).trim()
+      (l) =>
+        String(l.barcode || "").trim() === target ||
+        (l.saleUnits || []).some((u) => String(u.barcode || "").trim() === target)
     );
 
     if (local) {
@@ -223,7 +297,8 @@ const LubSales = () => {
         finish("out of stock");
         return;
       }
-      applyItem(local);
+      if (isAlreadyOnBill(local)) { finish("duplicate"); return; }
+      applyScannedItem(local);
       setScanError(null);
       setMessage("");
       finish("ok (local)");
@@ -245,7 +320,8 @@ const LubSales = () => {
       const result = await res.json();
 
       if (res.ok && result.data) {
-        applyItem(result.data);
+        if (isAlreadyOnBill(result.data)) { finish("duplicate"); return; }
+        applyScannedItem(result.data);
         setScanError(null);
         setMessage("");
         finish("ok (server)");
@@ -275,9 +351,10 @@ const LubSales = () => {
   // 🧠 Update barcode on input (no fetch yet)
   const handleBarcodeChange = (e, index) => {
     const value = e.target.value;
-    const updatedRows = [...rows];
-    updatedRows[index].barcode = value;
-    setRows(updatedRows);
+    // Functional, and replacing the row rather than mutating it: a scanner types
+    // a whole barcode in a few milliseconds, and the old read-then-write against
+    // a shallow copy could drop characters between renders.
+    setRows((prev) => prev.map((row, i) => (i === index ? { ...row, barcode: value } : row)));
   };
 
   // ⌨️ Trigger fetch when Enter key is pressed
@@ -459,14 +536,18 @@ const LubSales = () => {
               Record, print and export all sales receipt
             </p>
           </div>
-          {/* Registering a product from the till: a cashier scanning something
-              new should not have to leave the sale to add it. */}
-          <button
-            onClick={() => setShowAddProduct(true)}
-            className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"
-          >
-            <Plus size={15} /> New item
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Opens the customer-facing screen on the second monitor. Pressed
+                once at the start of a shift; the window then mirrors every
+                basket on its own. */}
+            <button
+              onClick={openCustomerDisplay}
+              title="Open the customer-facing screen"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-semibold"
+            >
+              <Monitor size={15} /> Customer screen
+            </button>
+          </div>
         </div>
       </div>
 
@@ -475,8 +556,11 @@ const LubSales = () => {
           sends a cashier hunting for a barcode that is perfectly correct. */}
       {scanError && (
         <div
+          // Amber is "stop and look", red is "this cannot proceed". A duplicate
+          // scan and an empty shelf are both recoverable at the till; an unknown
+          // barcode is not.
           className={`p-3.5 rounded-xl border ${
-            scanError.code === "OUT_OF_STOCK"
+            ["OUT_OF_STOCK", "ALREADY_ON_BILL"].includes(scanError.code)
               ? "bg-amber-50 border-amber-300 text-amber-800"
               : "bg-red-50 border-red-300 text-red-700"
           }`}
@@ -484,7 +568,9 @@ const LubSales = () => {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-sm font-bold">
-                {scanError.code === "OUT_OF_STOCK"
+                {scanError.code === "ALREADY_ON_BILL"
+                  ? "Already on this bill"
+                  : scanError.code === "OUT_OF_STOCK"
                   ? "Out of stock"
                   : scanError.code === "NOT_FOUND"
                   ? "Not registered at this station"
@@ -508,13 +594,17 @@ const LubSales = () => {
             </button>
           </div>
 
+          {/* No "register it now" button.
+              What the shop stocks, and what it sells for, is a management
+              decision — an unknown barcode at the till is a call to the
+              supervisor, not a form for the cashier to fill in. Telling them
+              exactly what to say is more use than a button that would put an
+              unpriced product in the system. */}
           {scanError.code === "NOT_FOUND" && (
-            <button
-              onClick={() => setShowAddProduct(true)}
-              className="mt-2.5 inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-semibold"
-            >
-              <Plus size={13} /> Register “{scanError.barcode}” now
-            </button>
+            <p className="mt-2.5 text-xs text-red-700 bg-white/60 rounded-lg px-3 py-2">
+              Ask your manager or supervisor to add this item. Give them the
+              barcode <span className="font-mono font-bold">{scanError.barcode}</span>.
+            </p>
           )}
         </div>
       )}
@@ -755,17 +845,6 @@ const LubSales = () => {
         receiptData={receiptData}
       />
 
-      {showAddProduct && (
-        <AddLubricantModal
-          onclose={() => {
-            setShowAddProduct(false);
-            setScanError(null);
-            // Refresh the catalogue so the item just registered can be scanned
-            // immediately, without reloading the page mid-sale.
-            fetchLubricants();
-          }}
-        />
-      )}
     </div>
   );
 };

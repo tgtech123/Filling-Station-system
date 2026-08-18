@@ -109,6 +109,43 @@ export const useLubricantStore = create((set, get) => ({
     }
   },
 
+  /**
+   * Correct a count to what is physically on the shelf.
+   *
+   * `expectedBefore` is the figure the person was looking at when they counted.
+   * The server refuses if it has moved since — a sale made mid-count must not be
+   * silently undone by an absolute figure typed a minute ago.
+   */
+  adjustStock: async (id, { quantityAfter, reason, note, expectedBefore }) => {
+    try {
+      const res = await fetch(`${API_URL}/api/lubricant/${id}/adjust-stock`, {
+        method: "POST",
+        headers: get().getAuthHeaders(),
+        body: JSON.stringify({ quantityAfter, reason, note, expectedBefore }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || "Could not adjust stock" };
+      await get().fetchLubricants();
+      return { success: true, message: data.message, data: data.data };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  /** Everything that ever moved this product's stock. */
+  fetchProductHistory: async (id) => {
+    try {
+      const res = await fetch(`${API_URL}/api/lubricant/${id}/history`, {
+        headers: get().getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || "Could not load history" };
+      return { success: true, data: data.data };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
   addLubricant: async (lubricantData) => {
     set({ loading: true, error: null });
     try {
@@ -119,7 +156,19 @@ export const useLubricantStore = create((set, get) => ({
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to add lubricant");
+      // This endpoint reports failures as `error`, not `message` — reading only
+      // `message` meant every rejection reached the user as a bare "Failed to
+      // add lubricant", including "access denied" and "duplicate barcode",
+      // which are the two a person can actually do something about.
+      if (!res.ok) {
+        throw new Error(
+          data.error ||
+            data.message ||
+            (res.status === 403
+              ? "You do not have permission to register products. Ask a manager."
+              : "Failed to add lubricant")
+        );
+      }
 
       const newItem = data.data || data.lubricant || data;
       set((state) => ({

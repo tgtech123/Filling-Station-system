@@ -577,11 +577,14 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       roles: ["manager"],
     },
     {
+      // Registering products and pricing them moved here from the till, so the
+      // supervisor — who already validates deliveries — needs the screen that
+      // does it.
       id: "lubricant-management",
       name: "Lubricant Management",
       icon: <RiOilLine size={20} />,
       link: "/dashboard/lubricantManagement",
-      roles: ["manager"],
+      roles: ["manager", "supervisor"],
     },
     {
       id: "financial-overview",

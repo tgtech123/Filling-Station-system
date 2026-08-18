@@ -145,6 +145,83 @@ const STATIC_FAQ_GROUPS = [
     ],
   },
   {
+    // Written for the till first. A cashier reads this mid-shift with a queue
+    // waiting, so every answer says which button, in order, in plain words.
+    category: "Shop & Store Sales",
+    faqs: [
+      {
+        _id: "shop1",
+        roles: ["cashier"],
+        question: "A customer wants a pack or a carton, not one bottle. How do I sell that?",
+        answer:
+          "Scan or add the item as normal, then use the \"Sold as\" box on that line. It lists every way the product is sold — for example: piece, Pack of 12, Carton of 24 — each with its price. Pick the one the customer is buying and the price updates by itself.\n\nQuantity means how many of THAT unit. So to sell two packs of 12, choose \"Pack of 12\" and set quantity to 2. The system takes 24 bottles off the shelf and the receipt says 2 Packs.\n\nIf a product has no \"Sold as\" box, it is only sold singly — nothing to choose.",
+      },
+      {
+        _id: "shop2",
+        roles: ["cashier"],
+        question: "The carton has its own barcode on the box. Can I just scan that?",
+        answer:
+          "Yes. If your manager registered the carton's barcode, scanning the box picks the carton automatically — you do not have to change \"Sold as\" yourself. Check the line says the carton price before you take payment.",
+      },
+      {
+        _id: "shop3",
+        roles: ["cashier"],
+        question: "I scanned an item and it says \"no product with this barcode\". What do I do?",
+        answer:
+          "Call your manager or supervisor and give them the barcode shown on screen. They add it and set its price — a cashier cannot register or price products, because a wrong price would sell the item at a loss.\n\nOnce they have added it, refresh the sales page and scan again. Do not type a price into another item to get around it.",
+      },
+      {
+        _id: "shop4",
+        roles: ["cashier"],
+        question: "How do I use the customer-facing screen?",
+        answer:
+          "Press \"Customer screen\" once at the start of your shift. A window opens on the second monitor showing the customer their items and total as you scan. Leave it open all day.\n\nIf it opens on your own screen instead, drag it across to the customer's monitor and press F11 to make it full screen. It only ever shows items, prices and the total — never stock or cost.",
+      },
+      {
+        _id: "shop5",
+        roles: ["cashier"],
+        question: "A customer wants their receipt again after the sale is finished.",
+        answer:
+          "Scroll to the sales list below the till, find the sale by receipt number, and press the print icon on that row. You can reprint any past sale as many times as you need. Nothing is deducted from stock again.",
+      },
+      {
+        _id: "shop6",
+        roles: ["manager", "supervisor"],
+        question: "How do I set up a product that sells by the piece AND by the pack?",
+        answer:
+          "Go to Lubricant Management > Add Lubricant. Enter the product as normal — stock is always counted in the SMALLEST unit, so 20 cartons of 12 is 240 pieces, not 20.\n\nThen under \"Also sold in packs?\" add each bigger unit: its name (Pack, Carton, Dozen, Bag), how many pieces it holds, and the profit percentage you want on it. The price works itself out from the cost, and you can see the sum on screen as you type.\n\nIf the box carries its own barcode, add it too — then your cashier can just scan the box.",
+      },
+      {
+        _id: "shop7",
+        roles: ["manager", "supervisor"],
+        question: "Why do I enter a percentage instead of typing the pack price?",
+        answer:
+          "So the price cannot go stale or land below cost. Cartons and bags are priced from what the supplier charged you plus your profit; packs and dozens are priced from the single price less a discount, because no supplier ever sells you a \"pack\" — you make one by opening a carton.\n\nThe real benefit is at delivery: when a supplier's cost changes, every price moves with it automatically and your margin holds. If you typed prices by hand, the ones you forgot to update would quietly sell at last month's margin.\n\nYou can still override any price — type over it and yours is kept.",
+      },
+      {
+        _id: "shop8",
+        roles: ["manager", "supervisor"],
+        question: "Where do I set the profit percentages for my whole shop?",
+        answer:
+          "Lubricant Management > Pricing defaults. Set the profit you expect by category (lubricants, drinks, snacks, other) and by unit (pack, dozen, carton, bag). Every new product starts from those, so nobody has to remember that snacks are 15%.\n\nSaving here does NOT re-price products you already have — they keep the percentage they were given. Change an individual product from its own page.",
+      },
+      {
+        _id: "shop9",
+        roles: ["manager", "supervisor"],
+        question: "I bought goods from the market with a paper invoice, not a purchase order. How do I enter them?",
+        answer:
+          "Use Lubricant Management > Purchases. Enter the supplier, the invoice number, the date, how you paid, and the items with what you actually paid. Stock goes up and the prices are recalculated from the new cost — the same as a delivery against a purchase order.\n\nKeep the invoice number accurate: it is what ties the paper in your file to the entry in the system when anyone checks later.",
+      },
+      {
+        _id: "shop10",
+        roles: ["manager", "supervisor"],
+        question: "A delivery arrived and the supplier's price went up. What do I do?",
+        answer:
+          "Open the purchase order and press Mark Received. On the confirmation screen enter what actually arrived and the new cost per item. The selling price recalculates from your profit percentage, and every pack and carton recalculates too — all of it editable before you confirm.\n\nCheck the per-piece figures next to each pack before saving. If one is flagged as dearer per piece than a single, the percentages need a look.",
+      },
+    ],
+  },
+  {
     category: "Loyalty Programme",
     roles: ["manager"],
     faqs: [
@@ -162,6 +239,13 @@ const STATIC_FAQ_GROUPS = [
   },
 ];
 
+/**
+ * One question and its answer.
+ *
+ * The answer keeps `whitespace-pre-line`: several answers are three ordered
+ * steps, and without it they ran together as one block of text — which is
+ * exactly the thing someone reads mid-shift with a queue at the counter.
+ */
 function FAQItem({ faq }) {
   const [open, setOpen] = useState(false);
   return (
@@ -174,7 +258,7 @@ function FAQItem({ faq }) {
         {open ? <ChevronUp size={18} className="text-gray-400 shrink-0" /> : <ChevronDown size={18} className="text-gray-400 shrink-0" />}
       </button>
       {open && (
-        <div className="px-5 pb-4 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3 leading-relaxed">
+        <div className="px-5 pb-4 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3 leading-relaxed whitespace-pre-line">
           {faq.answer}
         </div>
       )}

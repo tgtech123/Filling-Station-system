@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { useLubricantStore } from "@/store/lubricantStore";
+import { getCurrentUser } from "@/lib/currentUser";
 
-export default function AddLubricantModal({ onclose }) {
+export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
   const { addLubricant, loading, pricingSettings, fetchPricingSettings } = useLubricantStore();
 
   /** The station's standing margin for a category, if one is set. */
@@ -22,7 +23,9 @@ export default function AddLubricantModal({ onclose }) {
   };
 
   const [formData, setFormData] = useState({
-    barcode: "",
+    // Prefilled when the POS opens this after a scan found nothing — retyping a
+    // barcode with a customer waiting is how the same item gets registered twice.
+    barcode: defaultBarcode,
     productName: "",
     productType: "Lubricant",
     category: "lubricant",
@@ -106,6 +109,17 @@ export default function AddLubricantModal({ onclose }) {
     setSaleUnits((u) => u.filter((_, i) => i !== index));
 
   const [message, setMessage] = useState({ type: "", text: "" });
+
+  /**
+   * A cashier says WHAT the item is; a manager says what it is worth.
+   *
+   * Every money field is hidden from them rather than merely ignored on the
+   * server — showing a cost box that is silently discarded would be a lie about
+   * what the form does, and they would fill it in.
+   */
+  const [role, setRole] = useState(null);
+  useEffect(() => setRole(getCurrentUser()?.role || null), []);
+  const canPrice = role !== "cashier";
 
   useEffect(() => {
     if (!pricingSettings) fetchPricingSettings();
@@ -205,9 +219,15 @@ export default function AddLubricantModal({ onclose }) {
         onclose();
       }, 1500);
     } catch (err) {
+      // The store throws a plain Error, so the axios-shaped `err.response.data`
+      // read here never existed — every failure showed the generic fallback and
+      // the reason was lost. `err.message` is where the server's words are.
       setMessage({
         type: "error",
-        text: err?.response?.data?.error || "Failed to add lubricant. Please try again.",
+        text:
+          err?.message ||
+          err?.response?.data?.error ||
+          "Failed to add lubricant. Please try again.",
       });
     }
   };
@@ -346,6 +366,20 @@ export default function AddLubricantModal({ onclose }) {
             </div>
           </div>
 
+          {/* Everything below is money, so a cashier does not see it — the
+              product goes in unpriced and a manager prices it. Hidden rather
+              than ignored server-side: a box that is silently discarded is a lie
+              about what the form does, and they would fill it in. */}
+          {!canPrice && (
+            <div className="bg-amber-50 border-2 border-amber-200 rounded-[8px] p-3 mt-1">
+              <p className="text-sm font-semibold text-amber-800">Pricing is set by your manager</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Save this and your manager is alerted to price it. It can be sold as soon as they do.
+              </p>
+            </div>
+          )}
+
+          {canPrice && (
           <div className="flex gap-2 flex-col lg:flex-row w-full">
             <div className="flex-1">
               <p className="text-sm font-semibold">Re-order Level</p>
@@ -372,7 +406,9 @@ export default function AddLubricantModal({ onclose }) {
               />
             </div>
           </div>
+          )}
 
+          {canPrice && (
           <div className="flex gap-2 flex-col lg:flex-row w-full">
             <div className="flex-1">
               <p className="text-sm font-semibold">Selling Percentage (1–100%) *</p>
@@ -400,8 +436,10 @@ export default function AddLubricantModal({ onclose }) {
               />
             </div>
           </div>
+          )}
 
           {/* ── Bigger selling units ─────────────────────────────────────── */}
+          {canPrice && (
           <div className="border-2 border-gray-200 rounded-[8px] p-3 mt-2">
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -524,6 +562,7 @@ export default function AddLubricantModal({ onclose }) {
               </div>
             )}
           </div>
+          )}
 
           <button
             type="submit"
