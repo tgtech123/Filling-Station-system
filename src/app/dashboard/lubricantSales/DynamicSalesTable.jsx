@@ -88,12 +88,15 @@ const DynamicSalesTable = ({
   paymentMethod,
   setPaymentMethod,
   onSubmit,
+  onCancel,
+  copies,
+  setCopies,
   loading = false,
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [paymentBreakdown, setPaymentBreakdown] = useState(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = ({ print }) => {
     if (paymentMethod === "mixed") {
       if (!paymentBreakdown) {
         alert("Please enter mixed payment breakdown");
@@ -103,10 +106,12 @@ const DynamicSalesTable = ({
       onSubmit({
         paymentMethod: "mixed",
         paymentBreakdown,
+        print,
       });
     } else {
       onSubmit({
         paymentMethod,
+        print,
       });
     }
   };
@@ -153,27 +158,64 @@ const DynamicSalesTable = ({
                 <option value="mixed">Mixed</option>
               </select>
             </div>
+            {/* Receipt Copies */}
+            <div className="flex flex-col w-full sm:max-w-[8rem]">
+              <label className="font-bold mb-1 text-sm">Copies</label>
+              <select
+                value={copies}
+                onChange={(e) => setCopies(Number(e.target.value))}
+                className="w-full py-2 pl-3 rounded-lg border border-neutral-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 outline-none"
+              >
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
           </form>
 
-          {/* Record Button */}
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className={`text-white flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold w-full sm:w-auto flex-shrink-0 transition-colors ${
-              loading ? "bg-blue-400 cursor-not-allowed" : "bg-[#0080FF] hover:bg-blue-700"
-            }`}
-          >
-            {loading ? (
-              <>
-                Recording...
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              </>
-            ) : (
-              <>
-                Record <LuPlus size={20} />
-              </>
-            )}
-          </button>
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-shrink-0">
+            <button
+              onClick={() => handleSubmit({ print: true })}
+              disabled={loading}
+              className={`text-white flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold w-full sm:w-auto transition-colors ${
+                loading ? "bg-blue-400 cursor-not-allowed" : "bg-[#0080FF] hover:bg-blue-700"
+              }`}
+            >
+              {loading ? (
+                <>
+                  Recording...
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </>
+              ) : (
+                <>
+                  Record and Print <LuPlus size={20} />
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={() => handleSubmit({ print: false })}
+              disabled={loading}
+              className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold w-full sm:w-auto border-2 transition-colors ${
+                loading
+                  ? "border-gray-200 text-gray-300 cursor-not-allowed"
+                  : "border-[#0080FF] text-[#0080FF] hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              }`}
+            >
+              Save
+            </button>
+
+            <button
+              onClick={onCancel}
+              disabled={loading}
+              className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold text-white w-full sm:w-auto transition-colors ${
+                loading ? "bg-red-300 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
+              }`}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
 

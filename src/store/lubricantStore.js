@@ -4,6 +4,8 @@ import { API_URL } from "@/lib/config";
 export const useLubricantStore = create((set, get) => ({
   lubricants: [],
   purchases: [],
+  purchaseSummary: null,
+  stockAudit: null,
   sales: [],
   transactions: [],
   weeklySummary: {},
@@ -141,6 +143,53 @@ export const useLubricantStore = create((set, get) => ({
       const data = await res.json();
       if (!res.ok) return { success: false, error: data.error || "Could not load history" };
       return { success: true, data: data.data };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
+  },
+
+  /**
+   * Opening stock, movements and closing stock for a window — the audit sheet.
+   *
+   * Dates go up as plain YYYY-MM-DD. The server owns the day boundaries (a
+   * closing date has to include its own day), and sending an ISO timestamp from
+   * a browser in one timezone to a server in another is how a month-end report
+   * quietly loses its last evening of trade.
+   */
+  fetchStockAudit: async ({ from, to, category } = {}) => {
+    set({ loading: true, error: null });
+    try {
+      const params = new URLSearchParams();
+      if (from) params.set("from", from);
+      if (to) params.set("to", to);
+      if (category && category !== "all") params.set("category", category);
+
+      const res = await fetch(
+        `${API_URL}/api/lubricant/reports/stock-audit?${params.toString()}`,
+        { headers: get().getAuthHeaders() }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        set({ loading: false, error: data.error });
+        return { success: false, error: data.error || "Could not load the stock report" };
+      }
+      set({ stockAudit: data.data, loading: false });
+      return { success: true, data: data.data };
+    } catch (e) {
+      set({ loading: false, error: e.message });
+      return { success: false, error: e.message };
+    }
+  },
+
+  /** Every consignment still holding stock, across the station. */
+  fetchOpenBatches: async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/lubricant/reports/open-batches`, {
+        headers: get().getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || "Could not load consignments" };
+      return { success: true, data: data.data, totalValue: data.totalValue };
     } catch (e) {
       return { success: false, error: e.message };
     }
@@ -375,7 +424,9 @@ export const useLubricantStore = create((set, get) => ({
       }
 
       const purchasesData = Array.isArray(data) ? data : data.data || [];
-      set({ purchases: purchasesData, loading: false });
+      // The money the list never carried. Totalled by the server over the whole
+      // query, so it stays right when the table is only showing one page of it.
+      set({ purchases: purchasesData, purchaseSummary: data.summary || null, loading: false });
       return data;
     } catch (error) {
       set({ error: error.message, loading: false });

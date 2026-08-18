@@ -539,9 +539,14 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
   // never move it through receipt — the server enforces the same set.
   const canReceive = ["manager", "supervisor", "admin"].includes(role);
 
+  // Registering a vendor from inside an order registers them for THAT kind of
+  // supply — a drinks wholesaler added while editing a store order must not
+  // then appear in the lubricant vendor list.
+  const supplierType = order?.orderType === "store" ? "store" : "lubricant";
+
   useEffect(() => {
-    if (isEditing) fetchSuppliers("lubricant");
-  }, [isEditing]);
+    if (isEditing) fetchSuppliers(supplierType);
+  }, [isEditing, supplierType]);
 
   const enterEdit = () => {
     setEditVendorId("");
@@ -555,11 +560,6 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
     if (!reorderItems.length) fetchReorderItems(order.orderType || "lubricant");
     setIsEditing(true);
   };
-
-  // Registering a vendor from inside an order registers them for THAT kind of
-  // supply — a drinks wholesaler added while editing a store order must not
-  // then appear in the lubricant vendor list.
-  const supplierType = order?.orderType === "store" ? "store" : "lubricant";
 
   const cancelEdit = () => {
     setIsEditing(false);
@@ -576,7 +576,7 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
 
   const handleNewSupplierSaved = (supplier) => {
     handleSelectSupplier(supplier);
-    fetchSuppliers("lubricant");
+    fetchSuppliers(supplierType);
   };
 
   const updateEditQty = (lubricantId, qty) => {
@@ -1495,7 +1495,7 @@ export default function ProcurementPage() {
 
   const handleNewSupplierSaved = (supplier) => {
     handleSelectSupplier(supplier);
-    fetchSuppliers("lubricant");
+    fetchSuppliers(supplierType);
   };
 
   const toggleSelect = (item) => {
@@ -1584,7 +1584,7 @@ export default function ProcurementPage() {
                 <ArrowLeft size={17} />
               </Link>
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Lubricant Procurement</h1>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{orderType === "store" ? "Store" : "Lubricant"} Procurement</h1>
                 <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Select products to procure, set vendor details and submit</p>
               </div>
             </div>
@@ -1636,7 +1636,7 @@ export default function ProcurementPage() {
                 <div>
                   <h2 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-sm sm:text-base">
                     <Package size={17} className="text-blue-500 shrink-0" />
-                    Lubricant Inventory
+                    {orderType === "store" ? "Store" : "Lubricant"} Inventory
                     {reorderItems.length > 0 && (
                       <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">{reorderItems.length}</span>
                     )}
@@ -1660,7 +1660,7 @@ export default function ProcurementPage() {
                       <option value="healthy">Healthy</option>
                     </select>
                   </div>
-                  <button onClick={fetchReorderItems} title="Refresh inventory"
+                  <button onClick={() => fetchReorderItems(orderType)} title="Refresh inventory"
                     className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors">
                     <RefreshCw size={14} className={reorderLoading ? "animate-spin" : ""} />
                   </button>
@@ -1674,8 +1674,8 @@ export default function ProcurementPage() {
               ) : reorderItems.length === 0 ? (
                 <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 sm:p-10 text-center">
                   <Package size={32} className="text-gray-300 mx-auto mb-3" />
-                  <p className="font-semibold text-gray-700 dark:text-gray-300 text-sm">No lubricant products found</p>
-                  <p className="text-xs text-gray-400 mt-1">Add lubricant products in the Lubricant Management section</p>
+                  <p className="font-semibold text-gray-700 dark:text-gray-300 text-sm">No {orderType === "store" ? "store" : "lubricant"} products found</p>
+                  <p className="text-xs text-gray-400 mt-1">Add {orderType === "store" ? "store items" : "lubricant products"} in the Lubricant Management section</p>
                 </div>
               ) : filteredItems.length === 0 ? (
                 <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 text-center">

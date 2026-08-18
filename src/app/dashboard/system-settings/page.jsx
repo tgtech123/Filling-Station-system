@@ -295,12 +295,12 @@ function UpgradeModal({ onClose, currentPlanSlug, availablePlans, renewMode, onU
                 onClick={() => setSelectedSlug(plan.slug)}
                 className={`rounded-2xl border-[2px] p-5 text-left transition-all w-full ${
                   isSelected
-                    ? isHighlighted ? "border-[#1a71f6] bg-blue-50" : "border-gray-700 bg-gray-50"
-                    : "border-neutral-200 hover:border-gray-400"
+                    ? isHighlighted ? "border-[#1a71f6] bg-blue-50 dark:bg-blue-900/20" : "border-gray-700 dark:border-blue-500 bg-gray-50 dark:bg-blue-900/10"
+                    : "border-neutral-200 dark:border-gray-600 hover:border-gray-400 dark:hover:border-blue-400"
                 }`}
               >
                 <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
-                  <h4 className="font-semibold text-gray-800 text-sm">{plan.name}</h4>
+                  <h4 className="font-semibold text-[#1a71f6] dark:text-blue-400 text-sm">{plan.name}</h4>
                   {isSelected && (
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isHighlighted ? "bg-[#1a71f6] text-white" : "bg-gray-700 text-white"}`}>
                       {renewMode ? "Renewing" : "Selected"}
@@ -310,14 +310,14 @@ function UpgradeModal({ onClose, currentPlanSlug, availablePlans, renewMode, onU
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">Popular</span>
                   )}
                 </div>
-                <p className={`text-2xl font-bold mb-3 ${isHighlighted ? "text-[#1a71f6]" : "text-gray-900"}`}>
+                <p className="text-2xl font-bold mb-3 text-[#1a71f6] dark:text-blue-400">
                   ₦{(planPrice || 0).toLocaleString()}
-                  <span className="text-sm font-normal text-neutral-400">/{billingCycle === "yearly" ? "yr" : "mo"}</span>
+                  <span className="text-sm font-normal text-blue-500/70 dark:text-blue-300/80">/{billingCycle === "yearly" ? "yr" : "mo"}</span>
                 </p>
                 <ul className="space-y-1.5">
                   {(plan.features || []).slice(0, 6).map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-xs text-gray-600">
-                      <CheckCircle size={12} className={`${isHighlighted ? "text-[#1a71f6]" : "text-green-500"} shrink-0 mt-0.5`} />{f}
+                    <li key={f} className="flex items-start gap-2 text-xs font-medium text-[#1a71f6] dark:text-blue-400">
+                      <CheckCircle size={12} className="text-[#1a71f6] dark:text-blue-400 shrink-0 mt-0.5" />{f}
                     </li>
                   ))}
                 </ul>

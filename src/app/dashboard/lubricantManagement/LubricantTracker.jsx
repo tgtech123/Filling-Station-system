@@ -16,6 +16,19 @@ import InvoiceModal from "./InvoiceModal";
 import FilterModal from "./FilterModal";
 import { useLubricantStore } from "@/store/lubricantStore";
 
+/**
+ * Purchase items carry no category of their own — only `lubricantId` — so the
+ * category is resolved against the product catalogue at filter time. Kept in
+ * step with PRODUCT_CATEGORIES on the server.
+ */
+const CATEGORY_OPTIONS = [
+  { label: "All categories", value: "all"       },
+  { label: "Lubricants",     value: "lubricant" },
+  { label: "Drinks",         value: "drinks"    },
+  { label: "Snacks",         value: "snacks"    },
+  { label: "Other",          value: "other"     },
+];
+
 const DURATION_OPTIONS = [
   { label: "All Time",  value: "all"     },
   { label: "Daily",     value: "daily"   },
@@ -62,10 +75,11 @@ export default function LubricantTracker({ onclose }) {
   const [showDurationDrop, setShowDurationDrop]  = useState(false);
   const [selectedSuppliers, setSelectedSuppliers] = useState([]);
   const [selectedPayments, setSelectedPayments]  = useState([]);
+  const [category, setCategory]                  = useState("all");
   const [loading, setLoading]                    = useState(false);
 
   const durationRef = useRef(null);
-  const { getAllPurchases } = useLubricantStore();
+  const { getAllPurchases, lubricants, fetchLubricants } = useLubricantStore();
 
   useEffect(() => {
     const fetch = async () => {
@@ -81,6 +95,20 @@ export default function LubricantTracker({ onclose }) {
     };
     fetch();
   }, [getAllPurchases]);
+
+  // The catalogue is what maps a purchased item to its category.
+  useEffect(() => {
+    if (!lubricants?.length) fetchLubricants();
+  }, []);
+
+  const categoryById = useMemo(() => {
+    const map = new Map();
+    (lubricants || []).forEach((l) => map.set(String(l._id), l.category || "other"));
+    return map;
+  }, [lubricants]);
+
+  const itemCategory = (item) =>
+    categoryById.get(String(item.lubricantId)) || "other";
 
   // Close duration dropdown on outside click
   useEffect(() => {
@@ -108,6 +136,12 @@ export default function LubricantTracker({ onclose }) {
       if (!isInDurationRange(purchase.purchaseDate, duration)) return false;
       if (selectedSuppliers.length > 0 && !selectedSuppliers.includes(purchase.supplier)) return false;
       if (selectedPayments.length > 0 && !selectedPayments.includes(purchase.paymentMethod)) return false;
+
+      const items = purchase.items || [];
+      const inCategory =
+        category === "all" ? items : items.filter((i) => itemCategory(i) === category);
+      if (category !== "all" && inCategory.length === 0) return false;
+
       if (searchTerm.trim()) {
         const lower = searchTerm.toLowerCase();
         const haystack = [
@@ -115,16 +149,16 @@ export default function LubricantTracker({ onclose }) {
           purchase.supplier,
           purchase.paymentMethod,
           formatDate(purchase.purchaseDate),
-          purchase.items?.map((i) => i.productName)?.join(" ") ?? "",
+          inCategory.map((i) => i.productName).join(" "),
         ].join(" ").toLowerCase();
         if (!haystack.includes(lower)) return false;
       }
       return true;
     });
-  }, [tableData, duration, selectedSuppliers, selectedPayments, searchTerm]);
+  }, [tableData, duration, selectedSuppliers, selectedPayments, searchTerm, category, categoryById]);
 
   // Reset to page 1 whenever filters change
-  useEffect(() => setCurrentPage(1), [searchTerm, duration, selectedSuppliers, selectedPayments]);
+  useEffect(() => setCurrentPage(1), [searchTerm, duration, selectedSuppliers, selectedPayments, category]);
 
   const totalPages   = Math.max(1, Math.ceil(filteredData.length / itemsPerPage));
   const startIndex   = (currentPage - 1) * itemsPerPage;
@@ -171,9 +205,9 @@ export default function LubricantTracker({ onclose }) {
           {/* ── Sticky header ── */}
           <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-4 sm:px-6 py-4 flex items-start justify-between z-10">
             <div>
-              <h2 className="font-bold text-lg sm:text-xl text-gray-900 dark:text-white">Lubricant Tracker</h2>
+              <h2 className="font-bold text-lg sm:text-xl text-gray-900 dark:text-white">Purchase &amp; Invoice Tracker</h2>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                Track lubricant purchases and invoice records
+                Track purchases and invoice records across every product category
               </p>
             </div>
             <button
@@ -213,7 +247,22 @@ export default function LubricantTracker({ onclose }) {
               {/* Action buttons */}
               <div className="flex gap-2 flex-shrink-0">
 
-                {/* Duration dropdown */}
+                {/* Category */}
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className={`h-full px-3 py-2.5 rounded-xl border-2 text-sm font-medium outline-none transition-colors cursor-pointer ${
+                  category !== "all"
+                    ? "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                    : "border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 dark:bg-gray-700"
+                }`}
+              >
+                {CATEGORY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+
+              {/* Duration dropdown */}
                 <div ref={durationRef} className="relative">
                   <button
                     onClick={() => setShowDurationDrop((v) => !v)}

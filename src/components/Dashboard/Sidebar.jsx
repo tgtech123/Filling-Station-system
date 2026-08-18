@@ -411,7 +411,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     },
     {
       id: "supervisor-procurement",
-      name: "Procure Lubricants",
+      name: "Procure Stock",
       icon: <Package size={20} />,
       link: "/dashboard/procurement",
       roles: ["supervisor"],
@@ -630,7 +630,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     },
     {
       id: "procurement",
-      name: "Procure Lubricants",
+      name: "Procure Stock",
       icon: <Package size={20} />,
       link: "/dashboard/procurement",
       roles: ["manager"],

@@ -635,7 +635,7 @@ export default function CustomerOrderPage() {
         </button>
 
         <p className="text-center text-xs text-gray-400 pb-4">
-          Powered by <span className="font-semibold text-orange-500">FuelDesk</span>
+          Powered by <span className="font-semibold text-orange-500">Techsol Dev Concepts</span>
         </p>
       </form>
     </div>

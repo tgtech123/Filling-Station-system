@@ -1,6 +1,6 @@
 ﻿"use client";
 import { API_URL } from "@/lib/config";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, Plus, Monitor } from "lucide-react";
 import DynamicSalesTable from "./DynamicSalesTable";
 import ReceiptModal from "./reusefilter/ReceiptModal";
@@ -24,9 +24,76 @@ const LubSales = () => {
   const [paymentMethod, setPaymentMethod] = useState("POS");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  /**
+   * The in-flight latch, and the id of the basket in flight.
+   *
+   * `isSubmitting` disables the buttons, but it is state: it only takes effect
+   * on the next render, so two taps landing in the same tick can both get past
+   * it. This ref is set synchronously and closes that window outright.
+   *
+   * The key is the second line of defence, for what the latch cannot see — a
+   * request the browser retries after a dropped response. Minted once per
+   * basket and resent unchanged, it lets the server recognise the replay and
+   * return the original sale instead of recording a second one. A new basket
+   * gets a new key.
+   */
+  const submitInFlightRef = useRef(false);
+  const basketKeyRef = useRef(null);
+
+  const basketKey = () => {
+    if (!basketKeyRef.current) {
+      basketKeyRef.current =
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+    return basketKeyRef.current;
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [receiptData, setReceiptData] = useState(null);
+
+  /**
+   * Whether the receipt should open its own print dialog.
+   *
+   * "Record and Print" sets it; "Save" clears it. Kept as state rather than
+   * passed at call time because the modal reads it when it mounts.
+   */
+  const [autoPrint, setAutoPrint] = useState(false);
+
+  /**
+   * Slips per sale. A station that files its own copy wants the same number
+   * every time, so the choice is remembered on the till rather than re-picked
+   * on each sale. Read after mount — localStorage does not exist on the server.
+   */
+  const [copies, setCopies] = useState(1);
+  useEffect(() => {
+    const saved = Number(localStorage.getItem("receiptCopies"));
+    if (saved >= 1 && saved <= 5) setCopies(saved);
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("receiptCopies", String(copies));
+  }, [copies]);
+
+  /** One empty basket line — the shape every reset starts from. */
+  const blankRow = () => ({
+    barcode: "",
+    productName: "",
+    unitPrice: "",
+    quantity: "1",
+    amount: "",
+    lubricantId: null,
+    unitName: "",
+    saleUnits: [],
+    baseUnit: "piece",
+  });
+
+  const clearCart = () => {
+    setRows([blankRow()]);
+    setScanError(null);
+    basketKeyRef.current = null;
+  };
 
   /**
    * The last failed scan, kept structured rather than as a string so the banner
@@ -34,6 +101,44 @@ const LubSales = () => {
    * offering it for a product that is merely out of stock is not.
    */
   const [scanError, setScanError] = useState(null);
+
+  /**
+   * A duplicate found while the basket was being rewritten.
+   *
+   * The test has to run against `prev` inside the updater, not against `rows`
+   * from the closure: a hardware scanner fires faster than React re-renders, so
+   * a second beep could be handled from a render that had not yet seen the
+   * first item — and the guard would wave it straight through as a new line.
+   * Reporting through a ref is the price of testing against live state; this
+   * flushes it into the banner on the render that follows.
+   */
+  const pendingScanErrorRef = useRef(null);
+  useEffect(() => {
+    if (!pendingScanErrorRef.current) return;
+    setScanError(pendingScanErrorRef.current);
+    setMessage("");
+    pendingScanErrorRef.current = null;
+  });
+
+  /**
+   * Where a product already sits on the bill, or -1.
+   *
+   * Matching is by product id, so the same item scanned from its bottle and
+   * from its carton barcode still counts as one line.
+   */
+  const findExistingLine = (list, productId, skipIndex = -1) =>
+    list.findIndex(
+      (r, i) => i !== skipIndex && r.lubricantId && String(r.lubricantId) === String(productId)
+    );
+
+  const flagDuplicate = (list, at, productName, code = "") => {
+    pendingScanErrorRef.current = {
+      code: "ALREADY_ON_BILL",
+      message: `${productName} is already on line ${at + 1} (quantity ${list[at].quantity}). Increase the quantity on that line instead of adding it again.`,
+      barcode: code,
+      duplicateLine: at,
+    };
+  };
 
   // 🆕 Get selected product from store
   const {
@@ -134,10 +239,27 @@ const LubSales = () => {
 
   const addProductToTable = (product) => {
    const price = Number(product.unitPrice ?? 0);
-    
+
+    /**
+     * Picking from search is the same event as scanning, so it answers the same
+     * way: never a second line for a product already on the bill. This path had
+     * no guard, which is why a re-selected item still doubled up even after the
+     * scanner learned not to.
+     */
+    const already = findExistingLine(rows, product._id);
+    if (already !== -1) {
+      // A click is never faster than a render, so this one can report straight
+      // to state — no updater to squeeze the test into.
+      flagDuplicate(rows, already, product.productName || "That item", product.barcode || "");
+      setScanError(pendingScanErrorRef.current);
+      pendingScanErrorRef.current = null;
+      setMessage("");
+      return;
+    }
+
     // Find the first empty row
     const emptyRowIndex = rows.findIndex(row => !row.barcode && !row.productName);
-    
+
     if (emptyRowIndex !== -1) {
       // Fill the empty row
       const updatedRows = [...rows];
@@ -230,40 +352,19 @@ const LubSales = () => {
       console.log(`[scan] ${code} → ${outcome} in ${ms}ms`);
     };
 
-    const isAlreadyOnBill = (item) => {
-      /**
-       * Already on the bill?
-       *
-       * Scanning the same product twice almost always means the cashier lost
-       * track — two bottles beeped, or one beep they did not hear. Silently
-       * adding a second line for the same product is the worst answer: the
-       * receipt shows it twice, the customer queries it, and the cashier has to
-       * work out which line to delete with a queue waiting.
-       *
-       * So: refuse, say exactly where it already is, and let them set the
-       * quantity by hand. Auto-incrementing is the other tempting option, but
-       * then a double-beep silently charges for two and nobody ever sees it.
-       *
-       * Returns true when it handled the scan.
-       */
-      const duplicateAt = rows.findIndex(
-        (r, i) => i !== index && r.lubricantId && String(r.lubricantId) === String(item._id)
-      );
-      if (duplicateAt !== -1) {
-        setScanError({
-          code: "ALREADY_ON_BILL",
-          message: `${item.productName} is already on line ${duplicateAt + 1} (quantity ${rows[duplicateAt].quantity}). Change the quantity on that line instead of scanning again.`,
-          barcode: code,
-        });
-        // Clear the code just scanned so this line stays ready for the NEXT
-        // product rather than holding one that was refused.
-        setRows((prev) => prev.map((r, i) => (i === index ? { ...r, barcode: "" } : r)));
-        setMessage("");
-        return true;
-      }
-      return false;
-    };
-
+    /**
+     * Already on the bill?
+     *
+     * Scanning the same product twice almost always means the cashier lost
+     * track — two bottles beeped, or one beep they did not hear. Silently
+     * adding a second line is the worst answer: the receipt shows it twice, the
+     * customer queries it, and the cashier has to work out which line to delete
+     * with a queue waiting.
+     *
+     * So: refuse, say exactly where it already is, and offer to bump that
+     * line's quantity. Auto-incrementing on its own is the tempting option, but
+     * then a double-beep silently charges for two and nobody ever sees it.
+     */
     const applyScannedItem = (item) => {
       // A scanned code can be the product's own barcode or one printed on its
       // carton. Matching the carton selects the carton — that is the whole
@@ -284,6 +385,14 @@ const LubSales = () => {
        * pays for. Deriving from `prev` makes every scan land, at any speed.
        */
       setRows((prev) => {
+        const duplicateAt = findExistingLine(prev, item._id, index);
+        if (duplicateAt !== -1) {
+          flagDuplicate(prev, duplicateAt, item.productName, code);
+          // Clear the code just scanned so this line stays ready for the NEXT
+          // product rather than holding one that was refused.
+          return prev.map((r, i) => (i === index ? { ...r, barcode: "" } : r));
+        }
+
         const next = [...prev];
         next[index] = {
           ...next[index],
@@ -329,7 +438,6 @@ const LubSales = () => {
         finish("out of stock");
         return;
       }
-      if (isAlreadyOnBill(local)) { finish("duplicate"); return; }
       applyScannedItem(local);
       setScanError(null);
       setMessage("");
@@ -352,7 +460,6 @@ const LubSales = () => {
       const result = await res.json();
 
       if (res.ok && result.data) {
-        if (isAlreadyOnBill(result.data)) { finish("duplicate"); return; }
         applyScannedItem(result.data);
         setScanError(null);
         setMessage("");
@@ -438,6 +545,26 @@ const LubSales = () => {
     setRows(updatedRows);
   };
 
+  /**
+   * Bump the line a refused scan pointed at.
+   *
+   * The refusal stands on its own — this is the shortcut, not the mechanism, so
+   * it only ever adds one and leaves the banner's figure visible afterwards.
+   */
+  const increaseDuplicateLine = () => {
+    const index = scanError?.duplicateLine;
+    if (index === undefined || index === null) return;
+    setRows((prev) =>
+      prev.map((r, i) => {
+        if (i !== index) return r;
+        const qty = (Number(r.quantity) || 0) + 1;
+        return { ...r, quantity: String(qty), amount: String(qty * (Number(r.unitPrice) || 0)) };
+      })
+    );
+    setScanError(null);
+    setMessage(`✅ Line ${index + 1} quantity increased`);
+  };
+
   const handleDeleteRow = (index) => {
     const updatedRows = rows.filter((_, i) => i !== index);
     setRows(
@@ -459,7 +586,18 @@ const LubSales = () => {
     );
   };
 
-  const handleSubmit = async ({ paymentBreakdown } = {}) => {
+  const handleCancel = () => {
+    const hasItems = rows.some((r) => r.lubricantId);
+    if (hasItems && !window.confirm("Clear all items from this sale?")) return;
+    clearCart();
+    setMessage("");
+  };
+
+  const handleSubmit = async ({ paymentBreakdown, print = true } = {}) => {
+    // Synchronous, before any await — a second tap in the same tick stops here.
+    if (submitInFlightRef.current) return;
+    submitInFlightRef.current = true;
+
     try {
       setIsSubmitting(true);
       const token = localStorage.getItem("token");
@@ -490,6 +628,7 @@ const LubSales = () => {
               unitPrice: Number(item.unitPrice),
             })),
             paymentMethod: normalizedPaymentMethod,
+            idempotencyKey: basketKey(),
             ...(normalizedPaymentMethod === "mixed" && paymentBreakdown
               ? { paymentBreakdown }
               : {}),
@@ -515,6 +654,8 @@ const LubSales = () => {
         cashier: `${user.firstName} ${user.lastName}`,
         station: user.station?.name || "N/A",
         address: user.station?.address || "N/A",
+        phone: user.station?.phone || "",
+        email: user.station?.email || "",
         logo: user.station?.logoUrl || user.station?.logo || null,
         date: new Date().toLocaleString(),
         paymentType: paymentMethod,
@@ -529,31 +670,26 @@ const LubSales = () => {
         total: totalAmount,
       };
 
-      setMessage("✅ Sale recorded successfully!");
-      // Refresh transaction store so reprint tables update immediately
+      // Refresh transaction store so reprint tables update immediately.
+      // Deliberately not awaited: the receipt must not wait on a list refresh.
       fetchAllTransactions();
 
-      setTimeout(() => {
+      if (print) {
+        setAutoPrint(true);
         setReceiptData(receiptPayload);
         setIsModalOpen(true);
-        setRows([
-          {
-            barcode: "",
-            productName: "",
-            unitPrice: "",
-            quantity: "1",
-            amount: "",
-            lubricantId: null,
-            unitName: "",
-            saleUnits: [],
-            baseUnit: "piece",
-          },
-        ]);
         setMessage("");
-      }, 2000);
+      } else {
+        // Saved without printing — here the banner IS the confirmation, since
+        // no receipt appears to stand in for one.
+        setAutoPrint(false);
+        setMessage("✅ Sale saved");
+      }
+      clearCart();
     } catch (err) {
       setMessage(`❌ ${err.message || "Server error, please try again."}`);
     } finally {
+      submitInFlightRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -663,6 +799,15 @@ const LubSales = () => {
               supervisor, not a form for the cashier to fill in. Telling them
               exactly what to say is more use than a button that would put an
               unpriced product in the system. */}
+          {scanError.code === "ALREADY_ON_BILL" && scanError.duplicateLine !== undefined && (
+            <button
+              onClick={increaseDuplicateLine}
+              className="mt-2.5 w-full sm:w-auto px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors"
+            >
+              Add 1 to line {scanError.duplicateLine + 1}
+            </button>
+          )}
+
           {scanError.code === "NOT_FOUND" && (
             <p className="mt-2.5 text-xs text-red-700 bg-white/60 rounded-lg px-3 py-2">
               Ask your manager or supervisor to add this item. Give them the
@@ -899,13 +1044,18 @@ const LubSales = () => {
         paymentMethod={paymentMethod}
         setPaymentMethod={setPaymentMethod}
         onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        copies={copies}
+        setCopies={setCopies}
         loading={isSubmitting}
       />
 
       <ReceiptModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => { setIsModalOpen(false); setAutoPrint(false); }}
         receiptData={receiptData}
+        autoPrint={autoPrint}
+        copies={copies}
       />
 
     </div>

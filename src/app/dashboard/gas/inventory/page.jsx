@@ -467,7 +467,7 @@ export default function GasInventoryPage() {
         <p>${settings?.name || "Gas Station"}</p>
         <img src="${qrImageUrl}" width="240" height="240" />
         <p class="url">${orderUrl}</p>
-        <p style="margin-top:20px;font-size:11px;color:#aaa;">Powered by FuelDesk</p>
+        <p style="margin-top:20px;font-size:11px;color:#aaa;">Powered by Techsol Dev Concepts</p>
       </body></html>`);
     w.document.close();
     w.print();

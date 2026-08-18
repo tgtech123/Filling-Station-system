@@ -54,6 +54,51 @@ function getActivityStyle(item) {
   return { icon: <Plus className="text-[#04910c]" size={20} />, color: "text-[#04910c]" };
 }
 
+/**
+ * The three subscription banners, which differ only in wording and colour.
+ *
+ * They were three near-identical copies of the same markup, so a layout fix had
+ * to be made three times and the free-plan one had already drifted. One shell,
+ * three sets of content.
+ *
+ * Layout notes, both of which were the actual complaint:
+ *  - the message is the smaller element (text-xs, sm:text-sm). It is context;
+ *    the button is the thing to press, and at equal weight the button lost.
+ *  - on a narrow screen the action row CENTRES rather than hugging the right
+ *    edge, where it read as an afterthought pushed off the end of the text.
+ */
+function BannerShell({ tone, icon: Icon, children, actionHref, actionLabel, onDismiss }) {
+  const t = {
+    blue:  { bg: "bg-blue-50",  bar: "border-l-blue-500",   icon: "text-blue-500",   text: "text-blue-800",  btn: "bg-blue-600 hover:bg-blue-700",     x: "text-blue-400 hover:bg-blue-100" },
+    red:   { bg: "bg-red-50",   bar: "border-l-red-500",    icon: "text-red-500",    text: "text-red-700",   btn: "bg-red-500 hover:bg-red-600",       x: "text-red-400 hover:bg-red-100" },
+    amber: { bg: "bg-amber-50", bar: "border-l-orange-400", icon: "text-orange-500", text: "text-amber-800", btn: "bg-orange-500 hover:bg-orange-600", x: "text-orange-400 hover:bg-orange-100" },
+  }[tone];
+
+  return (
+    <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg px-4 py-3 mb-4 border-l-4 ${t.bg} ${t.bar}`}>
+      <div className="flex items-start sm:items-center gap-3 min-w-0">
+        <Icon size={18} className={`${t.icon} shrink-0 mt-0.5 sm:mt-0`} />
+        <p className={`text-xs sm:text-sm font-medium leading-snug ${t.text}`}>{children}</p>
+      </div>
+      <div className="flex items-center justify-center gap-2 shrink-0 self-center sm:self-auto">
+        <Link
+          href={actionHref}
+          className={`text-xs font-semibold px-4 py-2 rounded-lg text-white transition-colors whitespace-nowrap ${t.btn}`}
+        >
+          {actionLabel}
+        </Link>
+        <button
+          onClick={onDismiss}
+          aria-label="Dismiss"
+          className={`cursor-pointer p-1 rounded-md transition-colors ${t.x}`}
+        >
+          <X size={16} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function SubscriptionBanner() {
   const [dismissed, setDismissed] = useState(false);
   const { currentPlan } = usePaymentStore();
@@ -77,86 +122,40 @@ function SubscriptionBanner() {
 
   const planLabel = currentPlan.planName || "your plan";
 
+  const dismiss = () => setDismissed(true);
+
   if (isFree) {
     return (
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg px-4 py-3 mb-4 border-l-4 bg-blue-50 border-l-blue-500">
-        <div className="flex items-start sm:items-center gap-3 min-w-0">
-          <AlertCircle size={20} className="text-blue-500 shrink-0 mt-0.5 sm:mt-0" />
-          <p className="text-sm font-medium text-blue-800 leading-snug">
-            You are on the <span className="font-semibold">Free Plan</span>. Upgrade to access more staff slots, advanced analytics, and seamless operations.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-          <Link
-            href="/pricing"
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors whitespace-nowrap"
-          >
-            Upgrade Plan
-          </Link>
-          <button
-            onClick={() => setDismissed(true)}
-            className="cursor-pointer p-1 rounded-md text-blue-400 hover:bg-blue-100 transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      </div>
+      <BannerShell tone="blue" icon={AlertCircle} actionHref="/pricing?from=/dashboard/manager" actionLabel="Upgrade Plan" onDismiss={dismiss}>
+        You are on the <span className="font-semibold">Free Plan</span>. Upgrade for more staff slots and advanced analytics.
+      </BannerShell>
     );
   }
 
   if (isExpired) {
     return (
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg px-4 py-3 mb-4 border-l-4 bg-red-50 border-l-red-500">
-        <div className="flex items-start sm:items-center gap-3 min-w-0">
-          <XCircle size={20} className="text-red-500 shrink-0 mt-0.5 sm:mt-0" />
-          <p className="text-sm font-medium text-red-700 leading-snug">
-            Your <span className="font-semibold">{planLabel}</span> has expired. You are now on the Free plan (view-only mode). Upgrade to restore full access.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-          <Link
-            href="/pricing"
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-red-500 hover:bg-red-600 transition-colors whitespace-nowrap"
-          >
-            Upgrade Plan
-          </Link>
-          <button
-            onClick={() => setDismissed(true)}
-            className="cursor-pointer p-1 rounded-md text-red-400 hover:bg-red-100 transition-colors"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      </div>
+      <BannerShell tone="red" icon={XCircle} actionHref="/pricing?from=/dashboard/manager" actionLabel="Upgrade Plan" onDismiss={dismiss}>
+        Your <span className="font-semibold">{planLabel}</span> has expired — you are in view-only mode.
+      </BannerShell>
     );
   }
 
-  // isExpiringSoon
+  // isExpiringSoon. Shortened to the two facts that matter: which plan, and how
+  // long is left. The old wording spelled out the full date AND the day count
+  // AND "renew to continue enjoying benefits", which pushed the button off the
+  // end of the line on any laptop.
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg px-4 py-3 mb-4 border-l-4 bg-amber-50 border-l-orange-400">
-      <div className="flex items-start sm:items-center gap-3 min-w-0">
-        <AlertCircle size={20} className="text-orange-500 shrink-0 mt-0.5 sm:mt-0" />
-        <p className="text-sm font-medium text-amber-800 leading-snug">
-          Your <span className="font-semibold">{planLabel}</span> expires{" "}
-          {expiresOn ? <><span className="font-semibold">{expiresOn}</span> ({days} day{days === 1 ? "" : "s"} left).</> : `in ${days} day${days === 1 ? "" : "s"}.`}{" "}
-          Renew to continue enjoying benefits.
-        </p>
-      </div>
-      <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
-        <Link
-          href="/dashboard/system-settings"
-          className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white bg-orange-500 hover:bg-orange-600 transition-colors whitespace-nowrap"
-        >
-          Renew Subscription
-        </Link>
-        <button
-          onClick={() => setDismissed(true)}
-          className="cursor-pointer p-1 rounded-md text-orange-400 hover:bg-orange-100 transition-colors"
-        >
-          <X size={16} />
-        </button>
-      </div>
-    </div>
+    <BannerShell
+      tone="amber"
+      icon={AlertCircle}
+      actionHref="/dashboard/system-settings"
+      actionLabel="Renew Subscription"
+      onDismiss={dismiss}
+    >
+      Your <span className="font-semibold">{planLabel}</span> expires in{" "}
+      <span className="font-semibold">{days} day{days === 1 ? "" : "s"}</span>
+      {expiresOn ? <span className="hidden sm:inline"> ({expiresOn})</span> : null}.
+    </BannerShell>
   );
 }
 
@@ -269,7 +268,7 @@ export default function ManagerDashboard() {
               </span>
               {(!currentPlan || currentPlan?.plan === "free") && (
                 <button
-                  onClick={() => router.push("/pricing")}
+                  onClick={() => router.push("/pricing?from=/dashboard/manager")}
                   className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
                 >
                   Upgrade ↑

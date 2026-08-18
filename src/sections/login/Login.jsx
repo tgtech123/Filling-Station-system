@@ -33,7 +33,6 @@ const Login = () => {
   const upgraded = searchParams.get("upgraded") === "true";
   const upgradedPlan = searchParams.get("plan") || "";
   const idleLogout = searchParams.get("reason") === "idle";
-  const relocked = searchParams.get("reason") === "relock";
 
   const { settings, fetchPublicSettings } = usePlatformStore();
 
@@ -198,18 +197,6 @@ const Login = () => {
             </div>
           )}
 
-          {relocked && (
-            <div className="w-full mt-4 mb-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-center">
-              <p className="text-blue-700 font-semibold text-sm">
-                Please log in again
-              </p>
-              <p className="text-blue-600 text-xs mt-0.5">
-                For your security, your session was locked when you left the
-                app on this device.
-              </p>
-            </div>
-          )}
-
           {upgraded && (
             <div className="w-full mt-4 mb-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-center">
               <p className="text-green-700 font-semibold text-sm">
@@ -256,7 +243,7 @@ const Login = () => {
                 />
               </div>
 
-              {otpError && <p className="text-red-500 text-sm">{otpError}</p>}
+              {otpError && <p className="bg-red-50 border border-red-300 text-red-700 text-sm text-center rounded-md px-3 py-2">{otpError}</p>}
 
               <button
                 onClick={handleVerifyOtp}
@@ -325,10 +312,10 @@ const Login = () => {
               </div>
 
               {error && (
-                <p className="text-red-500 border-[1px] p-1 rounded-md border-red-700 text-sm text-center">{error}</p>
+                <p className="bg-red-50 border border-red-300 text-red-700 text-sm text-center rounded-md px-3 py-2">{error}</p>
               )}
               {message && (
-                <p className="text-green-500 border-[1px] p-1 rounded-md border-green-800 text-sm text-center">{message}</p>
+                <p className="bg-green-50 border border-green-300 text-green-700 text-sm text-center rounded-md px-3 py-2">{message}</p>
               )}
 
               {/* Remember Me — 30-day session + prefilled email next visit */}
