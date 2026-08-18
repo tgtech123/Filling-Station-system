@@ -426,7 +426,7 @@ export default function HelpPage() {
           Upgrade to a Pro plan or higher to access our Help & Support features including FAQs, WhatsApp support, and ticket submissions.
         </p>
         <a
-          href="/pricing"
+          href="/pricing?from=/dashboard/help"
           className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors text-sm"
         >
           View Plans

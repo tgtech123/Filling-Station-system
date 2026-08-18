@@ -1,6 +1,6 @@
 ﻿"use client";
-import React, { useState, useEffect, Suspense } from "react";
-import { CheckCircle, Building2, X, CreditCard, Zap } from "lucide-react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { CheckCircle, Building2, X, CreditCard, Zap, ArrowLeft } from "lucide-react";
 import FrequentlyQuestions from "./FrequentlyQuestions";
 import usePlansStore from "@/store/usePlansStore";
 import RegisterManagerModal from "@/components/RegisterManagerModal";
@@ -125,6 +125,22 @@ const PricingPage = () => {
         setShowRegisterModal(true);
       }
     } catch {}
+  }, [searchParams]);
+
+  /**
+   * Where "back" goes for someone who arrived from inside the app.
+   *
+   * This is a public marketing route rendered outside the dashboard shell, so
+   * a signed-in manager who taps Upgrade loses the sidebar, the header and any
+   * way back short of the browser control — which an installed PWA does not
+   * show at all. The header passes the page it came from as ?from=; anything
+   * that is not a local dashboard path is ignored so the parameter cannot be
+   * used to bounce someone off-site.
+   */
+  const backHref = useMemo(() => {
+    const from = searchParams.get("from") || "";
+    const local = from === "/dashboard" || from.startsWith("/dashboard/");
+    return local ? from : "/dashboard";
   }, [searchParams]);
 
   const isYearly = billing === "yearly";
@@ -425,8 +441,23 @@ const PricingPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* A signed-in visitor is mid-session — always leave them a way back. */}
+      {isLoggedIn && (
+        <div className="w-full px-4 sm:px-6 pt-5">
+          <div className="max-w-6xl mx-auto">
+            <Link
+              href={backHref}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-gray-200 text-sm font-semibold text-gray-600 hover:text-blue-600 hover:border-blue-300 shadow-sm transition-colors"
+            >
+              <ArrowLeft size={16} />
+              Back to dashboard
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Hero header */}
-      <div className="w-full px-4 sm:px-6 pt-12 sm:pt-16 lg:pt-24 pb-10 text-center">
+      <div className={`w-full px-4 sm:px-6 ${isLoggedIn ? "pt-6 sm:pt-8 lg:pt-12" : "pt-12 sm:pt-16 lg:pt-24"} pb-10 text-center`}>
         <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-600 text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-full mb-5">
           <Zap size={14} className="shrink-0" />
           Simple, transparent pricing

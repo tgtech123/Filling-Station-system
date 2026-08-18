@@ -45,6 +45,8 @@ const ActionButtons = ({ transactionId }) => {
             : "N/A",
           station: txn.fillingStation?.name || "Your Station Name",
           address: txn.fillingStation?.address || "",
+          phone: txn.fillingStation?.phone || "",
+          email: txn.fillingStation?.email || "",
           date: new Date(txn.createdAt).toLocaleString(),
           paymentType: txn.paymentMethod || "N/A",
           // A receipt must read the way the sale was made. Someone who bought

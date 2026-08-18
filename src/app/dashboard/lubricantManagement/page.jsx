@@ -2,7 +2,7 @@
 
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import FlashCard from "@/components/Dashboard/FlashCard";
-import { ArrowLeft, Home, Plus, TrendingUp } from "lucide-react";
+import { ArrowLeft, Home, Plus, TrendingUp, FileText } from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import { TbCurrencyNaira } from "react-icons/tb";
 import LubricantSales from "./LubricantSales";
@@ -13,12 +13,25 @@ import Link from "next/link";
 import { CgTrack } from "react-icons/cg";
 import LubricantTracker from "./LubricantTracker";
 import { useLubricantStore } from "@/store/lubricantStore";
+import LubricantStockModal from "../lubricantSales/LubricantStockModal";
+import { getCurrentUser } from "@/lib/currentUser";
 
 export default function LubricantManagement() {
   const [isLubricantModalOpen, setIsLubricantModalOpen] = useState(false);
   const [showLubricantTracker, setShowLubricantTracker] = useState(false);
   const [activeTab, setActiveTab] = useState("Lubricant sales");
   const [showPricingDefaults, setShowPricingDefaults] = useState(false);
+  const [showStockModal, setShowStockModal] = useState(false);
+
+  /**
+   * Booking a supplier invoice lived only on the cashier's sales page, whose
+   * sidebar link no role but the cashier has. A manager could reach it by
+   * typing the URL and no other way. The action belongs here, beside the rest
+   * of the stock and pricing controls, gated to the roles the server accepts.
+   */
+  const [role, setRole] = useState(null);
+  useEffect(() => setRole(getCurrentUser()?.role || null), []);
+  const canAddStock = ["manager", "supervisor", "admin"].includes(role);
 
   const { lubricants, dailySummary, fetchLubricants, fetchDailySummary } = useLubricantStore();
 
@@ -35,6 +48,14 @@ export default function LubricantManagement() {
       fetchDailySummary();
     }
   }, [isLubricantModalOpen, fetchLubricants, fetchDailySummary]);
+
+  // Booking a supplier invoice moves stock and cost, so the cards must re-read.
+  useEffect(() => {
+    if (!showStockModal) {
+      fetchLubricants();
+      fetchDailySummary();
+    }
+  }, [showStockModal, fetchLubricants, fetchDailySummary]);
 
   // 🆕 Refresh data when Tracker modal closes (in case stock was added)
   useEffect(() => {
@@ -161,6 +182,15 @@ export default function LubricantManagement() {
           >
             Pricing defaults
           </button>
+          {canAddStock && (
+            <button
+              onClick={() => setShowStockModal(true)}
+              className="cursor-pointer flex gap-2 items-center border-2 border-emerald-500 hover:bg-emerald-500 hover:text-white py-2 px-4 rounded-[12px] text-emerald-600 font-semibold text-sm transition-colors"
+            >
+              <FileText size={18} />
+              Add Stock (Invoice)
+            </button>
+          )}
           <button
             onClick={handleOpenLubricantModal}
             className="cursor-pointer flex gap-2 items-center border-2 border-[#0080ff] hover:bg-[#0080ff] hover:text-white py-2 px-5 rounded-[12px] text-[#0080ff] font-semibold text-sm transition-colors"
@@ -225,7 +255,7 @@ export default function LubricantManagement() {
           onClick={() => setShowLubricantTracker(true)}
           className="p-2 flex font-semibold cursor-pointer text-[#0080ff] items-center gap-1 border-2 rounded-[8px] border-[#0080ff] w-fit text-sm"
         >
-          Track Invoice Record
+          Track Purchases & Invoices
           <CgTrack size={20} className="text-[#0080ff]" />
         </div>
       </div>
@@ -244,6 +274,10 @@ export default function LubricantManagement() {
 
       {showLubricantTracker && (
         <LubricantTracker onclose={() => setShowLubricantTracker(false)} />
+      )}
+
+      {showStockModal && canAddStock && (
+        <LubricantStockModal onClose={() => setShowStockModal(false)} />
       )}
     </div>
   );

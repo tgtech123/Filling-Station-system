@@ -339,7 +339,7 @@ function PortalContent() {
           {/* Powered by footer */}
           <p className="text-center text-[11px] text-gray-400 pb-2">
             Powered by{" "}
-            <span className="font-semibold text-blue-500">FuelDesk</span>
+            <span className="font-semibold text-blue-500">Techsol Dev Concepts</span>
             {" · "}
             <a href="mailto:info@fueldesks.com" className="underline hover:text-blue-500 transition-colors">
               Contact us
@@ -362,7 +362,7 @@ function PortalContent() {
           </div>
           <h1 className="text-2xl font-bold text-gray-800">Loyalty Portal</h1>
           <p className="text-sm text-gray-400 mt-1">Check your points & rewards</p>
-          <p className="text-[11px] text-gray-300 mt-2">Powered by FuelDesk</p>
+          <p className="text-[11px] text-gray-300 mt-2">Powered by Techsol Dev Concepts</p>
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl p-6">

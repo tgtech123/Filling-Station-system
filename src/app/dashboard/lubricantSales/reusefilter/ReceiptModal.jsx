@@ -22,7 +22,18 @@ const Divider = ({ dashed }) => (
   <div className={`w-full border-t ${dashed ? "border-dashed border-gray-300" : "border-gray-200"} my-3`} />
 );
 
-const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false }) => {
+/**
+ * How many slips one print job produces.
+ *
+ * No browser API can preset the copy count in the print dialog, and a station
+ * on silent/kiosk printing never sees a dialog to type it into. So the copies
+ * go into the job itself: the thermal block is rendered N times with a page
+ * break between, which on an 80mm roll is N receipts off one press.
+ */
+const MAX_COPIES = 5;
+
+const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies = 1 }) => {
+  const copyCount = Math.min(MAX_COPIES, Math.max(1, Number(copies) || 1));
   const quote = useMemo(
     () => QUOTES[Math.floor(Math.random() * QUOTES.length)],
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,6 +64,8 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false }) => {
     cashier    = "Unknown",
     station    = "Filling Station",
     address    = "",
+    phone      = "",
+    email      = "",
     logo       = null,
     date       = new Date().toLocaleString(),
     txnId      = "N/A",
@@ -298,6 +311,43 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false }) => {
             padding:        0            !important;
           }
 
+          /* Station contact — the line a customer acts on, so it is set a
+             step above the quote and the branding beneath it. */
+          .t-contact-head {
+            font-size:      8pt       !important;
+            font-weight:    900       !important;
+            text-align:     center    !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.05em    !important;
+            display:        block     !important;
+            padding-bottom: 1pt       !important;
+          }
+          .t-contact-line {
+            font-size:   8.5pt  !important;
+            font-weight: 800    !important;
+            text-align:  center !important;
+            line-height: 1.6    !important;
+            display:     block  !important;
+            word-break:  break-all !important;
+          }
+
+          /* One copy per page: a break before every copy but the first. On
+             roll paper each page is a slip, so this is where it tears. */
+          .t-copy { display: block !important; }
+          .t-copy + .t-copy {
+            break-before:      page   !important;
+            page-break-before: always !important;
+          }
+          .t-copy-label {
+            font-size:      7.5pt    !important;
+            font-weight:    900      !important;
+            text-align:     center   !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em   !important;
+            display:        block    !important;
+            padding-top:    2pt      !important;
+          }
+
           /* Powered-by branding */
           .t-powered-by {
             font-size:      6.5pt   !important;
@@ -345,11 +395,11 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false }) => {
 
             <div className="text-center mb-3">
               <span className="inline-block bg-green-50 text-green-700 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full border border-green-200">
-                Lubricant Sales Receipt
+                Lubricant & Retail Sales Receipt
               </span>
             </div>
 
-            <div className="bg-gray-50 rounded-xl px-4 py-3 text-xs text-gray-600 space-y-1.5 mb-4">
+            <div className="px-1 text-xs text-gray-600 space-y-1.5 mb-4">
               <div className="flex justify-between">
                 <span className="text-gray-400 font-medium">Transaction ID</span>
                 <span className="font-semibold text-gray-800">{txnId}</span>
@@ -417,6 +467,16 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false }) => {
 
             <Divider />
 
+            {(phone || email) && (
+              <div className="text-center px-2 mb-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                  Complaints &amp; Suggestions
+                </p>
+                {phone && <p className="text-xs font-semibold text-gray-700 mt-1">{phone}</p>}
+                {email && <p className="text-xs font-semibold text-gray-700 break-all">{email}</p>}
+              </div>
+            )}
+
             <div className="text-center px-2 mb-4">
               <p className="text-[11px] italic text-gray-400 leading-relaxed">"{quote}"</p>
               <p className="text-[10px] text-gray-300 mt-2 font-medium tracking-wide uppercase">
@@ -453,6 +513,8 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false }) => {
             black bold Courier New on white paper.
         ══════════════════════════════════════════ */}
         <div className="receipt-thermal-print">
+          {Array.from({ length: copyCount }, (_, copyIndex) => (
+          <div className="t-copy" key={copyIndex}>
 
           {/* Station logo — always render; fall back to the public default */}
           <div className="t-logo-wrap">
@@ -466,7 +528,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false }) => {
           <div className="t-line-solid" />
 
           {/* Receipt type */}
-          <div className="t-receipt-title">Lubricant Sales Receipt</div>
+          <div className="t-receipt-title">Lubricant &amp; Retail Sales Receipt</div>
 
           <div className="t-line-dashed" />
 
@@ -531,11 +593,26 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false }) => {
           <div className="t-footer-line">"{quote}"</div>
           <div className="t-footer-line">— Thank you for your business —</div>
 
+          {(phone || email) && (
+            <>
+              <div className="t-line-dashed" />
+              <div className="t-contact-head">Complaints &amp; Suggestions</div>
+              {phone && <div className="t-contact-line">{phone}</div>}
+              {email && <div className="t-contact-line">{email}</div>}
+            </>
+          )}
+
           <div className="t-line-dashed" />
 
           {/* Branding */}
-          <div className="t-powered-by">Powered by FuelDesk Tech Ltd | +234 7068690589</div>
+          <div className="t-powered-by">Powered by Techsol Dev Concepts | +234 7068690589</div>
 
+          {copyCount > 1 && (
+            <div className="t-copy-label">Copy {copyIndex + 1} of {copyCount}</div>
+          )}
+
+          </div>
+          ))}
         </div>
 
       </div>

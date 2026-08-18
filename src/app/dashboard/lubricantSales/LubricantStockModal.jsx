@@ -174,8 +174,10 @@ export default function LubricantStockModal({ onClose }) {
     const load = async () => {
       setSuppLoading(true);
       try {
-        // Server returns type==="lubricant" AND type==="both" suppliers for ?type=lubricant
-        const { data } = await api.get("/api/suppliers", { params: { type: "lubricant" } });
+        // The product search behind this form spans every category, so a drinks
+        // or snacks invoice can be booked here too. Asking for ?type=lubricant
+        // left those wholesalers out of the only dropdown that offers them.
+        const { data } = await api.get("/api/suppliers", { params: { type: "all" } });
         if (!cancelled) setLubricantSuppliers(data.data || []);
       } catch (err) {
         console.error("[LubricantStockModal] Failed to fetch suppliers:", err?.response?.status, err?.message);

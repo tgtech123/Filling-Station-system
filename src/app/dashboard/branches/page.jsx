@@ -598,7 +598,7 @@ export default function BranchesPage() {
                 </p>
                 <div className="flex items-center justify-center gap-3">
                   <button
-                    onClick={() => router.push("/pricing")}
+                    onClick={() => router.push("/pricing?from=/dashboard/branches")}
                     className="flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold transition-colors"
                   >
                     <Crown size={18} />

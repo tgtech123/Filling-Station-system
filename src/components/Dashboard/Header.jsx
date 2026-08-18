@@ -9,7 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 import stroke from "../../assets/stroke.png";
 import staticLogo from "../../assets/station-logo.png";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import useNotificationStore from "@/store/useNotificationStore";
 import useAdminNotificationStore from "@/store/useAdminNotificationStore";
@@ -337,6 +337,18 @@ function AlertsDropdown({ alerts, onMarkAll, onItemClick, onViewAll }) {
 export default function Header({ toggleSidebar, showSidebar }) {
   const [userData, setUserData] = useState(null);
   const router = useRouter();
+  const pathname = usePathname();
+
+  /**
+   * Upgrading is a detour, not a destination.
+   *
+   * /pricing is a public marketing route outside the dashboard shell, so this
+   * button drops the sidebar, the header and any in-progress screen. Handing it
+   * the page we left lets that page offer a way straight back, instead of
+   * stranding someone whose installed app has no browser back button.
+   */
+  const goToPricing = () =>
+    router.push(`/pricing?from=${encodeURIComponent(pathname || "/dashboard")}`);
 
   // Station notification store (for all non-admin roles)
   const stationNotif = useNotificationStore();
@@ -682,7 +694,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
         <>
           {/* Desktop */}
           <button
-            onClick={() => router.push("/pricing")}
+            onClick={goToPricing}
             className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-semibold hover:opacity-90 transition-opacity"
           >
             <Crown size={14} />
@@ -690,10 +702,12 @@ export default function Header({ toggleSidebar, showSidebar }) {
           </button>
           {/* Mobile */}
           <button
-            onClick={() => router.push("/pricing")}
-            className="sm:hidden p-2 rounded-lg bg-blue-600 text-white"
+            onClick={goToPricing}
+            aria-label="Upgrade plan"
+            className="sm:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold"
           >
-            <Crown size={16} />
+            <Crown size={14} />
+            Upgrade
           </button>
         </>
       )}
