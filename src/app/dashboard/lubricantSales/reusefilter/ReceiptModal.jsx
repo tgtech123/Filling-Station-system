@@ -418,6 +418,16 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
               </div>
             </div>
 
+            {(phone || email) && (
+              <div className="text-center px-2 mb-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                  Complaints &amp; Suggestions
+                </p>
+                {phone && <p className="text-xs font-semibold text-gray-700 mt-1">{phone}</p>}
+                {email && <p className="text-xs font-semibold text-gray-700 break-all">{email}</p>}
+              </div>
+            )}
+
             <div className="overflow-x-auto">
               <table className="w-full text-xs mb-1">
                 <thead>
@@ -466,16 +476,6 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
             </div>
 
             <Divider />
-
-            {(phone || email) && (
-              <div className="text-center px-2 mb-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  Complaints &amp; Suggestions
-                </p>
-                {phone && <p className="text-xs font-semibold text-gray-700 mt-1">{phone}</p>}
-                {email && <p className="text-xs font-semibold text-gray-700 break-all">{email}</p>}
-              </div>
-            )}
 
             <div className="text-center px-2 mb-4">
               <p className="text-[11px] italic text-gray-400 leading-relaxed">"{quote}"</p>
@@ -538,6 +538,20 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           <div className="t-meta-row"><span>Cashier</span><span>{cashier}</span></div>
           <div className="t-meta-row"><span>Payment</span><span>{paymentType}</span></div>
 
+          {/* How to reach the STATION, sitting with the rest of the transaction
+              header rather than at the very bottom. On a long receipt the foot
+              of the slip is the part a customer never unrolls, and a complaints
+              line nobody reads is the same as not printing one. The vendor
+              credit stays at the bottom, where a credit belongs. */}
+          {(phone || email) && (
+            <>
+              <div className="t-line-dashed" />
+              <div className="t-contact-head">Complaints &amp; Suggestions</div>
+              {phone && <div className="t-contact-line">{phone}</div>}
+              {email && <div className="t-contact-line">{email}</div>}
+            </>
+          )}
+
           <div className="t-line-solid" />
 
           {/* Items table */}
@@ -592,15 +606,6 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           {/* Footer */}
           <div className="t-footer-line">"{quote}"</div>
           <div className="t-footer-line">— Thank you for your business —</div>
-
-          {(phone || email) && (
-            <>
-              <div className="t-line-dashed" />
-              <div className="t-contact-head">Complaints &amp; Suggestions</div>
-              {phone && <div className="t-contact-line">{phone}</div>}
-              {email && <div className="t-contact-line">{email}</div>}
-            </>
-          )}
 
           <div className="t-line-dashed" />
 
