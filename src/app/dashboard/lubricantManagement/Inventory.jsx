@@ -4,6 +4,7 @@ import DisplayCard from "@/components/Dashboard/DisplayCard";
 import Table from "./Table";
 import { useLubricantStore } from "@/store/lubricantStore";
 import ProductTrackerModal from "./ProductTrackerModal";
+import { getCurrentUser } from "@/lib/currentUser";
 
 export default function Inventory() {
     const { 
@@ -21,6 +22,18 @@ export default function Inventory() {
     // Product tracker: which item is open, and the search that finds it.
     const [trackedProduct, setTrackedProduct] = useState(null);
     const [trackerSearch, setTrackerSearch]   = useState("");
+
+    /**
+     * Who may open the trail.
+     *
+     * The tracker exposes cost, supplier and every write-off with its reason,
+     * and it carries the correction form. That is management and books work.
+     * The server refuses a cashier outright, so hiding it here only stops the
+     * app offering a door that will not open.
+     */
+    const [role, setRole] = useState(null);
+    useEffect(() => setRole(getCurrentUser()?.role || null), []);
+    const canTrack = ["manager", "supervisor", "accountant", "admin"].includes(role);
 
     const trackableProducts = useMemo(() => {
         const q = trackerSearch.trim().toLowerCase();
@@ -220,6 +233,7 @@ export default function Inventory() {
                         Opened when the shelf and the system disagree. Kept
                         beside the inventory table because that is where someone
                         notices the number is wrong. */}
+                    {canTrack && (
                     <div className="mt-6 border-t border-gray-100 dark:border-gray-700 pt-4">
                         <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                             Track a product
@@ -253,6 +267,7 @@ export default function Inventory() {
                             )}
                         </div>
                     </div>
+                    )}
                     {/* Progress Bars */}
                     <div className="mt-6 space-y-4">
                         {progressData.map((item, index) => (
@@ -317,7 +332,7 @@ export default function Inventory() {
                 </DisplayCard>
             </div>
 
-            {trackedProduct && (
+            {trackedProduct && canTrack && (
                 <ProductTrackerModal
                     product={trackedProduct}
                     onClose={() => {

@@ -11,6 +11,7 @@ import ActivityLogs from './components/ActivityLogs';
 import Settings from './components/Settings';
 import StationDetail from './components/StationDetail';
 import SupportPage from './components/SupportPage';
+import Announcements from './components/Announcements';
 
 const Page = () => {
   const [activePage, setActivePage] = useState('Dashboard');
@@ -53,6 +54,8 @@ const Page = () => {
         return <ActivityLogs />;
       case 'Settings':
         return <Settings />;
+      case 'Announcements':
+        return <Announcements />;
       case 'Support':
         return <SupportPage />;
       case 'StationDetail':

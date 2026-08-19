@@ -22,6 +22,9 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
     return match ? String(match.sellingPercentage) : "";
   };
 
+  /** Shop stock behaves differently from oil: it has a shelf life. */
+  const STORE_CATEGORIES = ["drinks", "snacks", "other"];
+
   const [formData, setFormData] = useState({
     // Prefilled when the POS opens this after a scan found nothing — retyping a
     // barcode with a customer waiting is how the same item gets registered twice.
@@ -32,6 +35,7 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
     brand: "",
     qtyInStock: "",
     reOrderLevel: "",
+    expiryDate: "",
     unitCost: "",
     sellingPrice: "",
     unitPrice: "", // auto-calculated
@@ -39,6 +43,8 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
     // re-order level, the shelf itself — is measured in this.
     baseUnit: "piece",
   });
+
+  const isStoreItem = STORE_CATEGORIES.includes(formData.category);
 
   /**
    * Bigger ways to sell the same stock: a pack of 12, a carton of 24.
@@ -208,6 +214,7 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
         brand: "",
         qtyInStock: "",
         reOrderLevel: "",
+        expiryDate: "",
         unitCost: "",
         sellingPrice: "",
         unitPrice: "",
@@ -382,16 +389,39 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
           {canPrice && (
           <div className="flex gap-2 flex-col lg:flex-row w-full">
             <div className="flex-1">
-              <p className="text-sm font-semibold">Re-order Level</p>
+              <p className="text-sm font-semibold">Re-order Level *</p>
               <input
                 name="reOrderLevel"
                 value={formData.reOrderLevel}
                 onChange={handleChange}
                 type="number"
+                min="1"
                 className="w-full border-2 border-gray-300 p-2 rounded-[8px]"
                 placeholder="E.g 20"
+                required
               />
+              <p className="text-xs text-gray-400 mt-0.5">
+                Procurement is alerted to raise a PO once stock falls to this figure.
+              </p>
             </div>
+
+            {isStoreItem && (
+              <div className="flex-1">
+                <p className="text-sm font-semibold">Expiry Date *</p>
+                <input
+                  name="expiryDate"
+                  value={formData.expiryDate}
+                  onChange={handleChange}
+                  type="date"
+                  min={new Date().toISOString().slice(0, 10)}
+                  className="w-full border-2 border-gray-300 p-2 rounded-[8px]"
+                  required
+                />
+                <p className="text-xs text-gray-400 mt-0.5">
+                  Flagged for clearance before it becomes a write-off.
+                </p>
+              </div>
+            )}
 
             <div className="flex-1">
               <p className="text-sm font-semibold">Unit Cost *</p>
@@ -571,7 +601,7 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
               loading && "opacity-70 cursor-not-allowed"
             }`}
           >
-            {loading ? "Adding..." : "Add Lubricant"}
+            {loading ? "Adding..." : isStoreItem ? "Add Store Item" : "Add Lubricant"}
           </button>
         </form>
       </div>

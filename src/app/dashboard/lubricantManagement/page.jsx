@@ -164,13 +164,6 @@ export default function LubricantManagement() {
     <div className="bg-gray-100 min-h-screen">
       <header className="px-4 lg:px-[40px] mb-4 lg:mb-6 bg-white dark:bg-gray-900 shadow-sm py-4 flex flex-col sm:flex-row gap-3 sm:gap-0 items-start sm:items-center sm:justify-between">
         <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 sm:items-center">
-          <Link
-            href="/dashboard"
-            className="cursor-pointer flex gap-2 items-center border-2 border-[#0080ff] py-2 px-4 rounded-[12px] text-[#0080ff] font-semibold text-sm"
-          >
-            <ArrowLeft size={18} />
-            Back
-          </Link>
           <h4 className="text-xl sm:text-2xl font-semibold">Lubricant Management</h4>
         </div>
         <div className="flex gap-2">

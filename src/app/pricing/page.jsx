@@ -38,6 +38,16 @@ const PricingPage = () => {
   const [payerName, setPayerName] = useState("");
   const [payerInfo, setPayerInfo] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  /**
+   * A manager who is not the owner.
+   *
+   * They are welcome here: someone running a branch is well placed to notice
+   * that a bigger plan would pay for itself, and they should be able to look at
+   * what it offers before raising it. Buying is another matter. The server
+   * refuses payment from anyone but the owner, so the card says so plainly
+   * rather than letting them press through to a refusal.
+   */
+  const [isHiredManager, setIsHiredManager] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [emailExists, setEmailExists] = useState(false);
   const [initiatingPayment, setInitiatingPayment] = useState(false);
@@ -97,6 +107,7 @@ const PricingPage = () => {
       if (token && userRaw) {
         const user = JSON.parse(userRaw);
         const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+        setIsHiredManager(user.role === "manager" && !user.isOwner);
         if (fullName) setPayerName(fullName);
         if (user.email) setPayerEmail(user.email);
         setIsLoggedIn(true);
@@ -367,12 +378,25 @@ const PricingPage = () => {
         </div>
 
         {/* CTA button */}
-        <button
-          onClick={(e) => { e.stopPropagation(); handleSelectPlan(plan); }}
-          className={`w-full rounded-full py-3 sm:py-3.5 text-base font-semibold mt-6 transition-all active:scale-95 ${ctaBtnClass()}`}
-        >
-          {ctaText}
-        </button>
+        {isHiredManager ? (
+          <div className="mt-6">
+            <div className={`w-full rounded-full py-3 sm:py-3.5 text-sm font-semibold text-center ${
+              isSelected ? "bg-white/15 text-white/80" : "bg-gray-100 text-gray-500"
+            }`}>
+              Owner approval required
+            </div>
+            <p className={`text-xs text-center mt-2 ${isSelected ? "text-white/60" : "text-gray-400"}`}>
+              Share this plan with the owner to request it.
+            </p>
+          </div>
+        ) : (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleSelectPlan(plan); }}
+            className={`w-full rounded-full py-3 sm:py-3.5 text-base font-semibold mt-6 transition-all active:scale-95 ${ctaBtnClass()}`}
+          >
+            {ctaText}
+          </button>
+        )}
 
         {/* Features */}
         <p className={`mt-6 mb-4 text-sm font-semibold uppercase tracking-wide ${isSelected ? "text-white/70" : "text-gray-400"}`}>
