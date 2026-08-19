@@ -130,9 +130,11 @@ function DashboardLayout({ children }) {
     authChecked
   );
 
-  // Fetch gas status whenever we land on a gas path
+  // Fetched once signed in, not on arrival at a gas page: the SIDEBAR needs the
+  // answer on every screen, and it is the menu that decides whether anyone can
+  // reach a gas page in the first place.
   useEffect(() => {
-    if (authChecked && isGasPath) fetchGasStatus();
+    if (authChecked) fetchGasStatus();
   }, [authChecked, isGasPath]);
 
   const formattedEndsAt = endsAt
@@ -206,33 +208,33 @@ function DashboardLayout({ children }) {
 
         <main className="flex-1 pt-[50px] py-4 px-4 overflow-y-auto overflow-x-hidden">
           {/* Gas department disabled screen */}
-          {isGasPath && gasEnabled === false ? (
+          {isGasPath && gasEnabled !== true && !gasLoading.status ? (
             <div className="min-h-[80vh] flex items-center justify-center">
               <div className="max-w-md w-full mx-auto text-center px-6">
                 <div className="w-20 h-20 bg-orange-100 rounded-3xl flex items-center justify-center mx-auto mb-5">
                   <PowerOff className="w-10 h-10 text-orange-400" />
                 </div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Gas Department Disabled</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">Gas Department Not Enabled</h2>
                 <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-                  The Gas Department has been temporarily disabled for this station.
-                  All gas operations, sales, and procurement are frozen until it is re-enabled.
+                  This station does not have the Gas Department switched on, so gas sales,
+                  procurement and reporting are unavailable.
                 </p>
                 {["manager", "admin"].includes(userRole) ? (
                   <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4">
                     <p className="text-sm text-orange-700 font-medium">
-                      Use the <span className="font-bold">Enable</span> button in the sidebar next to "🔥 Gas Department" to re-activate it.
+                      Use the <span className="font-bold">Enable</span> button in the sidebar next to "🔥 Gas Department" to switch it on.
                     </p>
                   </div>
                 ) : (
                   <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
                     <p className="text-sm text-amber-700 font-medium">
-                      Contact your station manager to re-enable the Gas Department.
+                      Ask your station manager to switch on the Gas Department.
                     </p>
                   </div>
                 )}
               </div>
             </div>
-          ) : isGasPath && gasEnabled === null && gasLoading.status ? (
+          ) : isGasPath && gasLoading.status ? (
             /* Loading gas status */
             <div className="min-h-[80vh] flex items-center justify-center">
               <div className="flex flex-col items-center gap-3">

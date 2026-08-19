@@ -70,9 +70,12 @@ export function Card({ title, subtitle, actions, children, className = '' }) {
 
 export function Modal({ title, onClose, children, wide = false }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4 overflow-y-auto"
+      onClick={onClose}
+    >
       <div
-        className={`bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full ${wide ? 'max-w-3xl' : 'max-w-lg'} max-h-[90vh] overflow-y-auto`}
+        className={`bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-xl shadow-xl w-full ${wide ? 'sm:max-w-3xl' : 'sm:max-w-lg'} max-h-[92vh] sm:max-h-[90vh] overflow-y-auto`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white dark:bg-gray-900 z-10">
@@ -81,7 +84,7 @@ export function Modal({ title, onClose, children, wide = false }) {
             <X size={18} />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-4 sm:p-5">{children}</div>
       </div>
     </div>
   );
@@ -89,7 +92,7 @@ export function Modal({ title, onClose, children, wide = false }) {
 
 export function Field({ label, children, hint }) {
   return (
-    <label className="block mb-3">
+    <label className="block mb-3 min-w-0">
       <span className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</span>
       {children}
       {hint && <span className="block text-xs text-gray-400 mt-0.5">{hint}</span>}
@@ -98,7 +101,7 @@ export function Field({ label, children, hint }) {
 }
 
 export const inputCls =
-  'w-full border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+  'w-full min-w-0 max-w-full border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 
 export function Btn({ children, onClick, variant = 'primary', disabled, type = 'button', small }) {
   const base = `inline-flex items-center gap-1.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${small ? 'px-2.5 py-1.5 text-xs' : 'px-4 py-2 text-sm'}`;

@@ -175,7 +175,7 @@ export default function JournalsPage() {
         {showCreate && (
           <Modal title="New Journal Entry" onClose={() => setShowCreate(false)} wide>
             <form onSubmit={submit}>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Date *">
                   <input type="date" className={inputCls} value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} required />
                 </Field>

@@ -12,6 +12,7 @@ import SchedulePumpMaintenanceModal from "./SchedulePumpMaintenanceModal";
 import EmergencyModal from "./EmergencyModal";
 import usePumpControlStore from "@/store/usePumpControlStore";
 import useEmergencyStore from "@/store/useEmergencyStore";
+import PageBackBar from "@/components/Dashboard/PageBackBar";
 
 export default function PumpControl() {
   const [showPumpModal, setShowPumpModal] = useState(false);
@@ -29,6 +30,7 @@ export default function PumpControl() {
 
   return (
     <div className="bg-gray-100 dark:bg-gray-950 min-h-screen">
+      <div className="px-4 lg:px-[40px] pt-4"><PageBackBar /></div>
       <header className="px-4 lg:px-[40px] mb-0 bg-white dark:bg-gray-900 shadow-sm h-[170px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
         <div className="mt-2 lg:mt-0 flex flex-col lg:flex-row gap-0 lg:gap-4 items-center">
           <h4 className="text-2xl font-semibold">Pump Control</h4>

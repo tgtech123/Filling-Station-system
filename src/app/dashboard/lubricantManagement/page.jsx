@@ -15,6 +15,7 @@ import LubricantTracker from "./LubricantTracker";
 import { useLubricantStore } from "@/store/lubricantStore";
 import LubricantStockModal from "../lubricantSales/LubricantStockModal";
 import { getCurrentUser } from "@/lib/currentUser";
+import PageBackBar from "@/components/Dashboard/PageBackBar";
 
 export default function LubricantManagement() {
   const [isLubricantModalOpen, setIsLubricantModalOpen] = useState(false);
@@ -162,6 +163,7 @@ export default function LubricantManagement() {
 
   return (
     <div className="bg-gray-100 min-h-screen">
+      <div className="px-4 lg:px-[40px] pt-4"><PageBackBar /></div>
       <header className="px-4 lg:px-[40px] mb-4 lg:mb-6 bg-white dark:bg-gray-900 shadow-sm py-4 flex flex-col sm:flex-row gap-3 sm:gap-0 items-start sm:items-center sm:justify-between">
         <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 sm:items-center">
           <h4 className="text-xl sm:text-2xl font-semibold">Lubricant Management</h4>

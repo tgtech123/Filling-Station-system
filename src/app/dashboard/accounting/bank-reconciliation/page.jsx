@@ -270,7 +270,7 @@ export default function BankReconciliationPage() {
         {showImport && (
           <Modal title="Import Bank Statement" onClose={() => setShowImport(false)} wide>
             <form onSubmit={runImport}>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Bank Account *">
                   <select className={inputCls} value={importForm.bankAccountId} onChange={(e) => setImportForm({ ...importForm, bankAccountId: e.target.value })} required>
                     <option value="">Select…</option>
@@ -300,7 +300,7 @@ export default function BankReconciliationPage() {
                   required
                 />
               </Field>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Opening Balance">
                   <input type="number" step="0.01" className={inputCls} value={importForm.openingBalance} onChange={(e) => setImportForm({ ...importForm, openingBalance: e.target.value })} />
                 </Field>
@@ -325,7 +325,7 @@ export default function BankReconciliationPage() {
               <Field label="Narration Contains *" hint="case-insensitive substring of the bank description">
                 <input className={inputCls} value={ruleForm.descriptionContains} onChange={(e) => setRuleForm({ ...ruleForm, descriptionContains: e.target.value })} required />
               </Field>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Direction">
                   <select className={inputCls} value={ruleForm.direction} onChange={(e) => setRuleForm({ ...ruleForm, direction: e.target.value })}>
                     <option value="any">Any</option>

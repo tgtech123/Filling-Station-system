@@ -405,7 +405,7 @@ export default function PeriodsPage() {
                   {STOCK_PRODUCTS.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
               </Field>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Quantity *" hint="litres / units / kg">
                   <input type="number" step="0.01" min="0" className={inputCls} value={openForm.qty} onChange={(e) => setOpenForm({ ...openForm, qty: e.target.value })} required />
                 </Field>

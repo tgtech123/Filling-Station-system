@@ -207,7 +207,7 @@ export default function TaxPage() {
         {showTax && (
           <Modal title="New Tax Code" onClose={() => setShowTax(false)}>
             <form onSubmit={addTax}>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Code *" hint="e.g. VAT-STD, WHT-5">
                   <input className={inputCls} value={taxForm.code} onChange={(e) => setTaxForm({ ...taxForm, code: e.target.value.toUpperCase() })} required />
                 </Field>

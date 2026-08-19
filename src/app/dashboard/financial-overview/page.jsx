@@ -8,6 +8,7 @@ import FlashCard from "@/components/Dashboard/FlashCard";
 import TabButtons from "./TabButtons";
 import TaxObligationsPanel from "./TaxObligationsPanel";
 import { useFinancialStore } from "@/store/useFinancialStore";
+import PageBackBar from "@/components/Dashboard/PageBackBar";
 
 const Page = () => {
   const { overview, fetchOverview, loading, errors } = useFinancialStore();
@@ -60,6 +61,7 @@ const Page = () => {
 
   return (
     <div className="bg-neutral-100 min-h-screen rounded-2xl">
+      <div className="px-4 lg:px-[40px] pt-4"><PageBackBar /></div>
       <header className="px-4 lg:px-[40px] mb-10 bg-white shadow-sm h-[170px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
         <div className="mt-2 lg:mt-0 flex flex-col lg:flex-row gap-0 lg:gap-4 items-center">
           <h4 className="text-xl font-semibold">Financial Overview</h4>

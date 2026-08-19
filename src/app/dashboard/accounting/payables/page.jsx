@@ -462,7 +462,7 @@ export default function PayablesPage() {
         {showInvModal && (
           <Modal title="Register Supplier Invoice" onClose={() => setShowInvModal(false)} wide>
             <form onSubmit={createInvoice}>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Supplier Name *">
                   <input className={inputCls} value={invForm.supplierName} onChange={(e) => setInvForm({ ...invForm, supplierName: e.target.value })} required />
                 </Field>
@@ -477,7 +477,7 @@ export default function PayablesPage() {
                 </Field>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Purchase Order (3-way match)" hint="Matching against PO + goods receipt before booking">
                   <select className={inputCls} value={invForm.poType} onChange={(e) => setInvForm({ ...invForm, poType: e.target.value, poId: '' })}>
                     <option value="none">No PO (expense invoice)</option>
@@ -614,7 +614,7 @@ export default function PayablesPage() {
               </Hint>
             </div>
             <form onSubmit={createCreditNote}>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Supplier Name *">
                   <input className={inputCls} value={cnForm.supplierName} onChange={(e) => setCnForm({ ...cnForm, supplierName: e.target.value })} required />
                 </Field>

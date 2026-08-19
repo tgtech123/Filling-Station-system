@@ -14,6 +14,7 @@ import useSupplierStore from "@/store/useSupplierStore";
 import { useLubricantStore } from "@/store/lubricantStore";
 import ReceivePricing from "./ReceivePricing";
 import toast from "react-hot-toast";
+import PageBackBar from "@/components/Dashboard/PageBackBar";
 
 // ─── urgency config ──────────────────────────────────────────────────────────
 const URGENCY = {
@@ -1579,6 +1580,7 @@ export default function ProcurementPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
+              <PageBackBar />
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{orderType === "store" ? "Store" : "Lubricant"} Procurement</h1>
                 <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Select products to procure, set vendor details and submit</p>

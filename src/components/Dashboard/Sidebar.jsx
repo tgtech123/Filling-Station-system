@@ -805,8 +805,9 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       // "both" sees everything — the small station where one person covers all.
     }
 
-    if (gasEnabled === false && link.id?.startsWith("gas-")) {
-      // Keep the divider visible for managers so they can use the toggle button
+    if (gasEnabled !== true && link.id?.startsWith("gas-")) {
+      // The divider carries the toggle, so a manager keeps a way to turn the
+      // department on. Everyone else sees no trace of it until they do.
       if (link.id === "gas-divider" && ["manager", "admin"].includes(normalizedRole)) return true;
       return false;
     }
