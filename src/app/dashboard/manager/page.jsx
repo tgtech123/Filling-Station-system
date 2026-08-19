@@ -63,11 +63,16 @@ function getActivityStyle(item) {
  *
  * Layout: ONE row at every width. It used to stack on narrow screens, which
  * dropped the button onto its own line under the text and turned a thin notice
- * into a block. The message truncates instead, because the button is the point
- * of the banner and must stay on the line beside the words.
+ * into a block.
+ *
+ * Keeping one row means the message cannot always fit, and truncating it alone
+ * was worse than stacking: a warning you cannot finish reading is not a
+ * warning. So a clipped message becomes tappable and opens in full. The banner
+ * stays one thin line, and nothing is lost behind the ellipsis.
  */
 function BannerShell({ tone, icon: Icon, children, actionHref, actionLabel, onDismiss }) {
   const hasAction = Boolean(actionHref && actionLabel);
+  const [open, setOpen] = useState(false);
   const t = {
     blue:  { bg: "bg-blue-50",  bar: "border-l-blue-500",   icon: "text-blue-500",   text: "text-blue-800",  btn: "bg-blue-600 hover:bg-blue-700",     x: "text-blue-400 hover:bg-blue-100" },
     red:   { bg: "bg-red-50",   bar: "border-l-red-500",    icon: "text-red-500",    text: "text-red-700",   btn: "bg-red-500 hover:bg-red-600",       x: "text-red-400 hover:bg-red-100" },
@@ -76,10 +81,14 @@ function BannerShell({ tone, icon: Icon, children, actionHref, actionLabel, onDi
 
   return (
     <div className={`flex flex-row items-center justify-between gap-2 sm:gap-3 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 mb-4 border-l-4 ${t.bg} ${t.bar}`}>
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-2 sm:gap-3 min-w-0 text-left flex-1"
+      >
         <Icon size={18} className={`${t.icon} shrink-0`} />
         <p className={`text-xs sm:text-sm font-medium leading-snug truncate ${t.text}`}>{children}</p>
-      </div>
+      </button>
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         {hasAction && (
           <Link
@@ -97,6 +106,40 @@ function BannerShell({ tone, icon: Icon, children, actionHref, actionLabel, onDi
           <X size={16} />
         </button>
       </div>
+
+      {/* The full notice, for when one line was not enough to carry it. */}
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-gray-800 w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 shadow-2xl"
+          >
+            <div className="flex items-start gap-3 mb-4">
+              <Icon size={20} className={`${t.icon} shrink-0 mt-0.5`} />
+              <p className={`text-sm leading-relaxed ${t.text}`}>{children}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {hasAction && (
+                <Link
+                  href={actionHref}
+                  className={`flex-1 text-center text-sm font-semibold px-4 py-2.5 rounded-lg text-white transition-colors ${t.btn}`}
+                >
+                  {actionLabel}
+                </Link>
+              )}
+              <button
+                onClick={() => setOpen(false)}
+                className="flex-1 text-sm font-semibold px-4 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

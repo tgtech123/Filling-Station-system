@@ -12,6 +12,7 @@ import AddTankModal from "./AddTankModal";
 import ScheduleDeliveryModal from "./ScheduleDeliveryModal";
 import Link from "next/link";
 import { useTankStore } from "@/store/tankStore";
+import PageBackBar from "@/components/Dashboard/PageBackBar";
 
 export default function FuelManagement() {
     const [activeTab, setActiveTab] = useState("fuelTank");
@@ -50,6 +51,7 @@ export default function FuelManagement() {
 
   return (
     <div className="bg-gray-100 min-h-screen">
+      <div className="px-4 lg:px-[40px] pt-4"><PageBackBar /></div>
       <header className="px-4 lg:px-[40px] mb-10 bg-white shadow-sm h-[150px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
         <div className=" mt-2 lg:mt-0 flex flex-col lg:flex-row gap-0 lg:gap-4 items-center">
           <h4 className="text-2xl font-semibold">Product Management</h4>

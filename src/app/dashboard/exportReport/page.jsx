@@ -6,6 +6,7 @@ import { reportType } from "./exportReportData";
 import ExportReportCard from "./ExportReportCard";
 import CustomReportBuilder from "./CustomReportBuilder";
 import useManagerReportsStore from "@/store/useManagerReportsStore";
+import PageBackBar from "@/components/Dashboard/PageBackBar";
 
 export default function ExportReport() {
   const exportLoading = useManagerReportsStore((state) => state.loading.export);
@@ -14,6 +15,7 @@ export default function ExportReport() {
 
   return (
     <div className="bg-gray-100 dark:bg-gray-950 min-h-screen">
+      <div className="px-4 lg:px-[40px] pt-4"><PageBackBar /></div>
       <header className="px-4 lg:px-[40px] mb-10 bg-white dark:bg-gray-900 shadow-sm h-[150px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
         <div className="mt-2 lg:mt-0 flex flex-col lg:flex-row gap-1 lg:gap-4 items-center">
           <h4 className="text-2xl font-semibold">Export Reports</h4>

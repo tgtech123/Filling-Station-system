@@ -5,6 +5,7 @@ import Link from 'next/link';
 import StaffManagement from './StaffManagement'
 import NewStaffModal from './NewStaffModal';
 import BulkImportModal from '@/components/BulkImportModal';
+import PageBackBar from "@/components/Dashboard/PageBackBar";
 
 const Page = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -13,6 +14,7 @@ const Page = () => {
   return (
     <>
       <div>
+        <div className="px-4 lg:px-[40px] pt-4"><PageBackBar /></div>
         <header className="px-4 lg:px-[40px] fixed w-full inset-0 z-50 bg-white shadow-sm h-[170px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
           <div className="mt-2 lg:mt-0 flex flex-col lg:flex-row gap-0 lg:gap-4 items-center">
             <h4 className="text-[1.5rem] text-[#2A2A2A] font-semibold">Staff Management</h4>

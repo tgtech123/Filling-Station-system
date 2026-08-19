@@ -261,7 +261,7 @@ export default function ChartOfAccountsPage() {
           <Modal title={editing ? `Edit ${editing.code}` : 'New Account'} onClose={() => setShowModal(false)}>
             <form onSubmit={save}>
               {!editing && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="Account Code *">
                     <input className={inputCls} value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="e.g. 6150" required />
                   </Field>
@@ -290,7 +290,7 @@ export default function ChartOfAccountsPage() {
                   </select>
                 </Field>
               )}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Cash-flow Category" hint="for the cash-flow statement">
                   <select className={inputCls} value={form.cashFlowCategory} onChange={(e) => setForm({ ...form, cashFlowCategory: e.target.value })}>
                     <option value="">—</option>

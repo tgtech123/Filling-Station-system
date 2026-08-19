@@ -77,7 +77,18 @@ export const getDashboardFlashCards = (dashboard) => {
     ];
   }
 
-  const { revenueGenerated, expenses, discrepancies, totalStockValue, accountsPayable } = dashboard.summary;
+  const {
+    revenueGenerated, expenses, discrepancies, totalStockValue, accountsPayable,
+    revenueBreakdown, salesCount,
+  } = dashboard.summary;
+
+  // Older servers do not send the split. Fall back to zeroes rather than
+  // rendering "undefined" on a card an accountant is meant to trust.
+  const fuelRevenue  = Number(revenueBreakdown?.fuel      || 0);
+  const lubRevenue   = Number(revenueBreakdown?.lubricant || 0);
+  const storeRevenue = Number(revenueBreakdown?.store     || 0);
+  const lubCount     = Number(salesCount?.lubricant || 0);
+  const storeCount   = Number(salesCount?.store     || 0);
 
   return [
     {
@@ -87,6 +98,31 @@ export const getDashboardFlashCards = (dashboard) => {
       icon: <TbCurrencyNaira size={23} />,
       variable: `₦${revenueGenerated.toLocaleString()}`,
       trend: "1.5"
+    },
+    // Oil and shop kept apart, because one combined counter figure cannot
+    // answer the question everybody actually asks: which of the two is
+    // earning. The sale count rides along, since frequency and value are
+    // different measures and a busy shop can out-earn a slow oil rack.
+    {
+      id: 6,
+      name: "Lubricant Sales",
+      period: `Today · ${lubCount} sale${lubCount === 1 ? "" : "s"}`,
+      icon: <TbCurrencyNaira size={23} />,
+      variable: `₦${lubRevenue.toLocaleString()}`,
+    },
+    {
+      id: 7,
+      name: "Store Sales",
+      period: `Today · ${storeCount} sale${storeCount === 1 ? "" : "s"}`,
+      icon: <TbCurrencyNaira size={23} />,
+      variable: `₦${storeRevenue.toLocaleString()}`,
+    },
+    {
+      id: 8,
+      name: "Fuel Sales",
+      period: "Today",
+      icon: <TbCurrencyNaira size={23} />,
+      variable: `₦${fuelRevenue.toLocaleString()}`,
     },
     {
       id: 2,

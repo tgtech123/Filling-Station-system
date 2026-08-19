@@ -31,9 +31,9 @@ const useGasStore = create((set, get) => ({
     get()._setLoading("status", true);
     try {
       const { data } = await api.get("/api/gas/status");
-      set({ gasEnabled: data.data?.gasEnabled ?? true });
+      set({ gasEnabled: data.data?.gasEnabled ?? false });
     } catch {
-      set({ gasEnabled: true }); // default to enabled on error
+      set({ gasEnabled: false }); // unknown means hidden, never speculatively shown
     } finally { get()._setLoading("status", false); }
   },
 

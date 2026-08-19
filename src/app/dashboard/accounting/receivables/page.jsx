@@ -359,7 +359,7 @@ export default function ReceivablesPage() {
               <Field label="Name *">
                 <input className={inputCls} value={custForm.name} onChange={(e) => setCustForm({ ...custForm, name: e.target.value })} required />
               </Field>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Email">
                   <input type="email" className={inputCls} value={custForm.email} onChange={(e) => setCustForm({ ...custForm, email: e.target.value })} />
                 </Field>
@@ -437,7 +437,7 @@ export default function ReceivablesPage() {
                   Recurring invoice (subscription billing)
                 </label>
                 {invForm.recurringEnabled && (
-                  <div className="grid grid-cols-2 gap-3 mt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
                     <Field label="Frequency">
                       <select className={inputCls} value={invForm.recurringFrequency} onChange={(e) => setInvForm({ ...invForm, recurringFrequency: e.target.value })}>
                         <option value="weekly">Weekly</option>

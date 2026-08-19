@@ -52,10 +52,23 @@ export default function PageBackBar() {
    * How many in-app navigations this session has made.
    *
    * `window.history.length` counts the whole tab, including pages before the
-   * app was opened, so it cannot answer "is the previous entry ours". A counter
-   * that only this layout increments can.
+   * app was opened, so it cannot answer "is the previous entry ours".
+   *
+   * Held in sessionStorage rather than a ref because not every screen renders
+   * inside DashboardLayout: nine pages carry their own copy of this control, so
+   * the count has to survive a component unmounting and a fresh one mounting on
+   * the next screen. A ref would reset to zero on each of those and offer "Back
+   * to dashboard" when there was a real previous page to return to.
    */
-  const depthRef = useRef(0);
+  const DEPTH_KEY = "navDepth";
+  const readDepth = () => {
+    if (typeof window === "undefined") return 0;
+    return Number(sessionStorage.getItem(DEPTH_KEY) || 0);
+  };
+  const writeDepth = (n) => {
+    if (typeof window !== "undefined") sessionStorage.setItem(DEPTH_KEY, String(Math.max(0, n)));
+  };
+
   const [canGoBack, setCanGoBack] = useState(false);
   const firstPathRef = useRef(null);
 
@@ -66,18 +79,25 @@ export default function PageBackBar() {
 
   useEffect(() => {
     if (firstPathRef.current === null) {
+      // First render of THIS instance. It may still be deep in the session, so
+      // read the running count rather than assuming a fresh start.
       firstPathRef.current = pathname;
-      return; // the entry page is not a navigation
+      setCanGoBack(readDepth() > 0);
+      return;
     }
-    if (pathname !== firstPathRef.current) depthRef.current += 1;
-    setCanGoBack(depthRef.current > 0);
+    if (pathname !== firstPathRef.current) {
+      firstPathRef.current = pathname;
+      writeDepth(readDepth() + 1);
+    }
+    setCanGoBack(readDepth() > 0);
   }, [pathname]);
 
   if (!pathname || LANDING_PATHS.has(pathname)) return null;
 
   const goBack = () => {
-    if (depthRef.current > 0) {
-      depthRef.current -= 1;
+    const depth = readDepth();
+    if (depth > 0) {
+      writeDepth(depth - 1);
       router.back();
     } else {
       router.push(home);

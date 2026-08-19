@@ -204,7 +204,59 @@ export default function ProductTrackerModal({ product, onClose }) {
                 </div>
               )}
 
-              <div className="space-y-2">
+              {/* Table on anything with room for one. Every fact the cards
+                  carried gets its own column, so a run of movements can be read
+                  down a line instead of unpicked card by card. Phones keep the
+                  cards below: six columns on a 360px screen is unreadable. */}
+              <div className="hidden sm:block overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="text-left text-xs uppercase tracking-wide text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                      <th className="py-2 pr-3 font-semibold">Date</th>
+                      <th className="py-2 pr-3 font-semibold">Event</th>
+                      <th className="py-2 pr-3 font-semibold">Who</th>
+                      <th className="py-2 pr-3 font-semibold text-right">Change</th>
+                      <th className="py-2 pr-3 font-semibold text-right">Left</th>
+                      <th className="py-2 font-semibold">Reference</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.events.map((e, i) => {
+                      const style = EVENT_STYLE[e.type] || EVENT_STYLE.adjustment;
+                      const Icon = style.icon;
+                      return (
+                        <tr key={i} className="border-b border-gray-100 dark:border-gray-800 align-top">
+                          <td className="py-2 pr-3 text-xs text-gray-500 whitespace-nowrap">
+                            {new Date(e.at).toLocaleString("en-NG", {
+                              day: "numeric", month: "short", year: "numeric",
+                              hour: "2-digit", minute: "2-digit",
+                            })}
+                          </td>
+                          <td className="py-2 pr-3 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1.5 font-semibold text-gray-800 dark:text-gray-100">
+                              <Icon size={14} className={`${style.colour} shrink-0`} />
+                              {style.label}
+                            </span>
+                          </td>
+                          <td className="py-2 pr-3 text-xs text-gray-600 dark:text-gray-300">{e.by}</td>
+                          <td className={`py-2 pr-3 text-right font-bold whitespace-nowrap ${e.change < 0 ? "text-red-600" : "text-green-600"}`}>
+                            {e.change > 0 ? "+" : ""}{e.change}
+                          </td>
+                          <td className="py-2 pr-3 text-right text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                            {e.balanceAfter} {unit}{e.balanceAfter === 1 ? "" : "s"}
+                          </td>
+                          <td className="py-2 text-xs text-gray-500">
+                            {e.detail}
+                            {e.reference ? <span className="block text-gray-400 font-mono">{e.reference}</span> : null}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="space-y-2 sm:hidden">
                 {data.events.map((e, i) => {
                   const style = EVENT_STYLE[e.type] || EVENT_STYLE.adjustment;
                   const Icon = style.icon;
