@@ -61,13 +61,13 @@ function getActivityStyle(item) {
  * to be made three times and the free-plan one had already drifted. One shell,
  * three sets of content.
  *
- * Layout notes, both of which were the actual complaint:
- *  - the message is the smaller element (text-xs, sm:text-sm). It is context;
- *    the button is the thing to press, and at equal weight the button lost.
- *  - on a narrow screen the action row CENTRES rather than hugging the right
- *    edge, where it read as an afterthought pushed off the end of the text.
+ * Layout: ONE row at every width. It used to stack on narrow screens, which
+ * dropped the button onto its own line under the text and turned a thin notice
+ * into a block. The message truncates instead, because the button is the point
+ * of the banner and must stay on the line beside the words.
  */
 function BannerShell({ tone, icon: Icon, children, actionHref, actionLabel, onDismiss }) {
+  const hasAction = Boolean(actionHref && actionLabel);
   const t = {
     blue:  { bg: "bg-blue-50",  bar: "border-l-blue-500",   icon: "text-blue-500",   text: "text-blue-800",  btn: "bg-blue-600 hover:bg-blue-700",     x: "text-blue-400 hover:bg-blue-100" },
     red:   { bg: "bg-red-50",   bar: "border-l-red-500",    icon: "text-red-500",    text: "text-red-700",   btn: "bg-red-500 hover:bg-red-600",       x: "text-red-400 hover:bg-red-100" },
@@ -75,18 +75,20 @@ function BannerShell({ tone, icon: Icon, children, actionHref, actionLabel, onDi
   }[tone];
 
   return (
-    <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg px-4 py-3 mb-4 border-l-4 ${t.bg} ${t.bar}`}>
-      <div className="flex items-start sm:items-center gap-3 min-w-0">
-        <Icon size={18} className={`${t.icon} shrink-0 mt-0.5 sm:mt-0`} />
-        <p className={`text-xs sm:text-sm font-medium leading-snug ${t.text}`}>{children}</p>
+    <div className={`flex flex-row items-center justify-between gap-2 sm:gap-3 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 mb-4 border-l-4 ${t.bg} ${t.bar}`}>
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <Icon size={18} className={`${t.icon} shrink-0`} />
+        <p className={`text-xs sm:text-sm font-medium leading-snug truncate ${t.text}`}>{children}</p>
       </div>
-      <div className="flex items-center justify-center gap-2 shrink-0 self-center sm:self-auto">
-        <Link
-          href={actionHref}
-          className={`text-xs font-semibold px-4 py-2 rounded-lg text-white transition-colors whitespace-nowrap ${t.btn}`}
-        >
-          {actionLabel}
-        </Link>
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {hasAction && (
+          <Link
+            href={actionHref}
+            className={`text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-white transition-colors whitespace-nowrap ${t.btn}`}
+          >
+            {actionLabel}
+          </Link>
+        )}
         <button
           onClick={onDismiss}
           aria-label="Dismiss"
@@ -103,12 +105,30 @@ function SubscriptionBanner() {
   const [dismissed, setDismissed] = useState(false);
   const { currentPlan } = usePaymentStore();
 
+  /**
+   * A station can have several manager accounts. Exactly one is the owner; the
+   * rest are hired managers running daily operations.
+   *
+   * Both see this banner, and deliberately so: a hired manager watching the
+   * plan run down is the person best placed to tell the owner before the
+   * station drops to view-only. What differs is the action. Paying is gated to
+   * the owner on the server, so offering a hired manager a Renew button would
+   * walk them into a refusal. They get the fact and who to take it to.
+   */
+  const [isOwner, setIsOwner] = useState(false);
+  useEffect(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      setIsOwner(Boolean(u.isOwner));
+    } catch {}
+  }, []);
+
   if (dismissed || !currentPlan) return null;
 
   const isFree = !currentPlan.plan || currentPlan.plan === "free";
   const days = currentPlan.daysRemaining ?? null;
   const isExpired = !isFree && days !== null && days <= 0;
-  const isExpiringSoon = !isFree && days !== null && days > 0 && days <= 30;
+  const isExpiringSoon = !isFree && days !== null && days > 0 && days <= 60;
 
   // Active paid plan with plenty of time — nothing to show
   if (!isFree && !isExpired && !isExpiringSoon) return null;
@@ -126,16 +146,32 @@ function SubscriptionBanner() {
 
   if (isFree) {
     return (
-      <BannerShell tone="blue" icon={AlertCircle} actionHref="/pricing?from=/dashboard/manager" actionLabel="Upgrade Plan" onDismiss={dismiss}>
-        You are on the <span className="font-semibold">Free Plan</span>. Upgrade for more staff slots and advanced analytics.
+      <BannerShell
+        tone="blue"
+        icon={AlertCircle}
+        actionHref={isOwner ? "/pricing?from=/dashboard/manager" : null}
+        actionLabel={isOwner ? "Upgrade Plan" : null}
+        onDismiss={dismiss}
+      >
+        You are on the <span className="font-semibold">Free Plan</span>.{" "}
+        {isOwner
+          ? "Upgrade for more staff slots and advanced analytics."
+          : "Ask the owner to upgrade for more staff slots and advanced analytics."}
       </BannerShell>
     );
   }
 
   if (isExpired) {
     return (
-      <BannerShell tone="red" icon={XCircle} actionHref="/pricing?from=/dashboard/manager" actionLabel="Upgrade Plan" onDismiss={dismiss}>
-        Your <span className="font-semibold">{planLabel}</span> has expired — you are in view-only mode.
+      <BannerShell
+        tone="red"
+        icon={XCircle}
+        actionHref={isOwner ? "/pricing?from=/dashboard/manager" : null}
+        actionLabel={isOwner ? "Renew Now" : null}
+        onDismiss={dismiss}
+      >
+        Your <span className="font-semibold">{planLabel}</span> has expired, the station is in view-only mode.
+        {!isOwner && " Tell the owner to renew."}
       </BannerShell>
     );
   }
@@ -148,13 +184,14 @@ function SubscriptionBanner() {
     <BannerShell
       tone="amber"
       icon={AlertCircle}
-      actionHref="/dashboard/system-settings"
-      actionLabel="Renew Subscription"
+      actionHref={isOwner ? "/dashboard/system-settings" : null}
+      actionLabel={isOwner ? "Renew Subscription" : null}
       onDismiss={dismiss}
     >
       Your <span className="font-semibold">{planLabel}</span> expires in{" "}
       <span className="font-semibold">{days} day{days === 1 ? "" : "s"}</span>
-      {expiresOn ? <span className="hidden sm:inline"> ({expiresOn})</span> : null}.
+      {expiresOn ? <span className="hidden sm:inline"> ({expiresOn})</span> : null}
+      {isOwner ? "." : ". Remind the owner to renew."}
     </BannerShell>
   );
 }

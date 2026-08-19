@@ -312,6 +312,7 @@ function RegisterSupplierModal({ onClose, onSaved, type = "lubricant" }) {
             >
               <option value="gas">Gas Supplier</option>
               <option value="lubricant">Lubricant Supplier</option>
+              <option value="store">Store Supplier</option>
               <option value="both">Gas & Lubricant</option>
             </select>
           </div>
@@ -1578,11 +1579,6 @@ export default function ProcurementPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <Link href="/dashboard"
-                className="flex items-center justify-center w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 transition-colors shrink-0"
-                title="Back to Dashboard">
-                <ArrowLeft size={17} />
-              </Link>
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{orderType === "store" ? "Store" : "Lubricant"} Procurement</h1>
                 <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Select products to procure, set vendor details and submit</p>

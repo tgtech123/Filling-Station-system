@@ -7,6 +7,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { AlertTriangle, PowerOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSessionTimeout } from "@/hooks/useSessionTimeout";
+import SystemUpdateBanner from "@/components/SystemUpdateBanner";
+import PageBackBar from "@/components/Dashboard/PageBackBar";
 import useGasStore from "@/store/useGasStore";
 import { useSocket, useSocketConnect } from "@/hooks/useSocket";
 import useDashboardStore from "@/store/useDashboardStore";
@@ -239,7 +241,11 @@ function DashboardLayout({ children }) {
               </div>
             </div>
           ) : (
-            children
+            <>
+              <SystemUpdateBanner />
+              <PageBackBar />
+              {children}
+            </>
           )}
         </main>
       </div>

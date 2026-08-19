@@ -31,13 +31,6 @@ export default function PumpControl() {
     <div className="bg-gray-100 dark:bg-gray-950 min-h-screen">
       <header className="px-4 lg:px-[40px] mb-0 bg-white dark:bg-gray-900 shadow-sm h-[170px] lg:h-[90px] flex flex-col lg:flex-row gap-4 lg:gap-0 items-center justify-center lg:justify-between">
         <div className="mt-2 lg:mt-0 flex flex-col lg:flex-row gap-0 lg:gap-4 items-center">
-          <Link
-            href="/dashboard"
-            className="cursor-pointer border-3 flex gap-2 border-none lg:border-[#0080ff] py-2 px-6 rounded-[12px] text-[#0080ff] font-semibold"
-          >
-            <ArrowLeft />
-            Back to Dashboard
-          </Link>
           <h4 className="text-2xl font-semibold">Pump Control</h4>
         </div>
         <div className="flex gap-2 items-center">

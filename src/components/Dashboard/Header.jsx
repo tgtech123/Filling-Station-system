@@ -377,6 +377,7 @@ export default function Header({ toggleSidebar, showSidebar }) {
   const { currentPlan } = usePaymentStore();
   const isEnterprise = currentPlan?.plan?.startsWith("enterprise");
   const canUpgrade = currentPlan?.plan !== "enterprise-max" && userData?.role === "manager";
+  const isOwner = Boolean(userData?.isOwner);
   const isSuperManager = userData?.isSuperManager === true;
 
   // Label shown to the user. The station OWNER and a hired manager both have
@@ -698,16 +699,16 @@ export default function Header({ toggleSidebar, showSidebar }) {
             className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-semibold hover:opacity-90 transition-opacity"
           >
             <Crown size={14} />
-            {currentPlan?.plan === "free" ? "Upgrade Plan" : "Upgrade"}
+            {isOwner ? (currentPlan?.plan === "free" ? "Upgrade Plan" : "Upgrade") : "View Plans"}
           </button>
           {/* Mobile */}
           <button
             onClick={goToPricing}
-            aria-label="Upgrade plan"
+            aria-label={isOwner ? "Upgrade plan" : "View plans"}
             className="sm:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold"
           >
             <Crown size={14} />
-            Upgrade
+            {isOwner ? "Upgrade" : "Plans"}
           </button>
         </>
       )}
