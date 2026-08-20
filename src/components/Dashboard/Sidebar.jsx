@@ -434,6 +434,15 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       subLinks: salarySubLinks,
     },
     {
+      // Read-only, and offered to the manager too: the owner answers for the
+      // same money and should not have to ask the accountant for it.
+      id: "staff-sales",
+      name: "Sales by Staff",
+      icon: <MdOutlinePeopleAlt size={22} />,
+      roles: ["accountant", "manager"],
+      link: "/dashboard/accountant/staffSales",
+    },
+    {
       id: "fixed-assets",
       name: "Fixed Assets",
       icon: <Building2 size={20} />,

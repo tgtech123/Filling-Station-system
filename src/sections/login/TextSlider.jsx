@@ -46,33 +46,38 @@ const TextSlider = () => {
   const goToSlide = (index) => setCurrentSlide(index);
 
   return (
-    <div className="bg-transparent relative flex items-center justify-center">
-      <div className="w-full max-w-3xl mx-auto text-center">
-        {/* Slide Content */}
-        <div className="text-white flex items-center justify-center mb-3">
-          <div key={currentSlide} className="animate-fadeIn px-2">
-            <h1 className="text-xl font-bold mb-2">{slides[currentSlide].title}</h1>
-            <p className="text-sm text-blue-100">{slides[currentSlide].description}</p>
-          </div>
+    /*
+     * Left-aligned rather than centred: it sits in the bottom corner of a
+     * photograph now, where centred copy reads as a caption floating in the
+     * middle of nothing. A fixed min-height stops the picture jumping every
+     * three seconds as a two-line title gives way to a one-line one.
+     */
+    <div className="mx-auto w-full max-w-xl">
+      <div className="min-h-[7.5rem]">
+        <div key={currentSlide} className="animate-fadeIn">
+          <h2 className="text-[1.35rem] font-bold leading-snug text-white drop-shadow-sm">
+            {slides[currentSlide].title}
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-white/75">
+            {slides[currentSlide].description}
+          </p>
         </div>
+      </div>
 
-        {/* Indicators */}
-        <div className="flex gap-2 justify-center mb-4">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                index === currentSlide
-                  ? 'bg-yellow-400 w-10'
-                  : 'bg-white bg-opacity-30 w-5 hover:bg-opacity-50'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
-
-        {/* Mobile hint removed (non-responsive version) */}
+      {/* Indicators */}
+      <div className="mt-5 flex gap-2">
+        {slides.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => goToSlide(index)}
+            className={`h-1.5 rounded-full transition-all duration-300 ${
+              index === currentSlide
+                ? 'w-8 bg-yellow-400'
+                : 'w-4 bg-white/30 hover:bg-white/60'
+            }`}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import Table from "./Table";
 import { useLubricantStore } from "@/store/lubricantStore";
 import ProductTrackerModal from "./ProductTrackerModal";
 import { getCurrentUser } from "@/lib/currentUser";
+import { API_URL } from "@/lib/config";
 
 export default function Inventory() {
     const { 
@@ -24,6 +25,27 @@ export default function Inventory() {
     const [trackerSearch, setTrackerSearch]   = useState("");
 
     /**
+     * Retired products are hidden from every daily list, which is the point of
+     * retiring them. But auditing one is the reason it was retired rather than
+     * deleted, so the tracker has to be able to reach it.
+     */
+    const [showRetired, setShowRetired] = useState(false);
+    const [retiredProducts, setRetiredProducts] = useState([]);
+
+    useEffect(() => {
+        if (!showRetired || retiredProducts.length) return;
+        fetch(`${API_URL}/api/lubricant?includeRetired=true`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => {
+                const all = (Array.isArray(d) ? d : d?.data || []).filter(Boolean);
+                setRetiredProducts(all.filter((p) => p.isActive === false));
+            })
+            .catch(() => {});
+    }, [showRetired, retiredProducts.length]);
+
+    /**
      * Who may open the trail.
      *
      * The tracker exposes cost, supplier and every write-off with its reason,
@@ -37,7 +59,10 @@ export default function Inventory() {
 
     const trackableProducts = useMemo(() => {
         const q = trackerSearch.trim().toLowerCase();
-        const all = (lubricants || []).filter(Boolean);
+        const all = [
+            ...(lubricants || []).filter(Boolean),
+            ...(showRetired ? retiredProducts : []),
+        ];
         // Unsearched, show the ones most likely to be queried: empty or nearly
         // empty shelves are what sends someone looking at history.
         if (!q) {
@@ -50,7 +75,7 @@ export default function Inventory() {
                 String(l.productName || "").toLowerCase().includes(q) ||
                 String(l.barcode || "").toLowerCase().includes(q)
         );
-    }, [lubricants, trackerSearch]);
+    }, [lubricants, trackerSearch, showRetired, retiredProducts]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -241,6 +266,15 @@ export default function Inventory() {
                         <p className="text-xs text-gray-400 mb-2">
                             Every delivery, sale and correction for one item — and where to fix the count.
                         </p>
+                        <label className="flex items-center gap-2 mb-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer w-fit">
+                            <input
+                                type="checkbox"
+                                checked={showRetired}
+                                onChange={(e) => setShowRetired(e.target.checked)}
+                                className="rounded border-gray-300"
+                            />
+                            Include retired products
+                        </label>
                         <input
                             value={trackerSearch}
                             onChange={(e) => setTrackerSearch(e.target.value)}
@@ -256,6 +290,11 @@ export default function Inventory() {
                                 >
                                     <span className="text-sm text-gray-700 dark:text-gray-200 truncate">
                                         {lub.productName}
+                                        {lub.isActive === false && (
+                                            <span className="ml-2 text-[10px] font-bold uppercase text-gray-400 border border-gray-300 rounded px-1.5 py-0.5">
+                                                Retired
+                                            </span>
+                                        )}
                                     </span>
                                     <span className={`text-xs font-semibold shrink-0 ${Number(lub.qtyInStock) <= 0 ? "text-red-500" : "text-gray-400"}`}>
                                         {lub.qtyInStock} {lub.baseUnit || "piece"}{Number(lub.qtyInStock) === 1 ? "" : "s"}
