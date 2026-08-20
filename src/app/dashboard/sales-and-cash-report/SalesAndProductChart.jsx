@@ -79,10 +79,13 @@ const SalesAndProductChart = () => {
    */
   const [view, setView] = useState("all");
 
+  // The Gas tab appears only where the department is switched on, so a
+  // fuel-only station is never offered a view that can only be empty.
   const VIEWS = [
     { key: "all",     label: "All Sales" },
     { key: "fuel",    label: "Fuel" },
     { key: "counter", label: "Counter" },
+    ...(salesOverview?.gasEnabled ? [{ key: "gas", label: "Gas" }] : []),
   ];
 
   // ── Sales Trend ───────────────────────────────────────────────────────────
@@ -92,6 +95,8 @@ const SalesAndProductChart = () => {
       ? byKind?.fuel ?? []
       : view === "counter"
       ? byKind?.counter ?? []
+      : view === "gas"
+      ? byKind?.gas ?? []
       : salesOverview?.salesTrend ?? [];
   const trendValues = salesTrend.map((d) => d.sales);
   const maxVal      = Math.max(...trendValues, 1);
@@ -122,7 +127,9 @@ const SalesAndProductChart = () => {
     view === "fuel"
       ? allProducts.filter((p) => p.kind === "fuel")
       : view === "counter"
-      ? allProducts.filter((p) => p.kind !== "fuel")
+      ? allProducts.filter((p) => p.kind === "lubricant" || p.kind === "store")
+      : view === "gas"
+      ? allProducts.filter((p) => p.kind === "gas")
       : allProducts;
 
   /**
@@ -180,14 +187,22 @@ const SalesAndProductChart = () => {
           <div className="flex justify-between items-center mb-[1.5rem]">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {view === "fuel" ? "Fuel Sales Trend" : view === "counter" ? "Counter Sales Trend" : "Sales Trend"}
+                {view === "fuel"
+                  ? "Fuel Sales Trend"
+                  : view === "counter"
+                  ? "Counter Sales Trend"
+                  : view === "gas"
+                  ? "Gas Sales Trend"
+                  : "Sales Trend"}
               </h3>
               <p className="text-sm text-gray-500">
                 {view === "fuel"
-                  ? "PMS, AGO, diesel and kerosene"
+                  ? "PMS, AGO (diesel) and kerosene"
                   : view === "counter"
                   ? "Lubricants and store items"
-                  : "Fuel and counter combined"}
+                  : view === "gas"
+                  ? "LPG by the kilo and filled cylinders"
+                  : "Fuel, counter and gas combined"}
               </p>
             </div>
             {/* Now fully wired — shares the same duration state as the right panel */}
@@ -270,6 +285,8 @@ const SalesAndProductChart = () => {
                   ? "Fuel Product Distribution"
                   : view === "counter"
                   ? "Counter Product Distribution"
+                  : view === "gas"
+                  ? "Gas Sales"
                   : "Product Sales Distribution"}
               </h3>
               <p className="text-sm text-gray-500">{selectedLabel}</p>
@@ -333,6 +350,8 @@ const SalesAndProductChart = () => {
                         <span className="block text-[11px] text-gray-400">
                           {p.kind === "fuel"
                             ? `${(p.litres || 0).toLocaleString()} L`
+                            : p.kind === "gas"
+                            ? `${(p.units || 0).toLocaleString()} kg${p.cylinders ? ` · ${p.cylinders} cyl` : ""}`
                             : `${(p.units || 0).toLocaleString()} unit${(p.units || 0) === 1 ? "" : "s"}`}
                         </span>
                       </span>

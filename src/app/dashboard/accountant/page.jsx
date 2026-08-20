@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import DisplayCard from "@/components/Dashboard/DisplayCard";
 import FlashCard from "@/components/Dashboard/FlashCard";
 import { useState, useEffect } from "react";
+import { useSocket } from "@/hooks/useSocket";
 import { samplePerformanceData, getDashboardFlashCards } from "./accountantData";
 import SalesExpensesChart from "./SalesExpensesChart";
 import ProductSalesOverviewChart from "./ProductSalesOverviewChart";
@@ -34,6 +35,25 @@ export default function AccountantDashboard() {
     getUserData();
     fetchDashboard('today');
   }, [fetchDashboard]);
+
+  /**
+   * Sales reach the accountant as they happen, not on the next reload.
+   *
+   * This page fetched once on mount and never again, behind a five minute
+   * cache, so someone with the books open could watch a busy afternoon and see
+   * nothing move. The person answerable for the money should not be the last to
+   * know what came in.
+   *
+   * The server already announces every sale on "dashboard:refresh": lubricant
+   * and store at the till, bulk gas on dispense, cylinders, shift close,
+   * reconciliation and deliveries. The manager dashboard listened; this one did
+   * not. `force` skips the cache, because the event IS the server saying the
+   * figures just changed.
+   */
+  useSocket({
+    "dashboard:refresh": () => fetchDashboard('today', true),
+    "shift:ended":       () => fetchDashboard('today', true),
+  });
 
   const fullName =
     userData?.firstName && userData?.lastName

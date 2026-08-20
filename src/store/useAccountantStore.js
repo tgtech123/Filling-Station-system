@@ -148,10 +148,10 @@ const useAccountantStore = create((set, get) => ({
     }),
 
   // ── Fetch Dashboard ─────────────────────────────────────────────────────────
-  fetchDashboard: async (duration = 'today') => {
+  fetchDashboard: async (duration = 'today', force = false) => {
     const { setLoading, setError } = get();
 
-    if (isFresh(_cache.dashboard, 'dashboard', duration)) {
+    if (!force && isFresh(_cache.dashboard, 'dashboard', duration)) {
       set({ dashboard: _cache.dashboard.data });
       return _cache.dashboard.data;
     }

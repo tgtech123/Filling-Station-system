@@ -233,6 +233,14 @@ export default function GasCashierPage() {
   const [inputKg,      setInputKg]      = useState("");
   const [inputAmount,  setInputAmount]  = useState("");
   const [payMethod,    setPayMethod]    = useState("cash");
+  /**
+   * A large fill is often settled two ways: part cash from a pocket, the rest
+   * by transfer. Recorded per tender because that is what reconciling needs —
+   * the cash figure must match a drawer and the rest must match a statement.
+   */
+  const [mixCash,     setMixCash]     = useState("");
+  const [mixTransfer, setMixTransfer] = useState("");
+  const [mixPOS,      setMixPOS]      = useState("");
   const [phoneSearch,  setPhoneSearch]  = useState("");
   const [ptRedeem,     setPtRedeem]     = useState(0);
   const [txRef,        setTxRef]        = useState("");
@@ -300,11 +308,27 @@ export default function GasCashierPage() {
     if (saleType === "kg"     && (!inputKg     || parseFloat(inputKg)     <= 0)) return setFormError("Enter a valid quantity");
     if (saleType === "amount" && (!inputAmount || parseFloat(inputAmount) <= 0)) return setFormError("Enter a valid amount");
 
+    // A mixed sale whose parts do not add up leaves money unaccounted for in
+    // the cash report, so it is refused here rather than reconciled later.
+    let breakdown;
+    if (payMethod === "mixed") {
+      breakdown = {
+        cash:     Number(mixCash)     || 0,
+        transfer: Number(mixTransfer) || 0,
+        POS:      Number(mixPOS)      || 0,
+      };
+      const entered = breakdown.cash + breakdown.transfer + breakdown.POS;
+      if (Math.round((entered - finalAmount) * 100) !== 0) {
+        return setFormError("The payment breakdown must add up to the amount due");
+      }
+    }
+
     const result = await createSale({
       saleType, cylinderSize,
       quantityKg:    saleType === "kg"     ? parseFloat(inputKg)     : undefined,
       amountPaid:    saleType === "amount"  ? parseFloat(inputAmount) : undefined,
       paymentMethod: payMethod,
+      ...(breakdown ? { paymentBreakdown: breakdown } : {}),
       transferReference: payMethod === "transfer" ? txRef : undefined,
       customerId:    selectedCustomer?._id,
       pointsToRedeem: ptRedeem,
@@ -583,8 +607,8 @@ export default function GasCashierPage() {
             {/* Payment */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Payment Method</p>
-              <div className="grid grid-cols-3 gap-2">
-                {[{id:"cash",label:"Cash",emoji:"💵"},{id:"transfer",label:"Transfer",emoji:"🏦"},{id:"pos",label:"POS",emoji:"💳"}].map(m => (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[{id:"cash",label:"Cash",emoji:"💵"},{id:"transfer",label:"Transfer",emoji:"🏦"},{id:"pos",label:"POS",emoji:"💳"},{id:"mixed",label:"Mixed",emoji:"🧾"}].map(m => (
                   <button key={m.id} onClick={() => setPayMethod(m.id)}
                     className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 transition-all ${payMethod===m.id?"bg-orange-50 border-orange-400 text-orange-700":"border-gray-200 text-gray-500 hover:border-orange-200"}`}>
                     <span className="text-2xl">{m.emoji}</span>
@@ -597,6 +621,42 @@ export default function GasCashierPage() {
                   placeholder="Transfer reference number"
                   className="mt-3 w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
               )}
+
+              {payMethod === "mixed" && (() => {
+                const entered = (Number(mixCash) || 0) + (Number(mixTransfer) || 0) + (Number(mixPOS) || 0);
+                const due = Number(finalAmount) || 0;
+                const diff = Math.round((due - entered) * 100) / 100;
+                return (
+                  <div className="mt-3 space-y-2">
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { label: "Cash", value: mixCash, set: setMixCash },
+                        { label: "Transfer", value: mixTransfer, set: setMixTransfer },
+                        { label: "POS", value: mixPOS, set: setMixPOS },
+                      ].map((f) => (
+                        <div key={f.label}>
+                          <label className="text-[11px] font-semibold text-gray-500">{f.label}</label>
+                          <input
+                            type="number" min="0" value={f.value}
+                            onChange={(e) => f.set(e.target.value)}
+                            placeholder="0"
+                            className="w-full min-w-0 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    {/* The parts must reach the total. Saying so before the sale
+                        is recorded is the only cheap moment to catch it. */}
+                    <p className={`text-xs font-semibold ${diff === 0 ? "text-green-600" : "text-red-600"}`}>
+                      {diff === 0
+                        ? "Breakdown matches the amount due."
+                        : diff > 0
+                        ? `₦${diff.toLocaleString()} still unallocated.`
+                        : `₦${Math.abs(diff).toLocaleString()} over the amount due.`}
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
 
             {formError && (
