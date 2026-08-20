@@ -83,8 +83,21 @@ const SalesHeader = () => {
     }
   };
 
+  /**
+   * Whether this product can go on a bill at all.
+   *
+   * Mirrors the till's own gate. The till refuses these anyway, but a row that
+   * looks identical to a sellable one and then bounces reads as a broken app —
+   * the dropdown should say why BEFORE it is clicked, not after.
+   */
+  const sellable = (item) =>
+    Number(item?.qtyInStock) > 0 && !item?.pendingPricing;
+
   // Handle product selection
   const handleProductSelect = (item) => {
+    // Belt and braces: the row is not clickable, but nothing downstream should
+    // depend on that being true.
+    if (!sellable(item)) return;
     setSelectedProductForSale(item);
     setSearchTerm("");
     setResults([]);
@@ -149,18 +162,42 @@ const SalesHeader = () => {
             {/* 🆕 Enhanced Dropdown with better styling */}
             {showDropdown && results.length > 0 && (
               <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md mt-1 max-h-60 overflow-y-auto z-50 shadow-lg">
-                {results.map((item) => (
-                  <div
-                    key={item._id}
-                    onClick={() => handleProductSelect(item)}
-                    className="p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-200 dark:border-gray-600 last:border-b-0"
-                  >
-                    <p className="font-semibold dark:text-gray-100">{item.productName}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Barcode: {item.barcode}
-                    </p>
-                  </div>
-                ))}
+                {results.map((item) => {
+                  const canSell = sellable(item);
+                  const qty = Number(item?.qtyInStock) || 0;
+                  return (
+                    <div
+                      key={item._id}
+                      onClick={() => handleProductSelect(item)}
+                      aria-disabled={!canSell}
+                      className={`p-3 border-b border-gray-200 dark:border-gray-600 last:border-b-0 ${
+                        canSell
+                          ? "cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                          : "cursor-not-allowed opacity-60"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="font-semibold dark:text-gray-100">{item.productName}</p>
+                        {/* The stock figure belongs in the list, not one click
+                            later. It is the thing that decides whether this row
+                            is any use, and a cashier scanning the dropdown for
+                            an alternative can see it at a glance. */}
+                        {canSell ? (
+                          <span className="shrink-0 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                            {qty} in stock
+                          </span>
+                        ) : (
+                          <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                            {item?.pendingPricing ? "Not priced" : "Out of stock"}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Barcode: {item.barcode}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

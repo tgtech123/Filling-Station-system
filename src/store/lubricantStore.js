@@ -54,13 +54,19 @@ export const useLubricantStore = create((set, get) => ({
   },
 
   // Get lubricant by barcode
-  getLubricantByBarcode: async (barcode) => {
+  /**
+   * `purpose` tells the server which job this lookup is for.
+   *
+   * Selling refuses an empty shelf; receiving must not, because that is exactly
+   * when a product has run out. Same endpoint, opposite expectations.
+   */
+  getLubricantByBarcode: async (barcode, purpose = "sale") => {
     set({ loading: true, error: null });
     try {
       const res = await fetch(`${API_URL}/api/lubricant/get-lubricant`, {
         method: "POST",
         headers: get().getAuthHeaders(),
-        body: JSON.stringify({ barcode }),
+        body: JSON.stringify({ barcode, purpose }),
       });
       if (!res.ok) throw new Error("Failed to get lubricant by barcode");
       const data = await res.json();

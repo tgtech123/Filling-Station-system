@@ -157,25 +157,59 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
             print-color-adjust:         exact !important;
           }
 
-          /* Base: every element is pure black, heavy weight, Courier New */
+          /**
+           * Why the old slip printed faint, and what actually fixes it.
+           *
+           * Three things were working against the paper at once:
+           *
+           * 1. Courier New is a THIN typewriter face. Its strokes are about as
+           *    narrow as a thermal head can burn, so they come out grey.
+           * 2. font-weight 800 asked for a weight Courier New does not have, so
+           *    the browser SYNTHESISED one. A faked bold is drawn by smearing
+           *    the glyph, which anti-aliases into light dots rather than
+           *    burning a solid line.
+           * 3. Anti-aliasing on a one-bit printer turns any grey pixel into a
+           *    dot that either fires weakly or not at all.
+           *
+           * So: a genuinely heavy face rather than a faked one, weight 700
+           * which real bold faces actually have, and a text-stroke that
+           * thickens every glyph by a measured amount. The stroke is the part
+           * that makes the biggest difference on thermal paper — it widens the
+           * burn instead of asking the printer to shade it.
+           */
           #receipt-print-root .receipt-thermal-print,
           #receipt-print-root .receipt-thermal-print * {
-            font-family: 'Courier New', Courier, monospace !important;
-            color:       #000000 !important;
-            background:  transparent !important;
-            font-size:   9.5pt  !important;
-            font-weight: 800    !important;
-            line-height: 1.5    !important;
+            font-family: 'Arial Black', 'Arial Bold', Arial, Helvetica, sans-serif !important;
+            color:            #000000 !important;
+            background:       transparent !important;
+            font-size:        10.5pt !important;
+            font-weight:      700    !important;
+            line-height:      1.45   !important;
+            letter-spacing:   0.01em !important;
+            /* Thickens the burn. Small on purpose: too much and the counters
+               inside letters like e and a fill in and the slip turns to mush. */
+            -webkit-text-stroke: 0.28pt #000000 !important;
+            text-rendering:   geometricPrecision !important;
+            -webkit-font-smoothing: none !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust:         exact !important;
             margin:  0 !important;
             padding: 0 !important;
           }
 
+          /* The lines worth burning darkest: the shop's name and the money.
+             A wider stroke, not a heavier weight, because the weight would be
+             synthesised and print lighter rather than darker. */
+          .t-station-name,
+          .t-total-label,
+          .t-total-amount {
+            -webkit-text-stroke: 0.45pt #000000 !important;
+          }
+
           /* Station headline */
           .t-station-name {
             font-size:      14pt  !important;
-            font-weight:    900   !important;
+            font-weight:    700   !important;
             text-align:     center !important;
             text-transform: uppercase !important;
             letter-spacing: 0.05em  !important;
@@ -196,7 +230,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           /* Receipt type label */
           .t-receipt-title {
             font-size:      11pt   !important;
-            font-weight:    900    !important;
+            font-weight:    700    !important;
             text-align:     center !important;
             text-transform: uppercase !important;
             letter-spacing: 0.08em    !important;
@@ -213,16 +247,16 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
             line-height:     1.7           !important;
           }
           .t-meta-row span:first-child { font-weight: 700 !important; }
-          .t-meta-row span:last-child  { font-weight: 900 !important; }
+          .t-meta-row span:last-child  { font-weight: 700 !important; }
 
           /* Divider lines */
           .t-line-solid {
-            border-top:    1.5pt solid #000 !important;
+            border-top:    2.5pt solid #000 !important;
             margin:        4pt 0            !important;
             display:       block            !important;
           }
           .t-line-dashed {
-            border-top:    1pt dashed #000 !important;
+            border-top:    1.8pt dashed #000 !important;
             margin:        4pt 0           !important;
             display:       block           !important;
           }
@@ -234,13 +268,13 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
             display:         table    !important;
           }
           .t-table thead tr {
-            border-top:    1.5pt solid #000 !important;
-            border-bottom: 1.5pt solid #000 !important;
+            border-top:    2.5pt solid #000 !important;
+            border-bottom: 2.5pt solid #000 !important;
             display:       table-row        !important;
           }
           .t-table th {
             font-size:      8pt       !important;
-            font-weight:    900       !important;
+            font-weight:    700       !important;
             text-transform: uppercase !important;
             padding:        3pt 2pt   !important;
             display:        table-cell !important;
@@ -249,7 +283,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
             font-size:    9pt        !important;
             font-weight:  700        !important;
             padding:      3pt 2pt    !important;
-            border-bottom: 0.5pt dashed #000 !important;
+            border-bottom: 1pt dashed #000 !important;
             vertical-align: top       !important;
             display:      table-cell  !important;
           }
@@ -263,12 +297,12 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           }
           .t-total-label {
             font-size:      12pt      !important;
-            font-weight:    900       !important;
+            font-weight:    700       !important;
             text-transform: uppercase !important;
           }
           .t-total-amount {
             font-size:   14pt !important;
-            font-weight: 900  !important;
+            font-weight: 700  !important;
           }
 
           /* Amount in words */
@@ -316,7 +350,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
              step above the quote and the branding beneath it. */
           .t-contact-head {
             font-size:      8pt       !important;
-            font-weight:    900       !important;
+            font-weight:    700       !important;
             text-align:     center    !important;
             text-transform: uppercase !important;
             letter-spacing: 0.05em    !important;
@@ -325,7 +359,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           }
           .t-contact-line {
             font-size:   8.5pt  !important;
-            font-weight: 800    !important;
+            font-weight: 700    !important;
             text-align:  center !important;
             line-height: 1.6    !important;
             display:     block  !important;
@@ -341,7 +375,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           }
           .t-copy-label {
             font-size:      7.5pt    !important;
-            font-weight:    900      !important;
+            font-weight:    700      !important;
             text-align:     center   !important;
             text-transform: uppercase !important;
             letter-spacing: 0.08em   !important;
@@ -354,7 +388,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
              behind and a customer may quote back at the counter. */
           .t-note {
             font-size:      8.5pt    !important;
-            font-weight:    900      !important;
+            font-weight:    700      !important;
             text-align:     center   !important;
             text-transform: uppercase !important;
             letter-spacing: 0.03em   !important;
@@ -376,7 +410,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           /* Powered-by branding */
           .t-powered-by {
             font-size:      6.5pt   !important;
-            font-weight:    800     !important;
+            font-weight:    700     !important;
             text-align:     center  !important;
             font-style:     normal  !important;
             letter-spacing: 0.03em  !important;

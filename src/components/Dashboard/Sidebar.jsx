@@ -339,7 +339,10 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
     },
     {
       id: "lubricants",
-      name: "Lubricant Sales",
+      // Drinks and snacks are sold from this same till, so naming it after the
+      // oil rack alone sent cashiers looking for a store page that does not
+      // exist. The page header already reads "Lubricant & Retail Sales".
+      name: "Lube & Retail Sales",
       icon: <RiOilLine size={20} />,
       link: "/dashboard/lubricantSales",
       roles: ["cashier"],
