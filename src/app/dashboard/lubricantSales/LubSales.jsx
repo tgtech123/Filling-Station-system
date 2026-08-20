@@ -23,6 +23,14 @@ const LubSales = () => {
   ]);
   const [paymentMethod, setPaymentMethod] = useState("POS");
   const [message, setMessage] = useState("");
+  /**
+   * Whether the banner reads as good news or bad.
+   *
+   * This used to be inferred from an emoji at the front of the message, so the
+   * icon was load-bearing rather than decorative. Saying the tone outright
+   * keeps the styling working and keeps pictures out of the sentence.
+   */
+  const [messageTone, setMessageTone] = useState("success");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
@@ -269,7 +277,7 @@ const LubSales = () => {
     const result = await openCustomerDisplay();
     if (result.status === "placed") {
       setDisplayHelp(null);
-      setMessage("✅ Customer screen opened on the second monitor");
+      setMessageTone("success"); setMessage("Customer screen opened on the second monitor");
     } else if (result.status === "opened") {
       setDisplayHelp({
         tone: "info",
@@ -288,7 +296,57 @@ const LubSales = () => {
     }
   };
 
+  /**
+   * The single gate every product passes before it can reach a till line.
+   *
+   * There were two ways into the basket — the scanner and the search box — and
+   * only the scanner checked whether the item could actually be sold. A product
+   * registered with no quantity went straight onto a line the moment anyone
+   * searched for it, and the refusal only arrived when the customer was already
+   * waiting to pay. One function, called by both, is the only arrangement where
+   * that cannot drift apart again: a third entry point added later has to go
+   * through here too.
+   *
+   * Returns true when the item was REFUSED, so callers read as a guard clause.
+   */
+  const blockUnsellable = (product, code = "") => {
+    const barcode = code || product?.barcode || "";
+    const name = product?.productName || "That item";
+
+    const qty = Number(product?.qtyInStock);
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setScanError({
+        code: "OUT_OF_STOCK",
+        message: `${name}${barcode ? ` (${barcode})` : ""} has 0 in stock — restock before selling.`,
+        barcode,
+        productName: name,
+      });
+      setMessage("");
+      return true;
+    }
+
+    // Registered at the till but never priced. The server refuses to sell it
+    // anyway, so letting it sit in the basket only defers the refusal to the
+    // worst possible moment — the customer standing there, ready to pay.
+    if (product?.pendingPricing) {
+      setScanError({
+        code: "NOT_PRICED",
+        message: `${name}${barcode ? ` (${barcode})` : ""} has no price yet — a manager must price it before it can be sold.`,
+        barcode,
+        productName: name,
+      });
+      setMessage("");
+      return true;
+    }
+
+    return false;
+  };
+
   const addProductToTable = (product) => {
+    // Picking from search is the same event as scanning, and answers to the
+    // same gate.
+    if (blockUnsellable(product)) return;
+
    const price = Number(product.unitPrice ?? 0);
 
     /**
@@ -379,7 +437,7 @@ const LubSales = () => {
     }
     
     // Show success message
-    setMessage(`✅ ${product.productName} added to cart`);
+    setMessageTone("success"); setMessage(`${product.productName} added to cart`);
   };
 
   /**
@@ -479,14 +537,8 @@ const LubSales = () => {
     );
 
     if (local) {
-      if (Number(local.qtyInStock) <= 0) {
-        setScanError({
-          code: "OUT_OF_STOCK",
-          message: `${local.productName} (${code}) has 0 in stock — restock before selling.`,
-          barcode: code,
-        });
-        setMessage("");
-        finish("out of stock");
+      if (blockUnsellable(local, code)) {
+        finish("refused");
         return;
       }
       applyScannedItem(local);
@@ -512,6 +564,13 @@ const LubSales = () => {
       const result = await res.json();
 
       if (res.ok && result.data) {
+        // The server already refuses an empty shelf, but it is one build away
+        // from a lookup that does not. Re-checking what came back costs
+        // nothing and keeps the rule in one place on this side too.
+        if (blockUnsellable(result.data, code)) {
+          finish("refused");
+          return;
+        }
         applyScannedItem(result.data);
         setScanError(null);
         setMessage("");
@@ -526,6 +585,11 @@ const LubSales = () => {
       if (result?.code === "OUT_OF_STOCK") {
         setScanError({ code: "OUT_OF_STOCK", message: result.error, barcode: code, productName: result.productName });
         finish("out of stock");
+      } else if (result?.code === "NOT_PRICED") {
+        // Amber, not red: the product is real and the shop has it. Someone with
+        // the authority to price it just has not yet.
+        setScanError({ code: "NOT_PRICED", message: result.error, barcode: code, productName: result.productName });
+        finish("not priced");
       } else if (res.status === 404 || result?.code === "NOT_FOUND") {
         setScanError({ code: "NOT_FOUND", message: result?.error || `No product with barcode "${code}" at this station.`, barcode: code });
         finish("not found");
@@ -615,7 +679,7 @@ const LubSales = () => {
       })
     );
     setScanError(null);
-    setMessage(`✅ Line ${index + 1} quantity increased`);
+    setMessageTone("success"); setMessage(`Line ${index + 1} quantity increased`);
   };
 
   const handleDeleteRow = (index) => {
@@ -658,14 +722,14 @@ const LubSales = () => {
 
       const validItems = rows.filter((row) => row.lubricantId);
       if (!validItems.length) {
-        setMessage("❌ Please scan at least one valid product");
+        setMessageTone("error"); setMessage("Please scan at least one valid product");
         return;
       }
 
       const normalizedPaymentMethod =
         paymentMethod === "POS" ? "POS" : paymentMethod.toLowerCase();
 
-      // ✅ Send ALL items in ONE request
+      // Send ALL items in ONE request
       const response = await fetch(
         `${API_URL}/api/lubricant/sell-lubricant-transaction`,
         {
@@ -690,6 +754,36 @@ const LubSales = () => {
       );
 
       const result = await response.json();
+
+      /**
+       * The shelf price moved while this basket was open.
+       *
+       * The server refuses rather than posting at either figure, because a
+       * receipt saying one thing while the books say another is worse than a
+       * refusal. Recovering is cheap: reload the catalogue, correct the line,
+       * and the cashier rings it up again at the real price.
+       */
+      if (result?.code === "PRICE_CHANGED") {
+        await fetchLubricants();
+        setRows((prev) =>
+          prev.map((r) =>
+            r.productName === result.productName && result.expectedPrice
+              ? {
+                  ...r,
+                  unitPrice: String(result.expectedPrice),
+                  amount: String((Number(r.quantity) || 1) * Number(result.expectedPrice)),
+                }
+              : r
+          )
+        );
+        setScanError({
+          code: "PRICE_CHANGED",
+          message: result.error,
+          productName: result.productName,
+        });
+        setMessage("");
+        return;
+      }
 
       if (!response.ok || !result.success) {
         throw new Error(
@@ -737,11 +831,11 @@ const LubSales = () => {
         // Saved without printing — here the banner IS the confirmation, since
         // no receipt appears to stand in for one.
         setAutoPrint(false);
-        setMessage("✅ Sale saved");
+        setMessageTone("success"); setMessage("Sale saved");
       }
       clearCart();
     } catch (err) {
-      setMessage(`❌ ${err.message || "Server error, please try again."}`);
+      setMessageTone("error"); setMessage(`${err.message || "Server error, please try again."}`);
     } finally {
       submitInFlightRef.current = false;
       setIsSubmitting(false);
@@ -753,7 +847,7 @@ const LubSales = () => {
       <div className="mb-2 flex flex-col text-neutral-800 dark:text-neutral-100 gap-2 sm:gap-3">
         <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Lubricant &amp; Store Sales</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Lubricant &amp; Retail Sales</h1>
             <p className="text-lg sm:text-xl font-medium">
               Record, print and export all sales receipt
             </p>
@@ -813,7 +907,7 @@ const LubSales = () => {
           // scan and an empty shelf are both recoverable at the till; an unknown
           // barcode is not.
           className={`p-3.5 rounded-xl border ${
-            ["OUT_OF_STOCK", "ALREADY_ON_BILL"].includes(scanError.code)
+            ["OUT_OF_STOCK", "ALREADY_ON_BILL", "NOT_PRICED", "PRICE_CHANGED"].includes(scanError.code)
               ? "bg-amber-50 border-amber-300 text-amber-800"
               : "bg-red-50 border-red-300 text-red-700"
           }`}
@@ -821,10 +915,14 @@ const LubSales = () => {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-sm font-bold">
-                {scanError.code === "ALREADY_ON_BILL"
+                {scanError.code === "PRICE_CHANGED"
+                  ? "Price has changed"
+                  : scanError.code === "ALREADY_ON_BILL"
                   ? "Already on this bill"
                   : scanError.code === "OUT_OF_STOCK"
                   ? "Out of stock"
+                  : scanError.code === "NOT_PRICED"
+                  ? "Not priced yet"
                   : scanError.code === "NOT_FOUND"
                   ? "Not registered at this station"
                   : scanError.code === "OFFLINE"
@@ -835,6 +933,11 @@ const LubSales = () => {
               {scanError.code === "OUT_OF_STOCK" && (
                 <p className="text-xs mt-1 opacity-80">
                   This item cannot be added to the sale until stock is received or adjusted.
+                </p>
+              )}
+              {scanError.code === "NOT_PRICED" && (
+                <p className="text-xs mt-1 opacity-80">
+                  Pricing is a manager's decision, so it cannot be set from the till.
                 </p>
               )}
             </div>
@@ -874,7 +977,7 @@ const LubSales = () => {
       {message && (
         <div
           className={`p-3 rounded-lg text-sm font-semibold ${
-            message.startsWith("✅")
+            messageTone === "success"
               ? "bg-green-100 text-green-700 border border-green-300"
               : "bg-red-100 text-red-700 border border-red-300"
           }`}
@@ -947,7 +1050,7 @@ const LubSales = () => {
                     <option value={row.baseUnit || "piece"}>{row.baseUnit || "piece"}</option>
                     {row.saleUnits.map((u) => (
                       <option key={u.name} value={u.name}>
-                        {unitLabel(row, u)} — ₦{Number(u.price).toLocaleString()}
+                        {unitLabel(row, u)}
                       </option>
                     ))}
                   </select>
@@ -1045,7 +1148,7 @@ const LubSales = () => {
                       <option value={row.baseUnit || "piece"}>{row.baseUnit || "piece"}</option>
                       {row.saleUnits.map((u) => (
                         <option key={u.name} value={u.name}>
-                          {unitLabel(row, u)} — ₦{Number(u.price).toLocaleString()}
+                          {unitLabel(row, u)}
                         </option>
                       ))}
                     </select>

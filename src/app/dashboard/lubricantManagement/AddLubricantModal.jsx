@@ -46,6 +46,9 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
 
   const isStoreItem = STORE_CATEGORIES.includes(formData.category);
 
+  /** "named" shows the text box; "na" fills the field with N/A and hides it. */
+  const [brandMode, setBrandMode] = useState("named");
+
   /**
    * Bigger ways to sell the same stock: a pack of 12, a carton of 24.
    *
@@ -202,7 +205,7 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
 
       setMessage({
         type: "success",
-        text: res?.message || "Lubricant added successfully!",
+        text: res?.message || "Product added successfully",
       });
 
       // Clear form
@@ -247,17 +250,11 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
         </div>
 
         <div className="mb-4">
-          {/* Neutral wording: this form now stocks drinks and snacks as well as
-              oil, and a cashier adding Coca-Cola should not be told they are
-              adding a lubricant. */}
-          <h4 className="font-semibold text-lg">
-            {formData.category === "lubricant" ? "Add Lubricant" : "Add Store Item"}
-          </h4>
-          <p>
-            {formData.category === "lubricant"
-              ? "Add new lubricant to stock"
-              : "Add a drink, snack or other shop item to stock"}
-          </p>
+          {/* This form stocks drinks and snacks as well as oil, so it says so
+              from the start. A heading that swapped as the category changed
+              read as though the form itself had changed. */}
+          <h4 className="font-semibold text-lg">Add Product (Lubricant or Retail)</h4>
+          <p>Add New Stock</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-2 w-full">
@@ -329,15 +326,33 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
           <div className="flex gap-2 flex-col lg:flex-row w-full">
             <div className="flex-1">
               <p className="text-sm font-semibold">Brand *</p>
-              <input
-                name="brand"
-                value={formData.brand}
-                onChange={handleChange}
-                type="text"
-                className="w-full border-2 border-gray-300 p-2 rounded-[8px]"
-                placeholder="e.g Mobil"
-                required
-              />
+              {/* Plenty of shop stock has no brand worth recording, and a
+                  required free-text box invites a dash or a full stop typed to
+                  get past it. N/A is an honest answer, so it is offered. */}
+              <select
+                value={brandMode}
+                onChange={(e) => {
+                  const mode = e.target.value;
+                  setBrandMode(mode);
+                  setFormData((prev) => ({ ...prev, brand: mode === "na" ? "N/A" : "" }));
+                }}
+                className="w-full border-2 border-gray-300 p-2 rounded-[8px] mb-2"
+              >
+                <option value="named">Enter a brand</option>
+                <option value="na">N/A (no brand)</option>
+              </select>
+
+              {brandMode === "named" && (
+                <input
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleChange}
+                  type="text"
+                  className="w-full border-2 border-gray-300 p-2 rounded-[8px]"
+                  placeholder="e.g Mobil"
+                  required
+                />
+              )}
             </div>
 
             <div className="flex-1">

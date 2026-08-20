@@ -150,6 +150,9 @@ function SupplierDropdown({ value, onChange, suppliers, loadingSuppliers }) {
   );
 }
 
+/** Shop stock, as opposed to automotive lubricants. */
+const STORE_CATEGORIES = ["drinks", "snacks", "other"];
+
 export default function LubricantStockModal({ onClose }) {
   const d = new Date();
   const day = String(d.getDate()).padStart(2, "0");
@@ -212,6 +215,18 @@ export default function LubricantStockModal({ onClose }) {
     },
   ]);
 
+  /**
+   * What this invoice is actually for, read off the rows rather than asked up
+   * front. One supplier invoice is usually all oil or all shop stock, so the
+   * heading can just say which; a mixed one says neither and stays neutral.
+   */
+  const invoiceKind = (() => {
+    const kinds = new Set(
+      rows.filter((r) => r.lubricantId).map((r) => (STORE_CATEGORIES.includes(r.category) ? "store" : "lubricant"))
+    );
+    return kinds.size === 1 ? [...kinds][0] : "mixed";
+  })();
+
   const [supplier, setSupplier] = useState("");
   const [invoiceNo, setInvoiceNo] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -221,6 +236,14 @@ export default function LubricantStockModal({ onClose }) {
   const [searchError, setSearchError] = useState(""); // Search error
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
+  /**
+   * Whether the banner reads as good news or bad.
+   *
+   * This used to be inferred from an emoji at the front of the message, so the
+   * icon was load-bearing rather than decorative. Saying the tone outright
+   * keeps the styling working and keeps pictures out of the sentence.
+   */
+  const [messageTone, setMessageTone] = useState("success");
 
   // Calculate total amount from all rows (sum of amounts)
   const calculateTotalAmount = () => {
@@ -253,7 +276,7 @@ export default function LubricantStockModal({ onClose }) {
     if (!barcode) return;
 
     try {
-      const response = await getLubricantByBarcode(barcode);
+      const response = await getLubricantByBarcode(barcode, "restock");
 
       if (response && response.data) {
         const lubricant = response.data;
@@ -392,7 +415,6 @@ export default function LubricantStockModal({ onClose }) {
     setRows(newRows);
   };
 
-  const STORE_CATEGORIES = ["drinks", "snacks", "other"];
 
   const handleExpiryChange = (e, index) => {
     const newRows = [...rows];
@@ -417,6 +439,28 @@ export default function LubricantStockModal({ onClose }) {
     }
     const discount = Number(unit.discountPercentage) || 0;
     return Math.round(factor * singlePrice * (1 - discount / 100));
+  };
+
+  /** Which rows have their unit prices open. Collapsed by default. */
+  const [openUnits, setOpenUnits] = useState({});
+  const toggleUnits = (index) =>
+    setOpenUnits((prev) => ({ ...prev, [index]: !prev[index] }));
+
+  /**
+   * Set a bigger unit's price directly.
+   *
+   * The pricing MODE still exists on the product and still drives the automatic
+   * recalculation when cost changes. What it no longer does is stand between
+   * somebody and the price they already know: a person holding a delivery note
+   * knows the carton sells for 7,700, not which formula produced it. Typing the
+   * figure records it as an explicit override, which is exactly what it is.
+   */
+  const handleUnitPrice = (rowIndex, unitIndex, value) => {
+    const newRows = [...rows];
+    const units = (newRows[rowIndex].saleUnits || []).map((u) => ({ ...u }));
+    units[unitIndex] = { ...units[unitIndex], price: value === "" ? "" : Number(value) };
+    newRows[rowIndex].saleUnits = units;
+    setRows(newRows);
   };
 
   const handleUnitFieldChange = (rowIndex, unitIndex, field, value) => {
@@ -631,18 +675,18 @@ export default function LubricantStockModal({ onClose }) {
       const response = await saveLubricantPurchase(purchaseData);
 
       if (response.success) {
-        setMessage(`✅ Purchase saved successfully! Invoice No: ${invoiceNo}`);
+        setMessageTone("success"); setMessage(`Purchase saved successfully! Invoice No: ${invoiceNo}`);
         // Optional: reset form after delay
         setTimeout(() => {
           onClose();
           setMessage("");
         }, 3000);
       } else {
-        setMessage(`❌ ${response.error || "Failed to save purchase"}`);
+        setMessageTone("error"); setMessage(`${response.error || "Failed to save purchase"}`);
       }
     } catch (error) {
       console.error("Error saving purchase:", error);
-      setMessage(`❌ ${error.message}`);
+      setMessageTone("error"); setMessage(`${error.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -658,9 +702,19 @@ export default function LubricantStockModal({ onClose }) {
             <div className="flex items-start justify-between gap-3 mb-4">
               <div className="min-w-0">
                 <h3 className="text-lg sm:text-2xl font-semibold leading-tight">
-                  Add Lubricant Stock Purchase
+                  {invoiceKind === "store"
+                    ? "Add Store Stock Purchase"
+                    : invoiceKind === "lubricant"
+                    ? "Add Lubricant Stock Purchase"
+                    : "Add Stock Purchase"}
                 </h3>
-                <p className="text-sm text-gray-500 mt-0.5">Record purchased lubricants in your station</p>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  {invoiceKind === "store"
+                    ? "Record purchased store items against this invoice"
+                    : invoiceKind === "lubricant"
+                    ? "Record purchased lubricants against this invoice"
+                    : "Record purchased lubricants or store items against this invoice"}
+                </p>
               </div>
               <button
                 onClick={onClose}
@@ -756,7 +810,7 @@ export default function LubricantStockModal({ onClose }) {
             <div className="bg-white dark:bg-gray-800 mt-4 p-4 rounded-xl">
               {message && (
                 <div className={`p-3 rounded-lg text-sm font-semibold mb-4 ${
-                  message.startsWith("✅")
+                  messageTone === "success"
                     ? "bg-green-100 text-green-700 border border-green-300"
                     : "bg-red-100 text-red-700 border border-red-300"
                 }`}>
@@ -904,54 +958,47 @@ export default function LubricantStockModal({ onClose }) {
                       
                           {(row.saleUnits || []).length > 0 && (
                             <div>
-                              <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                                Sells also as ({row.baseUnit || "piece"} = 1)
-                              </p>
-                              <div className="flex flex-col gap-2">
-                                {row.saleUnits.map((u, ui) => (
-                                  <div key={ui} className="flex items-center gap-2 flex-wrap bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-100 dark:border-gray-700">
-                                    <span className="text-xs font-semibold capitalize min-w-[70px]">{u.name}</span>
-                                    <span className="text-[11px] text-gray-400">of {u.factor}</span>
-                                    <select
-                                      value={u.pricingMode || "derived"}
-                                      onChange={(e) => handleUnitFieldChange(index, ui, "pricingMode", e.target.value)}
-                                      className="text-xs border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded px-1.5 py-1"
+                              {/* One button, because most of the time the price is already right and
+                                  the panel is only in the way. */}
+                              <button
+                                type="button"
+                                onClick={() => toggleUnits(index)}
+                                className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                              >
+                                {openUnits[index] ? "Hide" : "Edit"} pack / carton prices ({row.saleUnits.length})
+                              </button>
+                          
+                              {openUnits[index] && (
+                                <div className="flex flex-col gap-2 mt-2">
+                                  {row.saleUnits.map((u, ui) => (
+                                    <div
+                                      key={ui}
+                                      className="flex items-center gap-3 flex-wrap bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-100 dark:border-gray-700"
                                     >
-                                      <option value="derived">Priced off single</option>
-                                      <option value="cost">Priced off its own cost</option>
-                                    </select>
-                                    {(u.pricingMode || "derived") === "cost" ? (
-                                      <>
+                                      <span className="text-sm font-semibold capitalize min-w-[64px]">{u.name}</span>
+                                      <span className="text-xs text-gray-500">
+                                        {u.factor} {row.baseUnit || "piece"}{Number(u.factor) === 1 ? "" : "s"}
+                                      </span>
+                          
+                                      <div className="ml-auto flex items-center gap-1.5">
+                                        <span className="text-xs text-gray-400">₦</span>
                                         <input
                                           type="number"
-                                          value={u.unitCost ?? ""}
-                                          onChange={(e) => handleUnitFieldChange(index, ui, "unitCost", e.target.value)}
-                                          placeholder="cost"
-                                          className="w-20 text-xs border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded px-1.5 py-1"
+                                          min="0"
+                                          value={u.price ?? ""}
+                                          onChange={(e) => handleUnitPrice(index, ui, e.target.value)}
+                                          placeholder="0"
+                                          className="w-24 min-w-0 text-sm text-right border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2 py-1.5"
                                         />
-                                        <input
-                                          type="number"
-                                          value={u.sellingPercentage ?? ""}
-                                          onChange={(e) => handleUnitFieldChange(index, ui, "sellingPercentage", e.target.value)}
-                                          placeholder="%"
-                                          className="w-16 text-xs border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded px-1.5 py-1"
-                                        />
-                                      </>
-                                    ) : (
-                                      <input
-                                        type="number"
-                                        value={u.discountPercentage ?? ""}
-                                        onChange={(e) => handleUnitFieldChange(index, ui, "discountPercentage", e.target.value)}
-                                        placeholder="disc %"
-                                        className="w-20 text-xs border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded px-1.5 py-1"
-                                      />
-                                    )}
-                                    <span className="text-xs font-bold text-blue-600 ml-auto">
-                                      ₦{Number(u.price || 0).toLocaleString()}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  <p className="text-[11px] text-gray-400">
+                                    Leave a price alone to keep it. Prices are recalculated from the new
+                                    cost when you change the amount above, so check them before saving.
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
@@ -1053,54 +1100,47 @@ export default function LubricantStockModal({ onClose }) {
                               
                                   {(row.saleUnits || []).length > 0 && (
                                     <div>
-                                      <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                                        Sells also as ({row.baseUnit || "piece"} = 1)
-                                      </p>
-                                      <div className="flex flex-col gap-2">
-                                        {row.saleUnits.map((u, ui) => (
-                                          <div key={ui} className="flex items-center gap-2 flex-wrap bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-100 dark:border-gray-700">
-                                            <span className="text-xs font-semibold capitalize min-w-[70px]">{u.name}</span>
-                                            <span className="text-[11px] text-gray-400">of {u.factor}</span>
-                                            <select
-                                              value={u.pricingMode || "derived"}
-                                              onChange={(e) => handleUnitFieldChange(index, ui, "pricingMode", e.target.value)}
-                                              className="text-xs border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded px-1.5 py-1"
+                                      {/* One button, because most of the time the price is already right and
+                                          the panel is only in the way. */}
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleUnits(index)}
+                                        className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                                      >
+                                        {openUnits[index] ? "Hide" : "Edit"} pack / carton prices ({row.saleUnits.length})
+                                      </button>
+
+                                      {openUnits[index] && (
+                                        <div className="flex flex-col gap-2 mt-2">
+                                          {row.saleUnits.map((u, ui) => (
+                                            <div
+                                              key={ui}
+                                              className="flex items-center gap-3 flex-wrap bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-100 dark:border-gray-700"
                                             >
-                                              <option value="derived">Priced off single</option>
-                                              <option value="cost">Priced off its own cost</option>
-                                            </select>
-                                            {(u.pricingMode || "derived") === "cost" ? (
-                                              <>
+                                              <span className="text-sm font-semibold capitalize min-w-[64px]">{u.name}</span>
+                                              <span className="text-xs text-gray-500">
+                                                {u.factor} {row.baseUnit || "piece"}{Number(u.factor) === 1 ? "" : "s"}
+                                              </span>
+
+                                              <div className="ml-auto flex items-center gap-1.5">
+                                                <span className="text-xs text-gray-400">₦</span>
                                                 <input
                                                   type="number"
-                                                  value={u.unitCost ?? ""}
-                                                  onChange={(e) => handleUnitFieldChange(index, ui, "unitCost", e.target.value)}
-                                                  placeholder="cost"
-                                                  className="w-20 text-xs border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded px-1.5 py-1"
+                                                  min="0"
+                                                  value={u.price ?? ""}
+                                                  onChange={(e) => handleUnitPrice(index, ui, e.target.value)}
+                                                  placeholder="0"
+                                                  className="w-24 min-w-0 text-sm text-right border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2 py-1.5"
                                                 />
-                                                <input
-                                                  type="number"
-                                                  value={u.sellingPercentage ?? ""}
-                                                  onChange={(e) => handleUnitFieldChange(index, ui, "sellingPercentage", e.target.value)}
-                                                  placeholder="%"
-                                                  className="w-16 text-xs border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded px-1.5 py-1"
-                                                />
-                                              </>
-                                            ) : (
-                                              <input
-                                                type="number"
-                                                value={u.discountPercentage ?? ""}
-                                                onChange={(e) => handleUnitFieldChange(index, ui, "discountPercentage", e.target.value)}
-                                                placeholder="disc %"
-                                                className="w-20 text-xs border border-gray-200 dark:border-gray-600 dark:bg-gray-700 rounded px-1.5 py-1"
-                                              />
-                                            )}
-                                            <span className="text-xs font-bold text-blue-600 ml-auto">
-                                              ₦{Number(u.price || 0).toLocaleString()}
-                                            </span>
-                                          </div>
-                                        ))}
-                                      </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                          <p className="text-[11px] text-gray-400">
+                                            Leave a price alone to keep it. Prices are recalculated from the new
+                                            cost when you change the amount above, so check them before saving.
+                                          </p>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>
