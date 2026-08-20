@@ -76,7 +76,20 @@ const SalesReportMan = () => {
     }
   }, [isActiveTab]);
 
-  const salesData = getSalesData(salesOverview);
+  /**
+   * The label for whatever period is selected, empty when it is the default.
+   * Passing it through is what tells the cards to read the range figures
+   * instead of today's.
+   */
+  const salesDuration = useManagerReportsStore((state) => state.salesOverviewDuration);
+  const DURATION_LABELS = {
+    today: "", thisweek: "This week", thismonth: "This month",
+    thisquarter: "This quarter", thisyear: "This year",
+    lastmonth: "Last month", lastquarter: "Last quarter",
+  };
+  const rangeLabel = DURATION_LABELS[String(salesDuration || "").toLowerCase()] ?? "Selected period";
+
+  const salesData = getSalesData(salesOverview, rangeLabel);
   const cashData  = getCashData(cashOverview);
 
   // ── Map API recentTransactions → 2D row arrays for the table ───────────────

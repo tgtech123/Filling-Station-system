@@ -69,8 +69,30 @@ const SalesAndProductChart = () => {
     fetchSalesOverview(duration, true);
   }, [duration]);
 
+  /**
+   * Which half of the business this view is showing.
+   *
+   * Fuel is sold in litres from a pump; the counter is sold in pieces over a
+   * till. Putting both in one chart forces a single unit on two different
+   * things and buries the smaller of them. A switch keeps each readable on its
+   * own terms, and "All" stays available for the headline total.
+   */
+  const [view, setView] = useState("all");
+
+  const VIEWS = [
+    { key: "all",     label: "All Sales" },
+    { key: "fuel",    label: "Fuel" },
+    { key: "counter", label: "Counter" },
+  ];
+
   // ── Sales Trend ───────────────────────────────────────────────────────────
-  const salesTrend  = salesOverview?.salesTrend ?? [];
+  const byKind = salesOverview?.salesTrendByKind;
+  const salesTrend =
+    view === "fuel"
+      ? byKind?.fuel ?? []
+      : view === "counter"
+      ? byKind?.counter ?? []
+      : salesOverview?.salesTrend ?? [];
   const trendValues = salesTrend.map((d) => d.sales);
   const maxVal      = Math.max(...trendValues, 1);
   const minVal      = Math.min(...trendValues, 0);
@@ -94,13 +116,29 @@ const SalesAndProductChart = () => {
     : '';
 
   // ── Product Distribution ──────────────────────────────────────────────────
-  const rawProducts   = salesOverview?.productSalesDistribution ?? [];
-  const totalLitres   = rawProducts.reduce((sum, p) => sum + (p.litres || 0), 0);
+  const allProducts = salesOverview?.productSalesDistribution ?? [];
+
+  const rawProducts =
+    view === "fuel"
+      ? allProducts.filter((p) => p.kind === "fuel")
+      : view === "counter"
+      ? allProducts.filter((p) => p.kind !== "fuel")
+      : allProducts;
+
+  /**
+   * Share by MONEY, not litres.
+   *
+   * The old split divided every product's litres by the total litres, which is
+   * meaningless once shop stock is in the list: a crate of drinks has no litres
+   * at all, so it scored zero and vanished from the chart even after selling
+   * well. Amount is the one measure both sides genuinely share.
+   */
+  const totalAmount   = rawProducts.reduce((sum, p) => sum + (p.amount || 0), 0);
   const CIRCUMFERENCE = 2 * Math.PI * 70;
 
   const products = rawProducts.map((p) => ({
     ...p,
-    pct: totalLitres > 0 ? Math.round((p.litres / totalLitres) * 100) : 0,
+    pct: totalAmount > 0 ? Math.round(((p.amount || 0) / totalAmount) * 100) : 0,
   }));
 
   let cumulativeDash = 0;
@@ -115,14 +153,42 @@ const SalesAndProductChart = () => {
 
   return (
     <div className="mt-[1.5rem]">
+
+      {/* One switch driving BOTH panels, so the trend and the distribution
+          always describe the same half of the business. Two separate toggles
+          would let them disagree, which is worse than no toggle at all. */}
+      <div className="flex gap-1 p-1 bg-neutral-100 rounded-xl w-full sm:w-fit mb-4">
+        {VIEWS.map((v) => (
+          <button
+            key={v.key}
+            onClick={() => setView(v.key)}
+            className={`flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+              view === v.key
+                ? "bg-white text-[#0080ff] shadow-sm"
+                : "text-neutral-500 hover:text-neutral-700"
+            }`}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-col-reverse lg:flex-row gap-6 w-full">
 
         {/* ── Sales Trend Chart ──────────────────────────────────────────────── */}
         <div className="rounded-xl flex-1 p-2 border-2 border-neutral-200">
           <div className="flex justify-between items-center mb-[1.5rem]">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Sales Trend</h3>
-              <p className="text-sm text-gray-500">Over the selected duration</p>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {view === "fuel" ? "Fuel Sales Trend" : view === "counter" ? "Counter Sales Trend" : "Sales Trend"}
+              </h3>
+              <p className="text-sm text-gray-500">
+                {view === "fuel"
+                  ? "PMS, AGO, diesel and kerosene"
+                  : view === "counter"
+                  ? "Lubricants and store items"
+                  : "Fuel and counter combined"}
+              </p>
             </div>
             {/* Now fully wired — shares the same duration state as the right panel */}
             <Dropdown
@@ -199,7 +265,13 @@ const SalesAndProductChart = () => {
         <div className="flex-1 rounded-xl p-2 border-2 border-neutral-200">
           <div className="lg:flex flex-wrap lg:justify-between items-center mb-[1.5rem]">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Product Sales Distribution</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                {view === "fuel"
+                  ? "Fuel Product Distribution"
+                  : view === "counter"
+                  ? "Counter Product Distribution"
+                  : "Product Sales Distribution"}
+              </h3>
               <p className="text-sm text-gray-500">{selectedLabel}</p>
             </div>
             {/* Shares the same duration state — one dropdown change updates both panels */}
@@ -256,8 +328,13 @@ const SalesAndProductChart = () => {
                         <span className="text-gray-600 font-medium truncate">{p.product}</span>
                         <span className="text-gray-400 text-sm flex-shrink-0">{p.pct}%</span>
                       </div>
-                      <span className="text-gray-500 text-sm ml-4 flex-shrink-0">
-                        {(p.litres || 0).toLocaleString()} L
+                      <span className="text-gray-500 text-sm ml-4 flex-shrink-0 text-right">
+                        ₦{(p.amount || 0).toLocaleString()}
+                        <span className="block text-[11px] text-gray-400">
+                          {p.kind === "fuel"
+                            ? `${(p.litres || 0).toLocaleString()} L`
+                            : `${(p.units || 0).toLocaleString()} unit${(p.units || 0) === 1 ? "" : "s"}`}
+                        </span>
                       </span>
                     </div>
                   ))}

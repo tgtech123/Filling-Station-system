@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import useActivityFeedStore from "@/store/useActivityFeedStore";
 import FuelYieldFactorSection from "./FuelYieldFactorSection";
+import ReceiptNoteSection from "./ReceiptNoteSection";
 
 const API =
   process.env.NEXT_PUBLIC_API || "https://fueldesk-station-server.onrender.com";
@@ -978,6 +979,9 @@ export default function SettingsPage() {
 
         {/* ── FUEL YIELD FACTOR (STATION LITRE) ── */}
         <FuelYieldFactorSection />
+
+        {/* ── RECEIPT TERMS ── */}
+        <ReceiptNoteSection />
 
         {/* ── SECURITY ── */}
         <SectionCard>
