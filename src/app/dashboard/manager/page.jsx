@@ -498,17 +498,23 @@ export default function ManagerDashboard() {
                               {tank.currentQuantity?.toLocaleString() || 0}/{tank.limit?.toLocaleString() || 0} Litres
                             </p>
                           </div>
-                          <div className="h-6 w-full bg-gray-200 rounded-[30px]">
-                            <div
-                              style={{
-                                width: `${tank.percentFilled || 0}%`,
-                                background: color,
-                              }}
-                              className="relative h-6 rounded-[30px]"
-                            >
-                              <div className="absolute bg-[#dad6d6] h-8 w-8 rounded-full top-[-5px] right-[-2px]"></div>
-                            </div>
-                          </div>
+                          {(() => {
+                            const pct = Math.max(0, Math.min(100, Number(tank.percentFilled) || 0));
+                            return (
+                              <div className="relative h-6 w-full bg-gray-200 rounded-[30px]">
+                                <div
+                                  style={{ width: `${pct}%`, background: color }}
+                                  className="h-6 rounded-[30px] transition-all duration-300"
+                                />
+                                {/* Travel is reduced by the knob's own width so it
+                                    never leaves the track at either end. */}
+                                <div
+                                  style={{ left: `calc(${pct}% - ${(pct / 100) * 32}px)` }}
+                                  className="absolute top-1/2 -translate-y-1/2 bg-[#dad6d6] h-8 w-8 rounded-full border-2 border-white shadow-sm transition-all duration-300"
+                                />
+                              </div>
+                            );
+                          })()}
                         </div>
                       );
                     })

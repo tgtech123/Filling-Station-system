@@ -79,7 +79,7 @@ export const getDashboardFlashCards = (dashboard) => {
 
   const {
     revenueGenerated, expenses, discrepancies, totalStockValue, accountsPayable,
-    revenueBreakdown, salesCount,
+    revenueBreakdown, salesCount, gasSales,
   } = dashboard.summary;
 
   // Older servers do not send the split. Fall back to zeroes rather than
@@ -89,6 +89,10 @@ export const getDashboardFlashCards = (dashboard) => {
   const storeRevenue = Number(revenueBreakdown?.store     || 0);
   const lubCount     = Number(salesCount?.lubricant || 0);
   const storeCount   = Number(salesCount?.store     || 0);
+  const gasRevenue   = Number(revenueBreakdown?.gas || 0);
+  const gasCount     = Number(salesCount?.gas || 0);
+  const gasTender    = gasSales?.byTender || {};
+  const naira        = (n) => `₦${Number(n || 0).toLocaleString()}`;
 
   return [
     {
@@ -124,6 +128,26 @@ export const getDashboardFlashCards = (dashboard) => {
       icon: <TbCurrencyNaira size={23} />,
       variable: `₦${fuelRevenue.toLocaleString()}`,
     },
+    // Only where the department is actually running, so a fuel-only station
+    // is not shown a permanent zero.
+    ...(gasSales
+      ? [{
+          id: 9,
+          name: "Gas Sales",
+          period: `Today · ${gasCount} sale${gasCount === 1 ? "" : "s"} · ${Number(gasSales.kg || 0).toLocaleString()}kg`,
+          icon: <TbCurrencyNaira size={23} />,
+          variable: naira(gasRevenue),
+        },
+        {
+          // The reconciling figures: cash against a drawer, the rest against
+          // a statement. Mixed sales are already apportioned server-side.
+          id: 10,
+          name: "Gas by Tender",
+          period: `Cash ${naira(gasTender.cash)} · POS ${naira(gasTender.POS)} · Transfer ${naira(gasTender.transfer)}`,
+          icon: <Banknote size={23} />,
+          variable: naira(gasRevenue),
+        }]
+      : []),
     {
       id: 2,
       name: "Expenses",

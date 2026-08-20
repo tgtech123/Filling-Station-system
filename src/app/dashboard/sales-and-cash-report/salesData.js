@@ -16,9 +16,17 @@ export const getSalesData = (salesOverview, rangeLabel = "") => {
   const headlineCount  = useRange ? range.transactions : salesOverview?.totalTransactions;
   const breakdown      = useRange ? range : salesOverview?.todayBreakdown;
 
+  const naira = (n) => `₦${Number(n || 0).toLocaleString()}`;
+
+  // Gas only appears in the line when the station actually sells it, so a
+  // fuel-only station is not told about a department it does not run.
   const subLabel = breakdown
-    ? `Fuel ₦${Number(breakdown.fuel || 0).toLocaleString()} · Counter ₦${Number(breakdown.counter || 0).toLocaleString()}`
-    : "Fuel and counter";
+    ? [
+        `Fuel ${naira(breakdown.fuel)}`,
+        `Counter ${naira(breakdown.counter)}`,
+        ...(Number(breakdown.gas || 0) > 0 ? [`Gas ${naira(breakdown.gas)}`] : []),
+      ].join(" · ")
+    : "All sales channels";
 
   return [
   {
