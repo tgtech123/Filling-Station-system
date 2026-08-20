@@ -581,7 +581,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       // supervisor — who already validates deliveries — needs the screen that
       // does it.
       id: "lubricant-management",
-      name: "Lubricant Management",
+      name: "Products & Stock",
       icon: <RiOilLine size={20} />,
       link: "/dashboard/lubricantManagement",
       roles: ["manager", "supervisor"],

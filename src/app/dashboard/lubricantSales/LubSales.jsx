@@ -38,6 +38,38 @@ const LubSales = () => {
    * return the original sale instead of recording a second one. A new basket
    * gets a new key.
    */
+  /**
+   * The barcode inputs, so focus can follow the scanner.
+   *
+   * A hardware scanner types the code and sends Enter. Without moving focus,
+   * the caret stays in the line just filled, and the next beep types a second
+   * product's barcode ON TOP of the first one's field. The cashier sees the
+   * line they already scanned change under them, and either the sale is wrong
+   * or they stop and fix it with a queue waiting.
+   *
+   * Keyed by row index rather than held in an array, so a deleted row cannot
+   * leave a stale slot pointing at the wrong input.
+   */
+  const barcodeRefs = useRef({});
+
+  /**
+   * Put the caret on the first line still waiting for a product.
+   *
+   * Deferred a frame: the row that receives focus may not exist yet at the
+   * moment the scan resolves, because the empty line at the end is appended in
+   * the same update.
+   */
+  const focusNextBarcode = () => {
+    requestAnimationFrame(() => {
+      setRows((current) => {
+        const next = current.findIndex((r) => !r.lubricantId);
+        const el = barcodeRefs.current[next === -1 ? current.length - 1 : next];
+        if (el) { el.focus(); el.select?.(); }
+        return current; // read-only: this updater exists to see live rows
+      });
+    });
+  };
+
   const submitInFlightRef = useRef(false);
   const basketKeyRef = useRef(null);
 
@@ -67,6 +99,25 @@ const LubSales = () => {
    * every time, so the choice is remembered on the till rather than re-picked
    * on each sale. Read after mount — localStorage does not exist on the server.
    */
+  /**
+   * The station's own terms, printed under the totals.
+   *
+   * Read from the server rather than the login payload so a change the owner
+   * makes in Settings reaches the till on its next load, without every cashier
+   * having to sign out and back in for it to take effect.
+   */
+  const [receiptNote, setReceiptNote] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${API_URL}/api/receipt-settings`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (!cancelled && d?.data) setReceiptNote(d.data.receiptNote || ""); })
+      .catch(() => {}); // a missing note must never stop a sale
+    return () => { cancelled = true; };
+  }, []);
+
   const [copies, setCopies] = useState(1);
   useEffect(() => {
     const saved = Number(localStorage.getItem("receiptCopies"));
@@ -441,6 +492,7 @@ const LubSales = () => {
       applyScannedItem(local);
       setScanError(null);
       setMessage("");
+      focusNextBarcode();
       finish("ok (local)");
       return;
     }
@@ -463,6 +515,7 @@ const LubSales = () => {
         applyScannedItem(result.data);
         setScanError(null);
         setMessage("");
+        focusNextBarcode();
         finish("ok (server)");
         return;
       }
@@ -656,6 +709,7 @@ const LubSales = () => {
         address: user.station?.address || "N/A",
         phone: user.station?.phone || "",
         email: user.station?.email || "",
+        receiptNote: receiptNote,
         logo: user.station?.logoUrl || user.station?.logo || null,
         date: new Date().toLocaleString(),
         paymentType: paymentMethod,
@@ -856,6 +910,7 @@ const LubSales = () => {
                 </label>
                 <input
                   type="text"
+                  ref={(el) => { barcodeRefs.current[index] = el; }}
                   value={row.barcode}
                   onChange={(e) => handleBarcodeChange(e, index)}
                   onKeyDown={(e) => handleBarcodeKeyPress(e, index)}
@@ -963,6 +1018,7 @@ const LubSales = () => {
                 <td className="px-5 py-2">
                   <input
                     type="text"
+                    ref={(el) => { barcodeRefs.current[index] = el; }}
                     value={row.barcode}
                     onChange={(e) => handleBarcodeChange(e, index)}
                     onKeyDown={(e) => handleBarcodeKeyPress(e, index)}

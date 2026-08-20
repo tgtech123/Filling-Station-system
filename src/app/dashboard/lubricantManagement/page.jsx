@@ -42,7 +42,7 @@ export default function LubricantManagement() {
     fetchDailySummary();
   }, [fetchLubricants, fetchDailySummary]);
 
-  // 🆕 Refresh data when Add Lubricant modal closes
+  // 🆕 Refresh data when the Add Product modal closes
   useEffect(() => {
     if (!isLubricantModalOpen) {
       fetchLubricants();
@@ -166,7 +166,7 @@ export default function LubricantManagement() {
       <div className="px-4 lg:px-[40px] pt-4"><PageBackBar /></div>
       <header className="px-4 lg:px-[40px] mb-4 lg:mb-6 bg-white dark:bg-gray-900 shadow-sm py-4 flex flex-col sm:flex-row gap-3 sm:gap-0 items-start sm:items-center sm:justify-between">
         <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 sm:items-center">
-          <h4 className="text-xl sm:text-2xl font-semibold">Lubricant Management</h4>
+          <h4 className="text-xl sm:text-2xl font-semibold">Products &amp; Stock</h4>
         </div>
         <div className="flex gap-2">
           {/* The margins every new product starts from. Sits beside "Add"
@@ -191,16 +191,16 @@ export default function LubricantManagement() {
             className="cursor-pointer flex gap-2 items-center border-2 border-[#0080ff] hover:bg-[#0080ff] hover:text-white py-2 px-5 rounded-[12px] text-[#0080ff] font-semibold text-sm transition-colors"
           >
             <Plus size={18} />
-            Add Lubricant
+            Add Product
           </button>
         </div>
       </header>
 
       <div className="px-6 lg:px-[40px]">
         <DisplayCard>
-          <h4 className="text-xl font-semibold">Lubricant Management</h4>
+          <h4 className="text-xl font-semibold">Products &amp; Stock</h4>
           <p className="mb-6">
-            Monitor lubricant inventory and track cashier sales
+            Register products, set prices and track counter sales — lubricants and store items alike
           </p>
 
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -230,7 +230,7 @@ export default function LubricantManagement() {
             } flex items-center gap-2`}
           >
             <Home size={16} className="hidden sm:flex shrink-0" />
-            Lubricant Sales
+            Counter Sales
           </div>
           <div
             id="Inventory"

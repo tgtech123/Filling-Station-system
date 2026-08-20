@@ -66,6 +66,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
     address    = "",
     phone      = "",
     email      = "",
+    receiptNote = "",
     logo       = null,
     date       = new Date().toLocaleString(),
     txnId      = "N/A",
@@ -348,6 +349,30 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
             padding-top:    2pt      !important;
           }
 
+          /* The station's terms. Set apart from the quote above it, which is
+             decoration, because this one is a statement the station stands
+             behind and a customer may quote back at the counter. */
+          .t-note {
+            font-size:      8.5pt    !important;
+            font-weight:    900      !important;
+            text-align:     center   !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.03em   !important;
+            line-height:    1.5      !important;
+            display:        block    !important;
+            padding:        2pt 0    !important;
+          }
+
+          /* An email can be longer than half a slip, so its value wraps under
+             the label instead of colliding with it. */
+          .t-meta-email {
+            flex-wrap: wrap !important;
+          }
+          .t-meta-email span:last-child {
+            font-size:  8pt !important;
+            word-break: break-all !important;
+          }
+
           /* Powered-by branding */
           .t-powered-by {
             font-size:      6.5pt   !important;
@@ -382,7 +407,11 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
                 {logo ? (
                   <img src={logo} alt="Station logo" className="w-full h-full object-contain" />
                 ) : (
-                  <img src="/station-logo.png" alt="Station logo" className="w-full h-full object-contain" />
+                  // Initial rather than a stock badge, for the same reason the
+                  // printed slip carries none.
+                  <span className="text-2xl font-bold text-gray-300">
+                    {String(station || "?").trim().charAt(0).toUpperCase()}
+                  </span>
                 )}
               </div>
               <h2 className="receipt-station-name text-lg font-bold text-gray-900 leading-tight">{station}</h2>
@@ -419,12 +448,19 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
             </div>
 
             {(phone || email) && (
-              <div className="text-center px-2 mb-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  Complaints &amp; Suggestions
-                </p>
-                {phone && <p className="text-xs font-semibold text-gray-700 mt-1">{phone}</p>}
-                {email && <p className="text-xs font-semibold text-gray-700 break-all">{email}</p>}
+              <div className="px-1 text-xs text-gray-600 space-y-1.5 mb-4">
+                {phone && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-gray-400 font-medium shrink-0">Complaints</span>
+                    <span className="font-semibold text-gray-800 text-right">{phone}</span>
+                  </div>
+                )}
+                {email && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-gray-400 font-medium shrink-0">Email</span>
+                    <span className="font-semibold text-gray-800 text-right break-all">{email}</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -477,6 +513,12 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
 
             <Divider />
 
+            {receiptNote && (
+              <p className="text-center px-2 mb-3 text-[11px] font-bold uppercase tracking-wide text-gray-600">
+                {receiptNote}
+              </p>
+            )}
+
             <div className="text-center px-2 mb-4">
               <p className="text-[11px] italic text-gray-400 leading-relaxed">"{quote}"</p>
               <p className="text-[10px] text-gray-300 mt-2 font-medium tracking-wide uppercase">
@@ -516,10 +558,14 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           {Array.from({ length: copyCount }, (_, copyIndex) => (
           <div className="t-copy" key={copyIndex}>
 
-          {/* Station logo — always render; fall back to the public default */}
-          <div className="t-logo-wrap">
-            <img src={logo || "/station-logo.png"} alt="Station logo" />
-          </div>
+          {/* Only this station's own logo. No stock fallback: a packaged badge
+              on a receipt is somebody else's mark on this station's paper, and
+              the name printed underneath already identifies the slip. */}
+          {logo && (
+            <div className="t-logo-wrap">
+              <img src={logo} alt="Station logo" />
+            </div>
+          )}
 
           {/* Station name */}
           <div className="t-station-name">{station}</div>
@@ -546,9 +592,16 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           {(phone || email) && (
             <>
               <div className="t-line-dashed" />
-              <div className="t-contact-head">Complaints &amp; Suggestions</div>
-              {phone && <div className="t-contact-line">{phone}</div>}
-              {email && <div className="t-contact-line">{email}</div>}
+              {phone && (
+                <div className="t-meta-row">
+                  <span>Complaints</span><span>{phone}</span>
+                </div>
+              )}
+              {email && (
+                <div className="t-meta-row t-meta-email">
+                  <span>Email</span><span>{email}</span>
+                </div>
+              )}
             </>
           )}
 
@@ -606,6 +659,13 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           {/* Footer */}
           <div className="t-footer-line">"{quote}"</div>
           <div className="t-footer-line">— Thank you for your business —</div>
+
+          {receiptNote && (
+            <>
+              <div className="t-line-dashed" />
+              <div className="t-note">{receiptNote}</div>
+            </>
+          )}
 
           <div className="t-line-dashed" />
 

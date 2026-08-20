@@ -47,6 +47,17 @@ const ActionButtons = ({ transactionId }) => {
           address: txn.fillingStation?.address || "",
           phone: txn.fillingStation?.phone || "",
           email: txn.fillingStation?.email || "",
+          receiptNote: txn.fillingStation?.receiptNote || "",
+          /**
+           * The logo belongs to the station that MADE the sale, read off the
+           * transaction's own populated station rather than off whoever is
+           * signed in. A reprint pulled up after switching branches must not
+           * put this branch's badge on another branch's receipt.
+           *
+           * Was omitted entirely, so every reprint fell through to the
+           * packaged /station-logo.png placeholder.
+           */
+          logo: txn.fillingStation?.image || null,
           date: new Date(txn.createdAt).toLocaleString(),
           paymentType: txn.paymentMethod || "N/A",
           // A receipt must read the way the sale was made. Someone who bought

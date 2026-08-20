@@ -35,9 +35,19 @@ const useBranchStore = create((set, get) => ({
       const newToken = response.data.token;
       localStorage.setItem("token", newToken);
 
-      // Update user station in localStorage (super manager by definition can switch)
+      /**
+       * Store the station OBJECT, not its id.
+       *
+       * This assigned the bare id over the object the login had put there, so
+       * every `user.station?.name`, `?.logoUrl`, `?.phone` in the app came back
+       * undefined after a switch. A receipt printed at the new branch showed
+       * "N/A" as the station and the packaged placeholder as the logo.
+       */
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-      user.station = targetStationId;
+      const switched = response.data.station;
+      user.station = switched && typeof switched === "object"
+        ? { ...switched, _id: switched._id || switched.id }
+        : targetStationId;
       user.isSuperManager = true;
       localStorage.setItem("user", JSON.stringify(user));
 
