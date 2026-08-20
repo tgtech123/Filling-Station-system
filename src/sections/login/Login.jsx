@@ -159,29 +159,29 @@ const Login = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen lg:h-screen lg:overflow-hidden">
+    <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[minmax(0,1fr)_1.15fr] lg:overflow-hidden">
       {/* Left - Form Section */}
-      <div className="w-full flex items-center justify-center bg-white dark:bg-gray-900 px-2 py-4 lg:py-0 lg:h-screen lg:overflow-y-auto overflow-hidden ">
-        <div className="w-full max-w-md flex flex-col items-center border-2 border-neutral-200 p-5 rounded-lg shadow-2xl">
-          <div className="flex gap-5 mb-6 lg:mb-16 self-start">
+      <div className="flex w-full items-center justify-center bg-white px-5 py-10 dark:bg-gray-900 sm:px-8 lg:h-screen lg:overflow-y-auto">
+        <div className="flex w-full max-w-[23rem] flex-col items-center rounded-2xl border border-neutral-200/80 bg-white px-6 py-7 shadow-[0_1px_2px_rgba(16,24,40,0.06),0_16px_40px_-16px_rgba(16,24,40,0.25)] dark:border-gray-800 dark:bg-gray-900 dark:shadow-none">
+          <div className="mb-7 flex gap-5 self-start">
             <Link
               href="/"
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
-              <ArrowLeft size={28} className="hidden lg:block" />
+              <ArrowLeft size={20} className="hidden lg:block" />
               <ArrowLeft
-                size={28}
-                className="lg:hidden block border-2 border-neutral-300 p-1 rounded-sm"
+                size={20}
+                className="block rounded-md border border-neutral-300 p-1 lg:hidden"
               />
-              <h1 className="hidden lg:block">Back home</h1>
+              <h1 className="hidden text-sm font-semibold text-gray-500 dark:text-gray-400 lg:block">Back home</h1>
             </Link>
           </div>
 
-          <h1 className="w-full text-[2rem] sm:text-[2.5rem] lg:text-[2.875rem] font-bold text-[#323130] text-center mt-2">
+          <h1 className="w-full text-center text-[1.6rem] font-bold tracking-tight text-[#1c1b1a] dark:text-white sm:text-[1.75rem]">
               Welcome Back!  
            {/* <span> {settings?.platformName || "FuelDesk"} </span> */}
           </h1>
-          <p className="w-full text-[1rem] sm:text-[0.975rem] text-gray-500 text-center mt-1">
+          <p className="mt-1.5 w-full text-center text-sm text-gray-500 dark:text-gray-400">
             Login to access your customized station dashboard
           </p>
 
@@ -213,12 +213,12 @@ const Login = () => {
 
           {otpStep ? (
             /* ── OTP verification screen ── */
-            <div className="flex flex-col gap-4 mt-6 w-full">
+            <div className="mt-7 flex w-full flex-col gap-4">
               <div className="text-center mb-2">
-                <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <ShieldCheck size={28} className="text-blue-600" />
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 ring-1 ring-blue-100 dark:bg-blue-900/30 dark:ring-blue-900">
+                  <ShieldCheck size={22} className="text-blue-600" />
                 </div>
-                <h2 className="text-xl font-bold text-[#323130]">
+                <h2 className="text-lg font-bold text-[#1c1b1a] dark:text-white">
                   Check your email
                 </h2>
                 <p className="text-sm text-gray-500 mt-1">
@@ -228,7 +228,7 @@ const Login = () => {
               </div>
 
               <div className="flex flex-col">
-                <label className="text-sm font-bold text-[#323130] mb-1">
+                <label className="mb-1.5 text-[0.8rem] font-semibold text-gray-700 dark:text-gray-300">
                   Verification Code
                 </label>
                 <input
@@ -238,7 +238,7 @@ const Login = () => {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                   placeholder="000000"
-                  className="border-[1.6px] rounded-md h-[50px] w-full focus:border-blue-600 outline-none text-center text-2xl tracking-[0.5em] font-bold"
+                  className="h-12 w-full rounded-lg border border-neutral-300 bg-white text-center text-xl font-bold tracking-[0.4em] outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   autoFocus
                 />
               </div>
@@ -248,7 +248,7 @@ const Login = () => {
               <button
                 onClick={handleVerifyOtp}
                 disabled={otpLoading || otp.length !== 6}
-                className="flex items-center justify-center gap-2 bg-blue-600 rounded-md font-semibold text-white h-[45px] hover:bg-blue-500 transition disabled:opacity-70 disabled:cursor-not-allowed"
+                className="flex h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {otpLoading && <ImSpinner3 className="animate-spin h-4 w-4" />}
                 {otpLoading ? "Verifying..." : "Verify Code"}
@@ -269,11 +269,11 @@ const Login = () => {
             /* ── Normal login form ── */
             <form
               onSubmit={handleLogin}
-              className="flex flex-col gap-4 mt-6 w-full"
+              className="mt-7 flex w-full flex-col gap-4"
             >
               {/* Email */}
               <div className="relative flex flex-col">
-                <label className="text-sm font-bold text-[#323130]">
+                <label className="mb-1.5 text-[0.8rem] font-semibold text-gray-700 dark:text-gray-300">
                   Email
                 </label>
                 <input
@@ -283,14 +283,14 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="username123@gmail.com"
-                  className="pl-4 border-2 rounded-md h-[43px] w-full focus:border-blue-600 outline-none"
+                  className="h-11 w-full rounded-lg border border-neutral-300 bg-white px-3.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   required
                 />
               </div>
 
               {/* Password */}
               <div className="relative flex flex-col">
-                <label className="text-sm font-bold text-[#323130]">
+                <label className="mb-1.5 text-[0.8rem] font-semibold text-gray-700 dark:text-gray-300">
                   Password
                 </label>
                 <input
@@ -300,14 +300,14 @@ const Login = () => {
                   value={password}
                   placeholder="Enter password"
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-4 border-2 rounded-md w-full h-[43px] outline-none focus:border-blue-600"
+                  className="h-11 w-full rounded-lg border border-neutral-300 bg-white pl-3.5 pr-11 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   required
                 />
                 <div
                   onClick={handleShowPassword}
-                  className="absolute top-[1.875rem] right-3 text-neutral-400 cursor-pointer"
+                  className="absolute right-3 top-[2.05rem] cursor-pointer text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-200"
                 >
-                  {showPassword ? <FiEyeOff size={22} /> : <FiEye size={22} />}
+                  {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                 </div>
               </div>
 
@@ -336,14 +336,14 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading || success}
-                className="flex items-center justify-center gap-2 bg-blue-600 rounded-md font-semibold text-white h-[45px] hover:bg-blue-500 transition disabled:opacity-70 disabled:cursor-not-allowed"
+                className="flex h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {(loading || success) && <ImSpinner3 className="animate-spin h-4 w-4" />}
                 {success ? "Redirecting..." : loading ? "Signing in..." : "Sign In"}
               </button>
 
               {/* Forgot Password */}
-              <p className="flex justify-center text-sm font-semibold text-gray-500">
+              <p className="flex justify-center text-[0.8rem] font-medium text-gray-500 dark:text-gray-400">
                 Forgotten Password?{" "}
                 <Link
                   href="/reset-password"
@@ -358,7 +358,7 @@ const Login = () => {
       </div>
 
       {/* Right - Full Image Section (No Scroll) */}
-      <div className="hidden lg:block w-full h-full">
+      <div className="relative hidden h-full w-full lg:block">
         <LoginTwo />
       </div>
     </div>

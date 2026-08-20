@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { X, Loader2, ArrowDownCircle, ArrowUpCircle, Settings2, AlertTriangle } from "lucide-react";
 import { useLubricantStore } from "@/store/lubricantStore";
+import { getCurrentUser } from "@/lib/currentUser";
+import { API_URL } from "@/lib/config";
 
 const REASONS = [
   { value: "miscount",            label: "Miscounted before" },
@@ -45,6 +47,67 @@ export default function ProductTrackerModal({ product, onClose }) {
   const [note, setNote]             = useState("");
   const [saving, setSaving]         = useState(false);
   const [success, setSuccess]       = useState(null);
+  const [retiring, setRetiring]     = useState(false);
+
+  /**
+   * Retiring lives here rather than on the inventory table, because this is the
+   * screen where somebody has just read the product's whole history and can see
+   * what they are about to take off the shelf.
+   */
+  const canRetire = ["manager", "supervisor"].includes(getCurrentUser()?.role);
+  const isRetired = data?.product?.isActive === false;
+
+  const retire = async () => {
+    const name = data?.product?.productName || product.productName;
+    if (!window.confirm(
+      `Retire ${name}?
+
+It disappears from the till, the reorder list and the product list. Nothing is deleted: every sale, purchase and correction stays exactly as it is, and you can restore it later.`
+    )) return;
+
+    setRetiring(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/lubricant/${product._id}/retire`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({}),
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Could not retire this product");
+      setSuccess(body.message);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setRetiring(false);
+    }
+  };
+
+  const restore = async () => {
+    setRetiring(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/lubricant/${product._id}/restore`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.error || "Could not restore this product");
+      setSuccess(body.message);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setRetiring(false);
+    }
+  };
 
   const load = async () => {
     const result = await fetchProductHistory(product._id);
@@ -109,13 +172,43 @@ export default function ProductTrackerModal({ product, onClose }) {
 
         {/* Adjust */}
         <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
-          {!showAdjust ? (
-            <button
-              onClick={() => { setShowAdjust(true); setNewQty(String(current)); setSuccess(null); }}
-              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-            >
-              The shelf says something different — correct the count
-            </button>
+          {data?.product?.isActive === false ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2">
+              <p className="text-sm text-gray-500 flex-1 min-w-[220px]">
+                This product is retired. Its history below is complete and
+                unchanged; the count can no longer be corrected.
+              </p>
+              {canRetire && (
+                <button
+                  onClick={restore}
+                  disabled={retiring}
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                >
+                  {retiring ? "Working…" : "Put back on the shelf"}
+                </button>
+              )}
+            </div>
+          ) : !showAdjust ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <button
+                onClick={() => { setShowAdjust(true); setNewQty(String(current)); setSuccess(null); }}
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+              >
+                The shelf says something different — correct the count
+              </button>
+              {/* Retiring is a quiet action, not a red one: nothing is
+                  destroyed, so it should not wear the styling of something
+                  that is. */}
+              {canRetire && (
+                <button
+                  onClick={retire}
+                  disabled={retiring}
+                  className="text-xs font-semibold text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                >
+                  {retiring ? "Working…" : "Stop stocking this product"}
+                </button>
+              )}
+            </div>
           ) : (
             <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
               <div className="flex items-end gap-3 flex-wrap">
