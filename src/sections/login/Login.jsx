@@ -162,7 +162,7 @@ const Login = () => {
     <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[minmax(0,1fr)_1.15fr] lg:overflow-hidden">
       {/* Left - Form Section */}
       <div className="flex w-full items-center justify-center bg-white px-5 py-10 dark:bg-gray-900 sm:px-8 lg:h-screen lg:overflow-y-auto">
-        <div className="flex w-full max-w-[23rem] flex-col items-center rounded-2xl border border-neutral-200/80 bg-white px-6 py-7 shadow-[0_1px_2px_rgba(16,24,40,0.06),0_16px_40px_-16px_rgba(16,24,40,0.25)] dark:border-gray-800 dark:bg-gray-900 dark:shadow-none">
+        <div className="flex w-full max-w-[23rem] flex-col items-center rounded-lg border border-neutral-200/80 bg-white px-6 py-7 shadow-[0_1px_2px_rgba(16,24,40,0.06),0_16px_40px_-16px_rgba(16,24,40,0.25)] dark:border-2 dark:border-white dark:bg-gray-900 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_18px_45px_-12px_rgba(255,255,255,0.22)]">
           <div className="mb-7 flex gap-5 self-start">
             <Link
               href="/"
