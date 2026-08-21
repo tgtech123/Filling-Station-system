@@ -6,6 +6,7 @@ import { useLubricantStore } from "@/store/lubricantStore";
 import ProductTrackerModal from "./ProductTrackerModal";
 import { getCurrentUser } from "@/lib/currentUser";
 import { API_URL } from "@/lib/config";
+import { useSocket } from "@/hooks/useSocket";
 
 export default function Inventory() {
     const { 
@@ -56,6 +57,16 @@ export default function Inventory() {
     const [role, setRole] = useState(null);
     useEffect(() => setRole(getCurrentUser()?.role || null), []);
     const canTrack = ["manager", "supervisor", "accountant", "admin"].includes(role);
+
+    /**
+     * The same live signal the till uses.
+     *
+     * A manager watching inventory while a supervisor books in a delivery
+     * should see the counts move, not discover them on the next reload.
+     */
+    useSocket({
+        "catalogue:changed": () => fetchLubricants(),
+    });
 
     const trackableProducts = useMemo(() => {
         const q = trackerSearch.trim().toLowerCase();

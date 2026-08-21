@@ -441,11 +441,15 @@ export default function LubricantStockModal({ onClose }) {
     return Math.round(factor * singlePrice * (1 - discount / 100));
   };
 
-  /** Which rows have their unit prices open. Collapsed by default. */
-  const [openUnits, setOpenUnits] = useState({});
-  const toggleUnits = (index) =>
-    setOpenUnits((prev) => ({ ...prev, [index]: !prev[index] }));
-
+  /**
+   * Which basket row has its details open, or null.
+   *
+   * One modal serving every row rather than one panel inlined into each: the
+   * row itself should show what was bought, and the expiry date and unit
+   * prices are things you go and look at, not things you read past on the way
+   * to the next line.
+   */
+  const [detailRow, setDetailRow] = useState(null);
   /**
    * Set a bigger unit's price directly.
    *
@@ -939,67 +943,33 @@ export default function LubricantStockModal({ onClose }) {
                           belong on the invoice: the date arrives WITH the delivery and is
                           the only chance to catch it, and a cost change that skips the
                           carton leaves it selling on a margin the station stopped paying. */}
+                      {/* details behind a button */}
                       {row.lubricantId && (
-                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 flex flex-wrap gap-2">
                           {STORE_CATEGORIES.includes(row.category) && (
-                            <div className="mb-3">
-                              <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">
-                                Expiry Date {!row.expiryDate && <span className="text-amber-600">(needed for clearance alerts)</span>}
-                              </label>
-                              <input
-                                type="date"
-                                value={row.expiryDate}
-                                onChange={(e) => handleExpiryChange(e, index)}
-                                min={new Date().toISOString().slice(0, 10)}
-                                className="w-full min-w-0 px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-600 dark:text-white rounded-lg text-sm"
-                              />
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setDetailRow(index)}
+                              className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-colors ${
+                                row.expiryDate
+                                  ? "border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300"
+                                  : "border-amber-300 text-amber-700 bg-amber-50"
+                              }`}
+                            >
+                              {row.expiryDate
+                                ? `Expires ${new Date(row.expiryDate).toLocaleDateString("en-GB", { month: "short", year: "2-digit" })}`
+                                : "Set expiry date"}
+                            </button>
                           )}
                       
                           {(row.saleUnits || []).length > 0 && (
-                            <div>
-                              {/* One button, because most of the time the price is already right and
-                                  the panel is only in the way. */}
-                              <button
-                                type="button"
-                                onClick={() => toggleUnits(index)}
-                                className="text-xs font-semibold text-blue-600 hover:text-blue-700"
-                              >
-                                {openUnits[index] ? "Hide" : "Edit"} pack / carton prices ({row.saleUnits.length})
-                              </button>
-                          
-                              {openUnits[index] && (
-                                <div className="flex flex-col gap-2 mt-2">
-                                  {row.saleUnits.map((u, ui) => (
-                                    <div
-                                      key={ui}
-                                      className="flex items-center gap-3 flex-wrap bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-100 dark:border-gray-700"
-                                    >
-                                      <span className="text-sm font-semibold capitalize min-w-[64px]">{u.name}</span>
-                                      <span className="text-xs text-gray-500">
-                                        {u.factor} {row.baseUnit || "piece"}{Number(u.factor) === 1 ? "" : "s"}
-                                      </span>
-                          
-                                      <div className="ml-auto flex items-center gap-1.5">
-                                        <span className="text-xs text-gray-400">₦</span>
-                                        <input
-                                          type="number"
-                                          min="0"
-                                          value={u.price ?? ""}
-                                          onChange={(e) => handleUnitPrice(index, ui, e.target.value)}
-                                          placeholder="0"
-                                          className="w-24 min-w-0 text-sm text-right border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2 py-1.5"
-                                        />
-                                      </div>
-                                    </div>
-                                  ))}
-                                  <p className="text-[11px] text-gray-400">
-                                    Leave a price alone to keep it. Prices are recalculated from the new
-                                    cost when you change the amount above, so check them before saving.
-                                  </p>
-                                </div>
-                              )}
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setDetailRow(index)}
+                              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-blue-300 text-blue-600 hover:bg-blue-50 transition-colors"
+                            >
+                              Edit units ({row.saleUnits.length})
+                            </button>
                           )}
                         </div>
                       )}
@@ -1047,7 +1017,12 @@ export default function LubricantStockModal({ onClose }) {
                             />
                           </td>
                           <td className="px-4 py-2">
-                            <input type="text" value={row.productName} disabled className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300 rounded-xl" />
+                            {/* Read-only, so it is text, not a disabled box. A box
+                                implies you can type in it and clips a long name;
+                                plain text wraps and shows the whole thing. */}
+                            <p className="text-xs leading-snug font-medium text-gray-800 dark:text-gray-100 break-words whitespace-normal">
+                              {row.productName || <span className="text-gray-400">—</span>}
+                            </p>
                           </td>
                           <td className="px-4 py-2">
                             <NumericInput variant="decimal" value={row.amount} onChange={(e) => handleAmountChange(e, index)} placeholder="Enter amount" className="w-full px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-700 dark:text-white rounded-xl" />
@@ -1067,87 +1042,41 @@ export default function LubricantStockModal({ onClose }) {
                           <td className="px-4 py-2">
                             <NumericInput variant="decimal" value={row.unitPrice} onChange={(e) => handleUnitPriceChange(e, index)} disabled={!row.isEditing} className={`w-full px-3 py-2 border border-neutral-300 rounded-xl ${!row.isEditing ? "bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-300" : "dark:bg-gray-700 dark:border-gray-500 dark:text-white"}`} />
                           </td>
-                          <td className="px-4 py-2">
-                            <div className="flex items-center gap-2">
-                              <SquarePen size={18} className={`cursor-pointer ${row.isEditing ? "text-green-600 hover:text-green-800" : "text-blue-600 hover:text-blue-800"}`} onClick={() => toggleEdit(index)} />
-                              <Trash2 size={18} className="cursor-pointer text-red-500 hover:text-red-400" onClick={() => handleDeleteRow(index)} />
+                          <td className="px-2 py-2">
+                            {/* Expiry and units sit on the SAME row as the product, never stacked
+                                beneath it. Small and nowrap, so the line still fits across. */}
+                            <div className="flex items-center gap-1.5 flex-nowrap">
+                              {row.lubricantId && STORE_CATEGORIES.includes(row.category) && (
+                                <button
+                                  type="button"
+                                  onClick={() => setDetailRow(index)}
+                                  title={row.expiryDate ? "Expiry date" : "Set expiry date"}
+                                  className={`shrink-0 text-[11px] font-semibold px-2 py-1 rounded-md border whitespace-nowrap ${
+                                    row.expiryDate
+                                      ? "border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300"
+                                      : "border-amber-300 text-amber-700 bg-amber-50"
+                                  }`}
+                                >
+                                  {row.expiryDate
+                                    ? new Date(row.expiryDate).toLocaleDateString("en-GB", { month: "short", year: "2-digit" })
+                                    : "Expiry"}
+                                </button>
+                              )}
+                              {row.lubricantId && (row.saleUnits || []).length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setDetailRow(index)}
+                                  title="Edit unit prices"
+                                  className="shrink-0 text-[11px] font-semibold px-2 py-1 rounded-md border border-blue-300 text-blue-600 hover:bg-blue-50 whitespace-nowrap"
+                                >
+                                  Units ({row.saleUnits.length})
+                                </button>
+                              )}
+                              <SquarePen size={16} className={`shrink-0 cursor-pointer ${row.isEditing ? "text-green-600 hover:text-green-800" : "text-blue-600 hover:text-blue-800"}`} onClick={() => toggleEdit(index)} />
+                              <Trash2 size={16} className="shrink-0 cursor-pointer text-red-500 hover:text-red-400" onClick={() => handleDeleteRow(index)} />
                             </div>
                           </td>
                         </tr>
-                        {row.lubricantId && (STORE_CATEGORIES.includes(row.category) || (row.saleUnits || []).length > 0) && (
-                          <tr>
-                            <td colSpan="9" className="px-4 pb-3 bg-gray-50 dark:bg-gray-900">
-                              {/* Expiry and the bigger units this stock also sells in. Both
-                                  belong on the invoice: the date arrives WITH the delivery and is
-                                  the only chance to catch it, and a cost change that skips the
-                                  carton leaves it selling on a margin the station stopped paying. */}
-                              {row.lubricantId && (
-                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                                  {STORE_CATEGORIES.includes(row.category) && (
-                                    <div className="mb-3">
-                                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">
-                                        Expiry Date {!row.expiryDate && <span className="text-amber-600">(needed for clearance alerts)</span>}
-                                      </label>
-                                      <input
-                                        type="date"
-                                        value={row.expiryDate}
-                                        onChange={(e) => handleExpiryChange(e, index)}
-                                        min={new Date().toISOString().slice(0, 10)}
-                                        className="w-full min-w-0 px-3 py-2 border border-neutral-300 dark:border-gray-500 dark:bg-gray-600 dark:text-white rounded-lg text-sm"
-                                      />
-                                    </div>
-                                  )}
-                              
-                                  {(row.saleUnits || []).length > 0 && (
-                                    <div>
-                                      {/* One button, because most of the time the price is already right and
-                                          the panel is only in the way. */}
-                                      <button
-                                        type="button"
-                                        onClick={() => toggleUnits(index)}
-                                        className="text-xs font-semibold text-blue-600 hover:text-blue-700"
-                                      >
-                                        {openUnits[index] ? "Hide" : "Edit"} pack / carton prices ({row.saleUnits.length})
-                                      </button>
-
-                                      {openUnits[index] && (
-                                        <div className="flex flex-col gap-2 mt-2">
-                                          {row.saleUnits.map((u, ui) => (
-                                            <div
-                                              key={ui}
-                                              className="flex items-center gap-3 flex-wrap bg-white dark:bg-gray-800 rounded-lg p-2.5 border border-gray-100 dark:border-gray-700"
-                                            >
-                                              <span className="text-sm font-semibold capitalize min-w-[64px]">{u.name}</span>
-                                              <span className="text-xs text-gray-500">
-                                                {u.factor} {row.baseUnit || "piece"}{Number(u.factor) === 1 ? "" : "s"}
-                                              </span>
-
-                                              <div className="ml-auto flex items-center gap-1.5">
-                                                <span className="text-xs text-gray-400">₦</span>
-                                                <input
-                                                  type="number"
-                                                  min="0"
-                                                  value={u.price ?? ""}
-                                                  onChange={(e) => handleUnitPrice(index, ui, e.target.value)}
-                                                  placeholder="0"
-                                                  className="w-24 min-w-0 text-sm text-right border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2 py-1.5"
-                                                />
-                                              </div>
-                                            </div>
-                                          ))}
-                                          <p className="text-[11px] text-gray-400">
-                                            Leave a price alone to keep it. Prices are recalculated from the new
-                                            cost when you change the amount above, so check them before saving.
-                                          </p>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        )}
                         {row.error && (
                           <tr>
                             <td colSpan="9" className="px-4 py-2">
@@ -1183,6 +1112,122 @@ export default function LubricantStockModal({ onClose }) {
           </div>
         </div>
       </div>
+      {/* ── Row details: expiry and unit prices ────────────────────────── */}
+      {detailRow !== null && rows[detailRow] && (() => {
+        const row = rows[detailRow];
+        const singleCost = parseFloat(row.unitCost) || 0;
+        const singlePrice = parseFloat(row.unitPrice) || 0;
+
+        return (
+          <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" onClick={() => setDetailRow(null)}>
+            <div onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-gray-800 w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto">
+
+              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-5 py-4 flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-white">{row.productName || "Item details"}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">Expiry date and the prices for its bigger units</p>
+                </div>
+                <button onClick={() => setDetailRow(null)} className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                  <X size={18} className="text-gray-500" />
+                </button>
+              </div>
+
+              <div className="p-5">
+
+                {STORE_CATEGORIES.includes(row.category) && (
+                  <div className="mb-5">
+                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-200 block mb-1">Expiry date</label>
+                    <input
+                      type="date"
+                      value={row.expiryDate}
+                      onChange={(e) => handleExpiryChange(e, detailRow)}
+                      min={new Date().toISOString().slice(0, 10)}
+                      className="w-full min-w-0 px-3 py-2.5 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl text-sm"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Flagged for clearance before it becomes a write-off.
+                    </p>
+                  </div>
+                )}
+
+                {(row.saleUnits || []).length > 0 && (
+                  <div>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1">Units</p>
+                    <p className="text-xs text-gray-400 mb-3">
+                      One {row.baseUnit || "piece"} is the base. Each row below shows how many it
+                      holds and what it sells for.
+                    </p>
+
+                    <div className="flex flex-col gap-2">
+                      {row.saleUnits.map((u, ui) => {
+                        /**
+                         * What the unit SHOULD cost, from the percentage set when
+                         * the product was registered. Shown as the suggestion
+                         * beneath the box so somebody can see the margin the
+                         * station intended and accept it with one tap, rather
+                         * than working it out on paper.
+                         */
+                        const suggested = priceUnit(u, singlePrice, singleCost);
+                        const current = Number(u.price) || 0;
+                        const differs = suggested > 0 && Math.abs(suggested - current) > 0.5;
+
+                        return (
+                          <div key={ui} className="border border-gray-200 dark:border-gray-700 rounded-xl p-3">
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                              <div>
+                                <p className="text-sm font-bold capitalize text-gray-800 dark:text-gray-100">{u.name}</p>
+                                <p className="text-xs text-gray-500">
+                                  {u.factor} {row.baseUnit || "piece"}{Number(u.factor) === 1 ? "" : "s"}
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-sm text-gray-400">₦</span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={u.price ?? ""}
+                                  onChange={(e) => handleUnitPrice(detailRow, ui, e.target.value)}
+                                  placeholder="0"
+                                  className="w-28 min-w-0 text-right text-sm border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2 py-2"
+                                />
+                              </div>
+                            </div>
+
+                            {differs && (
+                              <button
+                                type="button"
+                                onClick={() => handleUnitPrice(detailRow, ui, String(suggested))}
+                                className="mt-2 text-xs text-blue-600 hover:text-blue-700 font-semibold"
+                              >
+                                Use ₦{suggested.toLocaleString()} from the {u.sellingPercentage || u.discountPercentage || 0}% set for this unit
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <p className="text-xs text-gray-400 mt-3">
+                      Prices recalculate from the new cost when you change the
+                      amount on the row. Anything you type here is kept as it is.
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setDetailRow(null)}
+                  className="mt-6 w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
+
+
   );
 }

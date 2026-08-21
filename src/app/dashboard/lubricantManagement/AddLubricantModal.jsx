@@ -37,7 +37,7 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
     reOrderLevel: "",
     expiryDate: "",
     unitCost: "",
-    sellingPrice: "",
+    sellingPercentage: "",
     unitPrice: "", // auto-calculated
     // What the stock figure above is counted in. Everything — cost, price,
     // re-order level, the shelf itself — is measured in this.
@@ -68,7 +68,7 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
       // Starts at the product's own markup: the same margin as singles is the
       // honest default until someone decides on a volume discount.
       ...u,
-      { name: "", factor: "", sellingPercentage: formData.sellingPrice || "", barcode: "" },
+      { name: "", factor: "", sellingPercentage: formData.sellingPercentage || "", barcode: "" },
     ]);
 
   /** What one of this unit costs and sells for, at the numbers typed so far. */
@@ -140,13 +140,13 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
   useEffect(() => {
     if (!pricingSettings) return;
     setFormData((prev) =>
-      prev.sellingPrice
+      prev.sellingPercentage
         ? prev
-        : { ...prev, sellingPrice: markupForCategory(prev.category) || prev.sellingPrice }
+        : { ...prev, sellingPercentage: markupForCategory(prev.category) || prev.sellingPercentage }
     );
   }, [pricingSettings]);
 
-  // 🔥 Auto-calc unitPrice whenever unitCost or sellingPrice changes
+  // 🔥 Auto-calc unitPrice whenever unitCost or sellingPercentage changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -165,13 +165,13 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
       if (name === "category") {
         const previousDefault = markupForCategory(prev.category);
         const nextDefault = markupForCategory(value);
-        if (nextDefault && (!prev.sellingPrice || prev.sellingPrice === previousDefault)) {
-          updated.sellingPrice = nextDefault;
+        if (nextDefault && (!prev.sellingPercentage || prev.sellingPercentage === previousDefault)) {
+          updated.sellingPercentage = nextDefault;
         }
       }
 
       const unitCostNum = parseFloat(updated.unitCost);
-      const percentageNum = parseFloat(updated.sellingPrice);
+      const percentageNum = parseFloat(updated.sellingPercentage);
 
       if (!isNaN(unitCostNum) && !isNaN(percentageNum) && percentageNum >= 1 && percentageNum <= 100) {
         updated.unitPrice = (unitCostNum + (unitCostNum * percentageNum) / 100).toFixed(2);
@@ -219,7 +219,7 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
         reOrderLevel: "",
         expiryDate: "",
         unitCost: "",
-        sellingPrice: "",
+        sellingPercentage: "",
         unitPrice: "",
         baseUnit: "piece",
       });
@@ -458,8 +458,8 @@ export default function AddLubricantModal({ onclose, defaultBarcode = "" }) {
             <div className="flex-1">
               <p className="text-sm font-semibold">Selling Percentage (1–100%) *</p>
               <input
-                name="sellingPrice"
-                value={formData.sellingPrice}
+                name="sellingPercentage"
+                value={formData.sellingPercentage}
                 onChange={handleChange}
                 type="number"
                 min="1"
