@@ -6,6 +6,7 @@ import DynamicSalesTable from "./DynamicSalesTable";
 import ReceiptModal from "./reusefilter/ReceiptModal";
 import { useLubricantStore } from "@/store/lubricantStore";
 import { publishToCustomerDisplay, openCustomerDisplay, CUSTOMER_DISPLAY_PATH } from "@/lib/customerDisplay";
+import { useSocket } from "@/hooks/useSocket";
 
 const LubSales = () => {
   const [rows, setRows] = useState([
@@ -213,6 +214,23 @@ const LubSales = () => {
   useEffect(() => {
     if (!lubricants?.length) fetchLubricants();
   }, []);
+
+  /**
+   * Keep the till's catalogue current while it sits open.
+   *
+   * The catalogue is held in memory so a scan resolves without a network round
+   * trip, which is right for speed and wrong for freshness: stock booked in on
+   * the office machine left the counter still showing zero, and the cashier was
+   * told an item was out of stock with the carton standing behind them.
+   *
+   * The server now announces every change that matters — an invoice booked,
+   * goods received, a count corrected, a product registered or priced — and
+   * this pulls the catalogue again when it hears one. Cheap, because it only
+   * fires on a real change rather than on a timer.
+   */
+  useSocket({
+    "catalogue:changed": () => fetchLubricants(),
+  });
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
