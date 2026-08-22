@@ -124,6 +124,32 @@ export const useLubricantStore = create((set, get) => ({
    * The server refuses if it has moved since — a sale made mid-count must not be
    * silently undone by an absolute figure typed a minute ago.
    */
+  /**
+   * Set a product's cost, markup and the bigger units it sells in.
+   *
+   * The endpoint has existed all along and accepts saleUnits; nothing in the
+   * app ever called it, so a product registered without a pack or carton could
+   * never be given one afterwards. The server re-prices every unit against the
+   * new cost and announces the change, so tills pick it up without a reload.
+   */
+  updateProductPricing: async (id, payload) => {
+    try {
+      const res = await fetch(`${API_URL}/api/lubricant/${id}/pricing`, {
+        method: "PATCH",
+        headers: get().getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Could not save pricing");
+
+      // The catalogue this store holds is what the till scans against.
+      await get().fetchLubricants();
+      return { success: true, data: data.lubricant };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  },
+
   adjustStock: async (id, { quantityAfter, reason, note, expectedBefore }) => {
     try {
       const res = await fetch(`${API_URL}/api/lubricant/${id}/adjust-stock`, {

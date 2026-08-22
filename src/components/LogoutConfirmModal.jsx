@@ -1,5 +1,6 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { LogOut, X } from "lucide-react";
 
 /**
@@ -20,9 +21,25 @@ export default function LogoutConfirmModal({ isOpen, onCancel, onConfirm }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [isOpen, onCancel]);
 
-  if (!isOpen) return null;
+  /**
+   * Rendered into document.body, not where it sits in the tree.
+   *
+   * This modal lives inside the Sidebar, whose root carries Tailwind's
+   * `transform` class for its collapse animation. A transformed element becomes
+   * the containing block for any `position: fixed` descendant, so `inset-0`
+   * resolved to the SIDEBAR rather than the viewport and the dialog appeared
+   * pinned to the left edge instead of the middle of the screen.
+   *
+   * No amount of centring CSS fixes that from inside; the overlay has to leave
+   * the transformed subtree. A portal is the way out, and it also puts the
+   * dialog above every other stacking context rather than trusting z-index.
+   */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
-  return (
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}
@@ -73,6 +90,7 @@ export default function LogoutConfirmModal({ isOpen, onCancel, onConfirm }) {
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
