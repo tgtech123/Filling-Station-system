@@ -32,6 +32,39 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
   };
 
   const rows = inv.items || [];
+  /**
+   * Who entered this invoice.
+   *
+   * The field said "Cashier", which is wrong twice over: the person is
+   * usually a manager or supervisor, and what matters is not their job title
+   * but that they are the one who can be asked about this invoice. So: their
+   * name, and their role beside it.
+   */
+  const enteredBy = (() => {
+    const by = inv.createdBy;
+    if (!by) return { name: "Unknown", role: "" };
+    if (typeof by === "string") return { name: by, role: "" };
+    const name = [by.firstName, by.lastName].filter(Boolean).join(" ").trim();
+    return { name: name || "Unknown", role: by.role || "" };
+  })();
+
+  /**
+   * When it was entered, to the minute.
+   *
+   * purchaseDate is the SUPPLIER's invoice date and carries no time, so the
+   * time has to come from when the record was written. The two are different
+   * facts, and an invoice entered days late shows both honestly.
+   */
+  const enteredAt = (() => {
+    const raw = inv.createdAt;
+    if (!raw) return "";
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleString("en-GB", {
+      day: "2-digit", month: "short", year: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+  })();
 
   const formatNgn = (n) => {
     if (typeof n !== "number") return n;
@@ -60,7 +93,7 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
         th, td { 
           padding: 12px 10px; 
           text-align: left; 
-          border-bottom: 1px solid #eee; 
+          border: 1px solid #999; 
         }
         th {
           background-color: #f9fafb;
@@ -144,6 +177,9 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
             <div className="md:text-right">
               <p className="text-sm text-gray-500">Purchase Date</p>
               <p className="text-lg font-semibold text-gray-800 mt-1">{inv.purchaseDate}</p>
+              {enteredAt && (
+                <p className="text-xs text-gray-500 mt-0.5">Entered {enteredAt}</p>
+              )}
             </div>
           </div>
 
@@ -151,8 +187,13 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="grid grid-cols-2 gap-y-3">
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Cashier</p>
-                <p className="font-medium text-sm mt-1">{inv.createdBy || "N/A"}</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Entered By</p>
+                <p className="font-medium text-sm mt-1">
+                  {enteredBy.name}
+                  {enteredBy.role && (
+                    <span className="text-gray-500 font-normal capitalize"> &middot; {enteredBy.role}</span>
+                  )}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wide">Supplier</p>
@@ -171,36 +212,36 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
 
           {/* Items Table */}
           <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
-            <table className="w-full">
-              <thead className="bg-gray-50">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="text-xs text-left px-4 py-3 text-gray-600 font-semibold uppercase tracking-wide">
+                  <th className="text-xs text-left px-4 py-3 text-gray-700 font-semibold uppercase tracking-wide border border-gray-300">
                     Barcode
                   </th>
-                  <th className="text-xs text-left px-4 py-3 text-gray-600 font-semibold uppercase tracking-wide">
+                  <th className="text-xs text-left px-4 py-3 text-gray-700 font-semibold uppercase tracking-wide border border-gray-300">
                     Product Name
                   </th>
-                  <th className="text-xs text-right px-4 py-3 text-gray-600 font-semibold uppercase tracking-wide">
+                  <th className="text-xs text-right px-4 py-3 text-gray-700 font-semibold uppercase tracking-wide border border-gray-300">
                     Qty
                   </th>
-                  <th className="text-xs text-right px-4 py-3 text-gray-600 font-semibold uppercase tracking-wide">
+                  <th className="text-xs text-right px-4 py-3 text-gray-700 font-semibold uppercase tracking-wide border border-gray-300">
                     Unit Cost
                   </th>
-                  <th className="text-xs text-right px-4 py-3 text-gray-600 font-semibold uppercase tracking-wide">
+                  <th className="text-xs text-right px-4 py-3 text-gray-700 font-semibold uppercase tracking-wide border border-gray-300">
                     Amount
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {rows.map((item, i) => (
                   <tr key={i} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-4 text-sm text-gray-600">{item.barcode}</td>
-                    <td className="px-4 py-4 text-sm font-medium text-gray-800">{item.productName}</td>
-                    <td className="px-4 py-4 text-sm text-right text-gray-600">{item.quantity}</td>
-                    <td className="px-4 py-4 text-sm text-right text-gray-600">
+                    <td className="px-4 py-4 text-sm text-gray-600 border border-gray-300">{item.barcode}</td>
+                    <td className="px-4 py-4 text-sm font-medium text-gray-800 border border-gray-300">{item.productName}</td>
+                    <td className="px-4 py-4 text-sm text-right text-gray-600 border border-gray-300">{item.quantity}</td>
+                    <td className="px-4 py-4 text-sm text-right text-gray-600 border border-gray-300">
                       ₦{formatNgn(item.unitCost)}
                     </td>
-                    <td className="px-4 py-4 text-sm text-right font-semibold text-gray-800">
+                    <td className="px-4 py-4 text-sm text-right font-semibold text-gray-800 border border-gray-300">
                       ₦{formatNgn(item.amount)}
                     </td>
                   </tr>

@@ -135,13 +135,11 @@ const DynamicSalesTable = ({
             {/* Total Amount */}
             <div className="flex flex-col w-full sm:max-w-xs">
               <label className="font-bold mb-1 text-sm">Total Amount</label>
-              <input
-                type="number"
-                disabled
-                value={totalAmount || ""}
-                className="bg-neutral-200 dark:bg-gray-700 dark:text-gray-200 w-full py-2 px-3 rounded-lg outline-none"
-                placeholder="₦0.00"
-              />
+              <div className="w-full bg-white border-2 border-neutral-200 dark:border-gray-600 rounded-lg py-2 px-3">
+                <p className="text-2xl font-extrabold tracking-tight tabular-nums text-[#0080ff] dark:text-green-600">
+                  ₦{Number(totalAmount || 0).toLocaleString()}
+                </p>
+              </div>
             </div>
 
             {/* Payment Method */}

@@ -47,6 +47,17 @@ export default function SalesTargetCard() {
     : 0;
   const progressPct = Math.min(rawPct, 100);
 
+  /**
+   * The number on the card, floored rather than rounded.
+   *
+   * toFixed(0) rounds, so 499,999 of a 500,000 target read "100%" while the
+   * target was not met: no celebration, no Met status, and an attendant
+   * looking at a full ring wondering what else it wanted. A progress figure
+   * must never claim more than has actually happened, so it only reaches 100
+   * when the target genuinely has.
+   */
+  const displayPct = Math.floor(rawPct);
+
   // Confetti when target is met/exceeded
   useEffect(() => {
     if (progressPct >= 100 && thumbRef.current) {
@@ -81,13 +92,13 @@ export default function SalesTargetCard() {
 
   if (loading) {
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mt-4">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 h-full">
         <div className="flex items-center gap-2 mb-4">
           <Target size={18} className="text-gray-400" />
           <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">My Sales Target</span>
         </div>
         <div className="animate-pulse flex items-center gap-6">
-          <div className="w-[140px] h-[140px] rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
+          <div className="w-[104px] h-[104px] rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
           <div className="flex-1 space-y-3">
             <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
             <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
@@ -100,7 +111,7 @@ export default function SalesTargetCard() {
 
   if (!target) {
     return (
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mt-4">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 h-full">
         <div className="flex items-center gap-2 mb-3">
           <Target size={18} className="text-gray-400" />
           <span className="font-semibold text-gray-700 dark:text-gray-200 text-sm">My Sales Target</span>
@@ -132,12 +143,12 @@ export default function SalesTargetCard() {
   const thumbY = 70 + radius * Math.sin((angle * Math.PI) / 180);
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 mt-4">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 h-full">
       <div className="flex items-center gap-6">
 
         {/* Circular progress ring */}
         <div className="flex-shrink-0">
-          <svg width="140" height="140" viewBox="0 0 140 140">
+          <svg width="104" height="104" viewBox="0 0 140 140" className="shrink-0">
             {/* Pulse animation style for met state */}
             {isMet && (
               <style>{`
@@ -192,7 +203,7 @@ export default function SalesTargetCard() {
               fontWeight="bold"
               fill={color}
             >
-              {rawPct.toFixed(0)}%
+              {displayPct}%
             </text>
 
             {/* Center label */}
