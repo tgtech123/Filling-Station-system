@@ -47,11 +47,6 @@ const TENDERS = [
 export default function ShiftTenderPage() {
   const params = useSearchParams();
   const router = useRouter();
-  const shiftId = params.get("shift") || picked;
-
-  const { expected, loading, fetchExpected, declare, awaiting, fetchAwaiting } =
-    useShiftTenderStore();
-
   /**
    * The screen is reached two ways: straight from closing a shift, which puts
    * the id in the URL, and from the sidebar, which cannot know it. In the
@@ -59,6 +54,12 @@ export default function ShiftTenderPage() {
    * picks one, or is taken straight through when there is only one.
    */
   const [picked, setPicked] = useState(null);
+
+  const shiftId = params.get("shift") || picked;
+
+  const { expected, loading, fetchExpected, declare, awaiting, fetchAwaiting } =
+    useShiftTenderStore();
+
 
   const [amounts, setAmounts] = useState({ cash: "", POS: "", transfer: "" });
   const [posRef, setPosRef] = useState("");
