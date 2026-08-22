@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import MainContainer from "@/components/Dashboard/MainContainer";
 import TargetCelebrationModal from "@/components/TargetCelebrationModal";
+import MyShortfallCard from "@/components/Dashboard/MyShortfallCard";
 import useNotificationStore from "@/store/useNotificationStore";
 import useSalesTargetStore from "@/store/useSalesTargetStore";
 import { useSocket } from "@/hooks/useSocket";
@@ -32,6 +33,9 @@ export default function AttendantDashboard() {
 
     return (
         <DashboardLayout>
+           {/* Above everything else: an attendant should not learn what they owe
+               from an argument three weeks later. Renders nothing when clear. */}
+           <MyShortfallCard />
            <MainContainer />
            <TargetCelebrationModal />
         </DashboardLayout>

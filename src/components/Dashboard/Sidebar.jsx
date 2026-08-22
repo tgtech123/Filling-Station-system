@@ -25,6 +25,7 @@ import {
   BarChart2,
   Package,
   Banknote,
+  TrendingDown,
   ClipboardList,
   ShieldCheck,
   Building2,
@@ -439,6 +440,47 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       roles: ["accountant"],
       isDropdown: true,
       subLinks: salarySubLinks,
+    },
+    {
+      // Each role's own step in one record: declare, confirm, audit.
+      id: "shift-tender",
+      name: "Submit Takings",
+      icon: <Banknote size={20} />,
+      link: "/dashboard/shifts/tender",
+      roles: ["attendant"],
+    },
+    {
+      id: "tender-queue",
+      name: "Confirm Takings",
+      icon: <Banknote size={20} />,
+      link: "/dashboard/cashier/tenderQueue",
+      roles: ["cashier", "supervisor"],
+    },
+    {
+      // Read-only, for everyone who answers for the money.
+      // The end-of-shift question: how much cash should be in the drawer, and
+      // how much belongs on a statement instead.
+      id: "cash-expected",
+      name: "Cash to Expect",
+      icon: <Banknote size={20} />,
+      link: "/dashboard/accountant/cashExpected",
+      roles: ["accountant", "manager"],
+    },
+    {
+      // Who owes the station money. Readable by everyone answerable for it;
+      // only a manager sees the buttons that close one.
+      id: "shortfalls",
+      name: "Shortages",
+      icon: <TrendingDown size={20} />,
+      link: "/dashboard/accountant/shortfalls",
+      roles: ["accountant", "manager", "supervisor"],
+    },
+    {
+      id: "tender-audit",
+      name: "Takings Audit",
+      icon: <Banknote size={20} />,
+      link: "/dashboard/accountant/tenderAudit",
+      roles: ["accountant", "manager"],
     },
     {
       // Read-only, and offered to the manager too: the owner answers for the
