@@ -348,11 +348,15 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       roles: ["cashier"],
     },
     {
+      // Supplier orders show what the station pays for its stock, so this came
+      // off the cashier's menu. It moves to the accountant rather than being
+      // deleted: read-only, printable and exportable is exactly what somebody
+      // reconciling supplier invoices against orders needs.
       id: "procurement-view",
-      name: "View Procurement",
+      name: "Purchase Orders",
       icon: <Package size={20} />,
       link: "/dashboard/procurement-view",
-      roles: ["cashier"],
+      roles: ["accountant"],
     },
     // Attendant links
     {

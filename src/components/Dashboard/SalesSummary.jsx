@@ -135,11 +135,18 @@ export default function SalesSummary() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-2">
+          {/* Target and the shift tally share ONE full-width row. The target
+              carries a ring and three figures, so it takes two thirds; the
+              tally is a single number and needs no more than a third. */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 mt-2 w-full items-stretch">
+            <div className="lg:col-span-2 min-w-0">
+              <SalesTargetCard />
+            </div>
             {data.slice(3).map((item) => (
-              <FlashCard key={item.id} {...item} />
+              <div key={item.id} className="lg:col-span-1 min-w-0">
+                <FlashCard {...item} />
+              </div>
             ))}
-            <SalesTargetCard />
           </div>
         </>
       )}

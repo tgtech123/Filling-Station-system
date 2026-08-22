@@ -1,12 +1,16 @@
 ﻿"use client";
 import { API_URL } from "@/lib/config";
 import React, { useState, useEffect, useRef } from "react";
-import { X, Plus, Monitor } from "lucide-react";
+import { X, Plus, Monitor, PauseCircle, ListChecks, RotateCcw, Trash2 } from "lucide-react";
 import DynamicSalesTable from "./DynamicSalesTable";
 import ReceiptModal from "./reusefilter/ReceiptModal";
 import { useLubricantStore } from "@/store/lubricantStore";
 import { publishToCustomerDisplay, openCustomerDisplay, CUSTOMER_DISPLAY_PATH } from "@/lib/customerDisplay";
 import { useSocket } from "@/hooks/useSocket";
+import {
+  saveLiveBasket, loadLiveBasket, clearLiveBasket,
+  listParkedSales, parkSale, removeParkedSale, getParkedSale,
+} from "./parkedSales";
 
 const LubSales = () => {
   const [rows, setRows] = useState([
@@ -127,6 +131,41 @@ const LubSales = () => {
     return () => { cancelled = true; };
   }, []);
 
+  /**
+   * Baskets set aside for customers who stepped away, and the panel that lists
+   * them. Read once on mount; every change goes through the helpers so the
+   * stored copy and the screen cannot disagree.
+   */
+  const [parked, setParked] = useState([]);
+  const [showParked, setShowParked] = useState(false);
+  const [parkLabel, setParkLabel] = useState("");
+  const [askingPark, setAskingPark] = useState(false);
+
+  useEffect(() => setParked(listParkedSales()), []);
+
+  /**
+   * Put the live basket back after a reload.
+   *
+   * A refresh used to empty the till, which meant re-scanning a customer's
+   * shopping in front of them. Restored once, on mount, and only when the
+   * basket is still empty so it can never overwrite a sale in progress.
+   */
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    const saved = loadLiveBasket();
+    if (!saved?.rows?.length) return;
+    setRows([...saved.rows, blankRow()]);
+    if (saved.paymentMethod) setPaymentMethod(saved.paymentMethod);
+  }, []);
+
+  /** Write the basket down as it changes, so a reload has something to find. */
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    saveLiveBasket(rows, paymentMethod);
+  }, [rows, paymentMethod]);
+
   const [copies, setCopies] = useState(1);
   useEffect(() => {
     const saved = Number(localStorage.getItem("receiptCopies"));
@@ -153,6 +192,8 @@ const LubSales = () => {
     setRows([blankRow()]);
     setScanError(null);
     basketKeyRef.current = null;
+    // The stored copy exists to survive a reload, not to outlive the basket.
+    clearLiveBasket();
   };
 
   /**
@@ -721,6 +762,47 @@ const LubSales = () => {
     );
   };
 
+  const handleParkSale = () => {
+    const next = parkSale(rows, paymentMethod, parkLabel);
+    setParked(next);
+    setParkLabel("");
+    setAskingPark(false);
+    clearCart();
+    setMessageTone("success");
+    setMessage("Sale set aside. The counter is clear for the next customer.");
+  };
+
+  /**
+   * Bring a parked basket back.
+   *
+   * Refused while something is already on the counter rather than merging the
+   * two: two customers' shopping in one basket is the one mistake here that
+   * ends with somebody paying for another person's goods.
+   */
+  const handleRestoreParked = (id) => {
+    if (rows.some((r) => r.lubricantId)) {
+      setScanError({
+        code: "BASKET_BUSY",
+        message: "Finish or set aside the sale on the counter before restoring another.",
+      });
+      setShowParked(false);
+      return;
+    }
+    const sale = getParkedSale(id);
+    if (!sale) return;
+    setRows([...sale.rows, blankRow()]);
+    if (sale.paymentMethod) setPaymentMethod(sale.paymentMethod);
+    setParked(removeParkedSale(id));
+    setShowParked(false);
+    setMessageTone("success");
+    setMessage(`Restored ${sale.label}`);
+  };
+
+  const handleDeleteParked = (id, label) => {
+    if (!window.confirm(`Delete "${label}"? The items on it are lost and would need scanning again.`)) return;
+    setParked(removeParkedSale(id));
+  };
+
   const handleCancel = () => {
     const hasItems = rows.some((r) => r.lubricantId);
     if (hasItems && !window.confirm("Clear all items from this sale?")) return;
@@ -761,6 +843,20 @@ const LubSales = () => {
               lubricantId: item.lubricantId,
               quantity: Number(item.quantity),
               unitPrice: Number(item.unitPrice),
+              /**
+               * WHICH unit was sold. Its absence was a live stock bug.
+               *
+               * Without it the server read every line as a base-unit sale, so a
+               * carton of 24 took ONE piece off the shelf while charging the
+               * carton price. The count drifted by 23 on every carton sold, and
+               * nothing on screen said so.
+               *
+               * It surfaced as a price mismatch only because the price is now
+               * checked against the shelf: the till offered the carton price
+               * and the server, believing it was selling a single, quoted the
+               * single's.
+               */
+              unitName: item.unitName || item.baseUnit || undefined,
             })),
             paymentMethod: normalizedPaymentMethod,
             idempotencyKey: basketKey(),
@@ -870,7 +966,32 @@ const LubSales = () => {
               Record, print and export all sales receipt
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            {/* Set the counter aside. Only offered when there is something to
+                set aside, so it never sits there inviting a pointless press. */}
+            {rows.some((r) => r.lubricantId) && (
+              <button
+                onClick={() => setAskingPark(true)}
+                title="Hold this sale and clear the counter"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 text-sm font-semibold transition-colors"
+              >
+                <PauseCircle size={15} /> Hold sale
+              </button>
+            )}
+
+            {parked.length > 0 && (
+              <button
+                onClick={() => setShowParked(true)}
+                title="Sales waiting to be finished"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100 text-sm font-semibold transition-colors"
+              >
+                <ListChecks size={15} /> On hold
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-blue-600 text-white text-[11px] font-bold">
+                  {parked.length}
+                </span>
+              </button>
+            )}
+
             {/* Opens the customer-facing screen on the second monitor. Pressed
                 once at the start of a shift; the window then mirrors every
                 basket on its own. */}
@@ -1046,12 +1167,9 @@ const LubSales = () => {
                 <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">
                   Product Name
                 </label>
-                <input
-                  type="text"
-                  value={row.productName}
-                  disabled
-                  className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200 rounded-lg text-sm"
-                />
+                <p className="w-full px-1 py-1 text-xs leading-snug font-medium text-gray-800 dark:text-gray-100 break-words whitespace-normal">
+                  {row.productName || <span className="text-gray-400">Scan or search a product</span>}
+                </p>
               </div>
 
               {/* Sold as — only when the product has bigger units defined */}
@@ -1149,12 +1267,9 @@ const LubSales = () => {
                   />
                 </td>
                 <td className="px-5 py-2">
-                  <input
-                    type="text"
-                    value={row.productName}
-                    disabled
-                    className="w-full px-3 py-2 border border-neutral-300 bg-neutral-100 dark:bg-gray-700 dark:border-gray-500 dark:text-gray-200 rounded-xl mt-2"
-                  />
+                  <p className="w-full px-1 py-2 text-xs leading-snug font-medium text-gray-800 dark:text-gray-100 break-words whitespace-normal">
+                    {row.productName || <span className="text-gray-400">—</span>}
+                  </p>
                 </td>
                 <td className="px-5 py-2">
                   {row.saleUnits?.length > 0 ? (
@@ -1226,6 +1341,114 @@ const LubSales = () => {
         setCopies={setCopies}
         loading={isSubmitting}
       />
+
+
+      {/* ── Name this held sale ─────────────────────────────────────────── */}
+      {askingPark && (
+        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" onClick={() => setAskingPark(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-gray-800 w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl shadow-2xl p-5">
+            <div className="flex items-center gap-2 mb-1">
+              <PauseCircle size={18} className="text-amber-500" />
+              <h3 className="font-bold text-gray-900 dark:text-white">Hold this sale</h3>
+            </div>
+            <p className="text-xs text-gray-500 mb-4">
+              Give it a name you can call out when they come back. A first name or
+              what they are wearing is plenty.
+            </p>
+
+            <input
+              autoFocus
+              value={parkLabel}
+              onChange={(e) => setParkLabel(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleParkSale(); }}
+              placeholder="e.g. Musa, or blue shirt"
+              className="w-full border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-xl px-3 py-2.5 text-sm outline-none focus:border-amber-400"
+            />
+
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={handleParkSale}
+                className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold transition-colors"
+              >
+                Hold it
+              </button>
+              <button
+                onClick={() => { setAskingPark(false); setParkLabel(""); }}
+                className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 text-sm font-semibold"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Sales waiting to be finished ────────────────────────────────── */}
+      {showParked && (
+        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4" onClick={() => setShowParked(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-white dark:bg-gray-800 w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[85vh] overflow-y-auto">
+
+            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 px-5 py-4 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-white">Sales on hold</h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {parked.length} waiting. Restoring brings one back to the counter.
+                </p>
+              </div>
+              <button onClick={() => setShowParked(false)} className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
+                <X size={18} className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-2">
+              {parked.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-8">Nothing on hold.</p>
+              ) : (
+                parked.map((sale) => (
+                  <div
+                    key={sale.id}
+                    className="border border-gray-200 dark:border-gray-700 rounded-xl p-3 hover:border-blue-300 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-bold text-gray-900 dark:text-white truncate">{sale.label}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {sale.itemCount} item{sale.itemCount === 1 ? "" : "s"}
+                          {" · "}
+                          {new Date(sale.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                      <p className="text-lg font-extrabold tabular-nums text-[#0080ff] dark:text-green-600 shrink-0">
+                        ₦{Number(sale.total || 0).toLocaleString()}
+                      </p>
+                    </div>
+
+                    {/* What is actually on it, so nobody restores blind. */}
+                    <p className="text-[11px] text-gray-400 mt-1.5 truncate">
+                      {sale.rows.map((r) => r.productName).filter(Boolean).join(", ")}
+                    </p>
+
+                    <div className="flex gap-2 mt-3">
+                      <button
+                        onClick={() => handleRestoreParked(sale.id)}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors"
+                      >
+                        <RotateCcw size={13} /> Restore
+                      </button>
+                      <button
+                        onClick={() => handleDeleteParked(sale.id, sale.label)}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border-2 border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition-colors"
+                      >
+                        <Trash2 size={13} /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <ReceiptModal
         isOpen={isModalOpen}
