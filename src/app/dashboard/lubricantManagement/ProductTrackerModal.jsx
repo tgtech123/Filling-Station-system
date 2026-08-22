@@ -35,7 +35,7 @@ const EVENT_STYLE = {
  * every week.
  */
 export default function ProductTrackerModal({ product, onClose }) {
-  const { fetchProductHistory, adjustStock } = useLubricantStore();
+  const { fetchProductHistory, adjustStock, updateProductPricing } = useLubricantStore();
 
   const [loading, setLoading]   = useState(true);
   const [data, setData]         = useState(null);
@@ -48,6 +48,58 @@ export default function ProductTrackerModal({ product, onClose }) {
   const [saving, setSaving]         = useState(false);
   const [success, setSuccess]       = useState(null);
   const [retiring, setRetiring]     = useState(false);
+
+  /**
+   * Adding a bigger selling unit to a product that never had one.
+   *
+   * A product registered as singles could not later be sold by the pack: the
+   * endpoint accepted units all along, but nothing in the app ever called it.
+   * So a shop that started stocking cartons had to delete and re-register the
+   * item, losing its whole history to add a size.
+   */
+  const [addingUnit, setAddingUnit] = useState(false);
+  const [unitName, setUnitName]     = useState("");
+  const [unitFactor, setUnitFactor] = useState("");
+  const [unitPrice, setUnitPrice]   = useState("");
+  const [savingUnit, setSavingUnit] = useState(false);
+
+  const existingUnits = data?.product?.saleUnits || product.saleUnits || [];
+
+  const saveUnit = async () => {
+    const name = unitName.trim();
+    const factor = Number(unitFactor);
+    const price = Number(unitPrice);
+
+    if (!name) return setError("Give the unit a name, such as Pack or Carton.");
+    if (!Number.isFinite(factor) || factor < 2) {
+      return setError("A bigger unit must hold at least 2. One that holds a single is just the single under another name.");
+    }
+    if (!Number.isFinite(price) || price <= 0) {
+      return setError("Enter what one of these sells for.");
+    }
+    if (existingUnits.some((u) => String(u.name).toLowerCase() === name.toLowerCase())) {
+      return setError(`This product already sells by the ${name}.`);
+    }
+
+    setSavingUnit(true);
+    setError(null);
+    const res = await updateProductPricing(product._id, {
+      // Every existing unit is sent back unchanged; omitting them would drop
+      // the sizes the product already had.
+      saleUnits: [
+        ...existingUnits.map((u) => ({ ...u })),
+        { name, factor, price, pricingMode: "cost" },
+      ],
+    });
+    setSavingUnit(false);
+
+    if (!res.success) return setError(res.error);
+
+    setUnitName(""); setUnitFactor(""); setUnitPrice("");
+    setAddingUnit(false);
+    setSuccess(`${name} of ${factor} added. The till can sell it now.`);
+    await load();
+  };
 
   /**
    * Retiring lives here rather than on the inventory table, because this is the
@@ -168,6 +220,91 @@ It disappears from the till, the reorder list and the product list. Nothing is d
         )}
         {error && (
           <p className="mx-5 mt-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-2.5">{error}</p>
+        )}
+
+        {/* ── Selling units ───────────────────────────────────────────── */}
+        {data?.product?.isActive !== false && (
+          <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-700 shrink-0">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Selling units</p>
+                <p className="text-xs text-gray-400">
+                  {existingUnits.length === 0
+                    ? `Sold only by the ${unit}.`
+                    : existingUnits.map((u) => `${u.name} of ${u.factor}`).join(" · ")}
+                </p>
+              </div>
+              {canRetire && !addingUnit && (
+                <button
+                  onClick={() => { setAddingUnit(true); setError(null); }}
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-700 shrink-0"
+                >
+                  Add a size
+                </button>
+              )}
+            </div>
+
+            {addingUnit && (
+              <div className="mt-3 bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-300 block mb-1">Name</label>
+                    <input
+                      value={unitName}
+                      onChange={(e) => setUnitName(e.target.value)}
+                      placeholder="Pack, Carton, Roll"
+                      className="w-full min-w-0 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2.5 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-300 block mb-1">
+                      How many {unit}s
+                    </label>
+                    <input
+                      type="number" min="2"
+                      value={unitFactor}
+                      onChange={(e) => setUnitFactor(e.target.value)}
+                      placeholder="12"
+                      className="w-full min-w-0 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2.5 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 dark:text-gray-300 block mb-1">Price (₦)</label>
+                    <input
+                      type="number" min="0"
+                      value={unitPrice}
+                      onChange={(e) => setUnitPrice(e.target.value)}
+                      placeholder="4104"
+                      className="w-full min-w-0 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2.5 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Stock is never re-counted: a carton of 12 is 12 of the same
+                    pieces already on the shelf, not 12 more. */}
+                <p className="text-xs text-gray-400 mt-2">
+                  This changes how the item is SOLD, not how much is in stock.
+                  Selling one takes {unitFactor || "n"} {unit}s off the shelf.
+                </p>
+
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={saveUnit}
+                    disabled={savingUnit}
+                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-sm font-semibold"
+                  >
+                    {savingUnit ? "Saving…" : "Add it"}
+                  </button>
+                  <button
+                    onClick={() => { setAddingUnit(false); setError(null); }}
+                    className="px-4 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 text-sm font-semibold"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Adjust */}
