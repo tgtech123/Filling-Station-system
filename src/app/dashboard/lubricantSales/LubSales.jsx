@@ -926,6 +926,9 @@ const LubSales = () => {
           sn: i + 1,
           name: item.productName,
           unitPrice: item.unitPrice,
+          // Which unit that price is FOR. Without it the slip showed a figure
+          // with nothing to say whether it bought one bottle or a carton.
+          unitName: item.unitName || item.baseUnit || "",
           quantity: item.quantity,
           amount: item.amount,
         })),

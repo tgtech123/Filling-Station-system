@@ -171,26 +171,36 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
            * 3. Anti-aliasing on a one-bit printer turns any grey pixel into a
            *    dot that either fires weakly or not at all.
            *
-           * So: a genuinely heavy face rather than a faked one, weight 700
-           * which real bold faces actually have, and a text-stroke that
-           * thickens every glyph by a measured amount. The stroke is the part
-           * that makes the biggest difference on thermal paper — it widens the
-           * burn instead of asking the printer to shade it.
+           * So: a genuinely heavy FACE, filled with pure black, at a size the
+           * printer can render as solid dots. Nothing clever. An outline drawn
+           * around lighter type was tried and made it worse, because a stroke
+           * thinner than one dot can only be anti-aliased.
            */
           #receipt-print-root .receipt-thermal-print,
           #receipt-print-root .receipt-thermal-print * {
             font-family: 'Arial Black', 'Arial Bold', Arial, Helvetica, sans-serif !important;
             color:            #000000 !important;
             background:       transparent !important;
-            font-size:        10.5pt !important;
-            font-weight:      700    !important;
-            line-height:      1.45   !important;
-            letter-spacing:   0.01em !important;
-            /* Thickens the burn. Small on purpose: too much and the counters
-               inside letters like e and a fill in and the slip turns to mush. */
-            -webkit-text-stroke: 0.28pt #000000 !important;
-            text-rendering:   geometricPrecision !important;
+            font-size:        11pt   !important;
+            font-weight:      900    !important;
+            line-height:      1.4    !important;
+            letter-spacing:   0.02em !important;
+            /**
+             * No text-stroke, and that is the point.
+             *
+             * A 0.28pt outline is thinner than one device dot, so the renderer
+             * CANNOT draw it solid: it anti-aliases, and every glyph gains a
+             * fringe of grey pixels. On a one-bit thermal head those half-lit
+             * dots either fire weakly or not at all, which is precisely the
+             * "dark grey rather than black" this was meant to cure. Asking for
+             * a thicker line produced a softer one.
+             *
+             * Solid black glyphs come from a genuinely heavy FACE filled with
+             * pure black, not from an outline drawn around a lighter one.
+             */
+            opacity: 1 !important;
             -webkit-font-smoothing: none !important;
+            -moz-osx-font-smoothing: grayscale !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust:         exact !important;
             margin:  0 !important;
@@ -200,14 +210,17 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           /* The lines worth burning darkest: the shop's name and the money.
              A wider stroke, not a heavier weight, because the weight would be
              synthesised and print lighter rather than darker. */
-          .t-station-name,
-          .t-total-label,
-          .t-total-amount {
-            -webkit-text-stroke: 0.45pt #000000 !important;
+          /* The name and the money stand out by SIZE, which a printer can
+             render solid, rather than by an outline it can only approximate. */
+          #receipt-print-root .receipt-thermal-print .t-station-name,
+          #receipt-print-root .receipt-thermal-print .t-total-label,
+          #receipt-print-root .receipt-thermal-print .t-total-amount {
+            color: #000000 !important;
+            opacity: 1 !important;
           }
 
           /* Station headline */
-          .t-station-name {
+          #receipt-print-root .receipt-thermal-print .t-station-name {
             font-size:      14pt  !important;
             font-weight:    700   !important;
             text-align:     center !important;
@@ -219,7 +232,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           }
 
           /* Address */
-          .t-address {
+          #receipt-print-root .receipt-thermal-print .t-address {
             font-size:   8pt    !important;
             font-weight: 700    !important;
             text-align:  center !important;
@@ -228,7 +241,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           }
 
           /* Receipt type label */
-          .t-receipt-title {
+          #receipt-print-root .receipt-thermal-print .t-receipt-title {
             font-size:      11pt   !important;
             font-weight:    700    !important;
             text-align:     center !important;
@@ -239,47 +252,47 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           }
 
           /* Meta rows (date, cashier, etc.) */
-          .t-meta-row {
+          #receipt-print-root .receipt-thermal-print .t-meta-row {
             display:         flex          !important;
             justify-content: space-between !important;
             font-size:       8.5pt         !important;
             font-weight:     700           !important;
             line-height:     1.7           !important;
           }
-          .t-meta-row span:first-child { font-weight: 700 !important; }
-          .t-meta-row span:last-child  { font-weight: 700 !important; }
+          #receipt-print-root .receipt-thermal-print .t-meta-row span:first-child { font-weight: 700 !important; }
+          #receipt-print-root .receipt-thermal-print .t-meta-row span:last-child  { font-weight: 700 !important; }
 
           /* Divider lines */
-          .t-line-solid {
+          #receipt-print-root .receipt-thermal-print .t-line-solid {
             border-top:    2.5pt solid #000 !important;
             margin:        4pt 0            !important;
             display:       block            !important;
           }
-          .t-line-dashed {
+          #receipt-print-root .receipt-thermal-print .t-line-dashed {
             border-top:    1.8pt dashed #000 !important;
             margin:        4pt 0           !important;
             display:       block           !important;
           }
 
           /* Items table */
-          .t-table {
+          #receipt-print-root .receipt-thermal-print .t-table {
             width:           100%     !important;
             border-collapse: collapse !important;
             display:         table    !important;
           }
-          .t-table thead tr {
+          #receipt-print-root .receipt-thermal-print .t-table thead tr {
             border-top:    2.5pt solid #000 !important;
             border-bottom: 2.5pt solid #000 !important;
             display:       table-row        !important;
           }
-          .t-table th {
+          #receipt-print-root .receipt-thermal-print .t-table th {
             font-size:      8pt       !important;
             font-weight:    700       !important;
             text-transform: uppercase !important;
             padding:        3pt 2pt   !important;
             display:        table-cell !important;
           }
-          .t-table td {
+          #receipt-print-root .receipt-thermal-print .t-table td {
             font-size:    9pt        !important;
             font-weight:  700        !important;
             padding:      3pt 2pt    !important;
@@ -289,24 +302,24 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           }
 
           /* Total row */
-          .t-total-row {
+          #receipt-print-root .receipt-thermal-print .t-total-row {
             display:         flex          !important;
             justify-content: space-between !important;
             align-items:     center        !important;
             padding:         3pt 0         !important;
           }
-          .t-total-label {
+          #receipt-print-root .receipt-thermal-print .t-total-label {
             font-size:      12pt      !important;
             font-weight:    700       !important;
             text-transform: uppercase !important;
           }
-          .t-total-amount {
+          #receipt-print-root .receipt-thermal-print .t-total-amount {
             font-size:   14pt !important;
             font-weight: 700  !important;
           }
 
           /* Amount in words */
-          .t-words {
+          #receipt-print-root .receipt-thermal-print .t-words {
             font-size:       8.5pt   !important;
             font-weight:     700     !important;
             text-align:      center  !important;
@@ -317,7 +330,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           }
 
           /* Footer */
-          .t-footer-line {
+          #receipt-print-root .receipt-thermal-print .t-footer-line {
             font-size:   8pt    !important;
             font-weight: 700    !important;
             text-align:  center !important;
@@ -348,7 +361,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
 
           /* Station contact — the line a customer acts on, so it is set a
              step above the quote and the branding beneath it. */
-          .t-contact-head {
+          #receipt-print-root .receipt-thermal-print .t-contact-head {
             font-size:      8pt       !important;
             font-weight:    700       !important;
             text-align:     center    !important;
@@ -357,7 +370,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
             display:        block     !important;
             padding-bottom: 1pt       !important;
           }
-          .t-contact-line {
+          #receipt-print-root .receipt-thermal-print .t-contact-line {
             font-size:   8.5pt  !important;
             font-weight: 700    !important;
             text-align:  center !important;
@@ -368,12 +381,12 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
 
           /* One copy per page: a break before every copy but the first. On
              roll paper each page is a slip, so this is where it tears. */
-          .t-copy { display: block !important; }
-          .t-copy + .t-copy {
+          #receipt-print-root .receipt-thermal-print .t-copy { display: block !important; }
+          #receipt-print-root .receipt-thermal-print .t-copy + .t-copy {
             break-before:      page   !important;
             page-break-before: always !important;
           }
-          .t-copy-label {
+          #receipt-print-root .receipt-thermal-print .t-copy-label {
             font-size:      7.5pt    !important;
             font-weight:    700      !important;
             text-align:     center   !important;
@@ -386,7 +399,7 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
           /* The station's terms. Set apart from the quote above it, which is
              decoration, because this one is a statement the station stands
              behind and a customer may quote back at the counter. */
-          .t-note {
+          #receipt-print-root .receipt-thermal-print .t-note {
             font-size:      8.5pt    !important;
             font-weight:    700      !important;
             text-align:     center   !important;
@@ -399,16 +412,28 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
 
           /* An email can be longer than half a slip, so its value wraps under
              the label instead of colliding with it. */
-          .t-meta-email {
+          #receipt-print-root .receipt-thermal-print .t-meta-email {
             flex-wrap: wrap !important;
           }
-          .t-meta-email span:last-child {
+          #receipt-print-root .receipt-thermal-print .t-meta-email span:last-child {
             font-size:  8pt !important;
             word-break: break-all !important;
           }
 
+          /* The unit a price belongs to, under the figure rather than beside
+             it. An 80mm slip has no room for a sixth column, and "2,300" alone
+             does not say whether it bought one bottle or a carton of them. */
+          #receipt-print-root .receipt-thermal-print .t-unit-label {
+            display:        block     !important;
+            font-size:      7pt       !important;
+            font-weight:    700       !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.04em    !important;
+            line-height:    1.2       !important;
+          }
+
           /* Powered-by branding */
-          .t-powered-by {
+          #receipt-print-root .receipt-thermal-print .t-powered-by {
             font-size:      6.5pt   !important;
             font-weight:    700     !important;
             text-align:     center  !important;
@@ -514,7 +539,14 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
                       <tr key={i} className="text-gray-700">
                         <td className="receipt-item-name py-2 font-medium max-w-[110px] truncate">{item.name}</td>
                         <td className="py-2 text-center">{item.quantity}</td>
-                        <td className="py-2 text-right">{Number(item.unitPrice).toLocaleString()}</td>
+                        <td className="py-2 text-right">
+                          {Number(item.unitPrice).toLocaleString()}
+                          {item.unitName && (
+                            <span className="block text-[10px] uppercase tracking-wide text-gray-400 leading-tight">
+                              {item.unitName}
+                            </span>
+                          )}
+                        </td>
                         <td className="py-2 text-right font-semibold">
                           {(Number(item.unitPrice) * Number(item.quantity)).toLocaleString()}
                         </td>
@@ -659,7 +691,12 @@ const ReceiptModal = ({ isOpen, onClose, receiptData, autoPrint = false, copies 
                     <td style={{ textAlign: "left"   }}>{i + 1}</td>
                     <td style={{ textAlign: "left", wordBreak: "break-word" }}>{item.name}</td>
                     <td style={{ textAlign: "center" }}>{item.quantity}</td>
-                    <td style={{ textAlign: "right"  }}>{Number(item.unitPrice).toLocaleString()}</td>
+                    <td style={{ textAlign: "right" }}>
+                      {Number(item.unitPrice).toLocaleString()}
+                      {item.unitName && (
+                        <span className="t-unit-label">{item.unitName}</span>
+                      )}
+                    </td>
                     <td style={{ textAlign: "right"  }}>
                       {(Number(item.unitPrice) * Number(item.quantity)).toLocaleString()}
                     </td>

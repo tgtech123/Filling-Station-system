@@ -67,9 +67,11 @@ const ActionButtons = ({ transactionId }) => {
             const soldInPacks = (item.unitFactor ?? 1) > 1;
             return {
               sn: index + 1,
-              name: soldInPacks
-                ? `${item.productName} (${item.unitName} of ${item.unitFactor})`
-                : item.productName,
+              // The unit has its own column now, so the name stays the name.
+              name: item.productName,
+              unitName: soldInPacks
+                ? `${item.unitName} of ${item.unitFactor}`
+                : item.unitName || "",
               unitPrice: soldInPacks ? item.unitPrice : item.priceSold,
               quantity: soldInPacks ? item.qtyInUnits : item.qtySold,
               amount: item.amount,
