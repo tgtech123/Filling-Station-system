@@ -89,10 +89,12 @@ export const supervisorData = (dashboard) => {
     },
     {
       title: "Available Stocks",
-      date: `Fuel ${availableStocks.fuelLitres?.toLocaleString() || 0}Litrs  |  Lubricant ${availableStocks.lubricantBottles || 0}`,
-      amount: `₦${availableStocks.stockValue?.toLocaleString() || 0}`,
+      date: `Lubricant ${availableStocks.lubricantBottles || 0} bottles`,
+      // What is on the forecourt, not what it is worth. Valuing the stock is an
+      // accounting question and it is answered on accounting screens.
+      amount: `${availableStocks.fuelLitres?.toLocaleString() || 0} L`,
       change: "",
-      changeText: "Stock value",
+      changeText: "Fuel in tanks",
       icon: <TrendingUp size={25} className="text-neutral-800 text-lg" />,
     },
   ];

@@ -65,12 +65,11 @@ export default function ShiftApprovalPage() {
     shift: shift.shiftType || "N/A",
     pumpNo: shift.pumpNo || "N/A",
     fuelType: shift.product || "N/A",
-    pricePerLitre: `₦${shift.pricePerLtr?.toLocaleString() || 0}`,
+    // Litres, never naira. The server no longer sends the amount, the cash
+    // counted or the difference to this role, and printing a confident "₦0"
+    // for each would read as a shift that took nothing.
     litresSold: `${shift.litresSold?.toLocaleString() || 0} Litres`,
     transactions: shift.noOfTransactions || 0,
-    amount: `₦${shift.amount?.toLocaleString() || 0}`,
-    reconciledCash: `₦${shift.reconciledCash?.toLocaleString() || 0}`,
-    discrepancy: shift.discrepancy || 0,
     status: shift.status || "Pending",
     shiftId: shift._id,
   }));

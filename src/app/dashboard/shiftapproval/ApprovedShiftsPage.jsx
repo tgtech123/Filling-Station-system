@@ -39,33 +39,36 @@ export default function ApprovedShiftsPage() {
     "Pump no",
     "Litres sold",
     "No. of Transactions",
-    "Total",
-    "Cash received",
-    "Discrepancy",
     "Approved by",
     "Status"
   ];
 
   // Transform API data to table rows with styling
+  /**
+   * Litres, never naira.
+   *
+   * The supervisor runs the forecourt, so the amount taken, the cash counted
+   * and the size of any difference are no longer sent to this screen at all.
+   * Rendering them anyway would have printed a confident "₦0" against every
+   * shift, which is worse than an empty column: it reads as a shift that took
+   * nothing rather than a figure this role is not shown.
+   *
+   * Whether a shift is Matched, Flagged or still Pending stays, because that is
+   * an operational fact and it is how an open shift gets chased.
+   */
   const tableRows = useMemo(() => {
     return approvedShifts.map((shift) => {
-      const discrepancy = Math.abs(shift.discrepancy || 0);
-      const hasDiscrepancy = discrepancy > 0;
       const isFlagged = shift.status === "Flagged";
 
       return [
-        new Date(shift.date).toLocaleDateString(),
+        new Date(shift.date).toLocaleDateString("en-GB", {
+          day: "2-digit", month: "short", year: "numeric",
+        }),
         shift.attendant,
         shift.shiftType,
         shift.pumpNo,
         `${shift.litresSold?.toLocaleString() || 0}L`,
         shift.noOfTransactions || 0,
-        `₦${shift.total?.toLocaleString() || 0}`,
-        `₦${shift.cashReceived?.toLocaleString() || 0}`,
-        // Discrepancy with conditional styling - return JSX
-        <span className={hasDiscrepancy ? "text-red-600 font-semibold" : ""}>
-          ₦{discrepancy.toLocaleString()}
-        </span>,
         shift.approvedBy,
         // Status with conditional styling - return JSX
         <span className={
@@ -169,7 +172,8 @@ export default function ApprovedShiftsPage() {
     setCurrentPage(newPage);
   };
 
-  const highlightedColumnIndex = tableColumns.indexOf("Discrepancy");
+  // No column needs singling out any more: the one that did was Discrepancy.
+  const highlightedColumnIndex = -1;
 
   // Loading state
   if (loading && approvedShifts.length === 0) {
@@ -237,36 +241,64 @@ export default function ApprovedShiftsPage() {
 
       {/* Mobile card list (< sm) */}
       <div className="sm:hidden space-y-3">
-        {paginatedData.map((row, i) => {
-          const discrepancyVal = getCellText(row[8]);
-          const hasDisc = discrepancyVal && discrepancyVal !== "₦0";
-          return (
-            <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 space-y-2 shadow-sm">
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <p className="font-semibold text-gray-800 text-sm">{getCellText(row[1])}</p>
-                  <p className="text-xs text-gray-400">{getCellText(row[0])} · {getCellText(row[2])}</p>
+        {paginatedData.length === 0 ? (
+          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-12">
+            No approved shifts for this selection.
+          </p>
+        ) : (
+          paginatedData.map((row, i) => (
+            <div
+              key={i}
+              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-800 dark:text-white text-sm truncate">
+                    {getCellText(row[1])}
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                    {getCellText(row[0])} · {getCellText(row[2])}
+                  </p>
                 </div>
-                <div>{row[10]}</div>
+                <div className="shrink-0">{row[7]}</div>
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-gray-600 pt-2 border-t border-gray-100">
-                <span><span className="text-gray-400">Pump</span> {getCellText(row[3])}</span>
-                <span><span className="text-gray-400">Litres</span> {getCellText(row[4])}</span>
-                <span><span className="text-gray-400">Txns</span> {getCellText(row[5])}</span>
-                <span><span className="text-gray-400">Total</span> <span className="font-semibold text-gray-800">{getCellText(row[6])}</span></span>
-                <span><span className="text-gray-400">Cash</span> {getCellText(row[7])}</span>
-                <span className={hasDisc ? "text-red-600 font-semibold" : ""}>
-                  <span className="text-gray-400 font-normal">Disc.</span> {getCellText(row[8])}
+
+              {/* Litres carries the weight here: it is the figure a supervisor
+                  is actually checking, so it is not buried among the rest. */}
+              <div className="flex items-end justify-between gap-3 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <div>
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500">Litres sold</p>
+                  <p className="text-lg font-extrabold tabular-nums text-gray-900 dark:text-white leading-none">
+                    {getCellText(row[4])}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500">Pump</p>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    {getCellText(row[3])}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[11px] text-gray-400 dark:text-gray-500">Txns</p>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    {getCellText(row[5])}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2.5 truncate">
+                Approved by{" "}
+                <span className="text-gray-600 dark:text-gray-300 font-medium">
+                  {getCellText(row[6])}
                 </span>
-              </div>
-              <p className="text-xs text-gray-400">Approved by: <span className="text-gray-600 font-medium">{getCellText(row[9])}</span></p>
+              </p>
             </div>
-          );
-        })}
+          ))
+        )}
       </div>
 
       {/* Desktop table (sm+) */}
-      <div className="hidden sm:block">
+      <div className="hidden sm:block overflow-x-auto">
         <Table
           columns={tableColumns}
           data={paginatedData}

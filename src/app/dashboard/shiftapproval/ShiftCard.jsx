@@ -74,7 +74,7 @@ export default function ShiftCard({ data }) {
   const profileImage = getUserImage(data.attendantId) || data.image;
 
   const handleApprove = async () => {
-    if (showCommentBox && !comment.trim() && data.discrepancy !== 0) {
+    if (showCommentBox && !comment.trim() && data.status === "Flagged") {
       alert("Please add a comment for flagged shifts");
       return;
     }
@@ -138,14 +138,6 @@ export default function ShiftCard({ data }) {
           <span className="text-gray-600 dark:text-gray-400">Litres Sold:</span>
           <span className="font-medium dark:text-gray-200">{data.litresSold}</span>
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600 dark:text-gray-400">Amount:</span>
-          <span className="font-medium text-green-600">{data.amount}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-gray-600 dark:text-gray-400">Reconciled Cash:</span>
-          <span className="font-medium dark:text-gray-200">{data.reconciledCash}</span>
-        </div>
         
         {/* Status Badge */}
         <div className="flex justify-between items-center pt-2 border-t dark:border-gray-700">
@@ -161,12 +153,13 @@ export default function ShiftCard({ data }) {
           </span>
         </div>
 
-        {/* Discrepancy if any */}
-        {data.discrepancy !== 0 && (
-          <div className="flex justify-between text-red-600 font-medium">
-            <span>Discrepancy:</span>
-            <span>₦{Math.abs(data.discrepancy).toLocaleString()}</span>
-          </div>
+        {/* Whether the money settled, never by how much. Enough to know a
+            shift needs chasing without showing a figure this role is not
+            answerable for. */}
+        {data.status === "Flagged" && (
+          <p className="text-xs text-red-600 font-medium">
+            The count did not match. The cashier or accountant is handling it.
+          </p>
         )}
       </div>
 
@@ -174,7 +167,7 @@ export default function ShiftCard({ data }) {
       {showCommentBox && (
         <div className="mt-3">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Add Comment {data.discrepancy !== 0 && <span className="text-red-500">*</span>}
+            Add Comment {data.status === "Flagged" && <span className="text-red-500">*</span>}
           </label>
           <textarea
             value={comment}
