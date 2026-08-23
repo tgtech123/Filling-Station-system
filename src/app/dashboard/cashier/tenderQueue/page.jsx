@@ -82,6 +82,17 @@ export default function TenderQueuePage() {
     setFeedback(null);
   };
 
+  /**
+   * Only takings nobody has counted yet get a card.
+   *
+   * The server already filters these out, so this is not the fix — it is the
+   * guard that stops the fix being undone by a stale response sitting in the
+   * store. A card whose button the server will refuse is worse than no card:
+   * the cashier reads it as work waiting for them and then gets told it is
+   * already done.
+   */
+  const uncounted = (pending || []).filter((row) => !row.received);
+
   const total = (s) =>
     (Number(s.cash) || 0) + (Number(s.POS) || 0) + (Number(s.transfer) || 0);
 
@@ -184,18 +195,18 @@ export default function TenderQueuePage() {
           </div>
         )}
 
-        {loading && pending.length === 0 ? (
+        {loading && uncounted.length === 0 ? (
           <div className="flex items-center gap-2 text-gray-400 py-12 justify-center">
             <Loader2 size={18} className="animate-spin" /> Loading…
           </div>
-        ) : pending.length === 0 ? (
+        ) : uncounted.length === 0 ? (
           <div className="text-center py-16">
             <CheckCircle2 size={32} className="text-green-500 mx-auto mb-3" />
             <p className="text-gray-500">Nothing waiting. Every shift handed in has been confirmed.</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {pending.map((row) => {
+            {uncounted.map((row) => {
               const open = openId === row._id;
               const declaredTotal = Number(row.declaredTotal || 0);
               const expectedAmount = Number(row.expectedAmount || 0);
