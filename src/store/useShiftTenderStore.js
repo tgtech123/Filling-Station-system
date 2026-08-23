@@ -11,10 +11,12 @@ import { api } from "@/lib/config";
 const useShiftTenderStore = create((set, get) => ({
   expected: null,
   pending: [],
-  audit: { rows: [], totals: null, byProduct: [], awaiting: 0 },
+  audit: { rows: [], totals: null, byProduct: [], outcomes: null, awaiting: 0 },
   shortfalls: { rows: [], attendants: [], totals: null },
   mine: null,
   awaiting: [],
+  history: [],
+  historyTotals: null,
   loading: false,
   error: null,
 
@@ -127,6 +129,22 @@ const useShiftTenderStore = create((set, get) => ({
   },
 
   /**
+   * The attendant's settled takings: meter readings, tender split, who signed.
+   *
+   * Confirmed shifts only. What is still short lives on the shortage card, so
+   * the two questions stay apart: what have I handed in, and what do I owe.
+   */
+  fetchMyHistory: async (limit) => {
+    try {
+      const res = await api.get("/api/shift-tender/my-history", { params: { limit } });
+      const d = res.data?.data || {};
+      set({ history: d.history || [], historyTotals: d.totals || null });
+    } catch {
+      set({ history: [], historyTotals: null });
+    }
+  },
+
+  /**
    * The attendant's own side: what they owe and what they must sign for.
    *
    * Scoped to the signed-in person by the server, never by a parameter here.
@@ -152,7 +170,37 @@ const useShiftTenderStore = create((set, get) => ({
     }
   },
 
-  /** Record that a shortage was repaid, written off, or put back as owing. */
+  /**
+   * Undo a count so the attendant can declare again and the cashier recount.
+   *
+   * Both sides can be wrong at once, and without a way back the only options
+   * are leaving a wrong figure standing or editing the database by hand.
+   */
+  reopen: async (id, reason) => {
+    try {
+      const res = await api.patch(`/api/shift-tender/${id}/reopen`, { reason });
+      return { success: true, message: res.data?.message };
+    } catch (err) {
+      return { success: false, error: err?.response?.data?.error || "Could not reopen" };
+    }
+  },
+
+  /**
+   * Money coming back against a shortage.
+   *
+   * Separate from confirming a shift on purpose: a bigger number in the count
+   * box restates what that shift took, it does not pay anything back.
+   */
+  repay: async (id, { amount, method, note }) => {
+    try {
+      const res = await api.post(`/api/shift-tender/${id}/repay`, { amount, method, note });
+      return { success: true, message: res.data?.message, settled: res.data?.settled, stillOwed: res.data?.stillOwed };
+    } catch (err) {
+      return { success: false, error: err?.response?.data?.error || 'Could not record it' };
+    }
+  },
+
+  /** Record that a shortage was written off, or put back as owing. */
   settleShortfall: async (id, action, note) => {
     try {
       const res = await api.patch(`/api/shift-tender/${id}/shortfall`, { action, note });
@@ -173,6 +221,7 @@ const useShiftTenderStore = create((set, get) => ({
           rows: d.rows || [],
           totals: d.totals || null,
           byProduct: d.byProduct || [],
+          outcomes: d.outcomes || null,
           awaiting: d.awaiting || 0,
         },
         loading: false,

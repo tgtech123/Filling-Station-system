@@ -454,7 +454,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       name: "Confirm Takings",
       icon: <Banknote size={20} />,
       link: "/dashboard/cashier/tenderQueue",
-      roles: ["cashier", "supervisor"],
+      roles: ["cashier", "accountant"],
     },
     {
       // Read-only, for everyone who answers for the money.
@@ -473,7 +473,7 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       name: "Shortages",
       icon: <TrendingDown size={20} />,
       link: "/dashboard/accountant/shortfalls",
-      roles: ["accountant", "manager", "supervisor"],
+      roles: ["accountant", "manager", "cashier"],
     },
     {
       id: "tender-audit",

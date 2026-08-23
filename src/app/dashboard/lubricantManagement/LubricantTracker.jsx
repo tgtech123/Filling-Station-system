@@ -15,6 +15,7 @@ import {
 import InvoiceModal from "./InvoiceModal";
 import FilterModal from "./FilterModal";
 import { useLubricantStore } from "@/store/lubricantStore";
+import { parseInvoiceDate, formatInvoiceDate, invoiceDateOf, invoiceDateTokens, looseRef } from "@/lib/invoiceDate";
 
 /**
  * Purchase items carry no category of their own — only `lubricantId` — so the
@@ -38,8 +39,14 @@ const DURATION_OPTIONS = [
 ];
 
 function isInDurationRange(dateStr, duration) {
-  if (!dateStr || duration === "all") return true;
-  const date = new Date(dateStr);
+  if (duration === "all") return true;
+  /**
+   * Read day-first. new Date("23/08/2026") is Invalid Date, and every
+   * comparison against it is false, so this filter used to silently empty the
+   * whole table the moment any duration was chosen.
+   */
+  const date = parseInvoiceDate(dateStr);
+  if (!date) return true; // unreadable date: show it rather than hide it
   const now  = new Date();
   switch (duration) {
     case "daily":
@@ -58,9 +65,10 @@ function isInDurationRange(dateStr, duration) {
   }
 }
 
+// Kept as a thin alias so every call site in this file gets the day-first
+// reader without being rewritten.
 function formatDate(dateStr) {
-  if (!dateStr) return "";
-  try { return new Date(dateStr).toLocaleDateString("en-GB"); } catch { return dateStr; }
+  return formatInvoiceDate(dateStr);
 }
 
 export default function LubricantTracker({ onclose }) {
@@ -133,7 +141,7 @@ export default function LubricantTracker({ onclose }) {
   // Filtered dataset
   const filteredData = useMemo(() => {
     return tableData.filter((purchase) => {
-      if (!isInDurationRange(purchase.purchaseDate, duration)) return false;
+      if (!isInDurationRange(invoiceDateOf(purchase), duration)) return false;
       if (selectedSuppliers.length > 0 && !selectedSuppliers.includes(purchase.supplier)) return false;
       if (selectedPayments.length > 0 && !selectedPayments.includes(purchase.paymentMethod)) return false;
 
@@ -143,15 +151,34 @@ export default function LubricantTracker({ onclose }) {
       if (category !== "all" && inCategory.length === 0) return false;
 
       if (searchTerm.trim()) {
-        const lower = searchTerm.toLowerCase();
+        const lower = searchTerm.trim().toLowerCase();
+
+        /**
+         * Two passes, because an invoice number and a product name are not
+         * searched the same way.
+         *
+         * Reference numbers get written down inconsistently: INV-001, inv 001
+         * and INV/001 are all the same invoice, so those are compared on their
+         * alphanumerics alone. Everything else is matched as typed.
+         *
+         * Dates carry every form somebody might type, since "23/08" and
+         * "23 Aug" are the same intent and a haystack built from one display
+         * format answers only one of them.
+         */
+        const refs = [purchase.invoiceNo, purchase.supplier]
+          .map(looseRef)
+          .join(" ");
+        const refHit = looseRef(searchTerm) && refs.includes(looseRef(searchTerm));
+
         const haystack = [
           purchase.invoiceNo,
           purchase.supplier,
           purchase.paymentMethod,
-          formatDate(purchase.purchaseDate),
+          invoiceDateTokens(invoiceDateOf(purchase)),
           inCategory.map((i) => i.productName).join(" "),
         ].join(" ").toLowerCase();
-        if (!haystack.includes(lower)) return false;
+
+        if (!refHit && !haystack.includes(lower)) return false;
       }
       return true;
     });
@@ -175,7 +202,7 @@ export default function LubricantTracker({ onclose }) {
       p.invoiceNo,
       p.supplier,
       p.paymentMethod,
-      formatDate(p.purchaseDate),
+      formatInvoiceDate(invoiceDateOf(p)),
       p.items?.map((i) => i.productName)?.join(" | ") ?? "",
       p.totalAmount,
     ]);
@@ -392,7 +419,7 @@ export default function LubricantTracker({ onclose }) {
                     purchase.invoiceNo,
                     purchase.supplier,
                     purchase.paymentMethod,
-                    formatDate(purchase.purchaseDate),
+                    formatInvoiceDate(invoiceDateOf(purchase)),
                     purchase.items?.map((i) => i.productName)?.join(", ") ?? "—",
                     `₦${new Intl.NumberFormat("en-NG").format(purchase.totalAmount)}`,
                   ])}

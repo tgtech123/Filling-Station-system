@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import useShiftTenderStore from "@/store/useShiftTenderStore";
 import { useSocket } from "@/hooks/useSocket";
+import ConfirmedTakings from "./ConfirmedTakings";
+import RepayModal from "./RepayModal";
 import { Loader2, CheckCircle2, AlertTriangle, Banknote, CreditCard, Landmark, TrendingDown } from "lucide-react";
 
 /**
@@ -38,6 +40,7 @@ export default function TenderQueuePage() {
   const [counted, setCounted] = useState({ cash: "", POS: "", transfer: "" });
   const [note, setNote] = useState("");
   const [settleNow, setSettleNow] = useState(false);
+  const [repaying, setRepaying] = useState(null);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
@@ -136,23 +139,41 @@ export default function TenderQueuePage() {
                 Money owed from earlier shifts, still unpaid
               </p>
             </div>
+            {/* One line per short shift, because a repayment is made against a
+                particular shift rather than against a person in general. */}
             <div className="divide-y divide-gray-100 dark:divide-gray-700">
-              {shortfalls.attendants
-                .filter((a) => a.outstanding > 0)
-                .map((a) => (
-                  <div key={a.attendantId} className="flex items-center justify-between gap-3 px-4 py-2.5">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{a.name}</p>
-                      <p className="text-[11px] text-gray-400">
-                        {a.shifts} short shift{a.shifts === 1 ? "" : "s"}
-                        {a.paid > 0 && ` · ${naira(a.paid)} already repaid`}
-                      </p>
+              {(shortfalls.rows || [])
+                .filter((r) => r.shortfallStatus === "outstanding")
+                .map((r) => {
+                  const owed = Math.max(
+                    0,
+                    Math.round(((r.shortfall || 0) - (r.repaidTotal || 0)) * 100) / 100
+                  );
+                  return (
+                    <div key={r._id} className="flex items-center justify-between gap-3 px-4 py-2.5 flex-wrap">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                          {nameOf(r.attendant)}
+                        </p>
+                        <p className="text-[11px] text-gray-400">
+                          {r.shift?.pumpTitle || "Pump"} · {r.product || r.shift?.product || "Fuel"}
+                          {r.repaidTotal > 0 && ` · ${naira(r.repaidTotal)} paid back so far`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <p className="text-base font-extrabold tabular-nums text-red-700 dark:text-red-400">
+                          {naira(owed)}
+                        </p>
+                        <button
+                          onClick={() => setRepaying(r)}
+                          className="px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-bold transition-colors"
+                        >
+                          Record repayment
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-base font-extrabold tabular-nums text-red-700 dark:text-red-400 shrink-0">
-                      {naira(a.outstanding)}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
             <div className="px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wide text-gray-500">Total owed</span>
@@ -436,6 +457,19 @@ export default function TenderQueuePage() {
               );
             })}
           </div>
+        )}
+        <ConfirmedTakings />
+
+        {repaying && (
+          <RepayModal
+            row={repaying}
+            onClose={() => setRepaying(null)}
+            onDone={(msg) => {
+              setRepaying(null);
+              setFeedback({ tone: "ok", text: msg });
+              fetchShortfalls({ status: "outstanding" });
+            }}
+          />
         )}
       </div>
     </DashboardLayout>

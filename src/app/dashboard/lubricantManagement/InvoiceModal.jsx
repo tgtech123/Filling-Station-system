@@ -1,5 +1,6 @@
 import { Download, X } from "lucide-react";
 import React, { useMemo } from "react";
+import { formatInvoiceDate } from "@/lib/invoiceDate";
 
 export default function InvoiceModal({ open = true, onClose, invoice = null }) {
   if (!open) return null;
@@ -176,7 +177,7 @@ export default function InvoiceModal({ open = true, onClose, invoice = null }) {
             </div>
             <div className="md:text-right">
               <p className="text-sm text-gray-500">Purchase Date</p>
-              <p className="text-lg font-semibold text-gray-800 mt-1">{inv.purchaseDate}</p>
+              <p className="text-lg font-semibold text-gray-800 mt-1">{formatInvoiceDate(inv.purchaseDate)}</p>
               {enteredAt && (
                 <p className="text-xs text-gray-500 mt-0.5">Entered {enteredAt}</p>
               )}
