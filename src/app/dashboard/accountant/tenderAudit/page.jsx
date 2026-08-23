@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import useShiftTenderStore from "@/store/useShiftTenderStore";
 import { useSocket } from "@/hooks/useSocket";
-import { Loader2, Eye, Banknote, CreditCard, Landmark, AlertTriangle } from "lucide-react";
+import { Loader2, Eye, Banknote, CreditCard, Landmark, AlertTriangle, RotateCcw } from "lucide-react";
 
 /**
  * Every shift's takings, by attendant, split by how they were paid.
@@ -48,9 +48,37 @@ const rangeToParams = (r) => {
 };
 
 export default function TenderAuditPage() {
-  const { audit, loading, fetchAudit } = useShiftTenderStore();
+  const { audit, loading, fetchAudit, reopen } = useShiftTenderStore();
   const [range, setRange] = useState("today");
   const [status, setStatus] = useState("");
+  const [role, setRole] = useState("");
+  const [reopening, setReopening] = useState(null);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [feedback, setFeedback] = useState(null);
+
+  /**
+   * Reopening is for whoever supervises the pair, not for either half of it.
+   * The cashier cannot undo their own count and the attendant cannot undo the
+   * count made against them; the server enforces both regardless of this.
+   */
+  useEffect(() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "{}");
+      setRole(String(u?.role || "").toLowerCase().trim());
+    } catch { /* no session, no buttons */ }
+  }, []);
+  const canReopen = ["manager", "supervisor", "admin"].includes(role);
+
+  const doReopen = async (id) => {
+    setBusy(true);
+    const res = await reopen(id, reason);
+    setBusy(false);
+    setReopening(null);
+    setReason("");
+    setFeedback({ ok: res.success, text: res.message || res.error });
+    if (res.success) load();
+  };
 
   const load = () => fetchAudit({ ...rangeToParams(range), ...(status ? { status } : {}) });
 
@@ -146,6 +174,16 @@ export default function TenderAuditPage() {
           </div>
         )}
 
+        {feedback && (
+          <p className={`mb-4 text-sm rounded-xl p-3 border ${
+            feedback.ok
+              ? "text-green-700 bg-green-50 border-green-200"
+              : "text-red-700 bg-red-50 border-red-200"
+          }`}>
+            {feedback.text}
+          </p>
+        )}
+
         {/* The same money cut by what came out of the hose. A pump runs off one
             tank and a tank holds one product, so this needs no tagging by hand. */}
         {byProduct?.length > 0 && (
@@ -188,6 +226,9 @@ export default function TenderAuditPage() {
                   <th className="px-3 py-2.5 border border-gray-200 dark:border-gray-700 text-right">Transfer</th>
                   <th className="px-3 py-2.5 border border-gray-200 dark:border-gray-700 text-right">Total</th>
                   <th className="px-3 py-2.5 border border-gray-200 dark:border-gray-700">Confirmed by</th>
+                  {canReopen && (
+                    <th className="px-3 py-2.5 border border-gray-200 dark:border-gray-700"> </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -232,6 +273,46 @@ export default function TenderAuditPage() {
                           <span className="text-amber-600 font-semibold">Awaiting</span>
                         )}
                       </td>
+                      {canReopen && (
+                        <td className="px-3 py-2.5 border border-gray-200 dark:border-gray-700 text-xs">
+                          {/* Only a counted shift has anything to undo, and a
+                              repaid shortage is money that already moved. */}
+                          {r.received && r.shortfallStatus !== "paid" ? (
+                            reopening === r._id ? (
+                              <div className="flex flex-col gap-1.5 min-w-[190px]">
+                                <input
+                                  value={reason}
+                                  onChange={(e) => setReason(e.target.value)}
+                                  placeholder="Why reopen? (required)"
+                                  className="w-full min-w-0 border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-2 py-1.5 text-xs"
+                                />
+                                <div className="flex gap-1.5">
+                                  <button
+                                    onClick={() => doReopen(r._id)}
+                                    disabled={busy || !reason.trim()}
+                                    className="flex-1 px-2 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-[11px] font-bold"
+                                  >
+                                    Reopen
+                                  </button>
+                                  <button
+                                    onClick={() => { setReopening(null); setReason(""); }}
+                                    className="px-2 py-1.5 rounded-lg border-2 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 text-[11px] font-semibold"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => { setReopening(r._id); setReason(""); }}
+                                className="flex items-center gap-1 text-[11px] font-semibold text-gray-500 hover:text-amber-700"
+                              >
+                                <RotateCcw size={11} /> Reopen
+                              </button>
+                            )
+                          ) : null}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

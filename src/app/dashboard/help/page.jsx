@@ -28,6 +28,94 @@ const STATUS_ICON = {
 // everyone. Managers/admins always see every group; other roles see only theirs.
 const STATIC_FAQ_GROUPS = [
   {
+    category: "Shift Takings & Shortages",
+    faqs: [
+      {
+        _id: "t1",
+        question: "How do shift takings work from start to finish?",
+        answer:
+          "Four steps, and each one belongs to a different person. 1) The ATTENDANT closes their shift with the meter reading, then goes to Submit Takings and enters how much is cash, how much is POS and how much is transfer. 2) The CASHIER or ACCOUNTANT counts what is physically handed over and confirms it. 3) If less reached the till than the meter says was sold, the difference is recorded as a shortage against that attendant. 4) The attendant sees the shortage on their own dashboard and either accepts it or disputes it. Managers and owners see the confirmed takings as revenue; they do not confirm anything themselves.",
+      },
+      {
+        _id: "t2",
+        roles: ["attendant"],
+        question: "My figures do not add up to what the system expects. Can I still submit?",
+        answer:
+          "Yes. The button will warn you and turn amber, and it will say whether you are short or over, but it will still submit. Nothing is gained by forcing you to type a number that balances when the money does not. Your manager is told at the same time, and the cashier will count what you actually hand over.",
+      },
+      {
+        _id: "t3",
+        roles: ["attendant"],
+        question: "I made a mistake on my takings. Can I change them?",
+        answer:
+          "Yes, as long as the cashier has not counted them yet. Open Submit Takings again, pick the same shift, and the boxes will already hold what you sent last time. Change what was wrong and submit again; it replaces the earlier figures. Once a cashier has counted the money you can no longer edit it, because there are then two records of the same money and changing one of them destroys the pair. Ask a manager or supervisor to reopen it instead.",
+      },
+      {
+        _id: "t4",
+        roles: ["attendant"],
+        question: "I miscounted and declared less than I actually had. What happens?",
+        answer:
+          "Nothing bad. The cashier counts the notes, finds the full amount, and the shift is confirmed as correct with no shortage. Your takings history will show that you submitted one figure and the cashier counted another, and that the count met the meter. That is the whole point of a second pair of hands.",
+      },
+      {
+        _id: "t5",
+        roles: ["cashier", "accountant"],
+        question: "An attendant is paying back money they owed from an earlier shift. Where do I enter it?",
+        answer:
+          "On the Confirm Takings page there is a red panel listing every attendant who is currently short, one line per shift. Click Record repayment on the right line, enter the amount you were handed, and pick how it came back (cash, transfer, POS, or to be deducted from pay). Part payments are fine; the balance stays owing and you can record the rest later. DO NOT type the repayment into the shift's count boxes. Those boxes say what that shift took off the pump, not what came back afterwards, so a bigger number there restates the shift and leaves the debt exactly where it was.",
+      },
+      {
+        _id: "t6",
+        roles: ["cashier", "accountant"],
+        question: "I typed a bigger figure into the count and the shortage is still showing. Why?",
+        answer:
+          "Because counting and repaying are two different things. The count says how much money that shift brought in, and it is checked against litres sold times price per litre. Changing it does not pay anything back; the system simply works the shortage out again from the new figure and it reappears. Use Record repayment on the shortage instead. If the count itself was genuinely wrong, ask a manager to reopen the shift so it can be counted properly.",
+      },
+      {
+        _id: "t7",
+        roles: ["cashier", "accountant"],
+        question: "The cash box is filled in for me. Do I still need to count?",
+        answer:
+          "Yes. All three boxes are prefilled with what the attendant declared so that a matching handover is one click, but the figures are theirs, not yours. Count the notes. If a box does not match what is in front of you, change it: the box turns amber and shows what it was, so a correction is visible at a glance. POS and transfer have a printout and a statement behind them; cash does not, which is why it is the one that matters most.",
+      },
+      {
+        _id: "t8",
+        roles: ["cashier", "accountant"],
+        question: "The attendant is short. Should I still confirm?",
+        answer:
+          "Always. Record what is actually in front of you. The difference becomes a shortage carried against that attendant, and you have a tick box for whether they paid it there and then. Refusing to confirm would leave the money uncounted AND the debt unrecorded, which is worse in both directions.",
+      },
+      {
+        _id: "t9",
+        roles: ["attendant"],
+        question: "I owe money from a shift. How do I pay it back?",
+        answer:
+          "Hand the money to the cashier and they will record it against that shift. Your dashboard card will drop by what you paid and will clear once the balance reaches zero. You can pay in parts. If you think the shortage is wrong, use I disagree on the card instead of paying: that puts a manager between your account and the cashier's, and both are kept.",
+      },
+      {
+        _id: "t10",
+        roles: ["accountant"],
+        question: "What can I do that a cashier cannot?",
+        answer:
+          "Writing a shortage off. Recording money coming back is cash handling and any till role can do it, but forgiving a debt where no money moves at all is a decision about the books and it sits with you alone. It needs a reason, and your name stays on it. You cannot write off a shortage that has already been partly repaid; reverse those payments first, so the money that came back is never left unaccounted for.",
+      },
+      {
+        _id: "t11",
+        roles: ["manager"],
+        question: "Why can I not confirm takings?",
+        answer:
+          "Confirming is for the two roles that handle cash, the cashier and the accountant. You see confirmed takings the way you see any other revenue figure. What you can do that they cannot is reopen a shift that was counted wrongly, because neither party to a count may undo their own half of it.",
+      },
+      {
+        _id: "t12",
+        roles: ["supervisor"],
+        question: "Why can I not see the money on shifts any more?",
+        answer:
+          "Litres are your business, naira are not. You see which pump moved, how much product went out and who was on it, and you can see that a shift is still open so you can chase the attendant. You will not see the amount, the cash counted or the size of any difference. You manage the attendants, so signing off the money those same attendants hand over would put both halves of the same check in one pair of hands. Shift approval also now needs the takings to have been counted first; it can no longer be approved on the cashier's behalf.",
+      },
+    ],
+  },
+  {
     category: "Getting Started",
     faqs: [
       {
