@@ -20,9 +20,9 @@ function LiveDot() {
 function saleRow(sale) {
   return {
     pump:      sale.pumpNo        ?? "—",
-    price:     `₦${(sale.pricePerLtr ?? 0).toLocaleString()}/L`,
+    // Price and amount are no longer sent to this role.
     litres:    `${(sale.litres ?? 0).toLocaleString()} L`,
-    amount:    `₦${(sale.amount ?? 0).toLocaleString()}`,
+
     time:      sale.timestamp ? new Date(sale.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—",
     attendant: sale.attendant ?? "Unknown",
   };
@@ -60,19 +60,19 @@ const LiveSalesAndSchedulePage = () => {
               {feed.map((s, i) => (
                 <div
                   key={i}
-                  className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-3"
+                  className="bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl px-4 py-3"
                 >
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <span className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">
                       Pump {s.pump}
                     </span>
-                    <span className="text-xs text-gray-400">{s.time}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{s.time}</span>
                   </div>
-                  <p className="text-base font-bold text-gray-900">{s.amount}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {s.litres} · {s.price}
+                  <p className="text-lg font-extrabold tabular-nums text-gray-900 dark:text-white leading-none">
+                    {s.litres}
                   </p>
-                  <p className="text-xs text-gray-600 mt-1.5 font-medium truncate">
+                  <p className="text-xs text-gray-400 mt-0.5">dispensed</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1.5 font-medium truncate">
                     {s.attendant}
                   </p>
                 </div>
@@ -84,7 +84,7 @@ const LiveSalesAndSchedulePage = () => {
               <table className="min-w-full text-sm text-left text-gray-700 dark:text-gray-300">
                 <thead className="bg-gray-50 dark:bg-gray-700 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                   <tr>
-                    {["Pump", "Price/Ltr", "Litres", "Amount", "Time", "Attendant"].map((h) => (
+                    {["Pump", "Litres", "Time", "Attendant"].map((h) => (
                       <th key={h} className="px-4 py-3 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -93,9 +93,7 @@ const LiveSalesAndSchedulePage = () => {
                   {feed.map((s, i) => (
                     <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
                       <td className="px-4 py-3 font-semibold text-blue-600 whitespace-nowrap">{s.pump}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{s.price}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{s.litres}</td>
-                      <td className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">{s.amount}</td>
+                      <td className="px-4 py-3 font-semibold tabular-nums whitespace-nowrap">{s.litres}</td>
                       <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{s.time}</td>
                       <td className="px-4 py-3 whitespace-nowrap">{s.attendant}</td>
                     </tr>
