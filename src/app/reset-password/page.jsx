@@ -45,20 +45,20 @@ export default function ResetPassword() {
   return (
     <AuthShell>
       <AuthCard>
-        <h1 className="text-2xl font-bold text-[#323130] dark:text-white">Reset Password</h1>
-        <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+        <h1 className="text-[1.4rem] font-bold tracking-tight text-[#1c1b1a] dark:text-white [@media(min-height:760px)]:text-[1.6rem]">Reset Password</h1>
+        <p className="mt-1 text-[0.8rem] text-gray-500 dark:text-gray-400 [@media(min-height:760px)]:mt-1.5 [@media(min-height:760px)]:text-sm">
           Enter your email to receive a reset link
         </p>
 
-          <form className="flex flex-col gap-4 mt-8 w-full">
+          <form className="mt-4 flex w-full flex-col gap-3 [@media(min-height:760px)]:mt-6 [@media(min-height:760px)]:gap-4">
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-bold text-[#323130]">Email</label>
+              <label className="text-[0.8rem] font-semibold text-gray-700 dark:text-gray-300">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); if (error) setError(null); }}
                 placeholder="username123@gmail.com"
-                className="pl-3 border-[1.6px] rounded-lg h-[43px] w-full focus:border-blue-600 outline-none text-sm"
+                className="h-11 w-full rounded-lg border border-neutral-300 bg-white px-3.5 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                 required
               />
             </div>
@@ -67,7 +67,7 @@ export default function ResetPassword() {
               <p className="text-sm text-red-500 font-medium -mt-1">{error}</p>
             )}
             {message && (
-              <div className="bg-yellow-50 border border-yellow-300 rounded-lg px-4 py-3">
+              <div className="rounded-lg border border-yellow-300 bg-yellow-50 px-4 py-2.5">
                 <p className="text-sm text-yellow-800 font-medium">{message}</p>
               </div>
             )}
@@ -76,7 +76,7 @@ export default function ResetPassword() {
               onClick={handleResetPassword}
               type="submit"
               disabled={loading}
-              className="bg-blue-600 flex justify-center items-center rounded-lg font-semibold text-white h-[45px] hover:bg-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed mt-1"
+              className="mt-1 flex h-11 items-center justify-center rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? "Sending..." : "Reset Password"}
             </button>
