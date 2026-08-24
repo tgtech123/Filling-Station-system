@@ -5,7 +5,7 @@ import { FiEyeOff } from "react-icons/fi";
 import { FiEye } from "react-icons/fi";
 import { ImSpinner3 } from "react-icons/im";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
-import LoginTwo from "../LoginTwo";
+import AuthShell, { AuthCard } from "./AuthShell";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import usePlatformStore from "@/store/usePlatformStore";
@@ -159,21 +159,22 @@ const Login = () => {
   };
 
   return (
-    <div className="grid min-h-screen grid-cols-1 lg:h-screen lg:grid-cols-[minmax(0,1fr)_1.15fr] lg:overflow-hidden">
-      {/* Left - Form Section */}
-      <div className="flex w-full items-center justify-center bg-white px-5 py-10 dark:bg-gray-900 sm:px-8 lg:py-6 lg:h-screen lg:overflow-y-auto scrollbar-hide">
-        <div className="flex w-full max-w-[23rem] flex-col items-center rounded-lg border border-neutral-200/80 bg-white px-6 py-7 shadow-[0_1px_2px_rgba(16,24,40,0.06),0_16px_40px_-16px_rgba(16,24,40,0.25)] dark:border-2 dark:border-white dark:bg-gray-900 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_18px_45px_-12px_rgba(255,255,255,0.22)]">
-          <div className="mb-7 flex gap-5 self-start">
+    <AuthShell>
+      <AuthCard className="items-center">
+          {/* One control at every size now that the card no longer changes
+              shape between breakpoints. The label used to be desktop-only,
+              which left phone users with a bare arrow and no idea where it
+              went. */}
+          <div className="mb-6 flex w-full">
             <Link
               href="/"
-              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              className="group flex items-center gap-2 rounded-lg px-1 py-1 text-sm font-semibold text-gray-500 transition-colors hover:text-[#0080ff] dark:text-gray-400"
             >
-              <ArrowLeft size={20} className="hidden lg:block" />
               <ArrowLeft
-                size={20}
-                className="block rounded-md border border-neutral-300 p-1 lg:hidden"
+                size={18}
+                className="transition-transform group-hover:-translate-x-0.5"
               />
-              <h1 className="hidden text-sm font-semibold text-gray-500 dark:text-gray-400 lg:block">Back home</h1>
+              Back home
             </Link>
           </div>
 
@@ -354,14 +355,8 @@ const Login = () => {
               </p>
             </form>
           )}
-        </div>
-      </div>
-
-      {/* Right - Full Image Section (No Scroll) */}
-      <div className="relative hidden h-full w-full lg:block">
-        <LoginTwo />
-      </div>
-    </div>
+      </AuthCard>
+    </AuthShell>
   );
 };
 

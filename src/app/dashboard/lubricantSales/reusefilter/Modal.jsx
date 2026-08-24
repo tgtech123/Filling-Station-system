@@ -27,6 +27,16 @@ const Modal = ({ isOpen, onClose }) => {
   const [filteredData, setFilteredData]   = useState([]);
   const [searchTerm, setSearchTerm]       = useState("");
   const [toggleChevron, setToggleChevron] = useState(false);
+  /**
+   * Own sales, or the whole station's.
+   *
+   * A cashier sees their own by default: a receipt carries what a customer
+   * bought and what they paid, and the person on the next till has no standing
+   * reason to hold that. But a customer comes back on Tuesday about a sale rung
+   * up by somebody who is off that day, so the wider search has to be one click
+   * away rather than absent. The server enforces which roles this applies to.
+   */
+  const [scope, setScope] = useState("mine");
 
   const txnIdToMongoId = useRef({});
 
@@ -34,8 +44,8 @@ const Modal = ({ isOpen, onClose }) => {
 
   // Fetch fresh data every time the modal opens
   useEffect(() => {
-    if (isOpen) fetchAllTransactions();
-  }, [isOpen]);
+    if (isOpen) fetchAllTransactions(scope);
+  }, [isOpen, scope]);
 
   // Derive formatted rows + id map from store whenever transactions change
   const salesData = useMemo(() => {
@@ -140,6 +150,26 @@ const Modal = ({ isOpen, onClose }) => {
           <IoCloseOutline size={24} />
         </button>
 
+        {/* Whose receipts are being searched. Explicit, so a cashier always
+            knows whether a missing sale is absent or simply someone else's. */}
+        <div className="flex items-center gap-1 p-1 bg-neutral-100 dark:bg-gray-800 rounded-xl mb-3 w-fit">
+          {[
+            { key: "mine", label: "My sales" },
+            { key: "station", label: "All cashiers" },
+          ].map((o) => (
+            <button
+              key={o.key}
+              onClick={() => setScope(o.key)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                scope === o.key
+                  ? "bg-white dark:bg-gray-700 text-[#0080ff] shadow-sm"
+                  : "text-neutral-500 hover:text-neutral-700 dark:text-gray-400"
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
         <div className="flex-1 mb-4">
           <p className="text-lg font-semibold">Reprint receipt</p>
           <p className="text-sm text-gray-500">Print and export all sales receipts</p>

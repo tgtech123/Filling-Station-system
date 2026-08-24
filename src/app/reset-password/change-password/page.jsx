@@ -1,6 +1,6 @@
 "use client"
 
-import LoginTwo from "@/sections/LoginTwo";
+import AuthShell, { AuthCard } from "@/sections/login/AuthShell";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -64,9 +64,11 @@ function ChangePasswordForm() {
   };
 
   return (
-    <div className="w-full max-w-md bg-white border border-gray-200 shadow-xl rounded-2xl px-8 py-10 flex flex-col items-start">
-      <h1 className="text-3xl sm:text-4xl font-bold text-[#323130]">Create Password</h1>
-      <p className="mt-2 text-sm sm:text-base text-gray-500">Enter a strong password for your account</p>
+    <AuthCard>
+      <h1 className="text-2xl font-bold text-[#323130] dark:text-white">Create Password</h1>
+      <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+        Enter a strong password for your account
+      </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-8 w-full">
         <div className="flex flex-col gap-1">
@@ -110,26 +112,26 @@ function ChangePasswordForm() {
           {loading ? "Saving..." : "Save and Login"}
         </button>
       </form>
-    </div>
+    </AuthCard>
   );
 }
 
 export default function ChangePassword() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen lg:h-screen lg:overflow-hidden">
-      <div className="w-full flex items-center justify-center bg-gray-50 px-4 py-10 lg:py-0 lg:h-screen lg:overflow-y-auto">
-        <Suspense fallback={
-          <div className="w-full max-w-md flex items-center justify-center">
-            <p>Loading...</p>
-          </div>
-        }>
-          <ChangePasswordForm />
-        </Suspense>
-      </div>
-
-      <div className="hidden md:flex w-full h-full">
-        <LoginTwo />
-      </div>
-    </div>
+    <AuthShell>
+      {/* The fallback wears the same card, so the page does not flash a bare
+          line of text over the photograph before the form arrives. */}
+      <Suspense
+        fallback={
+          <AuthCard>
+            <div className="flex items-center justify-center py-10 text-sm text-gray-400">
+              Loading…
+            </div>
+          </AuthCard>
+        }
+      >
+        <ChangePasswordForm />
+      </Suspense>
+    </AuthShell>
   );
 }

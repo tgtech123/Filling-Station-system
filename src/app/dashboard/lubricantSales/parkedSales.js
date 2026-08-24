@@ -94,6 +94,21 @@ export function clearLiveBasket() {
 
 /* ── Parked baskets ──────────────────────────────────────────────────────── */
 
+/**
+ * How many baskets may sit on hold at once.
+ *
+ * Three, and no more. A hold is a promise that a specific customer is coming
+ * back, and a till with a dozen of them is not managing a queue, it is
+ * accumulating stock that has left the shelf count without being sold and
+ * without anybody watching it. Three is what a person can actually keep in
+ * their head and point at across a counter.
+ *
+ * Silently dropping the oldest, which is what the old cap did, is the worst
+ * option available: the basket a customer is walking back towards is the one
+ * that disappears, and nothing says so.
+ */
+export const MAX_PARKED = 3;
+
 export function listParkedSales() {
   const list = read(PARKED_KEY, []);
   return Array.isArray(list) ? list : [];
@@ -106,9 +121,22 @@ export function listParkedSales() {
  * shirt", a car colour. Free text on purpose, because a queue does not come
  * with reference numbers.
  */
+/**
+ * Set the current basket aside.
+ *
+ * Returns { ok, parked, reason } rather than a bare list, so a refusal can be
+ * told apart from a hold that simply had nothing in it. Refusing is the whole
+ * point of the limit: dropping one quietly to make room for another is how a
+ * waiting customer's shopping vanishes.
+ */
 export function parkSale(rows, paymentMethod, label) {
   const kept = meaningful(rows);
-  if (!kept.length) return listParkedSales();
+  if (!kept.length) return { ok: false, reason: "EMPTY", parked: listParkedSales() };
+
+  const existing = listParkedSales();
+  if (existing.length >= MAX_PARKED) {
+    return { ok: false, reason: "LIMIT", parked: existing };
+  }
 
   const total = kept.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
@@ -123,10 +151,10 @@ export function parkSale(rows, paymentMethod, label) {
   };
 
   // Newest first: the person who just stepped aside is the likeliest to return.
-  const next = [entry, ...listParkedSales()].slice(0, 20);
+  const next = [entry, ...existing];
   write(PARKED_KEY, next);
   clearLiveBasket();
-  return next;
+  return { ok: true, parked: next };
 }
 
 export function removeParkedSale(id) {

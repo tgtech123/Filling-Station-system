@@ -489,11 +489,19 @@ export const useLubricantStore = create((set, get) => ({
     }
   },
 
-  // Get all lubricant transactions (sales grouped)
-  fetchAllTransactions: async () => {
+  /**
+   * Get lubricant transactions (sales grouped).
+   *
+   * A cashier gets their OWN sales by default; scope "station" asks for
+   * everyone's, which is what a customer returning on somebody else's day
+   * needs. The server decides who that applies to, so passing it changes
+   * nothing for a role that already sees the whole station.
+   */
+  fetchAllTransactions: async (scope) => {
     set({ transactionsLoading: true });
     try {
-      const res = await fetch(`${API_URL}/api/lubricant/transactions`, {
+      const qs = scope === "station" ? "?scope=station" : "";
+      const res = await fetch(`${API_URL}/api/lubricant/transactions${qs}`, {
         method: "GET",
         headers: get().getAuthHeaders(),
       });

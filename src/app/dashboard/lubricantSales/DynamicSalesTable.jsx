@@ -96,10 +96,45 @@ const DynamicSalesTable = ({
   const [showModal, setShowModal] = useState(false);
   const [paymentBreakdown, setPaymentBreakdown] = useState(null);
 
+  /**
+   * A mixed payment has to keep matching the basket, not just match it once.
+   *
+   * The split is entered against whatever the total was at that moment. Change
+   * a line afterwards, most obviously by switching a carton to pieces when the
+   * carton turns out to be out of stock, and the total moves while the split
+   * stays where it was. Nothing objected, and a 24,000 split was recorded
+   * against a 1,000 sale.
+   *
+   * Derived on every render rather than checked on submit, so the mismatch is
+   * visible the instant the basket changes instead of at the printer.
+   */
+  const mixTotal = paymentBreakdown
+    ? (Number(paymentBreakdown.cash) || 0) +
+      (Number(paymentBreakdown.POS ?? paymentBreakdown.pos) || 0) +
+      (Number(paymentBreakdown.transfer) || 0)
+    : 0;
+
+  const cartTotal = Number(totalAmount) || 0;
+  const mixGap = Math.round((mixTotal - cartTotal) * 100) / 100;
+  const isMixed = paymentMethod === "mixed";
+  // Kobo noise from unit maths is arithmetic, not a mismatch.
+  const mixBalances = !isMixed || (Boolean(paymentBreakdown) && Math.abs(mixGap) <= 0.5);
+
   const handleSubmit = ({ print }) => {
-    if (paymentMethod === "mixed") {
+    if (isMixed) {
       if (!paymentBreakdown) {
-        alert("Please enter mixed payment breakdown");
+        setShowModal(true);
+        return;
+      }
+      /**
+       * Refused, not warned. The money taken and the money recorded have to be
+       * the same number: paymentBreakdown is what apportions this sale into
+       * cash, POS and transfer for every reconciliation afterwards, so a split
+       * that disagrees with the total puts money into the day's position that
+       * was never in the drawer. The server refuses it too.
+       */
+      if (!mixBalances) {
+        setShowModal(true);
         return;
       }
 
@@ -130,6 +165,58 @@ const DynamicSalesTable = ({
     <>
       {/* Main UI */}
       <div className="w-full">
+        {/* Where the split stands against the basket. Shown whenever a mix is
+            in play, so it is never a surprise at the printer. */}
+        {isMixed && (
+          <div
+            className={`mb-3 rounded-xl border-2 px-3 py-2.5 ${
+              mixBalances
+                ? "border-green-200 bg-green-50 dark:bg-green-900/10"
+                : "border-red-300 bg-red-50 dark:bg-red-900/10"
+            }`}
+          >
+            {!paymentBreakdown ? (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-bold text-red-800">
+                  Enter how the ₦{cartTotal.toLocaleString()} is being split.
+                </p>
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold"
+                >
+                  Enter split
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className={`text-sm font-bold ${mixBalances ? "text-green-800" : "text-red-800"}`}>
+                    {mixBalances
+                      ? `Split matches the total: ₦${cartTotal.toLocaleString()}`
+                      : `Split is ₦${Math.abs(mixGap).toLocaleString()} ${mixGap > 0 ? "more than" : "short of"} the ₦${cartTotal.toLocaleString()} total`}
+                  </p>
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+                      mixBalances
+                        ? "border-2 border-green-300 text-green-800"
+                        : "bg-red-600 hover:bg-red-700 text-white"
+                    }`}
+                  >
+                    {mixBalances ? "Change split" : "Fix the split"}
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-600 dark:text-gray-400 mt-1">
+                  Cash ₦{(Number(paymentBreakdown.cash) || 0).toLocaleString()} · POS ₦
+                  {(Number(paymentBreakdown.POS ?? paymentBreakdown.pos) || 0).toLocaleString()} · Transfer ₦
+                  {(Number(paymentBreakdown.transfer) || 0).toLocaleString()}
+                  {!mixBalances && " · the basket changed after this was entered"}
+                </p>
+              </>
+            )}
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <form className="flex flex-col sm:flex-row gap-4 w-full">
             {/* Total Amount */}
@@ -175,9 +262,12 @@ const DynamicSalesTable = ({
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto flex-shrink-0">
             <button
               onClick={() => handleSubmit({ print: true })}
-              disabled={loading}
+              disabled={loading || !mixBalances}
+              title={!mixBalances ? "The payment split does not match the total" : undefined}
               className={`text-white flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold w-full sm:w-auto transition-colors ${
-                loading ? "bg-blue-400 cursor-not-allowed" : "bg-[#0080FF] hover:bg-blue-700"
+                loading || !mixBalances
+                  ? "bg-blue-400 cursor-not-allowed opacity-60"
+                  : "bg-[#0080FF] hover:bg-blue-700"
               }`}
             >
               {loading ? (
@@ -194,7 +284,8 @@ const DynamicSalesTable = ({
 
             <button
               onClick={() => handleSubmit({ print: false })}
-              disabled={loading}
+              disabled={loading || !mixBalances}
+              title={!mixBalances ? "The payment split does not match the total" : undefined}
               className={`flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg font-semibold w-full sm:w-auto border-2 transition-colors ${
                 loading
                   ? "border-gray-200 text-gray-300 cursor-not-allowed"
