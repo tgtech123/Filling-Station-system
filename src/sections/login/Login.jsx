@@ -165,7 +165,7 @@ const Login = () => {
               shape between breakpoints. The label used to be desktop-only,
               which left phone users with a bare arrow and no idea where it
               went. */}
-          <div className="mb-6 flex w-full">
+          <div className="mb-3 flex w-full [@media(min-height:760px)]:mb-5 [@media(min-height:900px)]:mb-6">
             <Link
               href="/"
               className="group flex items-center gap-2 rounded-lg px-1 py-1 text-sm font-semibold text-gray-500 transition-colors hover:text-[#0080ff] dark:text-gray-400"
@@ -178,16 +178,16 @@ const Login = () => {
             </Link>
           </div>
 
-          <h1 className="w-full text-center text-[1.6rem] font-bold tracking-tight text-[#1c1b1a] dark:text-white sm:text-[1.75rem]">
+          <h1 className="w-full text-center text-[1.4rem] font-bold tracking-tight text-[#1c1b1a] dark:text-white [@media(min-height:760px)]:text-[1.6rem] [@media(min-height:900px)]:text-[1.75rem]">
               Welcome Back!  
            {/* <span> {settings?.platformName || "FuelDesk"} </span> */}
           </h1>
-          <p className="mt-1.5 w-full text-center text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 w-full text-center text-[0.8rem] text-gray-500 dark:text-gray-400 [@media(min-height:760px)]:mt-1.5 [@media(min-height:760px)]:text-sm">
             Login to access your customized station dashboard
           </p>
 
           {idleLogout && (
-            <div className="w-full mt-4 mb-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-center">
+            <div className="w-full mt-3 mb-1 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-center">
               <p className="text-amber-700 font-semibold text-sm">
                 Session expired due to inactivity
               </p>
@@ -199,7 +199,7 @@ const Login = () => {
           )}
 
           {upgraded && (
-            <div className="w-full mt-4 mb-2 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-center">
+            <div className="w-full mt-3 mb-1 bg-green-50 border border-green-200 rounded-xl px-4 py-2.5 text-center">
               <p className="text-green-700 font-semibold text-sm">
                 🎉{" "}
                 {upgradedPlan
@@ -214,7 +214,7 @@ const Login = () => {
 
           {otpStep ? (
             /* ── OTP verification screen ── */
-            <div className="mt-7 flex w-full flex-col gap-4">
+            <div className="mt-4 flex w-full flex-col gap-3 [@media(min-height:760px)]:mt-6 [@media(min-height:760px)]:gap-4">
               <div className="text-center mb-2">
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 ring-1 ring-blue-100 dark:bg-blue-900/30 dark:ring-blue-900">
                   <ShieldCheck size={22} className="text-blue-600" />
@@ -270,7 +270,7 @@ const Login = () => {
             /* ── Normal login form ── */
             <form
               onSubmit={handleLogin}
-              className="mt-7 flex w-full flex-col gap-4"
+              className="mt-4 flex w-full flex-col gap-3 [@media(min-height:760px)]:mt-6 [@media(min-height:760px)]:gap-4"
             >
               {/* Email */}
               <div className="relative flex flex-col">

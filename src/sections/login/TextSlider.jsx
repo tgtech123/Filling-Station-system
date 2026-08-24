@@ -60,7 +60,7 @@ const TextSlider = ({ centered = false }) => {
     <div className={`mx-auto w-full ${centered ? "max-w-2xl text-center" : "max-w-xl"}`}>
       {/* A fixed floor stops the page jumping every three seconds as a two-line
           title gives way to a one-line one. */}
-      <div className={centered ? "min-h-[6.5rem] sm:min-h-[7rem]" : "min-h-[7.5rem]"}>
+      <div className={centered ? "min-h-[5rem] [@media(min-height:760px)]:min-h-[6.5rem] [@media(min-height:900px)]:min-h-[7rem]" : "min-h-[7.5rem]"}>
         <div key={currentSlide} className="animate-fadeIn">
           <h2
             className={`font-bold leading-snug text-white drop-shadow-sm ${
@@ -80,7 +80,7 @@ const TextSlider = ({ centered = false }) => {
       </div>
 
       {/* Indicators */}
-      <div className={`mt-4 flex gap-2 sm:mt-5 ${centered ? "justify-center" : ""}`}>
+      <div className={`mt-3 flex gap-2 [@media(min-height:760px)]:mt-4 [@media(min-height:900px)]:mt-5 ${centered ? "justify-center" : ""}`}>
         {slides.map((_, index) => (
           <button
             key={index}
