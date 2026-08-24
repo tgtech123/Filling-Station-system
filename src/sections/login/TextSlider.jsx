@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 
-const TextSlider = () => {
+/**
+ * The centered flag is opt-in so the split-column auth pages keep their left-aligned
+ * copy in the corner of the photograph, while the full-bleed login can run the
+ * same text across the foot of the screen.
+ */
+const TextSlider = ({ centered = false }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slides = [
@@ -52,20 +57,30 @@ const TextSlider = () => {
      * middle of nothing. A fixed min-height stops the picture jumping every
      * three seconds as a two-line title gives way to a one-line one.
      */
-    <div className="mx-auto w-full max-w-xl">
-      <div className="min-h-[7.5rem]">
+    <div className={`mx-auto w-full ${centered ? "max-w-2xl text-center" : "max-w-xl"}`}>
+      {/* A fixed floor stops the page jumping every three seconds as a two-line
+          title gives way to a one-line one. */}
+      <div className={centered ? "min-h-[6.5rem] sm:min-h-[7rem]" : "min-h-[7.5rem]"}>
         <div key={currentSlide} className="animate-fadeIn">
-          <h2 className="text-[1.35rem] font-bold leading-snug text-white drop-shadow-sm">
+          <h2
+            className={`font-bold leading-snug text-white drop-shadow-sm ${
+              centered ? "text-lg sm:text-xl md:text-[1.4rem]" : "text-[1.35rem]"
+            }`}
+          >
             {slides[currentSlide].title}
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-white/75">
+          <p
+            className={`mt-2 leading-relaxed text-white/75 ${
+              centered ? "mx-auto max-w-xl text-xs sm:text-sm" : "text-sm"
+            }`}
+          >
             {slides[currentSlide].description}
           </p>
         </div>
       </div>
 
       {/* Indicators */}
-      <div className="mt-5 flex gap-2">
+      <div className={`mt-4 flex gap-2 sm:mt-5 ${centered ? "justify-center" : ""}`}>
         {slides.map((_, index) => (
           <button
             key={index}

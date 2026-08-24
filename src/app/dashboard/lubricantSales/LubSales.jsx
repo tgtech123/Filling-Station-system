@@ -9,7 +9,7 @@ import { publishToCustomerDisplay, openCustomerDisplay, CUSTOMER_DISPLAY_PATH } 
 import { useSocket } from "@/hooks/useSocket";
 import {
   saveLiveBasket, loadLiveBasket, clearLiveBasket,
-  listParkedSales, parkSale, removeParkedSale, getParkedSale,
+  listParkedSales, parkSale, removeParkedSale, getParkedSale, MAX_PARKED,
 } from "./parkedSales";
 
 const LubSales = () => {
@@ -763,13 +763,42 @@ const LubSales = () => {
   };
 
   const handleParkSale = () => {
-    const next = parkSale(rows, paymentMethod, parkLabel);
-    setParked(next);
+    const res = parkSale(rows, paymentMethod, parkLabel);
+
+    /**
+     * At the limit the basket stays exactly where it is.
+     *
+     * Nothing is cleared and nothing is dropped: the cashier still has the
+     * customer's goods on the counter and can ring them up, and the three
+     * people already waiting still have theirs. Making room by discarding the
+     * oldest hold would take away the basket somebody is walking back towards.
+     */
+    if (!res.ok) {
+      setAskingPark(false);
+      if (res.reason === "LIMIT") {
+        setParked(res.parked);
+        setShowParked(true);
+        setScanError({
+          code: "PARK_LIMIT",
+          message:
+            `${MAX_PARKED} sales are already on hold, which is the most the till will keep. ` +
+            "Complete or cancel one of them before setting another aside.",
+        });
+      } else {
+        setMessageTone("error");
+        setMessage("There is nothing on the counter to set aside.");
+      }
+      return;
+    }
+
+    setParked(res.parked);
     setParkLabel("");
     setAskingPark(false);
     clearCart();
     setMessageTone("success");
-    setMessage("Sale set aside. The counter is clear for the next customer.");
+    setMessage(
+      `Sale set aside. ${res.parked.length} of ${MAX_PARKED} holds used. The counter is clear.`
+    );
   };
 
   /**
@@ -899,6 +928,22 @@ const LubSales = () => {
         return;
       }
 
+      /**
+       * The split does not add up to the sale.
+       *
+       * The till blocks this before the button is clickable, so reaching here
+       * means the basket moved between the check and the request, or the call
+       * came from somewhere the button does not guard. Either way nothing is
+       * written: the money taken and the money recorded have to be the same
+       * number, and a breakdown that disagrees would put naira into the day's
+       * cash position that were never in the drawer.
+       */
+      if (result?.code === "BREAKDOWN_MISMATCH") {
+        setMessageTone("error");
+        setMessage(result.error);
+        return;
+      }
+
       if (!response.ok || !result.success) {
         throw new Error(
           result.message || result.error || "Failed to record sale"
@@ -974,11 +1019,36 @@ const LubSales = () => {
                 set aside, so it never sits there inviting a pointless press. */}
             {rows.some((r) => r.lubricantId) && (
               <button
-                onClick={() => setAskingPark(true)}
-                title="Hold this sale and clear the counter"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 text-sm font-semibold transition-colors"
+                onClick={() => {
+                  // Full: show what is already waiting rather than open a form
+                  // that can only end in a refusal.
+                  if (parked.length >= MAX_PARKED) {
+                    setShowParked(true);
+                    setScanError({
+                      code: "PARK_LIMIT",
+                      message:
+                        `${MAX_PARKED} sales are already on hold, which is the most the till will keep. ` +
+                        "Complete or cancel one of them before setting another aside.",
+                    });
+                    return;
+                  }
+                  setAskingPark(true);
+                }}
+                title={
+                  parked.length >= MAX_PARKED
+                    ? `${MAX_PARKED} holds already used. Clear one first.`
+                    : "Hold this sale and clear the counter"
+                }
+                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-semibold transition-colors ${
+                  parked.length >= MAX_PARKED
+                    ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                    : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                }`}
               >
                 <PauseCircle size={15} /> Hold sale
+                <span className="text-[11px] font-bold opacity-70">
+                  {parked.length}/{MAX_PARKED}
+                </span>
               </button>
             )}
 
@@ -1395,13 +1465,22 @@ const LubSales = () => {
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-white">Sales on hold</h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {parked.length} waiting. Restoring brings one back to the counter.
+                  {parked.length} of {MAX_PARKED} holds used. Restoring brings one back to the counter.
                 </p>
               </div>
               <button onClick={() => setShowParked(false)} className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
                 <X size={18} className="text-gray-500" />
               </button>
             </div>
+
+            {parked.length >= MAX_PARKED && (
+              <p className="mx-5 mt-4 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                This is the most the till will hold. Finish or cancel one of these
+                before setting another sale aside. Nothing here is dropped to make
+                room, because the basket that vanished would be the one a customer
+                is walking back towards.
+              </p>
+            )}
 
             <div className="p-4 space-y-2">
               {parked.length === 0 ? (
