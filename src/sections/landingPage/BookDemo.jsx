@@ -42,6 +42,22 @@ function currentMonthKey() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
+/**
+ * "1 hour 30 minutes", not "90 minutes".
+ *
+ * Nobody books ninety minutes of their Saturday; they book an hour and a half.
+ * Minutes past sixty are for the config file, not for the person deciding
+ * whether they can spare the time.
+ */
+function formatDuration(minutes) {
+  const mins = Number(minutes) || 0;
+  const hours = Math.floor(mins / 60);
+  const rest = mins % 60;
+  if (!hours) return `${rest} minutes`;
+  const hourPart = `${hours} hour${hours > 1 ? "s" : ""}`;
+  return rest ? `${hourPart} ${rest} minutes` : hourPart;
+}
+
 /** "2026-09-03" → "Thu 3 Sep" — the chip above the form. */
 function shortDate(dateKey) {
   const d = new Date(`${dateKey}T00:00:00Z`);
@@ -61,7 +77,7 @@ function googleCalendarUrl({ startsAt, durationMinutes, meetingLink, reference }
     action: "TEMPLATE",
     text: "FuelDesk demo",
     dates: `${stamp(start)}/${stamp(end)}`,
-    details: `${durationMinutes}-minute walkthrough of FuelDesk. Reference ${reference}.${
+    details: `A ${formatDuration(durationMinutes)} walkthrough of FuelDesk. Reference ${reference}.${
       meetingLink ? ` Join: ${meetingLink}` : ""
     }`,
     location: meetingLink || "Google Meet",
@@ -143,6 +159,21 @@ export default function BookDemo() {
     [month]
   );
 
+  /**
+   * "60" or "60 or 90" — read off the month the server sent rather than written
+   * into the copy, because weekdays and Saturdays run to different lengths and
+   * either can be changed from the server environment without a deploy. Copy
+   * that names a number it did not look up is copy that goes stale.
+   */
+  const durationText = useMemo(() => {
+    const open = (month?.days ?? []).filter((d) => d.isWorkDay && d.durationMinutes);
+    const distinct = [...new Set(open.map((d) => d.durationMinutes))].sort((a, b) => a - b);
+    if (!distinct.length) return null;
+    const readable = distinct.map(formatDuration);
+    if (readable.length === 1) return readable[0];
+    return `${readable.slice(0, -1).join(", ")} or ${readable[readable.length - 1]}`;
+  }, [month]);
+
   const handleField = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
   const submit = async (e) => {
@@ -206,16 +237,20 @@ export default function BookDemo() {
       >
         <span className="inline-flex items-center gap-2 rounded-full border-2 border-[#0080FF] bg-[#cee1ff]/50 dark:bg-[#0080FF]/10 px-4 py-1 text-xs sm:text-sm font-semibold text-[#0080FF]">
           <Video size={16} aria-hidden="true" />
-          Free live demo on Google Meet
+          Live demo on Google Meet
         </span>
         <h2 className="mt-4 text-2xl sm:text-3xl lg:text-[40px] font-semibold leading-tight text-black dark:text-white">
           See FuelDesk running your station
         </h2>
         <p className="mt-3 text-sm sm:text-base text-gray-600 dark:text-gray-300">
-          Pick a time that suits you. We will walk you through live pump monitoring,
-          shift reconciliation and the reports your managers get every morning —
-          {month?.durationMinutes ? ` ${month.durationMinutes} minutes` : " under an hour"},
-          no obligation.
+          New to FuelDesk? This session is for you — see exactly how the system
+          runs a station before you pay for anything. We will walk you through
+          live pump monitoring, shift reconciliation and the reports your
+          managers get every morning.
+        </p>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          No account needed, and nothing to install — just a link and a time that
+          suits you.
         </p>
       </motion.div>
 
@@ -327,7 +362,7 @@ export default function BookDemo() {
               </h3>
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{confirmed.when}</p>
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Reference {confirmed.reference} · {confirmed.durationMinutes} minutes on{" "}
+                Reference {confirmed.reference} · {formatDuration(confirmed.durationMinutes)} on{" "}
                 {confirmed.meetingProvider}
               </p>
 
@@ -375,7 +410,7 @@ export default function BookDemo() {
                 Pick a day to see available times
               </p>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Weekdays, {month?.durationMinutes ?? 45} minutes, on Google Meet.
+                {durationText ? `${durationText} on Google Meet.` : "On Google Meet."}
               </p>
             </div>
           ) : !selectedTime ? (
@@ -384,7 +419,12 @@ export default function BookDemo() {
                 {shortDate(selectedDate)}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Choose a start time ({day?.timezone || month?.timezone || "WAT (GMT+1)"})
+                {/* This day's length, not the generic one — a Saturday visitor
+                    needs to know the appointment is longer before they pick a
+                    start time, not after they have booked it. */}
+                Choose a start time
+                {day?.durationMinutes ? ` · ${formatDuration(day.durationMinutes)}` : ""} (
+                {day?.timezone || month?.timezone || "WAT (GMT+1)"})
               </p>
 
               {dayLoading ? (
