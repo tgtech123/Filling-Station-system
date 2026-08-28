@@ -18,26 +18,78 @@
  * working when the forecourt connection does not.
  */
 
+import { getCurrentUser, getCurrentUserId } from "@/lib/currentUser";
+
 const LIVE_KEY = "fueldesk:till:live";
 const PARKED_KEY = "fueldesk:till:parked";
 
-/** Parked baskets are per station, so two branches never see each other's. */
-const stationOf = () => {
-  try {
-    const u = JSON.parse(localStorage.getItem("user") || "{}");
-    const s = u.station;
-    return String(s?._id || s?.id || s || "unknown");
-  } catch {
-    return "unknown";
-  }
+/**
+ * Which till these baskets belong to.
+ *
+ * Station AND cashier, not station alone. localStorage is shared by every tab
+ * of a browser profile, so a station-only key meant two cashiers on one machine
+ * resolved to the SAME key: one scanned an item and it turned up in the other's
+ * basket, and a cashier opening the till at the start of a shift inherited
+ * whatever the previous one had left on the counter. The cashier id separates
+ * them.
+ *
+ * Read through getCurrentUserId rather than reaching into localStorage again —
+ * that helper exists precisely because several screens each derived identity
+ * their own way and then stored under one key and read under another.
+ *
+ * Worth being honest about the limit: this does not let two cashiers be signed
+ * in at once in the SAME browser profile. `token` and `user` are single slots,
+ * so the second login replaces the first regardless of what these keys say.
+ * Concurrent cashiers still need separate browser profiles or separate devices.
+ * What this fixes is everything downstream of that — shift changeover on one
+ * till, and any case where the profiles really are separate.
+ */
+const tillOf = () => {
+  const u = getCurrentUser();
+  const s = u.station;
+  const station = String(s?._id || s?.id || s || "unknown");
+  const cashier = getCurrentUserId() || "unknown";
+  return `${station}:${cashier}`;
 };
 
-const keyFor = (base) => `${base}:${stationOf()}`;
+const keyFor = (base) => `${base}:${tillOf()}`;
+
+/**
+ * What the key looked like before the cashier id was added.
+ *
+ * Kept only so that shipping this change does not quietly destroy baskets a
+ * station is holding for customers who are walking back to the counter. On the
+ * first read after the update the old value is adopted into the new key and the
+ * old one removed — no worse than the behaviour being replaced, since that is
+ * exactly who could see them before, and it stops after that one read.
+ */
+const legacyKeyFor = (base) => {
+  const u = getCurrentUser();
+  const s = u.station;
+  return `${base}:${String(s?._id || s?.id || s || "unknown")}`;
+};
+
+const adoptLegacy = (key) => {
+  // No signed-in cashier means no owner to adopt them TO — leave them alone
+  // rather than filing them under "unknown", where the next real cashier would
+  // not find them either.
+  if (!getCurrentUserId()) return null;
+  const legacy = legacyKeyFor(key);
+  try {
+    const raw = localStorage.getItem(legacy);
+    if (!raw) return null;
+    localStorage.setItem(keyFor(key), raw);
+    localStorage.removeItem(legacy);
+    return raw;
+  } catch {
+    return null;
+  }
+};
 
 const read = (key, fallback) => {
   if (typeof window === "undefined") return fallback;
   try {
-    const raw = localStorage.getItem(keyFor(key));
+    const raw = localStorage.getItem(keyFor(key)) ?? adoptLegacy(key);
     return raw ? JSON.parse(raw) : fallback;
   } catch {
     return fallback;

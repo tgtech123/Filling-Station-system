@@ -1,4 +1,5 @@
 'use client'
+import BookDemo from "@/sections/landingPage/BookDemo";
 import Features from "@/sections/landingPage/Features";
 import GetStarted from "@/sections/landingPage/GetStarted";
 import Hero from "@/sections/landingPage/Hero";
@@ -35,6 +36,7 @@ export default function Home() {
       <div style={{ scrollBehavior: "smooth" }}>
         <Hero />
         <Features />
+        <BookDemo />
         <GetStarted />
       </div>
     </>

@@ -12,6 +12,7 @@ import {
   X,
   LifeBuoy,
   Megaphone,
+  CalendarCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import useThemePersistence from "@/hooks/useThemePersistence";
@@ -63,6 +64,7 @@ const SidebarTwo = ({ activeItem, setActiveItem, sidebarOpen, setSidebarOpen }) 
     { name: "Payments & Billing", icon: DollarSign, badge: null },
     { name: "Activity Log", icon: Activity, badge: null },
     { name: "Announcements", icon: Megaphone, badge: null },
+    { name: "Demo Bookings", icon: CalendarCheck, badge: null },
     { name: "Support", icon: LifeBuoy, badge: null },
     { name: "Settings", icon: Settings, badge: null },
   ];

@@ -61,6 +61,10 @@ export default function Navbar() {
           </span>
         </button>
 
+        <Link href="/#book-demo" className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+          Book a demo
+        </Link>
+
         <Link href="/pricing" className="text-lg font-semibold text-gray-700 dark:text-gray-300">
           Pricing
         </Link>
@@ -104,6 +108,7 @@ export default function Navbar() {
           </div>
 
           <Link href="/" className="text-gray-700 dark:text-gray-300" onClick={() => setIsOpen(false)}>Home</Link>
+          <Link href="/#book-demo" className="text-gray-700 dark:text-gray-300" onClick={() => setIsOpen(false)}>Book a demo</Link>
           <Link href="/contact" className="text-gray-700 dark:text-gray-300" onClick={() => setIsOpen(false)}>Contact</Link>
           <Link href="/pricing" className="text-gray-700 dark:text-gray-300" onClick={() => setIsOpen(false)}>Plans & Pricing</Link>
           <Link href="/login" className="text-gray-700 dark:text-gray-300" onClick={() => setIsOpen(false)}>Login</Link>
