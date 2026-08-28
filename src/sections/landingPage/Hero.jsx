@@ -3,8 +3,9 @@
 import Image from "next/image";
 import bgImg from "../../assets/main-bg.png"
 import liveDb from "../../assets/LiveDashboard.png";
-import { ArrowRight, BriefcaseBusiness } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
@@ -64,22 +65,42 @@ export default function Hero() {
             accountable
           </motion.p>
 
-          {/* GET STARTED BUTTON — scale + fade in */}
+          {/* CALLS TO ACTION — scale + fade in.
+              Two, not one: "get started" asks for a card, and a station owner
+              who has never seen the product will not give one. The demo is the
+              step before that, so it sits beside the primary button rather than
+              only at the bottom of the page where the undecided never scroll.
+              The hover/tap animation moved onto each button — it was on the
+              wrapper, which is now a row of two. */}
           <motion.div
-            className="flex cursor-pointer justify-center lg:justify-start mt-6"
-            onClick={() => router.push("/pricing")}
+            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 mt-6"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.6 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
           >
-            <Button
-              size="lg"
-              className="cursor-pointer flex bg-gradient-to-r from-[#0080ff] via-[#0c3865] to-[#0c3865] font-semibold py-3 px-6 h-auto"
-            >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
+              <Button
+                size="lg"
+                onClick={() => router.push("/pricing")}
+                className="w-full sm:w-auto cursor-pointer flex bg-gradient-to-r from-[#0080ff] via-[#0c3865] to-[#0c3865] font-semibold py-3 px-6 h-auto"
+              >
                 Get started now <ArrowRight size={18} />
-            </Button>
+              </Button>
+            </motion.div>
+
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto cursor-pointer border-2 border-[#0080ff] bg-white/70 dark:bg-transparent text-[#0080ff] hover:bg-[#0080ff] hover:text-white font-semibold py-3 px-6 h-auto"
+              >
+                <Link href="#book-demo" className="flex items-center gap-2">
+                  <CalendarDays size={18} aria-hidden="true" />
+                  Book a live demo
+                </Link>
+              </Button>
+            </motion.div>
           </motion.div>
 
           {/* STATS ROW — staggered fade in */}

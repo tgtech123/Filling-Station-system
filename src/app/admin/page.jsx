@@ -12,6 +12,7 @@ import Settings from './components/Settings';
 import StationDetail from './components/StationDetail';
 import SupportPage from './components/SupportPage';
 import Announcements from './components/Announcements';
+import DemoBookings from './components/DemoBookings';
 
 const Page = () => {
   const [activePage, setActivePage] = useState('Dashboard');
@@ -58,6 +59,8 @@ const Page = () => {
         return <Announcements />;
       case 'Support':
         return <SupportPage />;
+      case 'Demo Bookings':
+        return <DemoBookings />;
       case 'StationDetail':
         return (
           <StationDetail
