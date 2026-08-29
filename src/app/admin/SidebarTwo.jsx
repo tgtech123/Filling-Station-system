@@ -19,6 +19,7 @@ import useThemePersistence from "@/hooks/useThemePersistence";
 import Image from "next/image";
 import { useImageStore } from "@/store/useImageStore";
 import useAdminProfileStore from "@/store/useAdminProfileStore";
+import usePlatformStore from "@/store/usePlatformStore";
 import { getCurrentUserId } from "@/lib/currentUser";
 import { useRouter } from "next/navigation";
 import LogoutConfirmModal from "@/components/LogoutConfirmModal";
@@ -31,6 +32,7 @@ const SidebarTwo = ({ activeItem, setActiveItem, sidebarOpen, setSidebarOpen }) 
   const USER_ID = getCurrentUserId();
 
   const { adminName, adminImage, adminRole, initProfile } = useAdminProfileStore();
+  const { settings, fetchPublicSettings } = usePlatformStore();
   const getUserImage = useImageStore((s) => s.getUserImage);
   const { theme, setTheme } = useThemePersistence();
   const router = useRouter();
@@ -48,6 +50,7 @@ const SidebarTwo = ({ activeItem, setActiveItem, sidebarOpen, setSidebarOpen }) 
   useEffect(() => {
     setMounted(true);
     initProfile();
+    fetchPublicSettings();
   }, []);
 
   useEffect(() => {
@@ -100,9 +103,18 @@ const SidebarTwo = ({ activeItem, setActiveItem, sidebarOpen, setSidebarOpen }) 
           <X size={20} className="text-gray-500" />
         </button>
 
-        {/* Logo */}
-        <div className="p-5 xl:p-6 text-center">
-          <Image src="/station-logo.png" height={100} width={100} alt="logo" />
+        {/* Logo — the platform's own, the same source the public navbar uses.
+            This was hardcoded to /station-logo.png, a placeholder, so an admin
+            signing in to their own product was shown someone else's mark. */}
+        <div className="p-5 xl:p-6 flex justify-center">
+          <Image
+            src={settings?.logoUrl || "/fueldesk-logo.png"}
+            height={50}
+            width={130}
+            alt={settings?.platformName || "FuelDesk"}
+            className="h-auto w-[120px] object-contain"
+            unoptimized={!!settings?.logoUrl}
+          />
         </div>
 
         {/* Menu Section */}

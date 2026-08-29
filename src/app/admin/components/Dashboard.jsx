@@ -19,7 +19,23 @@ const Dashboard = () => {
     fetchActivityLogs();
   }, []);
 
-  const fmt = (n) => (n != null ? `${n > 0 ? '+' : ''}${n}% From last month` : '+0% From last month');
+  /**
+   * The change badge, or null when there is nothing truthful to show.
+   *
+   * Three outcomes, not two. A real rise or fall gets a direction; a genuine
+   * "unchanged" says so in plain words instead of borrowing the arrow that
+   * means growth; and no comparable previous month produces nothing at all.
+   * The old version fabricated "+0% From last month" whenever the figure was
+   * missing entirely.
+   */
+  const fmt = (n) => {
+    if (n == null) return null;
+    if (n === 0) return { text: 'No change from last month', direction: 'flat' };
+    return {
+      text: `${n > 0 ? '+' : ''}${n}% from last month`,
+      direction: n > 0 ? 'up' : 'down',
+    };
+  };
 
   const stats = [
     {

@@ -1,8 +1,10 @@
 import { ArrowUpRightIcon, ArrowDownRightIcon } from "@heroicons/react/24/solid";
-import { dashboardStats } from "./dashboardStats";
 
 export default function DashboardCard({ stats, loading }) {
-  const data = stats || dashboardStats;
+  // No hardcoded fallback. This used to fall back to a demo array — 1,284
+  // stations and $284,600 of revenue — which would have rendered as real
+  // figures on a real admin's screen the moment the prop went missing.
+  const data = stats ?? [];
 
   if (loading) {
     return (
@@ -30,7 +32,6 @@ export default function DashboardCard({ stats, loading }) {
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-[1.5rem]">
       {data.map(
         ({ id, label, value, change, icon: Icon, iconBg, iconColor }) => {
-          const isNegative = typeof change === 'string' && change.startsWith('-');
           return (
             <div
               key={id}
@@ -43,12 +44,24 @@ export default function DashboardCard({ stats, loading }) {
                   <Icon className={`h-6 w-6 ${iconColor}`} />
                 </div>
 
-                <span className={`flex items-center gap-1 text-xs font-medium ${isNegative ? 'text-red-500' : 'text-green-600'}`}>
-                  {isNegative
-                    ? <ArrowDownRightIcon className="h-4 w-4" />
-                    : <ArrowUpRightIcon className="h-4 w-4" />}
-                  {change}
-                </span>
+                {/* Rendered only when there is a comparison to make. Flat gets
+                    no arrow at all: an arrow is a direction, and "unchanged"
+                    does not have one. */}
+                {change && (
+                  <span
+                    className={`flex items-center gap-1 text-right text-xs font-medium leading-tight ${
+                      change.direction === 'up'
+                        ? 'text-green-600'
+                        : change.direction === 'down'
+                        ? 'text-red-500'
+                        : 'text-gray-400 dark:text-gray-500'
+                    }`}
+                  >
+                    {change.direction === 'up' && <ArrowUpRightIcon className="h-4 w-4 shrink-0" />}
+                    {change.direction === 'down' && <ArrowDownRightIcon className="h-4 w-4 shrink-0" />}
+                    {change.text}
+                  </span>
+                )}
               </div>
 
               <div className="mt-6">
