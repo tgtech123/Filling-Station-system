@@ -67,6 +67,18 @@ const GeneralPage = () => {
         <StatGrid data={cardData} />
       )}
 
+      {/* Explains the rows in the table below that sit at "pending" forever.
+          Without this the only reading available is "someone paid and it is
+          stuck", which is the opposite of what happened. */}
+      {paymentStats?.pendingPayments > 0 && (
+        <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+          {paymentStats.pendingPayments} checkout
+          {paymentStats.pendingPayments === 1 ? " was" : "s were"} started but never completed —
+          the customer closed the card form or changed their mind. No money changed hands, and
+          {paymentStats.pendingPayments === 1 ? " it is" : " they are"} not counted above.
+        </p>
+      )}
+
       {/* Sits above the full payment list on purpose: these are customers who
           paid and got nothing, which is the only thing on this page that needs
           acting on rather than reading. */}

@@ -611,8 +611,14 @@ function ModalPayment({
   const taxPercentLabel = `${Math.round((taxRate || 0) * 100 * 100) / 100}%`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4">
-      <div className="relative bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-2xl shadow-2xl p-6 w-full sm:max-w-sm max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-3 sm:p-4">
+      {/* Rounded on every corner, including on mobile. It used to be a flush
+          bottom sheet with only the top two corners rounded; the padding on the
+          backdrop is what makes the bottom two visible.
+          scrollbar-hide (defined in globals.css) keeps the track from cutting
+          into the rounded right edge when the content overflows — the panel
+          still scrolls, it just does it invisibly. */}
+      <div className="relative bg-white dark:bg-gray-800 rounded-3xl sm:rounded-2xl shadow-2xl p-6 w-full sm:max-w-sm max-h-[92vh] overflow-y-auto scrollbar-hide">
         {/* Handle bar for mobile bottom sheet */}
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5 sm:hidden" />
 
