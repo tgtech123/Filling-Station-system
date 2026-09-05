@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Plus, Download, Upload, Pencil, Trash2, ChevronRight, ChevronDown, BookOpen } from 'lucide-react';
 import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Hint, fmt, downloadBlob } from '../shared';
+import { extractApiError } from '@/lib/config';
 
 const TYPES = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense', 'Gain', 'Loss'];
 const STATUSES = ['Active', 'Inactive', 'Archived', 'OnHold'];
@@ -56,7 +57,7 @@ export default function ChartOfAccountsPage() {
       const res = await api.get('/api/accounting/accounts?withBalances=true');
       setAccounts(res.data.data);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to load accounts');
+      toast.error(extractApiError(e) || 'Failed to load accounts');
     } finally {
       setLoading(false);
     }
@@ -111,7 +112,7 @@ export default function ChartOfAccountsPage() {
       setShowModal(false);
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Save failed');
+      toast.error(extractApiError(e2) || 'Save failed');
     } finally {
       setSaving(false);
     }
@@ -124,7 +125,7 @@ export default function ChartOfAccountsPage() {
       toast.success('Account deleted');
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Delete failed');
+      toast.error(extractApiError(e) || 'Delete failed');
     }
   }
 
@@ -156,7 +157,7 @@ export default function ChartOfAccountsPage() {
       setImportText('');
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Import failed');
+      toast.error(extractApiError(e) || 'Import failed');
     }
   }
 

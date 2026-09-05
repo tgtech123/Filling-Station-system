@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from "react";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
 import useBranchStore from "@/store/useBranchStore";
 import usePaymentStore from "@/store/usePaymentStore";
@@ -42,7 +42,7 @@ function InviteManagerModal({ branch, onClose, onSent }) {
     } catch (err) {
       setError(
         err.response?.data?.error ||
-        err.response?.data?.message ||
+        extractApiError(err) ||
         "Failed to send invite — try again"
       );
     } finally {

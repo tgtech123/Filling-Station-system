@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const useGasProcurementStore = create((set, get) => ({
   procurements: [],
@@ -13,7 +13,7 @@ const useGasProcurementStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/procurement", { params });
       set({ procurements: data.data || [], total: data.total || 0 });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally { set({ loading: false }); }
   },
 
@@ -23,7 +23,7 @@ const useGasProcurementStore = create((set, get) => ({
       await get().fetchProcurements();
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -33,7 +33,7 @@ const useGasProcurementStore = create((set, get) => ({
       await get().fetchProcurements();
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -43,7 +43,7 @@ const useGasProcurementStore = create((set, get) => ({
       await get().fetchProcurements();
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -53,7 +53,7 @@ const useGasProcurementStore = create((set, get) => ({
       await get().fetchProcurements();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -62,7 +62,7 @@ const useGasProcurementStore = create((set, get) => ({
       await api.post(`/api/gas/procurement/${id}/resend-email`, { email });
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 }));

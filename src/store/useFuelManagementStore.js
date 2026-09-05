@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const useFuelManagementStore = create((set) => ({
   fuelData: null,
@@ -27,7 +27,7 @@ const useFuelManagementStore = create((set) => ({
       return response.data.data;
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message ||
+        extractApiError(error) ||
         error.message ||
         "Failed to fetch fuel management data";
 

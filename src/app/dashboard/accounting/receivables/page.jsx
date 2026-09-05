@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, RotateCw, Banknote, FileMinus, UserPlus, Mail, Loader2, BellRing } from 'lucide-react';
 import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate } from '../shared';
+import { extractApiError } from '@/lib/config';
 
 // Each line's product routes its revenue to that product's GL account
 // (PMS → 4010, AGO/Diesel → 4020, Kerosene → 4030, Lubricant → 4100, Gas → 4200)
@@ -52,7 +53,7 @@ export default function ReceivablesPage() {
       // The server explains WHY (no customer email, unverified sender, mail
       // outage). Showing that verbatim beats a generic failure the accountant
       // cannot act on.
-      toast.error(e2.response?.data?.message || 'Could not send the invoice');
+      toast.error(extractApiError(e2) || 'Could not send the invoice');
     } finally {
       setSendingId(null);
     }
@@ -72,7 +73,7 @@ export default function ReceivablesPage() {
       setCreditNotes(cn.data.data);
       setReceipts(rcpt.data.data);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to load receivables');
+      toast.error(extractApiError(e) || 'Failed to load receivables');
     } finally {
       setLoading(false);
     }
@@ -105,7 +106,7 @@ export default function ReceivablesPage() {
       setCustForm({ name: '', email: '', phone: '', creditLimit: '' });
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed');
+      toast.error(extractApiError(e2) || 'Failed');
     } finally {
       setSaving(false);
     }
@@ -132,7 +133,7 @@ export default function ReceivablesPage() {
       setInvForm(EMPTY_INV);
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed to create invoice');
+      toast.error(extractApiError(e2) || 'Failed to create invoice');
     } finally {
       setSaving(false);
     }
@@ -144,7 +145,7 @@ export default function ReceivablesPage() {
       toast.success(res.data.message);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Recurring run failed');
+      toast.error(extractApiError(e) || 'Recurring run failed');
     }
   }
 
@@ -163,7 +164,7 @@ export default function ReceivablesPage() {
       setCnForm({ customerId: '', invoiceId: '', amount: '', reason: '' });
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed to issue credit note');
+      toast.error(extractApiError(e2) || 'Failed to issue credit note');
     } finally {
       setSaving(false);
     }
@@ -186,7 +187,7 @@ export default function ReceivablesPage() {
       setRcptForm({ customerId: '', amount: '', bankAccountId: '', reference: '', applications: [] });
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed to record receipt');
+      toast.error(extractApiError(e2) || 'Failed to record receipt');
     } finally {
       setSaving(false);
     }

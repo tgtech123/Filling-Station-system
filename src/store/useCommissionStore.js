@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api } from '@/lib/config';
+import { api, extractApiError } from '@/lib/config';
 
 const COMMISSION_ENDPOINT = '/api/commissions';
 
@@ -148,7 +148,7 @@ const useCommissionStore = create((set, get) => ({
       set({ overview: data });
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch overview';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch overview';
       setError('overview', errorMsg);
     } finally {
       setLoading('overview', false);
@@ -178,7 +178,7 @@ const useCommissionStore = create((set, get) => ({
       set({ staffTracking: data });
       return response.data.data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch staff tracking';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch staff tracking';
       setError('staffTracking', errorMsg);
     } finally {
       setLoading('staffTracking', false);
@@ -203,7 +203,7 @@ const useCommissionStore = create((set, get) => ({
       set({ commissionStructure: data });
       return response.data.data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch commission structure';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch commission structure';
       setError('commissionStructure', errorMsg);
     } finally {
       setLoading('commissionStructure', false);
@@ -221,7 +221,7 @@ const useCommissionStore = create((set, get) => ({
       await fetchCommissionStructure();
       return response.data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to update commission structure';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to update commission structure';
       setError('updatingCommission', errorMsg);
       throw error;
     } finally {
@@ -247,7 +247,7 @@ const useCommissionStore = create((set, get) => ({
       set({ bonusStructure: data });
       return response.data.data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch bonus structure';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch bonus structure';
       setError('bonusStructure', errorMsg);
     } finally {
       setLoading('bonusStructure', false);
@@ -265,7 +265,7 @@ const useCommissionStore = create((set, get) => ({
       await fetchBonusStructure();
       return response.data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to update bonus structure';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to update bonus structure';
       setError('updatingBonus', errorMsg);
       throw error;
     } finally {
@@ -307,7 +307,7 @@ const useCommissionStore = create((set, get) => ({
       set({ paymentHistory: data.payments, pagination: data.pagination });
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch payment history';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch payment history';
       setError('paymentHistory', errorMsg);
     } finally {
       setLoading('paymentHistory', false);
@@ -328,7 +328,7 @@ const useCommissionStore = create((set, get) => ({
       _cache.overview.data        = null;
       return response.data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to calculate commissions';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to calculate commissions';
       setError('calculating', errorMsg);
       throw error;
     } finally {
@@ -347,7 +347,7 @@ const useCommissionStore = create((set, get) => ({
       await fetchPaymentHistory();
       return response.data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to mark payment as paid';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to mark payment as paid';
       setError('markingPaid', errorMsg);
       throw error;
     } finally {

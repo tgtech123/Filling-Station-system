@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Upload, Wand2, CheckCircle2, ArrowLeft, Plus, Trash2, Link2 } from 'lucide-react';
 import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate } from '../shared';
+import { extractApiError } from '@/lib/config';
 
 export default function BankReconciliationPage() {
   const [statements, setStatements] = useState([]);
@@ -32,7 +33,7 @@ export default function BankReconciliationPage() {
       setStatements(st.data.data);
       setRules(ru.data.data);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to load');
+      toast.error(extractApiError(e) || 'Failed to load');
     } finally {
       setLoading(false);
     }
@@ -51,7 +52,7 @@ export default function BankReconciliationPage() {
       const res = await api.get(`/api/accounting/bank/statements/${id}`);
       setDetail(res.data.data);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to open statement');
+      toast.error(extractApiError(e) || 'Failed to open statement');
     }
   }
 
@@ -66,7 +67,7 @@ export default function BankReconciliationPage() {
       load();
       openDetail(res.data.data._id);
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Import failed');
+      toast.error(extractApiError(e2) || 'Import failed');
     } finally {
       setSaving(false);
     }
@@ -78,7 +79,7 @@ export default function BankReconciliationPage() {
       toast.success(res.data.message);
       openDetail(detail.statement._id);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Auto-match failed');
+      toast.error(extractApiError(e) || 'Auto-match failed');
     }
   }
 
@@ -93,7 +94,7 @@ export default function BankReconciliationPage() {
       setMatchingLine(null);
       openDetail(detail.statement._id);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Match failed');
+      toast.error(extractApiError(e) || 'Match failed');
     }
   }
 
@@ -104,7 +105,7 @@ export default function BankReconciliationPage() {
       setDetail(null);
       load();
     } catch (e) {
-      const msg = e.response?.data?.message;
+      const msg = extractApiError(e);
       if (msg?.includes('unmatched') && confirm(`${msg}\n\nComplete anyway?`)) return complete(true);
       if (!msg?.includes('unmatched')) toast.error(msg || 'Failed');
     }
@@ -119,7 +120,7 @@ export default function BankReconciliationPage() {
       setRuleForm({ name: '', descriptionContains: '', direction: 'any', postToAccountId: '' });
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed');
+      toast.error(extractApiError(e2) || 'Failed');
     }
   }
 

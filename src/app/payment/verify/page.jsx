@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import usePaymentStore from "@/store/usePaymentStore";
+import { extractApiError } from "@/lib/config";
 
 function PaymentVerifyContent() {
   const router = useRouter();
@@ -106,7 +107,7 @@ function PaymentVerifyContent() {
         // and their plan is waiting.
         console.error("Verify failed:", err);
         setFailureReason(
-          err?.response?.data?.error || err?.response?.data?.message || err?.message || ""
+          err?.response?.data?.error || extractApiError(err) || err?.message || ""
         );
         setStatus("failed");
       }

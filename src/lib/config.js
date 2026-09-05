@@ -12,6 +12,20 @@ export const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+// The API is inconsistent about which key carries the human-readable reason:
+// the auth/plan middleware and many controllers send { error }, others send
+// { message }. Reading only `message` is why a 403 surfaced as axios's opaque
+// "Request failed with status code 403" instead of the real cause.
+// Returns undefined when neither key holds text, so the existing
+// `|| "Something went wrong"` tails at the call sites still apply.
+const asText = (v) => (typeof v === "string" && v.trim() ? v : undefined);
+
+export const extractApiError = (err) => {
+  const data = err?.response?.data;
+  if (!data) return undefined;
+  return asText(data.error) ?? asText(data.message);
+};
+
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token =
@@ -23,6 +37,10 @@ api.interceptors.request.use((config) => {
 
 // Prevent multiple simultaneous 401s from firing multiple redirects
 let sessionExpiredHandled = false;
+
+// Same idea for station-wide 403s: the dashboard fires several requests in
+// parallel and every one of them fails, so only announce the reason once.
+let forbiddenHandled = false;
 
 api.interceptors.response.use(
   (response) => response,
@@ -56,6 +74,30 @@ api.interceptors.response.use(
         // Reset the flag after redirect so future sessions work correctly
         setTimeout(() => {
           sessionExpiredHandled = false;
+        }, 5000);
+      }
+    }
+
+    // A 403 from the auth/plan gate carries a flag saying WHY access was
+    // refused. These are station-wide conditions rather than per-request
+    // failures, so surface them once here instead of letting every card
+    // render the raw axios string.
+    if (status === 403 && !forbiddenHandled && typeof window !== "undefined") {
+      const data = error?.response?.data || {};
+      const notice = data.planExpired
+        ? "Your subscription has expired. Use the Upgrade button to renew and restore access."
+        : data.suspended
+        ? "Your station account is suspended or no longer active. Please contact FuelDesk support."
+        : data.emergencyMode
+        ? "The station is under emergency lockdown. Contact your manager."
+        : null;
+
+      if (notice) {
+        forbiddenHandled = true;
+        toast.error(notice, { duration: 6000, id: "access-forbidden" });
+        // Let it announce again on a later burst, once this one has passed.
+        setTimeout(() => {
+          forbiddenHandled = false;
         }, 5000);
       }
     }

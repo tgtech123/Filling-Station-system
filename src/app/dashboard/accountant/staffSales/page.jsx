@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import DashboardLayout from "@/components/Dashboard/DashboardLayout";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 import { useSocket } from "@/hooks/useSocket";
 import { Loader2, Users, Eye, Fuel, Droplet, ShoppingBasket, Flame } from "lucide-react";
 
@@ -55,7 +55,7 @@ export default function StaffSalesPage() {
       const res = await api.get("/api/accountant/staff-sales", { params: { duration: d } });
       setData(res.data?.data || null);
     } catch (err) {
-      setError(err?.response?.data?.message || "Could not load staff sales");
+      setError(extractApiError(err) || "Could not load staff sales");
     } finally {
       setLoading(false);
     }

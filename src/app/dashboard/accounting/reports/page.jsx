@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Download } from 'lucide-react';
 import { api, Card, inputCls, Btn, Table, Hint, fmt, fmtDate, exportRowsAsCsv } from '../shared';
+import { extractApiError } from '@/lib/config';
 
 const TABS = ['Trial Balance', 'Balance Sheet', 'Income Statement', 'Cash Flow', 'Aging', 'General Ledger'];
 
@@ -50,7 +51,7 @@ export default function ReportsPage() {
       }
       setData(res?.data?.data ?? null);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Report failed');
+      toast.error(extractApiError(e) || 'Report failed');
     } finally {
       setLoading(false);
     }

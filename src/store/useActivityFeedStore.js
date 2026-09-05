@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api } from '@/lib/config';
+import { api, extractApiError } from '@/lib/config';
 
 let _pollingInterval = null;
 
@@ -38,7 +38,7 @@ const useActivityFeedStore = create((set, get) => ({
     } catch (error) {
       const msg =
         error.response?.data?.error ||
-        error.response?.data?.message ||
+        extractApiError(error) ||
         error.message ||
         'Failed to fetch recent activity';
       setError('activities', msg);
@@ -61,7 +61,7 @@ const useActivityFeedStore = create((set, get) => ({
     } catch (error) {
       const msg =
         error.response?.data?.error ||
-        error.response?.data?.message ||
+        extractApiError(error) ||
         error.message ||
         'Failed to fetch product levels';
       setError('productLevels', msg);

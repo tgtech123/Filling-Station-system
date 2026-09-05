@@ -11,6 +11,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar,
 } from 'recharts';
 import { api, Card, MetricCard, Hint, fmt, getUserRole } from './shared';
+import { extractApiError } from '@/lib/config';
 
 const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#06b6d4', '#84cc16'];
 
@@ -40,7 +41,7 @@ export default function AccountingDashboard() {
       const res = await api.get('/api/accounting/reports/dashboard');
       setData(res.data.data);
     } catch (e) {
-      setError(e.response?.data?.message || 'Failed to load dashboard');
+      setError(extractApiError(e) || 'Failed to load dashboard');
     } finally {
       setLoading(false);
     }

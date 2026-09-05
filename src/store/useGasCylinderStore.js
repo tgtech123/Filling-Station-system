@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 /**
  * Cylinder bottle retail — unit-based products sold instantly at the gas POS.
@@ -26,7 +26,7 @@ const useGasCylinderStore = create((set, get) => ({
       });
       set({ products: data.data || [] });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally {
       get()._setLoading("products", false);
     }
@@ -39,7 +39,7 @@ const useGasCylinderStore = create((set, get) => ({
       await get().fetchProducts(true);
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     } finally {
       get()._setLoading("saving", false);
     }
@@ -52,7 +52,7 @@ const useGasCylinderStore = create((set, get) => ({
       await get().fetchProducts(true);
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     } finally {
       get()._setLoading("saving", false);
     }
@@ -65,7 +65,7 @@ const useGasCylinderStore = create((set, get) => ({
       await get().fetchProducts(true);
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     } finally {
       get()._setLoading("saving", false);
     }
@@ -80,7 +80,7 @@ const useGasCylinderStore = create((set, get) => ({
       get().fetchProducts();
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     } finally {
       get()._setLoading("creating", false);
     }
@@ -92,7 +92,7 @@ const useGasCylinderStore = create((set, get) => ({
       get().fetchProducts(true);
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -102,7 +102,7 @@ const useGasCylinderStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/cylinders/sales", { params });
       set({ sales: data.data || [], total: data.total || 0 });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally {
       get()._setLoading("sales", false);
     }
@@ -132,7 +132,7 @@ const useGasCylinderStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/cylinders/procurement", { params });
       set({ procurements: data.data || [] });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally {
       get()._setLoading("procurement", false);
     }
@@ -145,7 +145,7 @@ const useGasCylinderStore = create((set, get) => ({
       await get().fetchProcurements();
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     } finally {
       get()._setLoading("saving", false);
     }
@@ -157,7 +157,7 @@ const useGasCylinderStore = create((set, get) => ({
       await get().fetchProcurements();
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -167,7 +167,7 @@ const useGasCylinderStore = create((set, get) => ({
       await get().fetchProcurements();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -177,7 +177,7 @@ const useGasCylinderStore = create((set, get) => ({
       await Promise.all([get().fetchProcurements(), get().fetchProducts(true)]);
       return { success: true, message: data.message };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -187,7 +187,7 @@ const useGasCylinderStore = create((set, get) => ({
       await get().fetchProcurements();
       return { success: true, message: data.message };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -197,7 +197,7 @@ const useGasCylinderStore = create((set, get) => ({
       await get().fetchProcurements();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 }));

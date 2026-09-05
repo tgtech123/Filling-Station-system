@@ -6,6 +6,7 @@ import ApprovedShiftsPage from "./ApprovedShiftsPage";
 import useSupervisorStore from "@/store/useSupervisorStore";
 import toast from "react-hot-toast";
 import { useSocket } from "@/hooks/useSocket";
+import { extractApiError } from "@/lib/config";
 
 export default function ShiftApprovalPage() {
   const [activeTab, setActiveTab] = useState("pending");
@@ -94,7 +95,7 @@ export default function ShiftApprovalPage() {
       clearPendingShifts();
       fetchPendingShifts({ page: 1, limit: 20 });
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Failed to clear stale shifts");
+      toast.error(extractApiError(err) || "Failed to clear stale shifts");
     } finally {
       setClearingStale(false);
     }

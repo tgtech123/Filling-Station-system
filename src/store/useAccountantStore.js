@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api } from '@/lib/config';
+import { api, extractApiError } from '@/lib/config';
 
 const ACCOUNTANT_ENDPOINT = '/api/accountant';
 
@@ -167,7 +167,7 @@ const useAccountantStore = create((set, get) => ({
       set({ dashboard: data });
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch dashboard';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch dashboard';
       setError('dashboard', errorMsg);
     } finally {
       setLoading('dashboard', false);
@@ -208,7 +208,7 @@ const useAccountantStore = create((set, get) => ({
       set({ reconciledSales: data.reconciliations, pagination: data.pagination });
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch reconciled sales';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch reconciled sales';
       setError('reconciledSales', errorMsg);
     } finally {
       setLoading('reconciledSales', false);
@@ -242,7 +242,7 @@ const useAccountantStore = create((set, get) => ({
       set({ incomeStatement: data });
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch income statement';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch income statement';
       setError('incomeStatement', errorMsg);
     } finally {
       setLoading('incomeStatement', false);
@@ -271,7 +271,7 @@ const useAccountantStore = create((set, get) => ({
       set({ balanceSheet: data });
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch balance sheet';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch balance sheet';
       setError('balanceSheet', errorMsg);
     } finally {
       setLoading('balanceSheet', false);
@@ -299,7 +299,7 @@ const useAccountantStore = create((set, get) => ({
       set({ cashflow: data });
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch cashflow';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch cashflow';
       setError('cashflow', errorMsg);
     } finally {
       setLoading('cashflow', false);
@@ -328,7 +328,7 @@ const useAccountantStore = create((set, get) => ({
       set({ keyRatios: data });
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch key ratios';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch key ratios';
       setError('keyRatios', errorMsg);
     } finally {
       setLoading('keyRatios', false);
@@ -355,7 +355,7 @@ const useAccountantStore = create((set, get) => ({
       set({ profitLoss: data });
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch profit & loss';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch profit & loss';
       setError('profitLoss', errorMsg);
     } finally {
       setLoading('profitLoss', false);
@@ -387,7 +387,7 @@ const useAccountantStore = create((set, get) => ({
         return data;
       })
       .catch((error) => {
-        const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch income report';
+        const errorMsg = extractApiError(error) || error.message || 'Failed to fetch income report';
         setError('incomeReport', errorMsg);
       })
       .finally(() => {
@@ -417,7 +417,7 @@ const useAccountantStore = create((set, get) => ({
       set({ shiftDetails: data });
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch shift details';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch shift details';
       setError('shiftDetails', errorMsg);
     } finally {
       setLoading('shiftDetails', false);
@@ -447,7 +447,7 @@ const useAccountantStore = create((set, get) => ({
       set({ taxReport: data });
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch tax report';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch tax report';
       setError('taxReport', errorMsg);
     } finally {
       setLoading('taxReport', false);

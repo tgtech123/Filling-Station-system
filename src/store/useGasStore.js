@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const useGasStore = create((set, get) => ({
   pricing:        null,
@@ -43,7 +43,7 @@ const useGasStore = create((set, get) => ({
       set({ gasEnabled: data.data?.gasEnabled });
       return { success: true, gasEnabled: data.data?.gasEnabled };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -55,7 +55,7 @@ const useGasStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/pricing");
       set({ pricing: data.data });
     } catch (e) {
-      get()._setError("pricing", e.response?.data?.message || e.message);
+      get()._setError("pricing", extractApiError(e) || e.message);
     } finally { get()._setLoading("pricing", false); }
   },
 
@@ -72,7 +72,7 @@ const useGasStore = create((set, get) => ({
       set({ pricing: data.data });
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -84,7 +84,7 @@ const useGasStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/cylinder-sizes");
       set({ cylinderSizes: data.data || [] });
     } catch (e) {
-      get()._setError("cylinderSizes", e.response?.data?.message || e.message);
+      get()._setError("cylinderSizes", extractApiError(e) || e.message);
     } finally { get()._setLoading("cylinderSizes", false); }
   },
 
@@ -94,7 +94,7 @@ const useGasStore = create((set, get) => ({
       await get().fetchCylinderSizes();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -104,7 +104,7 @@ const useGasStore = create((set, get) => ({
       await get().fetchCylinderSizes();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -116,7 +116,7 @@ const useGasStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/inventory");
       set({ inventory: data.data, tanks: data.data?.tanks || [], pumps: data.data?.pumps || [] });
     } catch (e) {
-      get()._setError("inventory", e.response?.data?.message || e.message);
+      get()._setError("inventory", extractApiError(e) || e.message);
     } finally { get()._setLoading("inventory", false); }
   },
 
@@ -128,7 +128,7 @@ const useGasStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/tanks");
       set({ tanks: data.data || [] });
     } catch (e) {
-      get()._setError("tanks", e.response?.data?.message || e.message);
+      get()._setError("tanks", extractApiError(e) || e.message);
     } finally { get()._setLoading("tanks", false); }
   },
 
@@ -138,7 +138,7 @@ const useGasStore = create((set, get) => ({
       await get().fetchTanks();
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -148,7 +148,7 @@ const useGasStore = create((set, get) => ({
       await get().fetchTanks();
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -160,7 +160,7 @@ const useGasStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/pumps");
       set({ pumps: data.data || [] });
     } catch (e) {
-      get()._setError("pumps", e.response?.data?.message || e.message);
+      get()._setError("pumps", extractApiError(e) || e.message);
     } finally { get()._setLoading("pumps", false); }
   },
 
@@ -170,7 +170,7 @@ const useGasStore = create((set, get) => ({
       await get().fetchPumps();
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -180,7 +180,7 @@ const useGasStore = create((set, get) => ({
       await get().fetchPumps();
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -192,7 +192,7 @@ const useGasStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/loyalty-config");
       set({ loyaltyConfig: data.data });
     } catch (e) {
-      get()._setError("loyalty", e.response?.data?.message || e.message);
+      get()._setError("loyalty", extractApiError(e) || e.message);
     } finally { get()._setLoading("loyalty", false); }
   },
 
@@ -213,7 +213,7 @@ const useGasStore = create((set, get) => ({
       });
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -225,7 +225,7 @@ const useGasStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/staff");
       set({ gasStaff: data.data || [] });
     } catch (e) {
-      get()._setError("staff", e.response?.data?.message || e.message);
+      get()._setError("staff", extractApiError(e) || e.message);
     } finally { get()._setLoading("staff", false); }
   },
 
@@ -235,7 +235,7 @@ const useGasStore = create((set, get) => ({
       await get().fetchGasStaff();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -245,7 +245,7 @@ const useGasStore = create((set, get) => ({
       await get().fetchGasStaff();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -262,7 +262,7 @@ const useGasStore = create((set, get) => ({
       set({ settings: data.data });
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 }));

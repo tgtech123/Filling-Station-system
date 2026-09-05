@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, FileCheck2, Calculator } from 'lucide-react';
 import { api, Card, Modal, Field, inputCls, Btn, Table, Hint, fmt, fmtDate, exportRowsAsCsv } from '../shared';
+import { extractApiError } from '@/lib/config';
 
 export default function TaxPage() {
   const [config, setConfig] = useState(null);
@@ -24,7 +25,7 @@ export default function TaxPage() {
       setConfig(cfg.data.data);
       setReport(rep.data.data);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to load tax data');
+      toast.error(extractApiError(e) || 'Failed to load tax data');
     } finally {
       setLoading(false);
     }
@@ -41,7 +42,7 @@ export default function TaxPage() {
       setTaxForm({ code: '', name: '', kind: 'VAT', rate: '' });
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed');
+      toast.error(extractApiError(e2) || 'Failed');
     }
   }
 
@@ -64,7 +65,7 @@ export default function TaxPage() {
       const res = await api.get(`/api/accounting/tax/calculate?amount=${calc.amount}&taxCode=${calc.taxCode}`);
       setCalc({ ...calc, result: res.data.data });
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Calculation failed');
+      toast.error(extractApiError(e) || 'Calculation failed');
     }
   }
 
@@ -75,7 +76,7 @@ export default function TaxPage() {
       toast.success(res.data.message);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed');
+      toast.error(extractApiError(e) || 'Failed');
     }
   }
 

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const useGasSaleStore = create((set, get) => ({
   sales: [],
@@ -17,7 +17,7 @@ const useGasSaleStore = create((set, get) => ({
       const { data } = await api.post("/api/gas/sales", payload);
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     } finally { get()._setLoading("creating", false); }
   },
 
@@ -27,7 +27,7 @@ const useGasSaleStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/sales/pending");
       set({ pendingSales: data.data || [] });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally { get()._setLoading("pending", false); }
   },
 
@@ -37,7 +37,7 @@ const useGasSaleStore = create((set, get) => ({
       set(s => ({ pendingSales: s.pendingSales.filter(p => p._id !== id) }));
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -46,7 +46,7 @@ const useGasSaleStore = create((set, get) => ({
       const { data } = await api.patch(`/api/gas/sales/${id}/dispense`);
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -56,7 +56,7 @@ const useGasSaleStore = create((set, get) => ({
       await get().fetchSales();
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -66,7 +66,7 @@ const useGasSaleStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/sales", { params });
       set({ sales: data.data || [], total: data.total || 0 });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally { get()._setLoading("sales", false); }
   },
 

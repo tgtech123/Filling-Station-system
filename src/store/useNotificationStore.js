@@ -1,5 +1,5 @@
 ﻿import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 let _pollingInterval = null;
 
@@ -42,7 +42,7 @@ const useNotificationStore = create((set, get) => ({
       set({ messages, messageUnreadCount });
     } catch (err) {
       const msg =
-        err.response?.data?.message || err.message || "Failed to fetch messages";
+        extractApiError(err) || err.message || "Failed to fetch messages";
       _setError("messages", msg);
     } finally {
       _setLoading("messages", false);
@@ -61,7 +61,7 @@ const useNotificationStore = create((set, get) => ({
       set({ alerts, alertUnreadCount });
     } catch (err) {
       const msg =
-        err.response?.data?.message || err.message || "Failed to fetch alerts";
+        extractApiError(err) || err.message || "Failed to fetch alerts";
       _setError("alerts", msg);
     } finally {
       _setLoading("alerts", false);

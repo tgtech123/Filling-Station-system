@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, CheckCircle2, XCircle, Undo2, Eye } from 'lucide-react';
 import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate } from '../shared';
+import { extractApiError } from '@/lib/config';
 
 const EMPTY_LINE = { account: '', description: '', debit: '', credit: '' };
 
@@ -46,7 +47,7 @@ export default function JournalsPage() {
       setJournals(res.data.data);
       setTotal(res.data.total);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to load journals');
+      toast.error(extractApiError(e) || 'Failed to load journals');
     } finally {
       setLoading(false);
     }
@@ -90,7 +91,7 @@ export default function JournalsPage() {
       setForm({ date: new Date().toISOString().split('T')[0], memo: '', lines: [{ ...EMPTY_LINE }, { ...EMPTY_LINE }] });
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed to create entry');
+      toast.error(extractApiError(e2) || 'Failed to create entry');
     } finally {
       setSaving(false);
     }
@@ -104,7 +105,7 @@ export default function JournalsPage() {
       setViewing(null);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || `${verb} failed`);
+      toast.error(extractApiError(e) || `${verb} failed`);
     }
   }
 

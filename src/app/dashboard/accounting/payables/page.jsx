@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, Link2, BookCheck, RefreshCw, Download, Printer, CheckCircle2, PlayCircle, FileMinus2, RotateCcw, Ban } from 'lucide-react';
 import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate, downloadBlob } from '../shared';
+import { extractApiError } from '@/lib/config';
 
 const EMPTY_INV = {
   invoiceNumber: '', supplierName: '', invoiceDate: new Date().toISOString().split('T')[0],
@@ -61,7 +62,7 @@ export default function PayablesPage() {
       setBatches(bat.data.data);
       setCreditNotes(cn.data.data);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to load payables');
+      toast.error(extractApiError(e) || 'Failed to load payables');
     } finally {
       setLoading(false);
     }
@@ -96,7 +97,7 @@ export default function PayablesPage() {
       setInvForm(EMPTY_INV);
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed to register invoice');
+      toast.error(extractApiError(e2) || 'Failed to register invoice');
     } finally {
       setSaving(false);
     }
@@ -122,7 +123,7 @@ export default function PayablesPage() {
       toast.success(res.data.message);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Re-match failed');
+      toast.error(extractApiError(e) || 'Re-match failed');
     }
   }
 
@@ -138,7 +139,7 @@ export default function PayablesPage() {
       load();
       setTab('batches');
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed to create batch');
+      toast.error(extractApiError(e2) || 'Failed to create batch');
     } finally {
       setSaving(false);
     }
@@ -151,7 +152,7 @@ export default function PayablesPage() {
       toast.success(res.data.message);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || `${verb} failed`);
+      toast.error(extractApiError(e) || `${verb} failed`);
     }
   }
 
@@ -165,7 +166,7 @@ export default function PayablesPage() {
       setReverseReason('');
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Reversal failed');
+      toast.error(extractApiError(e2) || 'Reversal failed');
     } finally {
       setSaving(false);
     }
@@ -234,7 +235,7 @@ export default function PayablesPage() {
       load();
       setTab('credit-notes');
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed to issue credit note');
+      toast.error(extractApiError(e2) || 'Failed to issue credit note');
     } finally {
       setSaving(false);
     }
@@ -251,7 +252,7 @@ export default function PayablesPage() {
       setApplyInvoiceId('');
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Apply failed');
+      toast.error(extractApiError(e2) || 'Apply failed');
     } finally {
       setSaving(false);
     }
@@ -264,7 +265,7 @@ export default function PayablesPage() {
       toast.success(res.data.message);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Void failed');
+      toast.error(extractApiError(e) || 'Void failed');
     }
   }
 

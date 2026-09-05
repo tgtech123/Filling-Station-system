@@ -4,7 +4,7 @@ import ToggleSwitch from "@/components/ToggleSwtich";
 import { Edit, Mail, MapPin, Phone, X, Save, Loader2, Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import LocationSelector from "@/components/LocationSelector";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 import { useImageStore } from "@/store/useImageStore";
 import NumericInput from "@/components/inputs/NumericInput";
 
@@ -146,7 +146,7 @@ export default function ManagerProfileModal({ onclose }) {
       setIsEditMode(false);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
-      setSaveError(err.response?.data?.message || "Failed to save changes. Please try again.");
+      setSaveError(extractApiError(err) || "Failed to save changes. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -218,7 +218,7 @@ export default function ManagerProfileModal({ onclose }) {
       setSecuritySuccess("Credentials updated successfully!");
       setTimeout(() => setSecuritySuccess(""), 4000);
     } catch (err) {
-      setSecurityError(err.response?.data?.message || "Failed to update credentials. Check your current password.");
+      setSecurityError(extractApiError(err) || "Failed to update credentials. Check your current password.");
     } finally {
       setSecuritySaving(false);
     }

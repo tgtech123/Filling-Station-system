@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Banknote, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import useSalaryStore from "@/store/useSalaryStore";
+import { extractApiError } from "@/lib/config";
 
 const BANKS = [
   "Access Bank", "Citibank", "Ecobank", "Fidelity Bank", "First Bank",
@@ -61,7 +62,7 @@ export default function ManagerSalaryCard({ staffId, readOnly = false, label = n
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
-      setError(err?.response?.data?.message || "Failed to save. Please try again.");
+      setError(extractApiError(err) || "Failed to save. Please try again.");
     }
   };
 

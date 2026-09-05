@@ -1,7 +1,7 @@
 ﻿// FILE: @/store/useCashierDashboardStore.js
 
 import { create } from 'zustand';
-import { api } from '@/lib/config';
+import { api, extractApiError } from '@/lib/config';
 
 // Module-level cache — survives component re-mounts, prevents 429 / crash-overlay
 const _cache = {
@@ -75,7 +75,7 @@ export const useCashierDashboardStore = create((set, get) => ({
       return { success: true, data: response.data.data };
     } catch (error) {
       const errorMessage = error.response?.data?.error ||
-                          error.response?.data?.message ||
+                          extractApiError(error) ||
                           error.message ||
                           'Failed to fetch dashboard data';
       set({ isLoading: false, ...(silent ? {} : { error: errorMessage }) });
@@ -104,7 +104,7 @@ export const useCashierDashboardStore = create((set, get) => ({
       return { success: true, data: response.data };
     } catch (error) {
       const errorMessage = error.response?.data?.error ||
-                          error.response?.data?.message ||
+                          extractApiError(error) ||
                           error.message ||
                           'Failed to fetch weekly lubricant summary';
       set({ isLoading: false, error: errorMessage });
@@ -127,7 +127,7 @@ export const useCashierDashboardStore = create((set, get) => ({
       return { success: true, data: response.data };
     } catch (error) {
       const errorMessage = error.response?.data?.error ||
-                          error.response?.data?.message ||
+                          extractApiError(error) ||
                           error.message ||
                           'Failed to fetch daily lubricant summary';
       set({ isLoading: false, error: errorMessage });
@@ -156,7 +156,7 @@ export const useCashierDashboardStore = create((set, get) => ({
       return { success: true, data: response.data };
     } catch (error) {
       const errorMessage = error.response?.data?.error ||
-                          error.response?.data?.message ||
+                          extractApiError(error) ||
                           error.message ||
                           'Failed to fetch monthly lubricant summary';
       set({ isLoading: false, error: errorMessage });
@@ -180,7 +180,7 @@ export const useCashierDashboardStore = create((set, get) => ({
       return { success: true, data, total: response.data.total };
     } catch (error) {
       const errorMessage = error.response?.data?.error ||
-                          error.response?.data?.message ||
+                          extractApiError(error) ||
                           error.message ||
                           'Failed to fetch lubricant transactions';
       set({ isLoading: false, error: errorMessage });
@@ -218,7 +218,7 @@ export const useCashierDashboardStore = create((set, get) => ({
       return { success: true, data, pagination: response.data.pagination };
     } catch (error) {
       const errorMessage = error.response?.data?.error ||
-                          error.response?.data?.message ||
+                          extractApiError(error) ||
                           error.message ||
                           'Failed to fetch daily sales';
       set({ isLoading: false, isBackgroundRefreshing: false, ...(silent ? {} : { error: errorMessage }) });
@@ -282,7 +282,7 @@ export const useCashierDashboardStore = create((set, get) => ({
       };
     } catch (error) {
       const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
+                          extractApiError(error) || 
                           error.message || 
                           'Failed to fetch reconciliation report';
       set({
@@ -317,7 +317,7 @@ export const useCashierDashboardStore = create((set, get) => ({
       return { success: true, data: response.data.data };
     } catch (error) {
       const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
+                          extractApiError(error) || 
                           error.message || 
                           'Failed to reconcile cash';
       set({
@@ -351,7 +351,7 @@ export const useCashierDashboardStore = create((set, get) => ({
       return { success: true, data: response.data.data };
     } catch (error) {
       const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
+                          extractApiError(error) || 
                           error.message || 
                           'Failed to update reconciliation';
       set({
@@ -382,7 +382,7 @@ export const useCashierDashboardStore = create((set, get) => ({
       return { success: true };
     } catch (error) {
       const errorMessage = error.response?.data?.error || 
-                          error.response?.data?.message || 
+                          extractApiError(error) || 
                           error.message || 
                           'Failed to delete reconciliation';
       set({
@@ -612,7 +612,7 @@ export const useReconciliationReport = () => {
 //       return { success: true, data: response.data.data };
 //     } catch (error) {
 //       const errorMessage = error.response?.data?.error || 
-//                           error.response?.data?.message || 
+//                           extractApiError(error) || 
 //                           error.message || 
 //                           'Failed to fetch dashboard data';
 //       set({
@@ -682,7 +682,7 @@ export const useReconciliationReport = () => {
 //       console.error('Error Response:', error.response?.data);
       
 //       const errorMessage = error.response?.data?.error || 
-//                           error.response?.data?.message || 
+//                           extractApiError(error) || 
 //                           error.message || 
 //                           'Failed to fetch daily sales';
 //       set({
@@ -749,7 +749,7 @@ export const useReconciliationReport = () => {
 //       };
 //     } catch (error) {
 //       const errorMessage = error.response?.data?.error || 
-//                           error.response?.data?.message || 
+//                           extractApiError(error) || 
 //                           error.message || 
 //                           'Failed to fetch reconciliation report';
 //       set({
@@ -783,7 +783,7 @@ export const useReconciliationReport = () => {
 //       return { success: true, data: response.data.data };
 //     } catch (error) {
 //       const errorMessage = error.response?.data?.error || 
-//                           error.response?.data?.message || 
+//                           extractApiError(error) || 
 //                           error.message || 
 //                           'Failed to reconcile cash';
 //       set({
@@ -816,7 +816,7 @@ export const useReconciliationReport = () => {
 //       return { success: true, data: response.data.data };
 //     } catch (error) {
 //       const errorMessage = error.response?.data?.error || 
-//                           error.response?.data?.message || 
+//                           extractApiError(error) || 
 //                           error.message || 
 //                           'Failed to update reconciliation';
 //       set({
@@ -846,7 +846,7 @@ export const useReconciliationReport = () => {
 //       return { success: true };
 //     } catch (error) {
 //       const errorMessage = error.response?.data?.error || 
-//                           error.response?.data?.message || 
+//                           extractApiError(error) || 
 //                           error.message || 
 //                           'Failed to delete reconciliation';
 //       set({

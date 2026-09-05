@@ -7,6 +7,7 @@ import {
   Building2, Users, DollarSign, ChevronDown, ChevronUp,
   Download, Printer, AlertCircle, ArrowLeft, Calendar,
 } from "lucide-react";
+import { extractApiError } from "@/lib/config";
 
 const fmt = (n) => `₦${Number(n || 0).toLocaleString()}`;
 
@@ -181,7 +182,7 @@ export default function ConsolidatedPayrollPage() {
     setError(null);
     fetchConsolidatedPayroll(month)
       .then(setData)
-      .catch((err) => setError(err.response?.data?.message || "Failed to load payroll data"))
+      .catch((err) => setError(extractApiError(err) || "Failed to load payroll data"))
       .finally(() => setLoading(false));
   }, [month, guard]);
 

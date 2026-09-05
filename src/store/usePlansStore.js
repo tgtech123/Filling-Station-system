@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const usePlansStore = create((set, get) => ({
   // ── State
@@ -29,7 +29,7 @@ const usePlansStore = create((set, get) => ({
       set({ plans: Array.from(nameMap.values()), loading: false });
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to fetch plans";
+        extractApiError(error) || error.message || "Failed to fetch plans";
       set({ loading: false, error: errorMsg });
       console.error("❌ fetchPublicPlans:", errorMsg);
     }
@@ -46,7 +46,7 @@ const usePlansStore = create((set, get) => ({
       });
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to fetch admin plans";
+        extractApiError(error) || error.message || "Failed to fetch admin plans";
       set({ loading: false, error: errorMsg });
       console.error("❌ fetchAdminPlans:", errorMsg);
     }
@@ -64,7 +64,7 @@ const usePlansStore = create((set, get) => ({
       return { success: true, plan: newPlan };
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to create plan";
+        extractApiError(error) || error.message || "Failed to create plan";
       console.error("❌ createPlan:", errorMsg);
       return { success: false, error: errorMsg };
     }
@@ -85,7 +85,7 @@ const usePlansStore = create((set, get) => ({
       return { success: true, plan: updated };
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to update plan";
+        extractApiError(error) || error.message || "Failed to update plan";
       console.error("❌ updatePlan:", errorMsg);
       return { success: false, error: errorMsg };
     }
@@ -105,7 +105,7 @@ const usePlansStore = create((set, get) => ({
       return { success: true };
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to delete plan";
+        extractApiError(error) || error.message || "Failed to delete plan";
       console.error("❌ deletePlan:", errorMsg);
       return { success: false, error: errorMsg };
     }

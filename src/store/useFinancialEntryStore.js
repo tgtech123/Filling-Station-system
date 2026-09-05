@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api } from '@/lib/config';
+import { api, extractApiError } from '@/lib/config';
 
 const BASE = '/api/financial-entries';
 
@@ -17,7 +17,7 @@ const useFinancialEntryStore = create((set, get) => ({
       const res = await api.get(BASE);
       set({ entries: res.data.data });
     } catch (err) {
-      set({ error: err.response?.data?.message || err.message || 'Failed to load entries' });
+      set({ error: extractApiError(err) || err.message || 'Failed to load entries' });
     } finally {
       set({ loading: false });
     }
@@ -29,7 +29,7 @@ const useFinancialEntryStore = create((set, get) => ({
       const res = await api.get(`${BASE}/unpaid-deliveries`);
       set({ unpaidDeliveries: res.data.data.deliveries, totalOwed: res.data.data.totalOwed });
     } catch (err) {
-      set({ error: err.response?.data?.message || err.message || 'Failed to load deliveries' });
+      set({ error: extractApiError(err) || err.message || 'Failed to load deliveries' });
     } finally {
       set({ loading: false });
     }
@@ -42,7 +42,7 @@ const useFinancialEntryStore = create((set, get) => ({
       set((s) => ({ entries: [res.data.data, ...s.entries] }));
       return res.data.data;
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to create entry';
+      const msg = extractApiError(err) || err.message || 'Failed to create entry';
       set({ error: msg });
       throw new Error(msg);
     } finally {
@@ -57,7 +57,7 @@ const useFinancialEntryStore = create((set, get) => ({
       set((s) => ({ entries: s.entries.map((e) => (e._id === id ? res.data.data : e)) }));
       return res.data.data;
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to update entry';
+      const msg = extractApiError(err) || err.message || 'Failed to update entry';
       set({ error: msg });
       throw new Error(msg);
     } finally {
@@ -71,7 +71,7 @@ const useFinancialEntryStore = create((set, get) => ({
       await api.delete(`${BASE}/${id}`);
       set((s) => ({ entries: s.entries.filter((e) => e._id !== id) }));
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to delete entry';
+      const msg = extractApiError(err) || err.message || 'Failed to delete entry';
       set({ error: msg });
       throw new Error(msg);
     } finally {
@@ -91,7 +91,7 @@ const useFinancialEntryStore = create((set, get) => ({
       const totalOwed = remaining.reduce((sum, d) => sum + d.quantity * d.pricePerLtr, 0);
       set({ totalOwed });
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to mark delivery as paid';
+      const msg = extractApiError(err) || err.message || 'Failed to mark delivery as paid';
       set({ error: msg });
       throw new Error(msg);
     } finally {

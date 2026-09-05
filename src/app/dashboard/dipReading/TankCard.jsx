@@ -5,6 +5,7 @@ import { useState } from "react";
 import { IoWarning } from "react-icons/io5";
 import NumericInput from "@/components/inputs/NumericInput";
 import useSupervisorStore from "@/store/useSupervisorStore";
+import { extractApiError } from "@/lib/config";
 
 export default function TankCard({
   tankId,
@@ -107,7 +108,7 @@ export default function TankCard({
       setError(true);
       setStatus("Deviation");
       setErrorMessage(
-        err.response?.data?.message || 
+        extractApiError(err) || 
         "Failed to submit reading. Please try again."
       );
       setMessage("Submission Failed");

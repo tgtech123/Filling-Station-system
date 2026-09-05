@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api } from '@/lib/config';
+import { api, extractApiError } from '@/lib/config';
 
 const ENDPOINT = '/api/fixed-assets';
 
@@ -16,7 +16,7 @@ const useFixedAssetStore = create((set, get) => ({
       set({ assets: res.data.data });
       return res.data.data;
     } catch (err) {
-      set({ error: err.response?.data?.message || err.message || 'Failed to load assets' });
+      set({ error: extractApiError(err) || err.message || 'Failed to load assets' });
     } finally {
       set({ loading: false });
     }
@@ -29,7 +29,7 @@ const useFixedAssetStore = create((set, get) => ({
       set((state) => ({ assets: [res.data.data, ...state.assets] }));
       return res.data.data;
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to create asset';
+      const msg = extractApiError(err) || err.message || 'Failed to create asset';
       set({ error: msg });
       throw new Error(msg);
     } finally {
@@ -46,7 +46,7 @@ const useFixedAssetStore = create((set, get) => ({
       }));
       return res.data.data;
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to update asset';
+      const msg = extractApiError(err) || err.message || 'Failed to update asset';
       set({ error: msg });
       throw new Error(msg);
     } finally {
@@ -60,7 +60,7 @@ const useFixedAssetStore = create((set, get) => ({
       await api.delete(`${ENDPOINT}/${id}`);
       set((state) => ({ assets: state.assets.filter((a) => a._id !== id) }));
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Failed to delete asset';
+      const msg = extractApiError(err) || err.message || 'Failed to delete asset';
       set({ error: msg });
       throw new Error(msg);
     } finally {

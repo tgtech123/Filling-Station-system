@@ -31,6 +31,7 @@ import {
   Building2,
   BookOpen,
   Scale,
+  Boxes,
 } from "lucide-react";
 import { RiOilLine } from "react-icons/ri";
 import { PiToggleLeftFill, PiToggleRightFill } from "react-icons/pi";
@@ -490,6 +491,17 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <MdOutlinePeopleAlt size={22} />,
       roles: ["accountant", "manager"],
       link: "/dashboard/accountant/staffSales",
+    },
+    {
+      // Opening and closing stock for every product line at once — lubricants,
+      // store, fuel, LPG and cylinders. The manager reads what the month began
+      // with; the accountant needs it because opening stock is the first line
+      // of cost of sales, and it cannot be taken on trust.
+      id: "opening-stock",
+      name: "Opening Stock",
+      icon: <Boxes size={20} />,
+      roles: ["accountant", "manager"],
+      link: "/dashboard/openingStock",
     },
     {
       id: "fixed-assets",

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 // ─── Module-level cache (survives re-renders & component unmounts) ────────────
 const TTL = {
@@ -56,7 +56,7 @@ const useDashboardStore = create((set, get) => ({
       return response.data;
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to fetch metrics";
+        extractApiError(error) || error.message || "Failed to fetch metrics";
       set((state) => ({
         loading: { ...state.loading, metrics: false },
         errors:  { ...state.errors,  metrics: errorMsg },
@@ -87,7 +87,7 @@ const useDashboardStore = create((set, get) => ({
       return response.data;
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to fetch tank status";
+        extractApiError(error) || error.message || "Failed to fetch tank status";
       set((state) => ({
         loading: { ...state.loading, tankStatus: false },
         errors:  { ...state.errors,  tankStatus: errorMsg },
