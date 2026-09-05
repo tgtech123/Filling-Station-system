@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api } from '@/lib/config';
+import { api, extractApiError } from '@/lib/config';
 
 const useSupervisorStore = create((set, get) => ({
   // State
@@ -40,7 +40,7 @@ const useSupervisorStore = create((set, get) => ({
       set({ dashboard: response.data.data, loading: false });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -57,7 +57,7 @@ const useSupervisorStore = create((set, get) => ({
       });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -73,7 +73,7 @@ const useSupervisorStore = create((set, get) => ({
       });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -85,7 +85,7 @@ const useSupervisorStore = create((set, get) => ({
       set({ loading: false });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -105,7 +105,7 @@ const useSupervisorStore = create((set, get) => ({
     return response.data;
   } catch (error) {
     console.error('Approval error:', error.response?.data); // See full error
-    set({ error: error.response?.data?.message || error.message, loading: false });
+    set({ error: extractApiError(error) || error.message, loading: false });
     throw error;
   }
 },
@@ -118,7 +118,7 @@ const useSupervisorStore = create((set, get) => ({
       set({ attendantDirectory: response.data.data, loading: false });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -130,7 +130,7 @@ const useSupervisorStore = create((set, get) => ({
       set({ scheduledAttendants: response.data.data, loading: false });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -142,7 +142,7 @@ const useSupervisorStore = create((set, get) => ({
       set({ scheduledAttendantsByType: response.data.data, loading: false });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -157,7 +157,7 @@ const useSupervisorStore = create((set, get) => ({
     await get().fetchDashboard();
     return response.data;
   } catch (error) {
-    set({ error: error.response?.data?.message || error.message, loading: false });
+    set({ error: extractApiError(error) || error.message, loading: false });
     throw error;
   }
 },
@@ -170,7 +170,7 @@ const useSupervisorStore = create((set, get) => ({
       set({ salesOverview: response.data.data, loading: false });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -186,7 +186,7 @@ const useSupervisorStore = create((set, get) => ({
       });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -198,7 +198,7 @@ const useSupervisorStore = create((set, get) => ({
       set({ loading: false });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -215,7 +215,7 @@ const useSupervisorStore = create((set, get) => ({
       });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -228,7 +228,7 @@ const useSupervisorStore = create((set, get) => ({
       set({ dipReadings: response.data.data, loading: false });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -242,7 +242,7 @@ const useSupervisorStore = create((set, get) => ({
   //     await get().fetchDipReadings();
   //     return response.data;
   //   } catch (error) {
-  //     set({ error: error.response?.data?.message || error.message, loading: false });
+  //     set({ error: extractApiError(error) || error.message, loading: false });
   //     throw error;
   //   }
   // },
@@ -257,7 +257,7 @@ const useSupervisorStore = create((set, get) => ({
     return response.data;
   } catch (error) {
     console.error('Store: Error submitting dip reading:', error.response?.data);
-    set({ error: error.response?.data?.message || error.message, loading: false });
+    set({ error: extractApiError(error) || error.message, loading: false });
     throw error;
   }
 },
@@ -273,7 +273,7 @@ const useSupervisorStore = create((set, get) => ({
       });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -286,7 +286,7 @@ const useSupervisorStore = create((set, get) => ({
       set({ pumpPerformance: response.data.data, loading: false });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -303,7 +303,7 @@ const useSupervisorStore = create((set, get) => ({
       });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },
@@ -315,7 +315,7 @@ const useSupervisorStore = create((set, get) => ({
       set({ staffDetailedPerformance: response.data.data, loading: false });
       return response.data;
     } catch (error) {
-      set({ error: error.response?.data?.message || error.message, loading: false });
+      set({ error: extractApiError(error) || error.message, loading: false });
       throw error;
     }
   },

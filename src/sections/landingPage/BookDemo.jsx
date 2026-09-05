@@ -13,7 +13,7 @@ import {
   Video,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import NumericInput from "@/components/inputs/NumericInput";
 
@@ -200,7 +200,7 @@ export default function BookDemo() {
     } catch (err) {
       const status = err?.response?.status;
       const message =
-        err?.response?.data?.message ||
+        extractApiError(err) ||
         err?.response?.data?.errors?.[0]?.msg ||
         "Something went wrong. Please try again.";
       toast.error(message);

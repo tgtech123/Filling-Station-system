@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const useEmergencyStore = create((set) => ({
   emergencyMode: false,
@@ -24,7 +24,7 @@ const useEmergencyStore = create((set) => ({
       set({ loading: false });
       return {
         success: false,
-        error: err.response?.data?.message || err.message || "Failed to activate",
+        error: extractApiError(err) || err.message || "Failed to activate",
       };
     }
   },
@@ -39,7 +39,7 @@ const useEmergencyStore = create((set) => ({
       set({ loading: false });
       return {
         success: false,
-        error: err.response?.data?.message || err.message || "Failed to deactivate",
+        error: extractApiError(err) || err.message || "Failed to deactivate",
       };
     }
   },

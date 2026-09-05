@@ -1,6 +1,6 @@
 ﻿// store/financialStore.js
 import { create } from 'zustand';
-import { api } from '@/lib/config';
+import { api, extractApiError } from '@/lib/config';
 
 export const useFinancialStore = create((set, get) => ({
   // State
@@ -172,7 +172,7 @@ export const useFinancialStore = create((set, get) => ({
       }));
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message;
+      const errorMsg = extractApiError(error) || error.message;
       set((state) => ({
         loading: { ...state.loading, taxSummary: false },
         errors:  { ...state.errors,  taxSummary: errorMsg },

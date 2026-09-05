@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const useGasOrderStore = create((set, get) => ({
   inbox: [],
@@ -14,7 +14,7 @@ const useGasOrderStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/orders/inbox");
       set({ inbox: data.data || [] });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally { set(s => ({ loading: { ...s.loading, inbox: false } })); }
   },
 
@@ -33,7 +33,7 @@ const useGasOrderStore = create((set, get) => ({
       set(s => ({ inbox: s.inbox.filter(o => o._id !== id) }));
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -43,7 +43,7 @@ const useGasOrderStore = create((set, get) => ({
       set(s => ({ inbox: s.inbox.filter(o => o._id !== id) }));
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -53,7 +53,7 @@ const useGasOrderStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/orders", { params });
       set({ orders: data.data || [], total: data.total || 0 });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally { set(s => ({ loading: { ...s.loading, orders: false } })); }
   },
 }));

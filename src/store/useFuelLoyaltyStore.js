@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api, API_URL } from "@/lib/config";
+import { api, API_URL, extractApiError } from "@/lib/config";
 
 const BASE = "/api/fuel-loyalty";
 
@@ -33,7 +33,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.get(`${BASE}/staff/settings`);
       set({ settings: data.data });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally {
       set(s => ({ loading: { ...s.loading, settings: false } }));
     }
@@ -45,7 +45,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       set({ settings: data.data });
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -56,7 +56,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.get(`${BASE}/staff/customers`, { params });
       set({ customers: data.data || [], total: data.total || 0 });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally {
       set(s => ({ loading: { ...s.loading, customers: false } }));
     }
@@ -84,7 +84,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       set({ selectedCustomer: data.data?.customer, transactions: data.data?.transactions || [], redemptions: data.data?.redemptions || [] });
       return { ok: true, ...data.data };
     } catch (e) {
-      return { ok: false, error: e.response?.data?.message || e.message };
+      return { ok: false, error: extractApiError(e) || e.message };
     } finally {
       set(s => ({ loading: { ...s.loading, customer: false } }));
     }
@@ -96,7 +96,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.post(`${BASE}/staff/customers`, payload);
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     } finally {
       set(s => ({ loading: { ...s.loading, register: false } }));
     }
@@ -107,7 +107,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.patch(`${BASE}/staff/customers/${id}`, payload);
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -118,7 +118,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.post(`${BASE}/staff/transactions`, payload);
       return { success: true, data: data.data, message: data.message };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     } finally {
       set(s => ({ loading: { ...s.loading, earn: false } }));
     }
@@ -138,7 +138,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.post(`${BASE}/staff/redemptions`, payload);
       return { success: true, data: data.data, message: data.message };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     } finally {
       set(s => ({ loading: { ...s.loading, redemption: false } }));
     }
@@ -150,7 +150,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.get(`${BASE}/staff/redemptions`, { params });
       set({ redemptions: data.data || [], redemptionTotal: data.total || 0 });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally {
       set(s => ({ loading: { ...s.loading, redemption: false } }));
     }
@@ -161,7 +161,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.patch(`${BASE}/staff/redemptions/${id}/approve`);
       return { success: true, data: data.data, message: data.message };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -170,7 +170,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.patch(`${BASE}/staff/redemptions/${id}/reject`, { note });
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -181,7 +181,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.get(`${BASE}/staff/audit`, { params: date ? { date } : {} });
       set({ auditReport: data.data || [] });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally {
       set(s => ({ loading: { ...s.loading, audit: false } }));
     }
@@ -311,7 +311,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.patch(`${BASE}/staff/redemptions/${id}/dispensed`, items ? { items } : {});
       return { success: true, message: data.message, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -323,7 +323,7 @@ const useFuelLoyaltyStore = create((set, get) => ({
       const { data } = await api.get(`${BASE}/staff/redemptions/${id}/shop-options`);
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 }));

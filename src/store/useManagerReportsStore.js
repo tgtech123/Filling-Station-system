@@ -3,7 +3,7 @@
 // Follows the same pattern as your existing stores.
 
 import { create } from 'zustand';
-import { api } from '@/lib/config';
+import { api, extractApiError } from '@/lib/config';
 
 
 // ─── Client-side search filter for activity logs ──────────────────────────────
@@ -100,7 +100,7 @@ const useManagerReportsStore = create((set, get) => ({
       set({ salesOverview: data, salesOverviewDuration: resolved });
       return data;
     } catch (error) {
-      const msg = error.response?.data?.message || error.message || 'Failed to fetch sales overview';
+      const msg = extractApiError(error) || error.message || 'Failed to fetch sales overview';
       setError('salesOverview', msg);
       throw error;
     } finally {
@@ -131,7 +131,7 @@ const useManagerReportsStore = create((set, get) => ({
       set({ cashOverview: data, cashOverviewPage: resolvedPage, cashOverviewLimit: resolvedLimit });
       return data;
     } catch (error) {
-      const msg = error.response?.data?.message || error.message || 'Failed to fetch cash overview';
+      const msg = extractApiError(error) || error.message || 'Failed to fetch cash overview';
       setError('cashOverview', msg);
       throw error;
     } finally {
@@ -172,7 +172,7 @@ const useManagerReportsStore = create((set, get) => ({
       set({ salesAndCash: data, salesAndCashFilters: merged });
       return data;
     } catch (error) {
-      const msg = error.response?.data?.message || error.message || 'Failed to fetch sales and cash report';
+      const msg = extractApiError(error) || error.message || 'Failed to fetch sales and cash report';
       setError('salesAndCash', msg);
       throw error;
     } finally {
@@ -199,7 +199,7 @@ const useManagerReportsStore = create((set, get) => ({
       set({ exportResult: result });
       return result;
     } catch (error) {
-      const msg = error.response?.data?.message || error.message || 'Failed to export report';
+      const msg = extractApiError(error) || error.message || 'Failed to export report';
       setError('export', msg);
       throw error;
     } finally {
@@ -236,7 +236,7 @@ const useManagerReportsStore = create((set, get) => ({
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      const msg = error.response?.data?.message || error.message || 'Failed to download CSV';
+      const msg = extractApiError(error) || error.message || 'Failed to download CSV';
       setError('export', msg);
       throw error;
     } finally {
@@ -282,7 +282,7 @@ const useManagerReportsStore = create((set, get) => ({
       set({ activityLogs: data, filteredActivityLogs: filtered, activityLogsFilters: merged });
       return data;
     } catch (error) {
-      const msg = error.response?.data?.message || error.message || 'Failed to fetch activity logs';
+      const msg = extractApiError(error) || error.message || 'Failed to fetch activity logs';
       setError('activityLogs', msg);
       throw error;
     } finally {

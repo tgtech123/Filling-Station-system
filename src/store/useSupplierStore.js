@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const useSupplierStore = create((set, get) => ({
   suppliers: [],
@@ -15,7 +15,7 @@ const useSupplierStore = create((set, get) => ({
       const { data } = await api.get("/api/suppliers", { params });
       set({ suppliers: data.data || [] });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally {
       set({ loading: false });
     }
@@ -30,7 +30,7 @@ const useSupplierStore = create((set, get) => ({
       set((s) => ({ suppliers: [...s.suppliers, data.data] }));
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     } finally {
       set({ saving: false });
     }
@@ -45,7 +45,7 @@ const useSupplierStore = create((set, get) => ({
       }));
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -56,7 +56,7 @@ const useSupplierStore = create((set, get) => ({
       set((s) => ({ suppliers: s.suppliers.filter((sup) => sup._id !== id) }));
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 }));

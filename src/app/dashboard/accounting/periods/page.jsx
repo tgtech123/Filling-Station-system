@@ -4,6 +4,7 @@ import DashboardLayout from '@/components/Dashboard/DashboardLayout';
 import toast from 'react-hot-toast';
 import { Lock, LockOpen, Unlock, CalendarClock, TrendingUp, Globe, RefreshCw, Plus, Boxes } from 'lucide-react';
 import { api, Card, Modal, Field, inputCls, Btn, StatusBadge, Table, Hint, fmt, fmtDate } from '../shared';
+import { extractApiError } from '@/lib/config';
 
 const STOCK_PRODUCTS = ['PMS', 'AGO (Diesel)', 'Kerosene', 'Lubricant', 'Gas'];
 
@@ -52,7 +53,7 @@ export default function PeriodsPage() {
       setSalesRuns(s.data.data);
       setValuation(v.data.data);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to load periods');
+      toast.error(extractApiError(e) || 'Failed to load periods');
     } finally {
       setLoading(false);
     }
@@ -69,7 +70,7 @@ export default function PeriodsPage() {
       toast.success(res.data.message);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Close failed');
+      toast.error(extractApiError(e) || 'Close failed');
     }
   }
 
@@ -79,7 +80,7 @@ export default function PeriodsPage() {
       toast.success(res.data.message);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Reopen failed');
+      toast.error(extractApiError(e) || 'Reopen failed');
     }
   }
 
@@ -98,7 +99,7 @@ export default function PeriodsPage() {
       setOpenForm({ product: 'PMS', qty: '', unitCost: '', date: new Date().toISOString().split('T')[0], postToGL: true });
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed to record stock');
+      toast.error(extractApiError(e2) || 'Failed to record stock');
     }
   }
 
@@ -107,7 +108,7 @@ export default function PeriodsPage() {
       const res = await api.get(`/api/accounting/sales-postings/preview?period=${runPeriod}`);
       setSalesPreview(res.data.data);
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Preview failed');
+      toast.error(extractApiError(e) || 'Preview failed');
     }
   }
 
@@ -118,7 +119,7 @@ export default function PeriodsPage() {
       setSalesPreview(null);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Sales posting failed');
+      toast.error(extractApiError(e) || 'Sales posting failed');
     }
   }
 
@@ -129,7 +130,7 @@ export default function PeriodsPage() {
       toast.success(res.data.message);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Depreciation run failed');
+      toast.error(extractApiError(e) || 'Depreciation run failed');
     }
   }
 
@@ -140,7 +141,7 @@ export default function PeriodsPage() {
       toast.success(res.data.message);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Revaluation failed');
+      toast.error(extractApiError(e) || 'Revaluation failed');
     }
   }
 
@@ -150,7 +151,7 @@ export default function PeriodsPage() {
       toast.success(res.data.message);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.message || 'Rate fetch failed');
+      toast.error(extractApiError(e) || 'Rate fetch failed');
     }
   }
 
@@ -162,7 +163,7 @@ export default function PeriodsPage() {
       setShowRate(false);
       load();
     } catch (e2) {
-      toast.error(e2.response?.data?.message || 'Failed');
+      toast.error(extractApiError(e2) || 'Failed');
     }
   }
 

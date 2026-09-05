@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const useGasCustomerStore = create((set, get) => ({
   customers: [],
@@ -15,7 +15,7 @@ const useGasCustomerStore = create((set, get) => ({
       const { data } = await api.post("/api/gas/customers", payload);
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     } finally { set(s => ({ loading: { ...s.loading, register: false } })); }
   },
 
@@ -38,7 +38,7 @@ const useGasCustomerStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/customers", { params });
       set({ customers: data.data || [], total: data.total || 0 });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally { set(s => ({ loading: { ...s.loading, list: false } })); }
   },
 
@@ -48,7 +48,7 @@ const useGasCustomerStore = create((set, get) => ({
       set({ selectedCustomer: data.data?.customer });
       return { ok: true, ...data.data };
     } catch (e) {
-      const msg = e.response?.data?.message || e.message || "Failed to load customer";
+      const msg = extractApiError(e) || e.message || "Failed to load customer";
       return { ok: false, error: msg };
     }
   },
@@ -65,7 +65,7 @@ const useGasCustomerStore = create((set, get) => ({
       const { data } = await api.patch(`/api/gas/customers/${id}`, payload);
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 }));

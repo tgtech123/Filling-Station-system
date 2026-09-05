@@ -1,5 +1,5 @@
 ﻿import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 import toast from "react-hot-toast";
 
 const useAdminStore = create((set, get) => ({
@@ -54,7 +54,7 @@ const useAdminStore = create((set, get) => ({
       return response.data.data;
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to fetch overview";
+        extractApiError(error) || error.message || "Failed to fetch overview";
       set({ loading: false, error: errorMsg });
       console.error("❌ fetchOverview:", errorMsg);
       return null;
@@ -95,7 +95,7 @@ const useAdminStore = create((set, get) => ({
       return { success: true };
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to reset password";
+        extractApiError(error) || error.message || "Failed to reset password";
       console.error("❌ resetStaffPassword:", errorMsg);
       return { success: false, error: errorMsg };
     }
@@ -138,7 +138,7 @@ const useAdminStore = create((set, get) => ({
       return response.data.stations || response.data.data;
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to fetch stations";
+        extractApiError(error) || error.message || "Failed to fetch stations";
       set({ loading: false, error: errorMsg, stations: [] });
       console.error("❌ fetchStations:", errorMsg);
       return null;
@@ -161,7 +161,7 @@ const useAdminStore = create((set, get) => ({
       return payload;
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to fetch station detail";
+        extractApiError(error) || error.message || "Failed to fetch station detail";
       set({ loading: false, error: errorMsg });
       console.error("❌ fetchStationDetail:", errorMsg);
       return null;
@@ -280,7 +280,7 @@ const useAdminStore = create((set, get) => ({
       return logs;
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to fetch activity logs";
+        extractApiError(error) || error.message || "Failed to fetch activity logs";
       set({ activityLoading: false, error: errorMsg, activityLogs: [] });
       console.error("❌ fetchActivityLogs:", errorMsg);
       return null;
@@ -313,7 +313,7 @@ const useAdminStore = create((set, get) => ({
       return { success: true, data: response.data };
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to update status";
+        extractApiError(error) || error.message || "Failed to update status";
       console.error("❌ updateStationStatus:", errorMsg);
       return { success: false, error: errorMsg };
     }
@@ -340,7 +340,7 @@ const useAdminStore = create((set, get) => ({
     } catch (err) {
       set({ loading: false });
       const errorMsg =
-        err.response?.data?.message || err.message || "Failed to restore station";
+        extractApiError(err) || err.message || "Failed to restore station";
       console.error("❌ restoreStation:", errorMsg);
       return { success: false, error: errorMsg };
     }
@@ -358,7 +358,7 @@ const useAdminStore = create((set, get) => ({
       return { success: true };
     } catch (error) {
       const errorMsg =
-        error.response?.data?.message || error.message || "Failed to delete station";
+        extractApiError(error) || error.message || "Failed to delete station";
       console.error("❌ deleteStation:", errorMsg);
       return { success: false, error: errorMsg };
     }

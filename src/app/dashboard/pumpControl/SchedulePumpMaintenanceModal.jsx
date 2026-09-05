@@ -2,7 +2,7 @@
 import { X } from "lucide-react";
 import { useState, useEffect } from "react";
 import usePumpStore from "@/store/pumpStore";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 import toast from "react-hot-toast";
 
 export default function SchedulePumpMaintenanceModal({ onclose }) {
@@ -49,7 +49,7 @@ export default function SchedulePumpMaintenanceModal({ onclose }) {
       getPumps();
       onclose();
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to schedule maintenance");
+      toast.error(extractApiError(err) || "Failed to schedule maintenance");
     } finally {
       setSubmitting(false);
     }

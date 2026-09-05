@@ -1,5 +1,5 @@
 ﻿import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const getStaffId = () => {
   if (typeof window !== "undefined") {
@@ -31,7 +31,7 @@ const useSalesTargetStore = create((set) => ({
       set({ target, loading: false });
     } catch (err) {
       const msg =
-        err.response?.data?.message || err.message || "Failed to fetch target";
+        extractApiError(err) || err.message || "Failed to fetch target";
       set({ error: msg, loading: false });
     }
   },

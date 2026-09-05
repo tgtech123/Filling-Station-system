@@ -6,6 +6,7 @@ import LocationSelector from "@/components/LocationSelector";
 import toast from "react-hot-toast";
 import useBranchStore from "@/store/useBranchStore";
 import NumericInput from "@/components/inputs/NumericInput";
+import { extractApiError } from "@/lib/config";
 
 export default function AddBranchModal({ onClose, onUpgradeRequired }) {
   const { createBranch } = useBranchStore();
@@ -85,7 +86,7 @@ export default function AddBranchModal({ onClose, onUpgradeRequired }) {
       } else {
         setError(
           err.response?.data?.error ||
-          err.response?.data?.message ||
+          extractApiError(err) ||
           "Failed to create branch"
         );
       }

@@ -1,5 +1,5 @@
 ﻿import { create } from 'zustand';
-import { api } from '@/lib/config';
+import { api, extractApiError } from '@/lib/config';
 
 const TRENDS_ENDPOINT = '/api/trends';
 
@@ -66,7 +66,7 @@ const useTrendsStore = create((set, get) => ({
       
       return data;
     } catch (error) {
-      const errorMsg = error.response?.data?.message || error.message || 'Failed to fetch trends dashboard';
+      const errorMsg = extractApiError(error) || error.message || 'Failed to fetch trends dashboard';
       setError('dashboard', errorMsg);
       throw error;
     } finally {

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const _cache = { staff: { data: null, ts: 0 } };
 const STAFF_TTL = 3 * 60_000;
@@ -46,7 +46,7 @@ const useStaffStore = create((set, get) => ({
       }));
       return data.staff;
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message;
+      const errorMsg = extractApiError(err) || err.message;
       set((state) => ({ loading: { ...state.loading, creating: false }, error: errorMsg }));
       throw err;
     }
@@ -67,7 +67,7 @@ const useStaffStore = create((set, get) => ({
       _cache.staff = { data, ts: Date.now() };
       set((state) => ({ staff: data, loading: { ...state.loading, fetching: false } }));
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message;
+      const errorMsg = extractApiError(err) || err.message;
       set((state) => ({ loading: { ...state.loading, fetching: false }, error: errorMsg }));
     }
   },
@@ -82,7 +82,7 @@ const useStaffStore = create((set, get) => ({
         loading: { ...state.loading, updatingId: null },
       }));
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message;
+      const errorMsg = extractApiError(err) || err.message;
       set((state) => ({ loading: { ...state.loading, updatingId: null }, error: errorMsg }));
     }
   },
@@ -97,7 +97,7 @@ const useStaffStore = create((set, get) => ({
         loading: { ...state.loading, deletingId: null },
       }));
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message;
+      const errorMsg = extractApiError(err) || err.message;
       set((state) => ({ loading: { ...state.loading, deletingId: null }, error: errorMsg }));
     }
   },

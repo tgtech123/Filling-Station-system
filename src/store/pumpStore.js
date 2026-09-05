@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 // NOTE: Authorization header is injected automatically by the api interceptor
 // in lib/config.js — no manual token handling needed here.
@@ -19,7 +19,7 @@ const usePumpStore = create((set) => ({
         loading: false,
       }));
     } catch (err) {
-      const message = err.response?.data?.message || err.message || "Failed to add pump";
+      const message = extractApiError(err) || err.message || "Failed to add pump";
       set({ error: message, loading: false });
       throw new Error(message);
     }
@@ -32,7 +32,7 @@ const usePumpStore = create((set) => ({
       const res = await api.get("/api/pump");
       set({ pumps: res.data?.data || res.data?.pumps || [], loading: false });
     } catch (err) {
-      const message = err.response?.data?.message || err.message || "Failed to fetch pumps";
+      const message = extractApiError(err) || err.message || "Failed to fetch pumps";
       set({ error: message, loading: false });
       throw new Error(message);
     }
@@ -50,7 +50,7 @@ const usePumpStore = create((set) => ({
         loading: false,
       }));
     } catch (err) {
-      const message = err.response?.data?.message || err.message || "Failed to update pump";
+      const message = extractApiError(err) || err.message || "Failed to update pump";
       set({ error: message, loading: false });
       throw new Error(message);
     }
@@ -66,7 +66,7 @@ const usePumpStore = create((set) => ({
         loading: false,
       }));
     } catch (err) {
-      const message = err.response?.data?.message || err.message || "Failed to delete pump";
+      const message = extractApiError(err) || err.message || "Failed to delete pump";
       set({ error: message, loading: false });
       throw new Error(message);
     }
@@ -79,7 +79,7 @@ const usePumpStore = create((set) => ({
       await api.post("/api/pump/update-prices", priceData);
       set({ loading: false });
     } catch (err) {
-      const message = err.response?.data?.message || err.message || "Failed to update price";
+      const message = extractApiError(err) || err.message || "Failed to update price";
       set({ error: message, loading: false });
       throw new Error(message);
     }

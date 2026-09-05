@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const ENDPOINT = "/api/salary";
 
@@ -39,7 +39,7 @@ const useSalaryStore = create((set, get) => ({
       set({ draft: res.data.data });
       return res.data.data;
     } catch (err) {
-      set({ error: err.response?.data?.message || "Failed to load draft" });
+      set({ error: extractApiError(err) || "Failed to load draft" });
       throw err;
     } finally {
       setLoading("draft", false);
@@ -56,7 +56,7 @@ const useSalaryStore = create((set, get) => ({
       set({ draft: res.data.data });
       return res.data.data;
     } catch (err) {
-      set({ error: err.response?.data?.message || "Failed to save draft" });
+      set({ error: extractApiError(err) || "Failed to save draft" });
       throw err;
     } finally {
       setLoading("saving", false);
@@ -73,7 +73,7 @@ const useSalaryStore = create((set, get) => ({
       set({ draft: res.data.data });
       return res.data.data;
     } catch (err) {
-      set({ error: err.response?.data?.message || "Failed to submit draft" });
+      set({ error: extractApiError(err) || "Failed to submit draft" });
       throw err;
     } finally {
       setLoading("submitting", false);
@@ -90,7 +90,7 @@ const useSalaryStore = create((set, get) => ({
       set({ pendingDrafts: res.data.data });
       return res.data.data;
     } catch (err) {
-      set({ error: err.response?.data?.message || "Failed to load pending drafts" });
+      set({ error: extractApiError(err) || "Failed to load pending drafts" });
       throw err;
     } finally {
       setLoading("pending", false);
@@ -113,7 +113,7 @@ const useSalaryStore = create((set, get) => ({
       }));
       return res.data.data;
     } catch (err) {
-      set({ error: err.response?.data?.message || "Failed to validate draft" });
+      set({ error: extractApiError(err) || "Failed to validate draft" });
       throw err;
     } finally {
       setLoading("validating", false);
@@ -130,7 +130,7 @@ const useSalaryStore = create((set, get) => ({
       set({ history: res.data.data });
       return res.data.data;
     } catch (err) {
-      set({ error: err.response?.data?.message || "Failed to load history" });
+      set({ error: extractApiError(err) || "Failed to load history" });
       throw err;
     } finally {
       setLoading("history", false);
@@ -147,7 +147,7 @@ const useSalaryStore = create((set, get) => ({
       set({ historyDetail: res.data.data });
       return res.data.data;
     } catch (err) {
-      set({ error: err.response?.data?.message || "Failed to load record" });
+      set({ error: extractApiError(err) || "Failed to load record" });
       throw err;
     } finally {
       setLoading("detail", false);
@@ -175,7 +175,7 @@ const useSalaryStore = create((set, get) => ({
       set((s) => ({ loading: { ...s.loading, saving: false } }));
       return res.data.data;
     } catch (err) {
-      set((s) => ({ loading: { ...s.loading, saving: false }, error: err.response?.data?.message || "Failed to save salary config" }));
+      set((s) => ({ loading: { ...s.loading, saving: false }, error: extractApiError(err) || "Failed to save salary config" }));
       throw err;
     }
   },
@@ -189,7 +189,7 @@ const useSalaryStore = create((set, get) => ({
       set((s) => ({ loading: { ...s.loading, consolidated: false } }));
       return res.data.data;
     } catch (err) {
-      set((s) => ({ loading: { ...s.loading, consolidated: false }, error: err.response?.data?.message || "Failed to load consolidated payroll" }));
+      set((s) => ({ loading: { ...s.loading, consolidated: false }, error: extractApiError(err) || "Failed to load consolidated payroll" }));
       throw err;
     }
   },

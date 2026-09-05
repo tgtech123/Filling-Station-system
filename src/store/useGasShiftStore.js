@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const useGasShiftStore = create((set, get) => ({
   currentShift: null,
@@ -13,7 +13,7 @@ const useGasShiftStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/shifts/current");
       set({ currentShift: data.data });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally { set({ loading: false }); }
   },
 
@@ -23,7 +23,7 @@ const useGasShiftStore = create((set, get) => ({
       set({ currentShift: data.data });
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -33,7 +33,7 @@ const useGasShiftStore = create((set, get) => ({
       set({ currentShift: null });
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -43,7 +43,7 @@ const useGasShiftStore = create((set, get) => ({
       const { data } = await api.get("/api/gas/shifts", { params });
       set({ shifts: data.data || [] });
     } catch (e) {
-      set({ error: e.response?.data?.message || e.message });
+      set({ error: extractApiError(e) || e.message });
     } finally { set({ loading: false }); }
   },
 }));

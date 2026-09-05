@@ -5,7 +5,7 @@ import Avatar from "@/components/Avatar";
 import ImageUploadButton from "@/components/ImageUploadButton";
 import useImageStore from "@/store/useImageStore";
 import useAdminProfileStore from "@/store/useAdminProfileStore";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 import { getCurrentUser, getCurrentUserId } from "@/lib/currentUser";
 
 const MyProfileModal = ({ isOpen, onClose }) => {
@@ -123,7 +123,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
         type: "error",
         text:
           err?.response?.data?.error ||
-          err?.response?.data?.message ||
+          extractApiError(err) ||
           "Could not save your profile. Please try again.",
       });
     } finally {
@@ -185,7 +185,7 @@ const MyProfileModal = ({ isOpen, onClose }) => {
     } catch (err) {
       setPasswordError(
         err.response?.data?.error ||
-          err.response?.data?.message ||
+          extractApiError(err) ||
           "Failed to change password"
       );
     } finally {

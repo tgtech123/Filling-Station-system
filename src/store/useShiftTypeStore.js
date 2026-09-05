@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 /**
  * Shift types — built-ins + the station's manager-defined custom types.
@@ -58,7 +58,7 @@ const useShiftTypeStore = create((set, get) => ({
       await get().fetchTypes();
       return { success: true, data: data.data };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 
@@ -69,7 +69,7 @@ const useShiftTypeStore = create((set, get) => ({
       await (includeInactive ? get().fetchAllTypes() : get().fetchTypes());
       return { success: true };
     } catch (e) {
-      return { success: false, error: e.response?.data?.message || e.message };
+      return { success: false, error: extractApiError(e) || e.message };
     }
   },
 }));

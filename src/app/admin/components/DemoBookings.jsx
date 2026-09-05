@@ -12,7 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { api } from "@/lib/config";
+import { api, extractApiError } from "@/lib/config";
 
 const FILTERS = [
   { key: "all", label: "All" },
@@ -58,7 +58,7 @@ export default function DemoBookings() {
       const res = await api.get(`/api/demo/bookings`, { params: { status, page, limit: 20 } });
       setData(res.data);
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Could not load demo bookings");
+      toast.error(extractApiError(err) || "Could not load demo bookings");
     } finally {
       setLoading(false);
     }
@@ -79,7 +79,7 @@ export default function DemoBookings() {
       );
       load();
     } catch (err) {
-      toast.error(err?.response?.data?.message || "Could not update the booking");
+      toast.error(extractApiError(err) || "Could not update the booking");
     } finally {
       setSavingId(null);
     }
