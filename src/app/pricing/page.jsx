@@ -692,21 +692,28 @@ function ModalPayment({
 
         <p className="text-xs text-gray-400 mt-3 mb-4 text-center">{planNote}</p>
 
+        {/* The panel needs its own dark surface. globals.css recolours every
+            text-gray-* class to near-white under html.dark — with !important —
+            so a tinted-but-still-light background like bg-blue-50 leaves the
+            whole breakdown white on white. Darkening the box is what fixes it;
+            adding dark: text colours would not, since the global !important
+            wins. Each amount also carries an explicit colour now rather than
+            inheriting the body's, which is what made them the worst-hit lines. */}
         {payerEmail && payerName && (
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4">
+          <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 rounded-xl p-4 mb-4">
             <p className="text-sm font-bold text-gray-900 mb-3">Payment Breakdown</p>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">{plan.name}</span>
-                <span className="font-semibold">₦{planPrice.toLocaleString()}</span>
+                <span className="font-semibold text-gray-900">₦{planPrice.toLocaleString()}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Tax ({taxPercentLabel})</span>
-                <span className="font-semibold">₦{vat.toLocaleString()}</span>
+                <span className="font-semibold text-gray-900">₦{vat.toLocaleString()}</span>
               </div>
-              <div className="border-t border-blue-200 pt-2 flex justify-between">
+              <div className="border-t border-blue-200 dark:border-blue-900 pt-2 flex justify-between">
                 <span className="font-bold text-gray-900">Total <span className="font-medium text-gray-500">(VAT included)</span></span>
-                <span className="font-bold text-blue-600 text-base">₦{totalPrice.toLocaleString()}</span>
+                <span className="font-bold text-blue-600 dark:text-blue-300 text-base">₦{totalPrice.toLocaleString()}</span>
               </div>
             </div>
           </div>
