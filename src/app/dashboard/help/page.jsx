@@ -5,6 +5,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import usePaymentStore from "@/store/usePaymentStore";
 import useSupportStore from "@/store/useSupportStore";
 import usePlatformStore from "@/store/usePlatformStore";
+import UserManual from "@/components/UserManual";
 import toast from "react-hot-toast";
 
 const FAQ_PLANS    = ["pro", "pro-max", "enterprise", "enterprise-pro", "enterprise-max"];
@@ -532,6 +533,10 @@ export default function HelpPage() {
           {hasTickets ? "Browse FAQs, chat on WhatsApp, or submit a support ticket." : hasWhatsApp ? "Browse FAQs or chat with us on WhatsApp." : "Browse our FAQ to find answers to common questions."}
         </p>
       </div>
+
+      {/* The full manual, above the FAQs: an FAQ answers a question somebody
+          already knows how to ask, and a new station usually does not. */}
+      <UserManual />
 
       {/* WhatsApp banner + float toggle */}
       {hasWhatsApp && whatsappUrl && (

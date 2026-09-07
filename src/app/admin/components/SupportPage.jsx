@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Send, Trash2, Edit2, Plus, X, ChevronDown, ChevronUp, CheckCircle, Clock, AlertCircle, Eye } from "lucide-react";
 import useSupportStore from "@/store/useSupportStore";
+import UserManual from "@/components/UserManual";
 import toast from "react-hot-toast";
 
 const PRIORITY_BADGE = {
@@ -354,7 +355,7 @@ export default function SupportPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl w-fit">
-        {["tickets", "faqs"].map((tab) => (
+        {["tickets", "faqs", "manual"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -373,6 +374,12 @@ export default function SupportPage() {
           </button>
         ))}
       </div>
+
+      {/* ── User Manual Tab ───────────────────────────── */}
+      {/* The manual sits with support because that is where somebody already
+          is when a station asks how something works — and it is the copy that
+          gets printed for a client or read out on a demo. */}
+      {activeTab === "manual" && <UserManual />}
 
       {/* ── Tickets Tab ───────────────────────────────── */}
       {activeTab === "tickets" && (

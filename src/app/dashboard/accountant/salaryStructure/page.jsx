@@ -10,34 +10,25 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
 import { saveAs } from "file-saver";
+import { computePayrollEntry } from "./payrollMath";
+import AllowanceModal from "./AllowanceModal";
+import AllowanceSettingsModal from "./AllowanceSettingsModal";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (n) => `₦${Number(n || 0).toLocaleString()}`;
 const pct = (n) => `${Number(n || 0)}%`;
 
-const calcEntry = (e, pensionEnabled = true) => {
-  const basic = Number(e.basicSalary) || 0;
-  const ba = e.bonusAmounts || {};
-  const mst = Number(ba.monthlySalesTarget) || 0;
-  const zd  = Number(ba.zeroDiscrepancies)  || 0;
-  const tp  = Number(ba.topPerformer)       || 0;
-  const totalBonus      = mst + zd + tp;
-  const taxAmount       = Math.round(basic * (Number(e.taxPercentage) || 0) / 100);
-  const shortage        = Number(e.shortage) || 0;
-  const employeePension = pensionEnabled ? Math.round(basic * 0.08) : 0;
-  const employerPension = pensionEnabled ? Math.round(basic * 0.10) : 0;
-  return {
-    ...e,
-    bonusAmounts: { monthlySalesTarget: mst, zeroDiscrepancies: zd, topPerformer: tp },
-    totalBonus,
-    taxAmount,
-    employeePension,
-    employerPension,
-    shortage,
-    salaryToPay: Math.max(0, basic + totalBonus - taxAmount - employeePension - shortage),
-  };
-};
+/**
+ * One payroll line, recalculated locally so the table responds as the
+ * accountant types.
+ *
+ * The arithmetic lives in ./payrollMath, which mirrors the server's
+ * utils/payrollMath.ts. Pension is charged on basic + pensionable allowances —
+ * the Pension Reform Act's "monthly emolument" — not on basic alone.
+ */
+const calcEntry = (e, pensionEnabled = true, allowancesEnabled = false) =>
+  computePayrollEntry(e, { pensionEnabled, allowancesEnabled });
 
 const monthLabel = (m) => {
   const [y, mo] = m.split("-");
@@ -100,6 +91,11 @@ const buildRows = (entries) =>
     "Name":               `${e.firstName} ${e.lastName}`,
     "Role":               e.role,
     "Basic Salary":       e.basicSalary,
+    // Named lines so the export doubles as the PFA remittance schedule —
+    // a PenCom schedule has to show the emolument the 8%/10% was struck on.
+    "Total Allowances":   e.totalAllowances ?? 0,
+    "Pensionable Allowances": Math.max(0, (e.pensionableEarnings || 0) - (e.basicSalary || 0)),
+    "Pensionable Earnings":   e.pensionableEarnings ?? e.basicSalary ?? 0,
     "Shift":              e.shiftType || "-",
     "Pay Type":           e.payType || "Monthly",
     "Monthly Sales ₦":   e.bonusAmounts?.monthlySalesTarget ?? 0,
@@ -132,7 +128,7 @@ const exportPDF = (entries, month) => {
   autoTable(doc, {
     startY: 28,
     head: [[
-      "Staff ID","Name","Role","Basic","Shift","Pay Type",
+      "Staff ID","Name","Role","Basic","Allowances","Pensionable Earnings","Shift","Pay Type",
       "Monthly Sales ₦","Zero Disc. ₦","Top Performer ₦",
       "Tax%","Tax₦",
       "Employee Pension (8%)","Employer Pension (10%)",
@@ -144,6 +140,8 @@ const exportPDF = (entries, month) => {
       `${e.firstName} ${e.lastName}`,
       e.role,
       fmt(e.basicSalary),
+      fmt(e.totalAllowances),
+      fmt(e.pensionableEarnings ?? e.basicSalary),
       e.shiftType || "-",
       e.payType || "Monthly",
       fmt(e.bonusAmounts?.monthlySalesTarget),
@@ -170,7 +168,10 @@ const exportPDF = (entries, month) => {
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function SalaryStructurePage() {
   const router = useRouter();
-  const { draft, loading, error, fetchDraft, saveDraft, submitDraft } = useSalaryStore();
+  const {
+    draft, loading, error, fetchDraft, saveDraft, submitDraft,
+    allowanceTypes, fetchAllowanceSettings,
+  } = useSalaryStore();
   const [month, setMonth] = useState(currentMonth());
   const [localEntries, setLocalEntries] = useState([]);
   const [search, setSearch] = useState("");
@@ -185,6 +186,15 @@ export default function SalaryStructurePage() {
     return saved === null ? true : saved === "true";
   });
 
+  // Whether this station runs allowances at all. Server-owned — the draft
+  // carries the value it was prepared under, so an old month keeps showing the
+  // rules that actually applied to it.
+  const allowancesEnabled = draft?.allowancesEnabled === true;
+
+  // Which staff member's allowances are open for editing.
+  const [allowanceTarget, setAllowanceTarget] = useState(null);
+  const [showAllowanceSettings, setShowAllowanceSettings] = useState(false);
+
   const showToast = useCallback((msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
@@ -193,13 +203,18 @@ export default function SalaryStructurePage() {
   // Persist pension toggle
   useEffect(() => {
     localStorage.setItem("salaryPensionEnabled", String(pensionEnabled));
-    setLocalEntries((prev) => prev.map((e) => calcEntry(e, pensionEnabled)));
-  }, [pensionEnabled]);
+    setLocalEntries((prev) => prev.map((e) => calcEntry(e, pensionEnabled, allowancesEnabled)));
+  }, [pensionEnabled, allowancesEnabled]);
 
   // Load draft whenever month changes
   useEffect(() => {
     fetchDraft(month).catch(() => {});
   }, [month]);
+
+  // The allowance catalogue — needed to label and edit the figures.
+  useEffect(() => {
+    fetchAllowanceSettings?.();
+  }, [fetchAllowanceSettings]);
 
   // Sync localEntries from store — also restore pensionEnabled from the draft
   useEffect(() => {
@@ -209,7 +224,11 @@ export default function SalaryStructurePage() {
         setPensionEnabled(draft.pensionEnabled);
         localStorage.setItem("salaryPensionEnabled", String(draft.pensionEnabled));
       }
-      setLocalEntries(draft.entries.map((e) => calcEntry(e, draft.pensionEnabled ?? pensionEnabled)));
+      setLocalEntries(
+        draft.entries.map((e) =>
+          calcEntry(e, draft.pensionEnabled ?? pensionEnabled, draft.allowancesEnabled === true)
+        )
+      );
       setDirty(false);
     }
   }, [draft?._id, draft?.status]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -232,11 +251,11 @@ export default function SalaryStructurePage() {
         entry[field] = value;
       }
 
-      next[idx] = calcEntry(entry, pensionEnabled);
+      next[idx] = calcEntry(entry, pensionEnabled, allowancesEnabled);
       return next;
     });
     setDirty(true);
-  }, [pensionEnabled]);
+  }, [pensionEnabled, allowancesEnabled]);
 
   // Unique roles for filter dropdown
   const roles = useMemo(
@@ -408,7 +427,25 @@ export default function SalaryStructurePage() {
             }`}>
               {pensionEnabled ? "Enabled — 8% employee / 10% employer" : "Disabled — ₦0 recorded"}
             </span>
+            {pensionEnabled && (
+              <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {allowancesEnabled
+                  ? "Charged on monthly emolument — basic plus pensionable allowances."
+                  : "Charged on basic salary only. If you pay housing or transport allowances, the law requires them in the base."}
+              </span>
+            )}
           </div>
+
+          {/* Allowances are the other half of the pension base, so the way in
+              sits beside the pension switch rather than in a settings page
+              nobody visits while preparing payroll. */}
+          <button
+            type="button"
+            onClick={() => setShowAllowanceSettings(true)}
+            className="ml-auto shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg border-2 border-amber-400 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+          >
+            {allowancesEnabled ? "Allowance settings" : "Set up allowances"}
+          </button>
         </div>
 
         {/* Action buttons */}
@@ -521,7 +558,7 @@ export default function SalaryStructurePage() {
             <thead>
               {/* Group headers */}
               <tr className="bg-gray-700 dark:bg-gray-900 text-white text-xs">
-                <th colSpan={6} className="px-3 py-2 text-left border-r border-gray-600">Staff Info</th>
+                <th colSpan={allowancesEnabled ? 7 : 6} className="px-3 py-2 text-left border-r border-gray-600">Staff Info</th>
                 <th colSpan={3} className="px-3 py-2 text-center border-r border-gray-600">Bonuses</th>
                 <th colSpan={2} className="px-3 py-2 text-center border-r border-gray-600">PAYE Tax</th>
                 <th colSpan={2} className="px-3 py-2 text-center border-r border-gray-600 bg-indigo-700">Pension (PenCom)</th>
@@ -533,6 +570,11 @@ export default function SalaryStructurePage() {
                 <th className="px-3 py-3 text-left font-semibold whitespace-nowrap min-w-[130px]">Name</th>
                 <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Role</th>
                 <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Basic Salary</th>
+                {allowancesEnabled && (
+                  <th className="px-3 py-3 text-center font-semibold whitespace-nowrap bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300">
+                    Allowances<br/><span className="font-normal text-[10px]">of which pensionable</span>
+                  </th>
+                )}
                 <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Shift</th>
                 <th className="px-3 py-3 text-left font-semibold whitespace-nowrap border-r border-gray-200 dark:border-gray-600">Pay Type</th>
                 {/* Bonuses */}
@@ -544,10 +586,16 @@ export default function SalaryStructurePage() {
                 <th className="px-3 py-3 text-center font-semibold whitespace-nowrap border-r border-gray-200 dark:border-gray-600">Tax ₦</th>
                 {/* Pension */}
                 <th className="px-3 py-3 text-center font-semibold whitespace-nowrap bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
-                  Employee<br/><span className="font-normal text-[10px]">8% of basic</span>
+                  Employee<br/>
+                  <span className="font-normal text-[10px]">
+                    8% of {allowancesEnabled ? "emolument" : "basic"}
+                  </span>
                 </th>
                 <th className="px-3 py-3 text-center font-semibold whitespace-nowrap border-r border-gray-200 dark:border-gray-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
-                  Employer<br/><span className="font-normal text-[10px]">10% of basic</span>
+                  Employer<br/>
+                  <span className="font-normal text-[10px]">
+                    10% of {allowancesEnabled ? "emolument" : "basic"}
+                  </span>
                 </th>
                 {/* Deductions + Net Pay */}
                 <th className="px-3 py-3 text-center font-semibold whitespace-nowrap">Shortage ₦</th>
@@ -561,7 +609,7 @@ export default function SalaryStructurePage() {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={18} className="text-center py-12 text-gray-400 dark:text-gray-500">
+                  <td colSpan={allowancesEnabled ? 19 : 18} className="text-center py-12 text-gray-400 dark:text-gray-500">
                     {loading.draft ? "Loading…" : "No staff found"}
                   </td>
                 </tr>
@@ -590,6 +638,32 @@ export default function SalaryStructurePage() {
                       <td className="px-3 py-3 font-semibold text-gray-800 dark:text-gray-200 whitespace-nowrap">
                         {fmt(entry.basicSalary)}
                       </td>
+                      {allowancesEnabled && (
+                        <td className="px-3 py-2 text-center whitespace-nowrap bg-amber-50/40 dark:bg-amber-900/10">
+                          {/* Click to set the figures. Read-only manager rows
+                              stay read-only here too — a manager's pay is the
+                              owner's, allowances included, and the server
+                              refuses the write regardless. */}
+                          <button
+                            type="button"
+                            disabled={!isEditable || entry.readOnly}
+                            onClick={() => setAllowanceTarget(entry)}
+                            className="disabled:cursor-not-allowed disabled:opacity-60 group"
+                            title={
+                              entry.readOnly
+                                ? "A manager's allowances are set by the station owner"
+                                : "Set this staff member's allowances"
+                            }
+                          >
+                            <span className="block font-semibold text-gray-800 dark:text-gray-200 group-hover:text-amber-700 dark:group-hover:text-amber-300">
+                              {fmt(entry.totalAllowances)}
+                            </span>
+                            <span className="block text-[10px] text-gray-500 dark:text-gray-400">
+                              {fmt(Math.max(0, (entry.pensionableEarnings || 0) - (entry.basicSalary || 0)))} pensionable
+                            </span>
+                          </button>
+                        </td>
+                      )}
                       <td className="px-3 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
                         {entry.shiftType || "—"}
                       </td>
@@ -735,6 +809,11 @@ export default function SalaryStructurePage() {
                   <td className="px-3 py-3 whitespace-nowrap">
                     {fmt(filtered.reduce((s, e) => s + (e.basicSalary || 0), 0))}
                   </td>
+                  {allowancesEnabled && (
+                    <td className="px-3 py-3 text-center text-amber-300 whitespace-nowrap bg-amber-900/20">
+                      {fmt(filtered.reduce((s, e) => s + (e.totalAllowances || 0), 0))}
+                    </td>
+                  )}
                   <td />{/* Shift */}
                   <td className="border-r border-gray-600" />{/* Pay Type */}
                   <td className="px-3 py-3 text-center text-green-300 whitespace-nowrap">
@@ -775,13 +854,52 @@ export default function SalaryStructurePage() {
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-100 dark:border-blue-800">
         <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-2">Calculation Formula</p>
         <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
-          <strong>Tax (PAYE)</strong> is calculated on Basic Salary (before bonuses). &nbsp;
+          <strong>Tax (PAYE)</strong> is calculated on Basic Salary{allowancesEnabled ? " + Allowances" : ""} (before bonuses). &nbsp;
           <strong>Pension</strong> is optional — use the toggle above to enable or disable it for your company.
-          When enabled: Employee = 8% of Basic (deducted from staff pay, remitted to PenCom); Employer = 10% of Basic (business cost). &nbsp;
-          <strong>Salary to Pay</strong> = Basic + Bonuses − Tax − Employee Pension − Shortage. &nbsp;
+          When enabled: Employee = 8% (deducted from staff pay, remitted to PenCom); Employer = 10% (business cost). &nbsp;
+          {allowancesEnabled ? (
+            <>
+              Both are charged on <strong>monthly emolument</strong> = Basic + pensionable allowances.
+              The Pension Reform Act 2014 requires housing and transport to be included, which is why
+              they cannot be switched off. &nbsp;
+              <strong>Salary to Pay</strong> = Basic + Allowances + Bonuses − Tax − Employee Pension − Shortage. &nbsp;
+            </>
+          ) : (
+            <>
+              Both are charged on Basic only, because allowances are switched off for this station.
+              If you pay housing or transport allowances, the Pension Reform Act 2014 requires them
+              in the pension base — switch allowances on in payroll settings. &nbsp;
+              <strong>Salary to Pay</strong> = Basic + Bonuses − Tax − Employee Pension − Shortage. &nbsp;
+            </>
+          )}
           MST = Monthly Sales Target &nbsp;|&nbsp; ZD = Zero Discrepancies &nbsp;|&nbsp; TP = Top Performer
         </p>
       </div>
+
+      {showAllowanceSettings && (
+        <AllowanceSettingsModal
+          onClose={() => setShowAllowanceSettings(false)}
+          onSaved={() => {
+            // The master switch changes how every row is computed, so the
+            // draft has to come back from the server rather than be patched.
+            fetchDraft(month).catch(() => {});
+            showToast("Allowance settings saved.");
+          }}
+        />
+      )}
+
+      {allowanceTarget && (
+        <AllowanceModal
+          entry={allowanceTarget}
+          onClose={() => setAllowanceTarget(null)}
+          onSaved={() => {
+            // Allowances live on the staff record, so the draft has to be
+            // re-read for the row to pick the new figures up.
+            fetchDraft(month).catch(() => {});
+            showToast("Allowances saved — pension base updated.");
+          }}
+        />
+      )}
     </div>
   );
 }

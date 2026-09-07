@@ -9,6 +9,9 @@ const useSalaryStore = create((set, get) => ({
   pendingDrafts: [],
   history: [],
   historyDetail: null,
+  /** { enabled, types: [...], statutoryKeys } — the station's allowance catalogue. */
+  allowanceSettings: null,
+  allowanceTypes: [],
 
   loading: {
     draft: false,
@@ -18,6 +21,7 @@ const useSalaryStore = create((set, get) => ({
     validating: false,
     history: false,
     detail: false,
+    allowances: false,
   },
 
   error: null,
@@ -36,13 +40,70 @@ const useSalaryStore = create((set, get) => ({
     set({ error: null });
     try {
       const res = await api.get(`${ENDPOINT}/draft`, { params: { month } });
-      set({ draft: res.data.data });
+      // The draft ships with the station's allowance catalogue so the payroll
+      // screen can label and edit allowances without a second round trip.
+      set({
+        draft: res.data.data,
+        ...(res.data.allowanceTypes && { allowanceTypes: res.data.allowanceTypes }),
+      });
       return res.data.data;
     } catch (err) {
       set({ error: extractApiError(err) || "Failed to load draft" });
       throw err;
     } finally {
       setLoading("draft", false);
+    }
+  },
+
+  // ── Allowances ────────────────────────────────────────────────────────────
+  // The station's catalogue: which allowances it pays, and which of them count
+  // toward the pension base.
+  fetchAllowanceSettings: async () => {
+    try {
+      const res = await api.get(`${ENDPOINT}/allowances/settings`);
+      set({
+        allowanceSettings: res.data.data,
+        allowanceTypes: res.data.data?.types ?? [],
+      });
+      return res.data.data;
+    } catch (err) {
+      set({ error: extractApiError(err) || "Failed to load allowance settings" });
+      return null;
+    }
+  },
+
+  updateAllowanceSettings: async (payload) => {
+    const { setLoading } = get();
+    setLoading("allowances", true);
+    set({ error: null });
+    try {
+      const res = await api.put(`${ENDPOINT}/allowances/settings`, payload);
+      set({
+        allowanceSettings: res.data.data,
+        allowanceTypes: res.data.data?.types ?? [],
+      });
+      return res.data.data;
+    } catch (err) {
+      set({ error: extractApiError(err) || "Failed to save allowance settings" });
+      throw err;
+    } finally {
+      setLoading("allowances", false);
+    }
+  },
+
+  /** What one staff member is paid under each allowance. */
+  saveStaffAllowances: async (staffId, allowances) => {
+    const { setLoading } = get();
+    setLoading("allowances", true);
+    set({ error: null });
+    try {
+      const res = await api.put(`${ENDPOINT}/staff/${staffId}/allowances`, { allowances });
+      return res.data;
+    } catch (err) {
+      set({ error: extractApiError(err) || "Failed to save allowances" });
+      throw err;
+    } finally {
+      setLoading("allowances", false);
     }
   },
 
