@@ -222,20 +222,46 @@ const LubSales = () => {
   });
 
   /**
-   * Where a product already sits on the bill, or -1.
+   * One unit name, normalised.
    *
-   * Matching is by product id, so the same item scanned from its bottle and
-   * from its carton barcode still counts as one line.
+   * "" and the base unit name are the SAME unit — a fresh row, a cleared row
+   * and the customer-display mapping all store the base unit as an empty
+   * string. Comparing raw strings would make "" and "piece" look different,
+   * which would quietly stop the duplicate guard below catching double-scans
+   * at all: the exact bug it exists to prevent, reintroduced in silence.
    */
-  const findExistingLine = (list, productId, skipIndex = -1) =>
+  const unitKey = (unitName, baseUnit) =>
+    String(unitName || baseUnit || "piece").trim().toLowerCase();
+
+  const unitKeyOfRow = (row) => unitKey(row?.unitName, row?.baseUnit);
+
+  /**
+   * Where this product, sold in THIS unit, already sits on the bill — or -1.
+   *
+   * A bill line is identified by what it sells and how it is sold. Two packs
+   * and three loose pieces of the same drink are two different things to sell,
+   * and a customer may buy both at once, so they are two lines. The same
+   * product twice in the same unit is still one line — that is the mis-scan
+   * this guard is for.
+   */
+  const findExistingLine = (list, productId, forUnitKey, skipIndex = -1) =>
     list.findIndex(
-      (r, i) => i !== skipIndex && r.lubricantId && String(r.lubricantId) === String(productId)
+      (r, i) =>
+        i !== skipIndex &&
+        r.lubricantId &&
+        String(r.lubricantId) === String(productId) &&
+        unitKeyOfRow(r) === forUnitKey
     );
 
   const flagDuplicate = (list, at, productName, code = "") => {
+    const line = list[at] || {};
+    // Name the unit. "Already on line 1" is ambiguous now that one product can
+    // legitimately occupy two lines in two different units.
+    const unitLabel =
+      line.unitName && line.unitName !== line.baseUnit ? ` (${line.unitName})` : "";
     pendingScanErrorRef.current = {
       code: "ALREADY_ON_BILL",
-      message: `${productName} is already on line ${at + 1} (quantity ${list[at].quantity}). Increase the quantity on that line instead of adding it again.`,
+      message: `${productName}${unitLabel} is already on line ${at + 1} (quantity ${line.quantity}). Increase the quantity on that line, or sell it in a different unit to add it separately.`,
       barcode: code,
       duplicateLine: at,
     };
@@ -414,7 +440,9 @@ const LubSales = () => {
      * no guard, which is why a re-selected item still doubled up even after the
      * scanner learned not to.
      */
-    const already = findExistingLine(rows, product._id);
+    // The row this pick is about to create is a base-unit row (below), so the
+    // bill is checked for this product in its base unit — not in every unit.
+    const already = findExistingLine(rows, product._id, unitKey(null, product.baseUnit));
     if (already !== -1) {
       // A click is never faster than a render, so this one can report straight
       // to state — no updater to squeeze the test into.
@@ -523,15 +551,18 @@ const LubSales = () => {
     /**
      * Already on the bill?
      *
-     * Scanning the same product twice almost always means the cashier lost
-     * track — two bottles beeped, or one beep they did not hear. Silently
-     * adding a second line is the worst answer: the receipt shows it twice, the
-     * customer queries it, and the cashier has to work out which line to delete
-     * with a queue waiting.
+     * Scanning the same product in the same unit twice almost always means the
+     * cashier lost track — two bottles beeped, or one beep they did not hear.
+     * Silently adding a second line is the worst answer: the receipt shows it
+     * twice, the customer queries it, and the cashier has to work out which
+     * line to delete with a queue waiting.
      *
      * So: refuse, say exactly where it already is, and offer to bump that
      * line's quantity. Auto-incrementing on its own is the tempting option, but
      * then a double-beep silently charges for two and nobody ever sees it.
+     *
+     * A different UNIT is a different sale and gets its own line: two packs
+     * plus three loose pieces is one legitimate basket, not a mis-scan.
      */
     const applyScannedItem = (item) => {
       // A scanned code can be the product's own barcode or one printed on its
@@ -553,7 +584,15 @@ const LubSales = () => {
        * pays for. Deriving from `prev` makes every scan land, at any speed.
        */
       setRows((prev) => {
-        const duplicateAt = findExistingLine(prev, item._id, index);
+        // The unit this scan will land as — a carton's own barcode selects the
+        // carton, anything else is the base unit. Resolved above, before the
+        // updater, so it costs nothing to check here.
+        const duplicateAt = findExistingLine(
+          prev,
+          item._id,
+          unitKey(scannedUnit?.name, item.baseUnit),
+          index
+        );
         if (duplicateAt !== -1) {
           flagDuplicate(prev, duplicateAt, item.productName, code);
           // Clear the code just scanned so this line stays ready for the NEXT
