@@ -23,6 +23,8 @@ import {
   Network,
   Plus,
   BarChart2,
+  Truck,
+  FileText,
   Package,
   Banknote,
   TrendingDown,
@@ -502,6 +504,37 @@ export default function Sidebar({ isVisible, toggleSidebar }) {
       icon: <Boxes size={20} />,
       roles: ["accountant", "manager"],
       link: "/dashboard/openingStock",
+    },
+    {
+      // What sold and what was made on it, over any window. Sits beside opening
+      // stock deliberately: the two read the same movement walk, one answering
+      // "what am I holding" and this one "what is earning". Every line states
+      // cost and margin, which is why the forecourt roles are not on it.
+      // What is owed to each supplier and what has fallen due. Sits with the
+      // other finance reads: it states the station's debts and its ageing, which a
+      // cashier populating a supplier dropdown has no call on.
+      id: "suppliers-payables",
+      name: "Suppliers",
+      icon: <Truck size={20} />,
+      roles: ["accountant", "manager"],
+      link: "/dashboard/suppliers",
+    },
+    {
+      // The flat register: every supplier invoice, paid and unpaid, looked up
+      // by number or supplier and exported for an auditor or a bank. Separate
+      // from the grouped Suppliers view, which is for chasing what is owed.
+      id: "supplier-invoice-log",
+      name: "Supplier Invoices",
+      icon: <FileText size={20} />,
+      roles: ["accountant", "manager"],
+      link: "/dashboard/suppliers/log",
+    },
+    {
+      id: "sales-analysis",
+      name: "Sales Analysis",
+      icon: <BarChart2 size={20} />,
+      roles: ["accountant", "manager"],
+      link: "/dashboard/salesAnalysis",
     },
     {
       id: "fixed-assets",

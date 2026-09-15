@@ -47,6 +47,12 @@ export default function PayablesPage() {
   const [reverseReason, setReverseReason] = useState('');
   const [invForm, setInvForm] = useState(EMPTY_INV);
   const [batchForm, setBatchForm] = useState({ payDate: new Date().toISOString().split('T')[0], method: 'EFT', bankAccountId: '', invoiceIds: [] });
+  /**
+   * Part amounts, keyed by invoice id, only for invoices not being settled in
+   * full. Empty is the normal case and means "pay it off" — so the common path
+   * is still tick and submit, with nothing to type.
+   */
+  const [payAmounts, setPayAmounts] = useState({});
   const [cnForm, setCnForm] = useState(EMPTY_CN);
   const [saving, setSaving] = useState(false);
 
@@ -130,12 +136,40 @@ export default function PayablesPage() {
   async function createBatch(e) {
     e.preventDefault();
     if (!batchForm.invoiceIds.length) return toast.error('Select at least one invoice');
+
+    /**
+     * An invoice being settled in full goes as a plain id — exactly what this
+     * form has always sent. Only a genuine part payment carries an amount, so
+     * a full batch is byte-for-byte the request it was before.
+     */
+    const lines = [];
+    for (const id of batchForm.invoiceIds) {
+      const raw = payAmounts[id];
+      const inv = payable.find((i) => i._id === id);
+      const balance = inv ? openBalance(inv) : 0;
+
+      if (raw === undefined || raw === '') { lines.push(id); continue; }
+
+      const amount = Number(raw);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        return toast.error(`${inv?.internalRef || 'An invoice'}: enter a payment amount greater than zero`);
+      }
+      if (amount > balance + 0.01) {
+        return toast.error(`${inv?.internalRef || 'An invoice'}: ₦${fmt(amount)} is more than the ₦${fmt(balance)} still owing`);
+      }
+      // Typed the whole balance — that is a full settlement, not an instalment.
+      if (amount >= balance - 0.01) { lines.push(id); continue; }
+
+      lines.push({ invoiceId: id, amount });
+    }
+
     setSaving(true);
     try {
-      const res = await api.post('/api/accounting/ap/batches', batchForm);
+      const res = await api.post('/api/accounting/ap/batches', { ...batchForm, invoiceIds: lines });
       toast.success(res.data.message);
       setShowBatchModal(false);
       setBatchForm({ payDate: new Date().toISOString().split('T')[0], method: 'EFT', bankAccountId: '', invoiceIds: [] });
+      setPayAmounts({});
       load();
       setTab('batches');
     } catch (e2) {
@@ -577,23 +611,66 @@ export default function PayablesPage() {
 
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select invoices to pay</p>
               <div className="border border-gray-100 dark:border-gray-800 rounded-lg divide-y divide-gray-50 dark:divide-gray-800 max-h-64 overflow-y-auto mb-3">
-                {payable.map((inv) => (
-                  <label key={inv._id} className="flex items-center gap-3 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <input
-                      type="checkbox"
-                      checked={batchForm.invoiceIds.includes(inv._id)}
-                      onChange={(e) => setBatchForm({
-                        ...batchForm,
-                        invoiceIds: e.target.checked
-                          ? [...batchForm.invoiceIds, inv._id]
-                          : batchForm.invoiceIds.filter((id) => id !== inv._id),
-                      })}
-                    />
-                    <span className="font-mono text-xs">{inv.internalRef}</span>
-                    <span className="flex-1">{inv.supplierName}</span>
-                    <span className="font-mono text-xs">₦{fmt(openBalance(inv))}</span>
-                  </label>
-                ))}
+                {payable.map((inv) => {
+                  const checked = batchForm.invoiceIds.includes(inv._id);
+                  const balance = openBalance(inv);
+                  const typed = payAmounts[inv._id];
+                  const part = typed !== undefined && typed !== '' && Number(typed) < balance - 0.01;
+                  return (
+                    <div key={inv._id} className="px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            setBatchForm({
+                              ...batchForm,
+                              invoiceIds: e.target.checked
+                                ? [...batchForm.invoiceIds, inv._id]
+                                : batchForm.invoiceIds.filter((id) => id !== inv._id),
+                            });
+                            // Unticking clears any amount typed against it, so a
+                            // re-tick never silently reuses a stale figure.
+                            if (!e.target.checked) {
+                              setPayAmounts((p) => { const n = { ...p }; delete n[inv._id]; return n; });
+                            }
+                          }}
+                        />
+                        <span className="font-mono text-xs">{inv.internalRef}</span>
+                        <span className="flex-1">{inv.supplierName}</span>
+                        {inv.status === 'partially_paid' && (
+                          <span className="text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                            part paid
+                          </span>
+                        )}
+                        <span className="font-mono text-xs">₦{fmt(balance)}</span>
+                      </label>
+
+                      {/* Only once ticked, and empty by default: the whole
+                          balance is what gets paid unless somebody says otherwise. */}
+                      {checked && (
+                        <div className="flex items-center gap-2 mt-1.5 ml-7">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Pay now</span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max={balance}
+                            value={typed ?? ''}
+                            placeholder={`${fmt(balance)} (full)`}
+                            onChange={(ev) => setPayAmounts((p) => ({ ...p, [inv._id]: ev.target.value }))}
+                            className="w-40 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 rounded px-2 py-1 text-xs font-mono"
+                          />
+                          {part && (
+                            <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                              leaves ₦{fmt(balance - Number(typed))} owing
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="flex justify-end gap-2">

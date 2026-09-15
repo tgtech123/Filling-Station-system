@@ -11,6 +11,8 @@ const authHeaders = () => {
 
 const useProcurementStore = create((set, get) => ({
   reorderItems: [],
+  // Set only when the list was narrowed to a supplier; null otherwise.
+  reorderMeta: null,
   procurements: [],
   activeProcurement: null,
   loading: false,
@@ -24,16 +26,34 @@ const useProcurementStore = create((set, get) => ({
    * raising an order needs the list already filtered — asking them to pick the
    * right lines out of one mixed list is the step that goes wrong.
    */
-  fetchReorderItems: async (orderType = "") => {
+  /**
+   * The products a purchase order can be built from.
+   *
+   * With no supplier this is the whole inventory for the order type, as it has
+   * always been. Pass a supplierId and the server narrows it to what that
+   * supplier has actually invoiced before AND is at or below its reorder level
+   * — the list somebody would otherwise assemble by hand from the invoice file.
+   *
+   * `reorderMeta` carries the counts behind an empty result, because "nothing
+   * needs ordering" and "this supplier has never supplied anything" look the
+   * same on screen and mean opposite things.
+   */
+  fetchReorderItems: async (orderType = "", supplierId = "") => {
     set({ reorderLoading: true, error: null });
     try {
-      const url = orderType
-        ? `${API_URL}/api/procurement/reorder-items?orderType=${orderType}`
-        : `${API_URL}/api/procurement/reorder-items`;
+      const params = new URLSearchParams();
+      if (orderType) params.set("orderType", orderType);
+      if (supplierId) params.set("supplierId", supplierId);
+      const qs = params.toString();
+      const url = `${API_URL}/api/procurement/reorder-items${qs ? `?${qs}` : ""}`;
       const res = await fetch(url, { headers: authHeaders() });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to fetch reorder items");
-      set({ reorderItems: data.data || [], reorderLoading: false });
+      set({
+        reorderItems: data.data || [],
+        reorderMeta: data.meta || null,
+        reorderLoading: false,
+      });
     } catch (err) {
       set({ error: err.message, reorderLoading: false });
     }
