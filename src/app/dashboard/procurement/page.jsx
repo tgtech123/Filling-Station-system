@@ -1032,6 +1032,12 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
               const handlePayment = async () => {
                 const amt = parseFloat(paymentAmount);
                 if (isNaN(amt) || amt < 0) { toast.error("Enter a valid amount"); return; }
+                // Overpaying an order is a typo, not a decision. The server
+                // refuses it too; catching it here saves the round trip.
+                if (totalCost > 0 && amt > balance + 0.01) {
+                  toast.error(`₦${amt.toLocaleString("en-NG")} is more than the ₦${balance.toLocaleString("en-NG")} still owing`);
+                  return;
+                }
                 setPaymentSaving(true);
                 const result = await recordPayment(order._id, { amountPaid: amt, paymentNotes });
                 setPaymentSaving(false);
@@ -1087,6 +1093,33 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
                   </div>
 
                   {/* Record / update payment */}
+                  {/* How the running total was arrived at. Without this a
+                      mistyped instalment cannot be told from a real one. */}
+                  {(order.payments || []).length > 0 && (
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-3.5 mb-2.5">
+                      <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                        Payments recorded ({order.payments.length})
+                      </p>
+                      <div className="space-y-1.5">
+                        {order.payments.map((p, i) => (
+                          <div key={p._id || i} className="flex items-baseline justify-between gap-3 text-xs">
+                            <span className="text-gray-500 dark:text-gray-400">
+                              {new Date(p.paidAt).toLocaleString("en-NG", {
+                                day: "numeric", month: "short", year: "numeric",
+                                hour: "2-digit", minute: "2-digit",
+                              })}
+                              {p.recordedByName ? ` · ${p.recordedByName}` : ""}
+                              {p.notes ? ` · ${p.notes}` : ""}
+                            </span>
+                            <span className="font-mono font-semibold text-gray-900 dark:text-gray-100 shrink-0">
+                              ₦{Number(p.amount || 0).toLocaleString("en-NG")}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {pStatus !== "paid" && (
                     <div className="bg-blue-50/60 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-xl p-3.5 space-y-2.5">
                       <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
@@ -1094,7 +1127,13 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
                       </p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <div>
-                          <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">Amount Paid (₦)</label>
+                          {/* This instalment — the server adds it to whatever
+                              has already been paid. The label has to say so:
+                              "Amount Paid" beside a running total reads as the
+                              total, and that is how the wrong figure gets typed. */}
+                          <label className="text-xs text-gray-500 dark:text-gray-400 block mb-1">
+                            Pay now (₦){paid > 0 ? ` — ₦${paid.toLocaleString("en-NG")} already paid` : ""}
+                          </label>
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 pointer-events-none">₦</span>
                             <input
@@ -1103,7 +1142,8 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
                               step={0.01}
                               value={paymentAmount}
                               onChange={(e) => setPaymentAmount(e.target.value)}
-                              placeholder={totalCost > 0 ? totalCost.toLocaleString("en-NG") : "0.00"}
+                              max={balance || undefined}
+                              placeholder={balance > 0 ? balance.toLocaleString("en-NG") : "0.00"}
                               className="w-full pl-7 pr-3 border border-gray-300 dark:border-gray-600 rounded-xl py-2.5 text-sm outline-none focus:border-blue-500 dark:bg-gray-800 dark:text-white font-bold"
                             />
                           </div>
@@ -1428,7 +1468,7 @@ function OrderDetailModal({ order: initialOrder, onClose, onUpdate, role }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ProcurementPage() {
   const {
-    reorderItems, procurements, reorderLoading, loading,
+    reorderItems, reorderMeta, procurements, reorderLoading, loading,
     fetchReorderItems, fetchProcurements,
     createProcurement, submitProcurement, deleteProcurement,
   } = useProcurementStore();
@@ -1450,6 +1490,15 @@ export default function ProcurementPage() {
   const [paymentFilter,   setPaymentFilter]   = useState("all");
   const [userData,        setUserData]        = useState(null);
   const [showRegister,    setShowRegister]    = useState(false);
+  /**
+   * Shown only when a supplier's own list comes back empty.
+   *
+   * The daily path is unchanged — pick the supplier, see their items, type
+   * quantities. This appears in the one case that path cannot serve: a supplier
+   * with no invoice history yet, where the alternative is being unable to raise
+   * an order at all.
+   */
+  const [showAllAtReorder, setShowAllAtReorder] = useState(false);
 
   /**
    * Lubricants and store stock are bought from different suppliers, so the whole
@@ -1471,17 +1520,40 @@ export default function ProcurementPage() {
   }, []);
 
   useEffect(() => {
-    fetchReorderItems(orderType);
     fetchProcurements("", orderType);
     fetchSuppliers(orderType);
+    // Suppliers are registered per order type, so a vendor chosen for oils must
+    // not stay selected while the screen switches to shop stock — it would
+    // filter the item list by a supplier who sells none of it.
+    setVendorId(""); setVendorName(""); setVendorPhone(""); setVendorEmail("");
   }, [orderType]);
+
+  /**
+   * The item list follows the supplier.
+   *
+   * With no supplier chosen this is the full inventory, as before. Once one is
+   * chosen the server returns only what that supplier has invoiced before AND
+   * is at or below its reorder level — which is the list whoever raises the
+   * order would otherwise build by hand from the invoice file.
+   */
+  useEffect(() => {
+    fetchReorderItems(orderType, vendorId);
+    setShowAllAtReorder(false);
+  }, [orderType, vendorId]);
 
   const procuredBy     = userData ? `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "Manager" : "Manager";
   const stationLogo    = userData?.station?.logoUrl || userData?.station?.logo || userData?.station?.image || "";
   const stationName    = userData?.station?.name || "";
   const stationAddress = userData?.station?.address || "";
 
-  const filteredItems = urgencyFilter === "all" ? reorderItems : reorderItems.filter((i) => i.urgency === urgencyFilter);
+  // Narrowed to a supplier only when one is chosen AND the server answered
+  // with the supplier metadata; otherwise this is the plain inventory list.
+  const supplierScoped = !!vendorId && !!reorderMeta;
+  const baseItems =
+    supplierScoped && showAllAtReorder ? reorderMeta.allAtReorder || [] : reorderItems;
+
+  const filteredItems =
+    urgencyFilter === "all" ? baseItems : baseItems.filter((i) => i.urgency === urgencyFilter);
 
   const needsAttentionCount = useMemo(
     () => reorderItems.filter((i) => i.urgency !== "healthy").length,
@@ -1515,8 +1587,14 @@ export default function ProcurementPage() {
         brand:             item.brand || "",
         currentStock:      item.qtyInStock ?? 0,
         reOrderLevel:      item.reOrderLevel ?? 0,
-        quantityToProcure: Math.max(1, (item.reOrderLevel ?? 0) - (item.qtyInStock ?? 0)),
-        unitCost:          item.unitCost ?? 0,
+        // What this supplier last delivered, when we know it: their pack sizes
+        // and their last price beat a standing figure the product happens to
+        // carry. Both are starting points — the quantity box is still typed in.
+        quantityToProcure: Math.max(
+          1,
+          item.suggestedQty ?? (item.reOrderLevel ?? 0) - (item.qtyInStock ?? 0)
+        ),
+        unitCost:          item.lastUnitCost || item.unitCost || 0,
       }]);
     }
     setSelected(next);
@@ -1634,17 +1712,25 @@ export default function ProcurementPage() {
                 <div>
                   <h2 className="font-bold text-gray-900 dark:text-white flex items-center gap-2 text-sm sm:text-base">
                     <Package size={17} className="text-blue-500 shrink-0" />
-                    {orderType === "store" ? "Store" : "Lubricant"} Inventory
-                    {reorderItems.length > 0 && (
-                      <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">{reorderItems.length}</span>
+                    {supplierScoped && !showAllAtReorder
+                      ? `Due from ${reorderMeta.supplierName || "this supplier"}`
+                      : `${orderType === "store" ? "Store" : "Lubricant"} Inventory`}
+                    {filteredItems.length > 0 && (
+                      <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-full">{filteredItems.length}</span>
                     )}
                   </h2>
-                  {needsAttentionCount > 0 && (
+                  {supplierScoped ? (
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {showAllAtReorder
+                        ? "Every product at or below its reorder level, whoever supplied it."
+                        : "Supplied by them before, and at or below reorder level."}
+                    </p>
+                  ) : needsAttentionCount > 0 ? (
                     <p className="text-xs text-orange-500 mt-0.5 flex items-center gap-1">
                       <AlertTriangle size={11} />
                       {needsAttentionCount} product{needsAttentionCount !== 1 ? "s" : ""} need attention
                     </p>
-                  )}
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-1.5 border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-800">
@@ -1669,7 +1755,47 @@ export default function ProcurementPage() {
                 <div className="flex items-center justify-center h-36">
                   <RefreshCw size={24} className="animate-spin text-blue-500" />
                 </div>
-              ) : reorderItems.length === 0 ? (
+              ) : supplierScoped && filteredItems.length === 0 ? (
+                /* "Nothing to order" and "we have never bought from them" look
+                   identical on screen and mean opposite things, so the counts
+                   from the server decide which is said. */
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 text-center">
+                  {reorderMeta.suppliedCount === 0 ? (
+                    <>
+                      <Package size={30} className="text-gray-300 mx-auto mb-3" />
+                      <p className="font-semibold text-gray-700 dark:text-gray-300 text-sm">
+                        No invoices yet from {reorderMeta.supplierName || "this supplier"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
+                        Nothing has been received from them before, so there is no history to
+                        narrow the list by. If you have bought from them, check the supplier
+                        name on those invoices matches the name they are registered under.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle size={28} className="text-green-400 mx-auto mb-2" />
+                      <p className="font-semibold text-gray-700 dark:text-gray-300 text-sm">
+                        Nothing to reorder from {reorderMeta.supplierName || "this supplier"}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        All {reorderMeta.suppliedCount} product
+                        {reorderMeta.suppliedCount === 1 ? "" : "s"} they supply are above their
+                        reorder level.
+                      </p>
+                    </>
+                  )}
+                  {reorderMeta.atReorderCount > 0 && !showAllAtReorder && (
+                    <button
+                      onClick={() => setShowAllAtReorder(true)}
+                      className="mt-3 text-xs text-blue-600 hover:underline"
+                    >
+                      Show all {reorderMeta.atReorderCount} product
+                      {reorderMeta.atReorderCount === 1 ? "" : "s"} at reorder level instead
+                    </button>
+                  )}
+                </div>
+              ) : reorderItems.length === 0 && !supplierScoped ? (
                 <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 sm:p-10 text-center">
                   <Package size={32} className="text-gray-300 mx-auto mb-3" />
                   <p className="font-semibold text-gray-700 dark:text-gray-300 text-sm">No {orderType === "store" ? "store" : "lubricant"} products found</p>
@@ -1717,6 +1843,24 @@ export default function ProcurementPage() {
                             <span className="text-gray-400">{pct}%</span>
                           </div>
                           <StockBar current={item.qtyInStock} max={item.reOrderLevel} />
+                          {/* What this supplier last charged for it, so the price
+                              on the order is a decision rather than a guess. */}
+                          {item.suppliedBySelected && (
+                            <p className="mt-1.5 text-[11px] text-gray-400">
+                              Last from them: {item.lastQuantity || "—"} @ ₦
+                              {Number(item.lastUnitCost || 0).toLocaleString()}
+                              {item.lastSuppliedAt
+                                ? " · " +
+                                  new Date(item.lastSuppliedAt).toLocaleDateString("en-NG", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  })
+                                : ""}
+                              {item.lastInvoiceNo ? " · inv " + item.lastInvoiceNo : ""}
+                              {item.timesSupplied > 1 ? " · " + item.timesSupplied + " times" : ""}
+                            </p>
+                          )}
                         </div>
                       </label>
                     );
